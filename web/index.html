@@ -42,9 +42,19 @@ button[aria-pressed="true"]{background:var(--bell);color:#2a1f0e;border-color:va
 .note{position:absolute;left:50%;bottom:6%;transform:translateX(-50%) rotate(-1.5deg);background:#f7e27a;color:#2b2416;font-family:var(--font-hand);font-size:1.5rem;line-height:1.25;padding:16px 20px 18px;width:min(320px,80%);box-shadow:0 10px 30px rgba(0,0,0,.4);border-radius:2px;cursor:pointer}
 .note small{display:block;font-size:.95rem;opacity:.65;margin-top:6px}
 .screen{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);background:#101820;color:#cfe3d6;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;line-height:1.5;padding:14px 16px;width:min(420px,86%);border-radius:8px;border:6px solid #2f3a44;white-space:pre-wrap;word-break:break-all;cursor:pointer;max-height:50%;overflow:auto}
-.birthday{position:absolute;left:50%;top:4%;z-index:4;transform:translateX(-50%) rotate(-1deg);max-width:calc(100% - 32px);padding:9px 22px 10px;background:#f7e27a;color:#352711;border:2px solid #9b6d2e;border-radius:4px;box-shadow:0 7px 18px rgba(0,0,0,.3);font-family:var(--font-hand);font-size:clamp(1.15rem,3vw,1.75rem);font-weight:700;line-height:1.1;text-align:center;white-space:nowrap;pointer-events:none}
-.birthday::before,.birthday::after{content:"🎈";position:absolute;top:50%;transform:translateY(-50%)}
-.birthday::before{left:-18px}.birthday::after{right:-18px}
+.birthday{position:absolute;left:50%;top:4%;z-index:4;transform:translateX(-50%) rotate(-1deg);max-width:calc(100% - 42px);padding:12px 28px 10px;background:linear-gradient(145deg,#9d4055,#6f2d43);color:#fff1b8;border:3px solid #2b1d18;border-radius:8px 8px 14px 14px;box-shadow:0 7px 18px rgba(0,0,0,.38),inset 0 0 0 2px rgba(255,226,122,.2);font-family:var(--font-hand);font-size:clamp(1.15rem,3vw,1.75rem);font-weight:700;line-height:1.1;text-align:center;white-space:nowrap;cursor:pointer}
+.birthday::before,.birthday::after{content:"";position:absolute;bottom:-13px;width:22px;height:17px;background:#8a374d;border:3px solid #2b1d18;border-top:0;clip-path:polygon(0 0,100% 0,50% 100%)}
+.birthday::before{left:18%}.birthday::after{right:18%}
+.birthday-lights{position:absolute;left:10px;right:10px;top:-11px;display:flex;justify-content:space-around}
+.birthday-lights i{width:9px;height:9px;border:2px solid #2b1d18;border-radius:50%;background:#ffd75e;box-shadow:0 0 4px #ffd75e,0 0 10px rgba(255,215,94,.8);animation:birthdayTwinkle 1.15s ease-in-out infinite alternate}
+.birthday-lights i:nth-child(2n){background:#ff8292;box-shadow:0 0 4px #ff8292,0 0 10px rgba(255,130,146,.8);animation-delay:-.55s}
+.birthday-lights i:nth-child(3n){background:#88d8c8;box-shadow:0 0 4px #88d8c8,0 0 10px rgba(136,216,200,.8);animation-delay:-.9s}
+.birthday-hint{display:block;margin-top:3px;font-family:var(--font-body);font-size:.62rem;font-weight:400;color:#f7d9df;letter-spacing:.03em}
+.birthday[aria-pressed="true"]{background:linear-gradient(145deg,#9d4055,#6f2d43);color:#fff1b8;border-color:#2b1d18}
+.birthday.party-started{cursor:default}
+.birthday.party-started .birthday-hint{visibility:hidden}
+@keyframes birthdayTwinkle{from{opacity:.45;transform:scale(.8)}to{opacity:1;transform:scale(1.25)}}
+@media (prefers-reduced-motion:reduce){.birthday-lights i{animation:none}}
 .birthday[hidden]{display:none}
 .a11y{position:absolute;left:8px;top:8px;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;z-index:6}
 .a11y:focus-within{width:auto;height:auto;margin:0;overflow:visible;clip:auto;clip-path:none;white-space:normal;display:flex;gap:6px}
@@ -62,7 +72,7 @@ button[aria-pressed="true"]{background:var(--bell);color:#2a1f0e;border-color:va
   </header>
   <div class="stagewrap" id="wrap">
     <canvas id="cv" aria-label="강고양이 씨의 방"></canvas>
-    <div class="birthday" id="birthday" role="status" hidden></div>
+    <button class="birthday" id="birthday" type="button" hidden><span class="birthday-lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span id="birthdayText"></span><small class="birthday-hint">눌러서 파티 시작</small></button>
     <div class="a11y" aria-label="방 상호작">
       <button id="aCat">강고양이 씨 쓰다듬기</button>
       <button id="aMouse">쥐야쥐 놀라게 하기</button>
@@ -101,10 +111,12 @@ button[aria-pressed="true"]{background:var(--bell);color:#2a1f0e;border-color:va
    f/ : 캐릭터 프레임 (모두 왼쪽을 보는 그림). [폭, 높이, 발 기준점 x, y]
    r/ : 방 배경과 소품 */
 const FRAMES={"cat_run_1":[559,397,160.0,396.0],"cat_run_2":[481,408,223.0,406.0],"cat_run_3":[452,445,246.0,443.0],"cat_run_4":[541,416,175.5,415.0],"cat_run_5":[473,408,250.0,407.0],"cat_run_6":[494,417,216.0,415.0],"cat_paw_1":[500,433,259.5,432.0],"cat_paw_2":[490,440,257.0,438.0],"cat_paw_3":[505,440,315.5,438.0],"cat_paw_4":[528,440,329.5,438.0],"cat_paw_5":[505,430,263.0,429.0],"cat_paw_6":[498,434,258.5,433.0],"cat_type_1":[456,460,251.0,459.0],"cat_type_2":[431,468,225.0,466.0],"cat_type_3":[439,464,237.5,463.0],"cat_type_4":[431,467,227.5,466.0],"cat_type_5":[450,468,248.5,467.0],"cat_type_6":[434,463,238.0,462.0],"cat_eat_1":[576,448,278.5,446.0],"cat_eat_2":[575,449,253.5,447.0],"cat_eat_3":[576,449,252.5,447.0],"cat_eat_4":[568,449,273.5,448.0],"cat_screen_1":[396,441,195.5,439.0],"cat_screen_2":[394,442,194.5,440.0],"cat_screen_3":[397,438,195.0,437.0],"cat_screen_4":[403,441,197.5,439.0],"cat_screen_5":[381,440,188.5,438.0],"cat_startle_1":[565,446,279.5,445.0],"cat_startle_2":[534,450,276.5,448.0],"cat_startle_3":[507,488,266.5,486.0],"cat_startle_4":[518,468,275.5,467.0],"cat_lookup_1":[620,448,296.0,446.0],"cat_lookup_2":[559,450,261.0,449.0],"cat_lookup_3":[583,473,276.5,472.0],"cat_window_1":[442,414,233.0,413.0],"cat_window_2":[429,418,220.5,417.0],"cat_window_3":[428,396,223.5,395.0],"cat_wait_1":[462,469,272.5,468.0],"cat_wait_2":[552,463,315.5,462.0],"cat_sulk_1":[444,324,255.0,323.0],"cat_sulk_2":[448,311,251.0,309.0],"cat_bsleep_1":[595,487,408.0,486.0],"cat_bsleep_2":[596,491,406.5,490.0],"cat_bsleep_3":[559,482,380.5,481.0],"cat_box_1":[641,339,320.5,337.0],"cat_box_2":[645,468,321.5,467.0],"cat_box_3":[643,471,320.5,470.0],"cat_groom_1":[548,449,310.5,447.0],"cat_groom_2":[548,449,310.5,447.0],"cat_groom_3":[548,449,310.5,447.0],"cat_groom_4":[548,449,310.5,447.0],"cat_belly_1":[356,380,215.5,377.0],"cat_belly_2":[452,368,272.0,366.0],"cat_loaf_1":[471,325,241.0,324.0],"cat_loaf_2":[461,315,225.0,314.0],"cat_roll_1":[399,336,201.5,335.0],"cat_roll_2":[351,292,193.5,290.0],"cat_roll_3":[363,341,197.5,339.0],"cat_sit_1":[474,402,253.5,401.0],"cat_sit_2":[450,343,219.5,342.0],"cat_sleep_1":[474,308,236.5,307.0],"cat_sleep_2":[480,300,223.5,299.0],"cat_stand":[491,412,253.5,411.0],"cat_stretch":[616,497,265.5,496.0],"cat_walk_1":[469,380,237.0,379.0],"cat_walk_2":[404,413,217.5,412.0],"cat_walk_3":[408,410,217.0,409.0],"cat_yawn":[522,395,236.5,393.0],"mouse_trot_1":[284,94,180.5,93.0],"mouse_trot_2":[279,85,188.0,84.0],"mouse_trot_3":[287,93,144.0,92.0],"mouse_sleep_1":[137,94,74.5,93.0],"mouse_sleep_2":[141,95,77.5,94.0],"mouse_startle_1":[348,170,178.0,169.0],"mouse_watch_1":[202,175,131.0,174.0],"mouse_peek_1":[165,97,82.0,96.0],"mouse_idle_1":[312,102,209.5,101.0]};
-const ROOM={"door_closed":[131,248],"curtain_l":[99,256],"laptop_off":[228,140],"cup_up":[121,102],"bowl_empty":[167,71],"lamp_off":[133,196],"box_back":[233,158],"door_open":[129,269],"curtain_r":[99,257],"laptop_on":[228,140],"cup_down":[129,107],"bowl_full":[166,81],"lamp_on":[132,196],"table":[694,280],"rug":[718,173],"postit":[245,218],"frame":[226,279],"box_front":[295,172],"fx/bfly_1":[180,124],"fx/bfly_2":[180,124],"fx/bfly_3":[180,124],"fx/bfly_4":[180,124],"fx/bird_1":[180,162],"fx/bird_2":[180,162],"fx/bird_3":[180,162],"fx/fan_1":[260,349],"fx/fan_2":[260,349],"fx/fan_3":[260,349],"fx/fan_4":[260,349],"icon/fish":[96,54],"icon/question":[96,133],"icon/excl":[96,293],"icon/excl2":[96,139],"icon/sun":[96,92],"icon/cat_calm":[96,71],"icon/zzz":[96,72],"icon/arrow":[96,80],"icon/bird":[96,78],"icon/eyes":[96,59],"icon/mouse":[96,71],"icon/sigh":[96,76],"icon/butterfly":[96,77],"icon/cat_flip":[96,75],"icon/paws":[96,99],"icon/heart":[96,84],"icon/cup":[96,70],"icon/paw":[96,74],"icon/cat_smug":[96,73],"icon/angry":[96,107],"icon/rain":[96,90],"icon/ears":[96,56],"icon/bowl":[96,60],"icon/code":[96,102],"cushion":[440,174],"pumpkin":[440,375],"tree":[400,638],"treat":[400,210],"books":[520,198],"towel":[440,206],"fx/ufo_off":[200,154],"fx/ufo_on":[200,154],"screen/cat-bird-video":[320,200],"screen/cat-equations":[320,200],"screen/cat-keyboard-chaos":[320,200],"screen/cat-tuna-search":[320,200],"screen/idle-aquarium":[320,200],"screen/idle-mandeuk-wallpaper":[320,200],"screen/idle-stars":[320,200],"screen/mouse-cheese-shop":[320,200],"screen/rare-superintelligence-paper":[320,200],"icon/alien":[96,94],"icon/snow":[96,101],"heater":[300,207]};
+const ROOM={"door_closed":[131,248],"curtain_l":[99,256],"laptop_off":[228,140],"cup_up":[121,102],"bowl_empty":[167,71],"lamp_off":[133,196],"box_back":[233,158],"door_open":[129,269],"curtain_r":[99,257],"laptop_on":[228,140],"cup_down":[129,107],"bowl_full":[166,81],"lamp_on":[132,196],"table":[694,280],"rug":[718,173],"postit":[245,218],"frame":[226,279],"box_front":[295,172],"fx/bfly_1":[180,124],"fx/bfly_2":[180,124],"fx/bfly_3":[180,124],"fx/bfly_4":[180,124],"fx/bird_1":[180,162],"fx/bird_2":[180,162],"fx/bird_3":[180,162],"fx/fan_1":[260,349],"fx/fan_2":[260,349],"fx/fan_3":[260,349],"fx/fan_4":[260,349],"icon/fish":[96,54],"icon/question":[96,133],"icon/excl":[96,293],"icon/excl2":[96,139],"icon/sun":[96,92],"icon/cat_calm":[96,71],"icon/zzz":[96,72],"icon/arrow":[96,80],"icon/bird":[96,78],"icon/eyes":[96,59],"icon/mouse":[96,71],"icon/sigh":[96,76],"icon/butterfly":[96,77],"icon/cat_flip":[96,75],"icon/paws":[96,99],"icon/heart":[96,84],"icon/cup":[96,70],"icon/paw":[96,74],"icon/cat_smug":[96,73],"icon/angry":[96,107],"icon/rain":[96,90],"icon/ears":[96,56],"icon/bowl":[96,60],"icon/code":[96,102],"cushion":[440,174],"pumpkin":[440,375],"tree":[400,638],"birthday_cake":[993,1584],"treat":[400,210],"books":[520,198],"towel":[440,206],"fx/ufo_off":[200,154],"fx/ufo_on":[200,154],"screen/cat-bird-video":[320,200],"screen/cat-equations":[320,200],"screen/cat-keyboard-chaos":[320,200],"screen/cat-tuna-search":[320,200],"screen/idle-aquarium":[320,200],"screen/idle-mandeuk-wallpaper":[320,200],"screen/idle-stars":[320,200],"screen/mouse-cheese-shop":[320,200],"screen/rare-superintelligence-paper":[320,200],"icon/alien":[96,94],"icon/snow":[96,101],"heater":[300,207]};
 const SRC={};
 Object.keys(FRAMES).forEach(k=>SRC['f_'+k]='f/'+k+'.webp');
 ['bg','apt_day','apt_night',...Object.keys(ROOM)].forEach(k=>SRC['r_'+k]='r/'+k+'.webp');
+SRC.f_birthday_dance='f/cat-birthday-dance-sheet-v1.png';
+SRC.r_birthday_cake='r/birthday-cake-v1.png';
 const ICON_NAMES=Object.keys(ROOM).filter(k=>k.startsWith('icon/')).map(k=>k.slice(5));
 const IMG={};
 const FSC=0.42, MSC=0.417; // 프레임 픽셀 → 방 크기
@@ -143,10 +155,11 @@ const HAND='"Gaegu","Nanum Pen Script",cursive',BODYF='"Gowun Dodum","Apple SD G
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const store={get(k,d){try{const v=localStorage.getItem('goyang.'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
              set(k,v){try{localStorage.setItem('goyang.'+k,JSON.stringify(v))}catch(e){}}};
-const birthdayName=(new URLSearchParams(location.search).get('birthday')||'').trim().slice(0,24);
-if(new URLSearchParams(location.search).has('birthday')){
+const pageParams=new URLSearchParams(location.search),birthdayMode=pageParams.has('birthday');
+const birthdayName=(pageParams.get('birthday')||'').trim().slice(0,24);
+if(birthdayMode){
   const banner=document.getElementById('birthday');
-  banner.textContent=birthdayName?birthdayName+'님, 생일 축하해요!':'생일 축하해요!';
+  document.getElementById('birthdayText').textContent=birthdayName?birthdayName+'님, 생일 축하해요!':'생일 축하해요!';
   banner.hidden=false;
 }
 const rnd=(a,b)=>a+Math.random()*(b-a);
@@ -211,6 +224,9 @@ const Snd={ac:null,on:false,master:null,rainG:null,roomG:null,tvG:null,
   door(){if(!this.on)return;const ac=this.ac,t=ac.currentTime,o=ac.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(180,t);o.frequency.linearRampToValueAtTime(120,t+0.6);const fl=ac.createBiquadFilter();fl.type='bandpass';fl.frequency.value=700;fl.Q.value=6;o.connect(fl);this.env(fl,t,0.05,0.6,0.05);o.start(t);o.stop(t+0.8)},
   click(){if(!this.on)return;this.thump(0.5,2000)},
   purr(sec=3){if(!this.on)return;const ac=this.ac,t=ac.currentTime,s=ac.createBufferSource();s.buffer=this.brown;s.loop=true;const fl=ac.createBiquadFilter();fl.type='lowpass';fl.frequency.value=160;const am=ac.createGain();am.gain.value=0.5;const lfo=ac.createOscillator();lfo.frequency.value=24;const lg=ac.createGain();lg.gain.value=0.5;lfo.connect(lg);lg.connect(am.gain);s.connect(fl);fl.connect(am);const g=ac.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.35,t+0.5);g.gain.linearRampToValueAtTime(0,t+sec);am.connect(g);g.connect(this.master);s.start(t);lfo.start(t);s.stop(t+sec+0.1);lfo.stop(t+sec+0.1)},
+  birthdaySong(){if(!this.on||!this.ac)return 0;const ac=this.ac,start=ac.currentTime+0.08,beat=0.34;
+    const notes=[[67,.75],[67,.25],[69,1],[67,1],[72,1],[71,2],[67,.75],[67,.25],[69,1],[67,1],[74,1],[72,2],[67,.75],[67,.25],[79,1],[76,1],[72,1],[71,1],[69,2],[77,.75],[77,.25],[76,1],[72,1],[74,1],[72,2]];
+    let at=0;notes.forEach(([m,d])=>{const t=start+at*beat,dur=d*beat,o=ac.createOscillator();o.type='triangle';o.frequency.value=440*Math.pow(2,(m-69)/12);const g=ac.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.11,t+.025);g.gain.setValueAtTime(.09,t+Math.max(.03,dur-.09));g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(this.master);o.start(t);o.stop(t+dur+.02);at+=d});return at*beat+.15},
   setAmb(rain,tv,dark){if(!this.on)return;const t=this.ac.currentTime;this.rainG.gain.setTargetAtTime(rain?0.16:0,t,1.5);this.tvG.gain.setTargetAtTime(tv?0.012*(0.6+0.4*Math.sin(t*1.7)*Math.sin(t*0.6)):0,t,0.3);this.roomG.gain.setTargetAtTime(dark?0.05:0.08,t,2)}
 };
 
@@ -226,7 +242,7 @@ function initObjects(data){OBJ=data.objects;OBJ.forEach(o=>{O[o.id]=o;if(o.pos)P
 // 등장 조건
 const WHEN={always:()=>true,summer:()=>season(now())==='summer',winter:()=>season(now())==='winter',
   halloween:()=>holiday(now())==='halloween',christmas:()=>holiday(now())==='christmas',boxDay:()=>boxToday(now()),treat:()=>world.treat};
-const present=o=>(WHEN[o.when||'always']||WHEN.always)();
+const present=o=>o.id==='tree'&&birthdayMode?false:(WHEN[o.when||'always']||WHEN.always)();
 // 지금 상태
 const STATE={
   door:()=>{const m=world.manduk;if(!m)return 'closed';if(m.phase==='steps'||m.phase==='pause')return 'glow';return (m.phase!=='close'||m.t<0.6)?'open':'closed'},
@@ -307,6 +323,7 @@ const follow=(who,sp,near,maxT,off=0)=>({init(a){a.left=maxT},tick(a,dt){a.left-
   const pts=routeTo(a,tx,ty,false);stepToward(a,pts[0][0],pts[0][1],sp,dt);return false}});
 const faceTo=who=>fn(a=>{a.face=who.x>a.x?1:-1});
 const hold=(sec,pose,closed=false,face)=>({init(a){a.left=sec;a.moving=false;if(pose)a.pose=pose;a.closed=closed;if(face)a.face=face},tick(a,dt){a.left-=dt;return a.left<=0}});
+const dance=sec=>({init(a){a.left=sec;a.dance={t:0,dur:sec};a.pose='stand';a.closed=false;a.moving=false},tick(a,dt){a.left-=dt;a.dance.t+=dt;if(a.left<=0){a.dance=null;return true}return false}});
 const bub=(t,sec=4)=>({init(a){a.bub={t,life:sec,max:sec}},tick(){return true}});
 const fn=f=>({init(a){f(a)},tick(){return true}});
 const until=(cond,max=60)=>({init(a){a.left=max;a.moving=false},tick(a,dt){a.left-=dt;return cond()||a.left<=0}});
@@ -799,7 +816,9 @@ function catFrame(a){
 function drawFrame(name,x,y,face,sc,sy=1){const im=IMG['f_'+name];if(!imageReady(im))return;const [fw,fh,ax,ay]=FRAMES[name];
   ctx.save();ctx.translate(x,y);ctx.scale(-face*sc,sc*sy);ctx.drawImage(im,-ax,-ay);ctx.restore()}
 function drawCat(a){
-  const dp=DEPTH(a.y),sc=FSC*dp,fr='cat_'+catFrame(a);a.frame=fr;
+  const dp=DEPTH(a.y),sc=FSC*dp;
+  if(a.dance){const im=IMG.f_birthday_dance,cell=imageReady(im)?im.width/4:0,i=Math.floor(a.dance.t/0.34)%4,h=250*dp,w=cell?cell/im.height*h:0;a.frame='cat_stand';ctx.beginPath();ctx.ellipse(a.x,a.y+2,72*dp,12*dp,0,0,7);ctx.fillStyle='rgba(50,30,15,.22)';ctx.fill();if(cell)ctx.drawImage(im,i*cell,0,cell,im.height,a.x-w/2,a.y-h,w,h);return}
+  const fr='cat_'+catFrame(a);a.frame=fr;
   if(!fr.startsWith('cat_box_')){ctx.beginPath();ctx.ellipse(a.x,a.y+2,96*dp,13*dp,0,0,7);ctx.fillStyle='rgba(50,30,15,.22)';ctx.fill()}
   const br=(!RM&&a.closed&&a.dp==='loaf'&&!a.tr&&!a.act)?1+Math.sin(world.t*1.5+a.phase)*0.012:1;
   if(fr.startsWith('cat_box_'))drawFrame(fr,P.box.x,P.box.y,-1,FSC*DEPTH(P.box.y));else drawFrame(fr,a.x,a.y,a.face,sc,br);
@@ -987,6 +1006,7 @@ function render(d,real){
   drawRoom(d);drawSunbeam(d);
   // 소품과 캐릭터를 바닥에 닿는 위치 순서로 그린다 (뒤에 있으면 가려짐)
   const L=OBJ.filter(o=>o.layer==='floor'&&present(o)).map(o=>[depthOf(objView(o)),()=>drawObj(o,d)]);
+  if(birthdayMode)L.push([598,()=>drawProp('birthday_cake',590,598,142)]);
   const c=world.cup;
   L.push([cat.inBox?P.box.y:cat.y,()=>drawActor(cat)]);L.push([mouse.y,()=>drawActor(mouse)]);
   L.sort((a,b)=>a[0]-b[0]).forEach(e=>e[1]());
@@ -1036,6 +1056,11 @@ function petCat(){
 /* ───────── 버튼 ───────── */
 const $=id=>document.getElementById(id);
 let devOpen=false,wake=null;
+let birthdayPartyStarted=false;
+function startBirthdayParty(){if(!birthdayMode||birthdayPartyStarted)return;birthdayPartyStarted=true;const banner=$('birthday');banner.classList.add('party-started');banner.setAttribute('aria-pressed','true');
+  Snd.init();if(Snd.ac){Snd.on=true;Snd.ac.resume();$('bSound').setAttribute('aria-pressed','true');$('bSound').textContent='소리 끄기'}
+  const sec=Snd.birthdaySong()||13;run(cat,[go(500,690,85),bub('🎂❤️✨',2),dance(sec),hold(1,'stand'),hold(rnd(20,45),'loaf')],'birthday');}
+$('birthday').onclick=startBirthdayParty;
 async function wakeLock(){try{if(navigator.wakeLock&&!wake){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>wake=null)}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&(Snd.on||document.fullscreenElement))wakeLock()});
 $('bSound').onclick=()=>{const on=Snd.toggle();$('bSound').setAttribute('aria-pressed',on);$('bSound').textContent=on?'소리 끄기':'소리 켜기';if(on){wakeLock();Snd.bell()}};
