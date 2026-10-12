@@ -142,8 +142,19 @@ const CODE = {
     drawTreeGlow();
   },
   heater: v => drawHeater(v),
+  tvShelf: v => drawShelfL(v),
   fan: v => drawProp('fx/fan_' + (Math.floor(world.t * (RM ? 2 : 14)) % 4 + 1), v.pos.x, v.pos.y, v.pos.w),
 };
+// ㄱ자 TV 선반: 윗판은 그림 비율 그대로, 다리만 선반 높이(h)에 맞춰 늘인다
+const SHELF_BOARD = 72; // 그림에서 윗판이 끝나는 줄(원본 768×180 기준)
+function drawShelfL(v) {
+  const im = img(v.img);
+  if (!imageReady(im))
+    return;
+  const k = v.pos.w / im.width, bh = SHELF_BOARD * im.height / 180, x0 = v.pos.x - v.pos.w / 2, y0 = v.pos.y - v.h;
+  ctx.drawImage(im, 0, 0, im.width, bh, x0, y0, v.pos.w, bh * k);
+  ctx.drawImage(im, 0, bh, im.width, im.height - bh, x0, y0 + bh * k, v.pos.w, v.h - bh * k);
+}
 // 노트북 화면: 상황별 그룹에서 하나를 골라 화면 안쪽에만 그린다
 // 이벤트 한 번에 화면 하나: 이벤트가 시작될 때 한 번만 고르고, 노트북이 꺼질 때까지 그대로 둔다
 const screenPick = { img: null };

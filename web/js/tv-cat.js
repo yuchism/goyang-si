@@ -1,7 +1,7 @@
 /* 강고양이 씨 TV · 반응과 편성표 창: TV 보기, TV 위 낮잠, 뒤 빼꼼, 사건 반응, 편성표 창 */
 import { play } from './anim.js';
 import { loafB } from './cat.js';
-import { O, S, socketOf } from './objects.js';
+import { O, S, present, socketOf, topOf } from './objects.js';
 import { closeShelf } from './shelf.js';
 import { Snd } from './sound.js';
 import { bub, fn, go, hold, run } from './steps.js';
@@ -44,33 +44,97 @@ export function tvWatchB() {
     hold(rnd(10, 30), 'loaf', Math.random() < 0.4)
   ], 'tv');
 }
-// 따뜻한 TV 위에서 낮잠. 꺼지고 식으면 내려온다
+// 점프: 바닥 자리 ↔ TV 위. 발 위치를 포물선으로 옮기고 그림은 웅크림 → 도약 → 착지
+const JUMP_UP = [['tv_jump_up_1of3', 0.4], ['tv_jump_up_2of3', 0.42], ['tv_jump_up_3of3', 0.35]];
+const JUMP_DOWN = [['tv_jump_down_1of2', 0.38], ['tv_jump_down_2of2', 0.4]];
+const tvTopY = () => O.tv.pos.y + 0.5;
+const jumpStep = (up, tx) => ({ init(a) {
+    const s = S('tv.side');
+    a.act = null;
+    a.moving = false;
+    a.tr = null;
+    a.dp = a.pose = 'stand';
+    const lift = topOf('tv'), x0 = up ? s[0] : a.x, x1 = up ? tx : s[0];
+    // 바닥 기준(y = 자리의 깊이)으로 발 높이를 계산한다. TV 위의 발 높이 = TV 깊이 - TV 윗면
+    const top = tvTopY() - lift;
+    a.jump = { up, t: 0, x0, x1, f0: up ? s[1] : top, f1: up ? top : s[1], sy: s[1], seq: up ? JUMP_UP : JUMP_DOWN };
+    a.onTV = false;
+    a.x = x0;
+    a.y = s[1];
+    a.face = x1 < x0 ? -1 : x1 > x0 ? 1 : -1;
+    a.jump.f = a.jump.seq[0][0];
+    a.jump.lift = a.y - a.jump.f0;
+  },
+  tick(a, dt) {
+    const J = a.jump;
+    if (!J)
+      return true;
+    J.t += dt;
+    const [[f0, d0], [f1, d1], last] = J.seq, T = J.seq.reduce((t, f) => t + f[1], 0);
+    // 위로: 웅크림(제자리) → 날기(포물선) → 착지(TV 위). 아래로: 몸 늘이기(내려가며) → 착지(바닥)
+    const flyFrom = J.up ? d0 : 0, flyDur = J.up ? d1 : d0;
+    const k = Math.min(1, Math.max(0, (J.t - flyFrom) / flyDur)), e = J.up ? 1 - (1 - k) * (1 - k) : k * k;
+    const fy = J.f0 + (J.f1 - J.f0) * e - (J.up ? 26 : 12) * Math.sin(Math.PI * k);
+    a.x = J.x0 + (J.x1 - J.x0) * k;
+    J.lift = J.sy - fy;
+    J.f = J.t < d0 ? f0 : (J.up ? (J.t < d0 + d1 ? f1 : last[0]) : f1);
+    if (J.t >= T) {
+      a.jump = null;
+      if (J.up) {
+        a.onTV = true;
+        a.y = tvTopY();
+      }
+      else {
+        a.y = J.sy;
+        a.dp = a.pose = 'stand';
+      }
+      a.x = J.x1;
+      Snd.thump(0.3, 300);
+      return true;
+    }
+    return false;
+  } });
+// 할로윈: TV 위에 호박이 있어서 못 올라간다. 올려다보다가 시무룩
+export function tvTopBlockedB() {
+  const s = S('tv.side');
+  if (!s)
+    return loafB();
+  run(cat, [
+    go(s[0], s[1], 60),
+    fn(faceTV),
+    play('lookup', 2.2),
+    bub('❓', 2),
+    hold(1.2, 'stand'),
+    play('sulk', rnd(8, 16)),
+    bub('😑', 3),
+    hold(rnd(10, 25), 'loaf')
+  ], 'tvtop');
+}
+// 따뜻한 TV 위에서 낮잠. 꺼지고 식으면 뛰어내린다
 export function tvTopB() {
   const s = S('tv.side');
   if (!s || !tvOn())
     return loafB();
+  if (O.pumpkin && present(O.pumpkin))
+    return tvTopBlockedB();
+  const tx = O.tv.pos.x + rnd(-14, 12);
   run(cat, [
     go(s[0], s[1], 60),
     hold(0.5, 'stand', false, -1),
+    jumpStep(true, tx),
     fn(a => {
-      a.onTV = true;
-      a.x = O.tv.pos.x + rnd(-14, 12);
-      a.y = O.tv.pos.y + 0.5;
       a.face = pick([-1, 1]);
-      Snd.thump(0.3, 300);
     }),
     hold(1.4, 'loaf'),
     bub('💤', 4),
     play('tvtop', rnd(240, 900), () => tvCold()),
+    hold(0.8, 'stand'),
     fn(a => {
-      const cold = tvCold();
-      a.onTV = false;
-      a.x = s[0];
-      a.y = s[1];
-      a.dp = a.pose = 'stand';
-      a.tr = null;
-      Snd.thump(0.3, 300);
-      if (cold)
+      a.face = -1;
+    }),
+    jumpStep(false),
+    fn(a => {
+      if (tvCold())
         say(a, '😑', 3);
     }),
     go(rnd(260, 720), rnd(665, 720), 50),
@@ -88,7 +152,7 @@ export function tvPeekB() {
     fn(a => {
       a.tvPeek = true;
       a.x = edge[0] - 9;
-      a.y = b[1];
+      a.y = O.tv.pos.y - 0.5; // 선반 위 TV 바로 뒤 (TV보다 먼저 그려져 고개만 보인다)
       a.face = -1;
     }),
     play('tvpeek', rnd(4, 7)),

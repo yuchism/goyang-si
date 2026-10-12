@@ -10,7 +10,7 @@ data = json.load(open(src, encoding='utf-8'))
 objs = data['objects']
 
 WHEN = {None: '항상', 'always': '항상', 'summer': '여름', 'winter': '겨울', 'halloween': '할로윈',
-        'christmas': '크리스마스', 'boxDay': '상자 있는 날 (9일 중 3일)', 'treat': '기념일 간식을 받은 날'}
+        'christmas': '크리스마스', 'boxDay': '상자 있는 날 (9일 중 3일)', 'treat': '기념일 간식을 받은 날', 'doorClosed': '문이 닫혀 있을 때'}
 LAYER = {'background': '배경', 'wall': '벽', 'floor-flat': '바닥에 깔림', 'floor': '바닥 (앞뒤 정렬)', None: '-'}
 WHO = {'cat': '강고양이 씨', 'mouse': '쥐야쥐'}
 TOUCH = {'note': '오늘의 메모 보기', 'screen': '노트북 화면 보기', 'shelf': '책장 메뉴 열기', 'tv': 'TV 편성표 보기'}

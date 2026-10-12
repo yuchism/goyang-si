@@ -204,7 +204,8 @@ function act(m) {
       setTimeout(() => {
         world.cup.state = 'table';
         world.cup.fall = 0;
-        world.cup.x = 1040;
+        world.cup.x = P.cup.x;
+        world.cup.y = P.cup.y;
       }, 1100);
     }
     else {

@@ -17,7 +17,8 @@
     "drama": ["tv_drama_1of5.webp", "tv_drama_2of5.webp", "tv_drama_3of5.webp", "tv_drama_4of5.webp", "tv_drama_5of5.webp"],
     "baseball": ["tv_baseball_1of5.webp", "tv_baseball_2of5.webp", "tv_baseball_3of5.webp", "tv_baseball_4of5.webp", "tv_baseball_5of5.webp"],
     "football": ["tv_football_1of4.webp", "tv_football_2of4.webp", "tv_football_3of4.webp", "tv_football_4of4.webp"],
-    "actress": ["tv_actress_1of4.webp", "tv_actress_2of4.webp", "tv_actress_3of4.webp", "tv_actress_4of4.webp"]
+    "actress": ["tv_actress_1of4.webp", "tv_actress_2of4.webp", "tv_actress_3of4.webp", "tv_actress_4of4.webp"],
+    "horror": ["tv_horror_1of3.webp", "tv_horror_2of3.webp", "tv_horror_3of3.webp"]
   },
   "catReactions": {
     "size": [512, 512],

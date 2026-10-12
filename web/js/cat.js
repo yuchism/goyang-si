@@ -9,7 +9,7 @@ import { DEPTH } from './stage.js';
 import { bub, fn, go, hold, run } from './steps.js';
 import { boxToday, hourOf, inBeam, mandukAsleep, mandukHome, rainNow, sunbeam, wx } from './time.js';
 import { TVP, tvOn } from './tv.js';
-import { tvTopB, tvWatchB } from './tv-cat.js';
+import { tvTopB, tvTopBlockedB, tvWatchB } from './tv-cat.js';
 import { pick, rnd, store } from './util.js';
 import { cat, mouse, say, world } from './world.js';
 // 타자 프레임의 앞발 끝: 발 기준점에서 [앞쪽 거리, 위로 높이] (프레임 픽셀)
@@ -41,6 +41,8 @@ export function catBrain(d) {
     add(dark ? 0.5 : prime ? 4 : pr && TVP[pr].sport ? 2 : 0.9, tvWatchB);
     if (!present(O.pumpkin))
       add((h >= 19 || h < 1) ? 1.3 : 0.5, tvTopB);
+    else
+      add((h >= 19 || h < 1) ? 0.35 : 0.15, tvTopBlockedB); // 할로윈: 올라가려다 호박 때문에 포기
   }
   add(1 + (b && b.k > 0.4 ? 2.2 : 0), rollB);
   add(dark ? 0 : (1 + (rain ? 2 : 0)), windowB);

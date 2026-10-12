@@ -166,6 +166,11 @@ export function run(a, steps, tag = '') {
     a.act = null;
   if (a.kind === 'cat')
     a.typing = false;
+  if (a.jump) {
+    if (a.jump.up)
+      a.onTV = true;
+    a.jump = null;
+  } // 점프 중에 끊기면 TV 위에 있던 것으로 치고 아래 규칙대로 내려놓는다
   if (a.onTV) {
     a.onTV = false;
     const s = S('tv.side');

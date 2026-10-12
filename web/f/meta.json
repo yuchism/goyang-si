@@ -92,5 +92,10 @@
   "cat_bday_bow": [512, 512, 290, 496],
   "cat_bday_hat_loaf": [512, 512, 276, 496],
   "mouse_bday_clap_1": [512, 512, 320, 472],
-  "mouse_bday_clap_2": [512, 512, 320, 472]
+  "mouse_bday_clap_2": [512, 512, 320, 472],
+  "cat_tv_jump_down_1of2": [512, 512, 255.5, 495.0],
+  "cat_tv_jump_down_2of2": [512, 512, 256.0, 495.0],
+  "cat_tv_jump_up_1of3": [512, 512, 256.0, 495.0],
+  "cat_tv_jump_up_2of3": [512, 512, 255.5, 495.0],
+  "cat_tv_jump_up_3of3": [512, 512, 256.0, 494.0]
 }

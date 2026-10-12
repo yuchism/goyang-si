@@ -91,6 +91,8 @@ function clipFrame(a) {
   return C.f[i];
 }
 export function catFrame(a) {
+  if (a.jump)
+    return a.jump.f;
   if (a.act && a.act.t >= 0)
     return clipFrame(a);
   if (a.react && a.react.t > 0 && !a.tr && a.dp === 'loaf')

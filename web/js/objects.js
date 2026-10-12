@@ -15,10 +15,13 @@ export function initObjects(data) {
     if (o.area)
       P[o.id] = { x: o.area[0], y: o.area[1], w: o.area[2], h: o.area[3] };
   });
+  if (P.cup)
+    Object.assign(world.cup, { x: P.cup.x, y: P.cup.y }); // 컵이 떨어지기 시작하는 곳 = 탁자 위 컵 자리
 }
 // 등장 조건
 const WHEN = { always: () => true, summer: () => season(now()) === 'summer', winter: () => season(now()) === 'winter',
-  halloween: () => holiday(now()) === 'halloween', christmas: () => holiday(now()) === 'christmas', boxDay: () => boxToday(now()), treat: () => world.treat };
+  halloween: () => holiday(now()) === 'halloween', christmas: () => holiday(now()) === 'christmas', boxDay: () => boxToday(now()), treat: () => world.treat,
+  doorClosed: () => STATE.door() !== 'open' };
 export const present = o => o.id === 'tree' && birthdayMode ? false : (WHEN[o.when || 'always'] || WHEN.always)();
 // 지금 상태
 const STATE = {
@@ -56,7 +59,7 @@ export function topOf(id) {
   const o = O[id];
   if (!o || !o.top)
     return 0;
-  return (o.z ? zOf(o) : 0) + o.top;
+  return zOf(o) + o.top;
 }
 export function zOf(o) {
   return o.z != null ? o.z : o.on ? topOf(o.on) : 0;

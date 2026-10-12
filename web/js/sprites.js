@@ -3,7 +3,7 @@ import { catFrame, mouseFrame } from './anim.js';
 import { FRAMES, FSC, IMG, MSC, imageReady, img } from './assets.js';
 import { DANCE_CELLS } from './birthday.js';
 import { inked, rr } from './draw.js';
-import { P, topOf } from './objects.js';
+import { O, P, topOf, zOf } from './objects.js';
 import { DEPTH, H, W, cam, ctx, view } from './stage.js';
 import { HAND, INK, RM, clamp } from './util.js';
 import { cat, world } from './world.js';
@@ -18,6 +18,8 @@ function drawFrame(name, x, y, face, sc, sy = 1) {
   ctx.drawImage(im, -ax, -ay);
   ctx.restore();
 }
+// 바닥에서 떠 있는 높이: TV 위, 선반 위 TV 뒤, 점프 중
+const liftOf = a => a.jump ? a.jump.lift : a.onTV ? topOf('tv') : a.tvPeek ? zOf(O.tv) : 0;
 function drawCat(a) {
   const dp = DEPTH(a.y), sc = FSC * dp;
   if (a.dance) {
@@ -36,7 +38,7 @@ function drawCat(a) {
   }
   const fr = 'cat_' + catFrame(a);
   a.frame = fr;
-  const lift = a.onTV ? topOf('tv') : 0;
+  const lift = liftOf(a);
   if (!fr.startsWith('cat_box_') && !a.onTV && !a.tvPeek) {
     ctx.beginPath();
     ctx.ellipse(a.x, a.y + 2, 96 * dp, 13 * dp, 0, 0, 7);
@@ -93,7 +95,7 @@ export function drawActor(a) {
 }
 const TV_HEAD = { cat_tv_ear_turn: [95, 240], cat_tv_top_sleep_1of2: [120, 270], cat_tv_top_sleep_2of2: [120, 270], cat_tv_behind_peek_1of2: [250, 110], cat_tv_behind_peek_2of2: [250, 110] }; // TV 그림의 머리 위치
 function headPos(a) {
-  const dp = DEPTH(a.y), lift = a.onTV ? topOf('tv') : 0;
+  const dp = DEPTH(a.y), lift = liftOf(a);
   if (a.frame && a.frame.startsWith('cat_tv_')) {
     const f = FRAMES[a.frame], hd = TV_HEAD[a.frame] || [276, 110], sc = FSC * dp;
     return [a.x + (-a.face) * (hd[0] - f[2]) * sc, a.y - lift - (f[3] - hd[1]) * sc];

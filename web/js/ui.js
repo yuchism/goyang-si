@@ -3,7 +3,7 @@ import { imageReady, img } from './assets.js';
 import { knockB, petCat, secretB } from './cat.js';
 import { startVisit, todaysNote } from './manduk.js';
 import { mouseHide, spawnMouse } from './mouse.js';
-import { OBJ, objView, present, topOf } from './objects.js';
+import { OBJ, objView, present, topOf, zOf } from './objects.js';
 import { spawnButterfly, startSanta, startUFO } from './outside.js';
 import { bookAt, closeShelf, onShelf, openShelf } from './shelf.js';
 import { Snd } from './sound.js';
@@ -82,8 +82,8 @@ export function initUI() {
       const v = objView(o), im = img(v.look);
       if (!v.pos || !imageReady(im))
         continue;
-      const w = v.pos.w, h = w * im.height / im.width;
-      if (x > v.pos.x - w / 2 - 6 && x < v.pos.x + w / 2 + 6 && y > v.pos.y - h - 6 && y < v.pos.y + 6) {
+      const w = v.pos.w, h = w * im.height / im.width, by = v.pos.y - zOf(o);
+      if (x > v.pos.x - w / 2 - 6 && x < v.pos.x + w / 2 + 6 && y > by - h - 6 && y < by + 6) {
         TOUCH[o.touch]();
         return;
       }
