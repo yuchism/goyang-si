@@ -45,9 +45,9 @@
 | 한국어 | 영어 | 메모 |
 |---|---|---|
 | 고양.시 | goyang.si | 도메인 그대로. 고양시/고양이 말장난은 영어로 안 통하지만 ".si = super intelligence"는 통한다 |
-| 강고양이 씨 | Kang Goyangi | 소개 문구에 "goyangi = cat"을 한 번 적어 두면 이름 자체가 귀여운 농담이 된다 |
-| 김만득 씨 | Mandeuk (Kim Mandeuk) | |
-| 쥐야쥐 | Jwiyajwi | |
+| 강고양이 씨 | Kitty Kang | 2026-10-12 확정. 뜻이 바로 전해지는 이름으로 |
+| 김만득 씨 | Mandeuk | 사람 이름이라 로마자 그대로 |
+| 쥐야쥐 | Mousey | 2026-10-12 확정 |
 | 고양.방송 | GBS (Goyang Broadcasting System) | KBS·SBS 같은 느낌을 영어권에도 그대로 |
 | 고양 뉴스 | Goyang News | |
 | 드라마 「창가에서」 | *By the Window* | |
@@ -122,7 +122,7 @@
 
 | 항목 | 결과 |
 |---|---|
-| 8장 결정 | 호칭 "씨"는 영어에서 뺀다(a). 5장 이름표 그대로(Kang Goyangi, Mandeuk, Jwiyajwi, GBS, *By the Window*, Meows vs Purrs, Fur vs Yarn, Meowtertainment Tonight, treat sticks) |
+| 8장 결정 | 호칭 "씨"는 영어에서 쓰지 않는다(a). 이름은 **Kitty Kang**(강고양이), **Mousey**(쥐야쥐), **Mandeuk**(김만득). 나머지 5장 이름표 그대로(GBS, *By the Window*, Meows vs Purrs, Fur vs Yarn, Meowtertainment Tonight, treat sticks) |
 | `js/i18n.js` | `STR` 표 한 곳, `tr(키, {자리})`, `LANG`, `setLang`, `applyDom`. 함수 이름은 `t` 대신 **`tr`** (코드 곳곳에 `t`라는 지역 변수(시각)가 있어서 겹치지 않게) |
 | 처음 언어 | 저장값(`goyang.lang`) → 브라우저 언어 중 `ko`로 시작하는 게 있으면 한국어, 아니면 영어 |
 | 전환 버튼 | **상단 오른쪽 상태 표시 옆** `KO / EN`. 아래 버튼 줄에 두면 폰에서 한 줄 더 생겨 방이 줄어들어서 옮겼다. 바꾸면 열려 있는 포스트잇·노트북·TV 편성표·책장 창도 바로 다시 채운다(`langchange` 이벤트) |

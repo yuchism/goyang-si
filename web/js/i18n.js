@@ -7,13 +7,13 @@ import { setHandFont, store } from './util.js';
 export const STR = {
   /* ── 페이지 ── */
   title: { ko: '고양.시', en: 'goyang.si' },
-  metaDesc: { ko: '강고양이 씨가 사는 방. 실제 시간에 맞춰 졸고, 햇빛을 따라가고, 가끔 쥐야쥐를 쫓는다.', en: 'The room where Kang Goyangi (goyangi = cat) lives. Dozes on real time, follows the sunlight, and now and then chases Jwiyajwi.' },
+  metaDesc: { ko: '강고양이 씨가 사는 방. 실제 시간에 맞춰 졸고, 햇빛을 따라가고, 가끔 쥐야쥐를 쫓는다.', en: 'The room where Kitty Kang lives. Dozes on real time, follows the sunlight, and now and then chases Mousey.' },
   mark: { ko: '고양<b>.</b>시', en: 'goyang<b>.</b>si' },
-  canvas: { ko: '강고양이 씨의 방', en: "Kang Goyangi's room" },
+  canvas: { ko: '강고양이 씨의 방', en: "Kitty Kang's room" },
   partyHint: { ko: '눌러서 파티 시작', en: 'tap to start the party' },
   a11y: { ko: '방 상호작용', en: 'Room actions' },
-  aCat: { ko: '강고양이 씨 쓰다듬기', en: 'Pet Kang Goyangi' },
-  aMouse: { ko: '쥐야쥐 놀라게 하기', en: 'Startle Jwiyajwi' },
+  aCat: { ko: '강고양이 씨 쓰다듬기', en: 'Pet Kitty Kang' },
+  aMouse: { ko: '쥐야쥐 놀라게 하기', en: 'Startle Mousey' },
   aNote: { ko: '오늘의 포스트잇 읽기', en: "Read today's sticky note" },
   aScreen: { ko: '노트북 화면 읽기', en: 'Read the laptop screen' },
   aTv: { ko: 'TV 편성표 보기', en: 'See the TV schedule' },
@@ -22,7 +22,7 @@ export const STR = {
   screenDlg: { ko: '노트북 화면', en: 'Laptop screen' },
   shelfDlg: { ko: '책장', en: 'Bookshelf' },
   tvDlg: { ko: '고양.방송', en: 'GBS' },
-  hint: { ko: '강고양이 씨를 톡 건드려 보세요. 너무 자주는 말고요. 문의 노란 쪽지, 노트북, TV, 책장의 책도 눌러볼 수 있어요.', en: 'Give Kang Goyangi a little tap. Just not too often. You can also tap the yellow note on the door, the laptop, the TV and the books on the shelf.' },
+  hint: { ko: '강고양이 씨를 톡 건드려 보세요. 너무 자주는 말고요. 문의 노란 쪽지, 노트북, TV, 책장의 책도 눌러볼 수 있어요.', en: 'Give Kitty Kang a little tap. Just not too often. You can also tap the yellow note on the door, the laptop, the TV and the books on the shelf.' },
   bShelf: { ko: '책장', en: 'Bookshelf' },
   soundOn: { ko: '소리 켜기', en: 'Sound on' },
   soundOff: { ko: '소리 끄기', en: 'Sound off' },
@@ -38,7 +38,7 @@ export const STR = {
   devDay: { ko: '요일', en: 'Day' },
   dayNext: { ko: '다음 날로', en: 'Next day' },
   devCall: { ko: '불러오기', en: 'Summon' },
-  dMouse: { ko: '쥐야쥐', en: 'Jwiyajwi' },
+  dMouse: { ko: '쥐야쥐', en: 'Mousey' },
   dBfly: { ko: '나비', en: 'Butterfly' },
   dMan: { ko: '만득 씨', en: 'Mandeuk' },
   dRain: { ko: '비', en: 'Rain' },
@@ -85,9 +85,9 @@ export const STR = {
     ko: { feed: [['밥 먹자~', '천천히 먹어'], ['고양아 밥~', '많이 먹어라']], noise: [['아 왜~ 또 뭐 깼어?', '강고양이!!']], quiet: [['...뭐야, 조용하네']],
       ret: [['다녀왔다~', '고양아~ 잘 있었어?']], lights: [['불 끈다~', '잘 자라 고양아']], check: [['뭐 하냐~', '고양아~'], ['물 마셨어?', '그래그래'], ['어디 있나~', '거기 있었구나']],
       night: [['자다 깼잖아…', '강고양이…']], anniv: [['오늘 너 우리 집 온 날이다.', '간식!']], leave: [['다녀올게~']] },
-    en: { feed: [['Dinner time~', 'Slow down, buddy'], ['Food, kitty~', 'Eat up']], noise: [['Ugh, what did you break now?', 'KANG GOYANGI!!']], quiet: [['...huh, so quiet']],
+    en: { feed: [['Dinner time~', 'Slow down, buddy'], ['Food, kitty~', 'Eat up']], noise: [['Ugh, what did you break now?', 'KITTY KANG!!']], quiet: [['...huh, so quiet']],
       ret: [["I'm home~", 'Hey kitty~ were you good?']], lights: [['Lights out~', 'Night night, kitty']], check: [["Whatcha doing~", 'Hey kitty~'], ['Had some water?', 'Good, good'], ['Where are you~', 'Oh, there you are']],
-      night: [['You woke me up…', 'Kang Goyangi…']], anniv: [['Today is the day you came home.', 'Treats!']], leave: [['Off to work~']] }
+      night: [['You woke me up…', 'Kitty Kang…']], anniv: [['Today is the day you came home.', 'Treats!']], leave: [['Off to work~']] }
   },
   mandukKeyboard: { ko: '또 키보드 밟았네', en: 'Stepped on the keyboard again' },
   /* ── 포스트잇 ── */
@@ -95,7 +95,7 @@ export const STR = {
     ko: ['고양이 밥 줌 8시', '택배 상자 버리지 말 것\n(고양이가 씀)', '츄르 사기', '요즘 상자에 구멍이 났네?', '치즈가 조금씩 없어진다.\n고양아 너지?', '벽 쪽에서 사각사각 소리.\n집이 낡았나', '모래 갈기', '고양이 발톱 깎기 (도전)', '햇빛 드는 자리 비워둘 것', '고양이가 나를 보고 하품함.\n무슨 뜻이지', '노트북 덮어 두기', '빵 봉지에 작은 구멍…\n고양이 이빨이 이렇게 작았나', '휴지 사기', '슬리퍼 한 짝 또 없어짐', '나비 들어오면 창문 닫기?\n(고양이가 좋아함. 그냥 둠)'],
     en: ['fed cat, 8:00', "don't throw out the box\n(written by cat)", 'buy treat sticks', 'box has a hole in it lately?', 'cheese keeps disappearing.\nwas it you, cat?', 'scritch-scratch in the wall.\nold house?', 'change litter', "trim cat's claws (attempt)", 'keep the sunny spot clear', 'cat looked at me and yawned.\nwhat does that mean', 'close the laptop', 'tiny hole in the bread bag…\nare cat teeth that small?', 'buy tissues', 'lost one slipper. again', 'close window if butterflies get in?\n(cat likes them. leaving it)']
   },
-  noteAnniv: { ko: '오늘은 강고양이 온 날!\n간식 챙기기', en: "today's Kang Goyangi's day!\ndon't forget treats" },
+  noteAnniv: { ko: '오늘은 강고양이 온 날!\n간식 챙기기', en: "it's Kitty Kang's day!\ndon't forget treats" },
   noteLaptop: { ko: '노트북 덮어 두기!!\n(또 밟음)', en: 'CLOSE THE LAPTOP!!\n(stepped on it again)' },
   noteRain: { ko: '우산 챙기기', en: 'take umbrella' },
   noteSign: { ko: '— 김만득', en: '— Mandeuk' },
@@ -104,7 +104,7 @@ export const STR = {
   laptopMess: { ko: ['ㅁㅁㅁㅁㅁㅁㅁㅁ', 'ㅠㅠㅠㅠㅠ;;;;;;;;', 'fffffffffffffff', 'ㅇㅇㅇㅇㅇㅇ\\\\\\\\', 'zzzzzzzzzzzzzzzz', 'ㅎㅎㅎㅎㅎㅎㅎ======', 'ㅁㅁㅁ;;;;;;;;;;;;;;;;;'],
     en: ['aaaaaaaaaaaa', 'jjjjjjj;;;;;;;;', 'fffffffffffffff', 'kkkkkkk\\\\\\\\', 'zzzzzzzzzzzzzzzz', 'hhhhhhhhh======', 'asdf;;;;;;;;;;;;;;;;'] },
   laptopReal: { ko: ['∇·E = ρ/ε₀', 'while (!bowl.full) { wait(); }', 'argmax(낮잠) = 햇빛', 'e^{iπ} + 1 = 0', 'if (만득.home) return 고양이();', 'sum(츄르) → ∞', 'P(쥐야쥐 잡힘) = 0'],
-    en: ['∇·E = ρ/ε₀', 'while (!bowl.full) { wait(); }', 'argmax(nap) = sunlight', 'e^{iπ} + 1 = 0', 'if (mandeuk.home) return cat();', 'sum(treats) → ∞', 'P(jwiyajwi caught) = 0'] },
+    en: ['∇·E = ρ/ε₀', 'while (!bowl.full) { wait(); }', 'argmax(nap) = sunlight', 'e^{iπ} + 1 = 0', 'if (mandeuk.home) return cat();', 'sum(treats) → ∞', 'P(mousey caught) = 0'] },
   tunaSearch: { ko: '참치캔 대량 구매', en: 'bulk tuna cans' },
   /* ── 생일 ── */
   bdayBanner: { ko: '{name}님, 생일 축하해요!', en: 'Happy birthday, {name}!' },
