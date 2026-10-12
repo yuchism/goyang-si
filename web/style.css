@@ -106,6 +106,8 @@ button[aria-pressed="true"]{background:var(--bell);color:#2a1f0e;border-color:va
 .tvg .req .msg{min-height:1.3em;font-size:.82rem;line-height:1.4;margin:10px 0 6px;color:var(--bell)}
 .tvg .req .link{font-size:.78rem;padding:8px 10px;color:#d9c9ae;font-family:ui-monospace,Menlo,monospace}
 .tvg .req .link[hidden]{display:none}
+/* 키보드가 올라온 동안: 보이는 화면 위쪽에 고정 (top·max-height는 tv-cat.js가 visualViewport로 정함) */
+.tvg.kb{position:fixed;bottom:auto;z-index:50}
 
 /* 영어: 손글씨 글꼴을 Patrick Hand로, 책등 글자는 옆으로 눕혀서 */
 html[lang="en"]{--font-hand:"Patrick Hand","Gaegu",cursive}

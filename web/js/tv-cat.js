@@ -331,6 +331,7 @@ export function closeTvGuide() {
   tvgView = 'guide';
   reqMsg = '';
   reqLink = '';
+  placeKb();
 }
 /* ───────── 축하 방송 신청: 생일 링크 만들기 ───────── */
 const canShare = () => typeof navigator.share === 'function';
@@ -353,6 +354,26 @@ function renderReq() {
     `<p class="msg" role="status" aria-live="polite">${esc(reqMsg)}</p>` +
     `<input class="link" type="text" readonly aria-label="${esc(tr('reqLinkLabel'))}" value="${esc(reqLink)}"${reqLink ? '' : ' hidden'}></div>`;
   tvgEl.hidden = false;
+  placeKb();
+}
+/* 폰 키보드가 올라오면: 신청 창을 지금 보이는 화면(visualViewport) 위쪽에 붙인다.
+   키보드는 레이아웃을 줄이지 않고 화면 아래를 덮기만 해서, 무대 아래쪽에 붙은 창이 키보드 뒤로 숨는다 */
+const VV = window.visualViewport;
+let kbWas = false;
+function placeKb() {
+  const kb = !!VV && document.documentElement.clientHeight - VV.height > 120;
+  const on = kb && !tvgEl.hidden && tvgView === 'req';
+  tvgEl.classList.toggle('kb', on);
+  tvgEl.style.top = on ? Math.round(VV.offsetTop + 8) + 'px' : '';
+  tvgEl.style.maxHeight = on ? Math.max(140, Math.round(VV.height - 16)) + 'px' : '';
+  // 키보드가 내려가면: 입력창을 보여 주려고 밀려 올라간 페이지를 제자리로
+  if (kbWas && !kb && (window.scrollY || document.documentElement.scrollTop))
+    window.scrollTo(0, 0);
+  kbWas = kb;
+}
+if (VV) {
+  VV.addEventListener('resize', placeKb);
+  VV.addEventListener('scroll', placeKb);
 }
 function openReq() {
   tvgView = 'req';
@@ -366,6 +387,7 @@ function openReq() {
 function backToGuide() {
   tvgView = 'guide';
   openTvGuide(true);
+  placeKb();
   const b = tvgEl.querySelector('.reqopen');
   b && b.focus({ preventScroll: true });
 }
