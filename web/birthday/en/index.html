@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kitty Kang’s birthday party</title>
+  <meta name="description" content="GBS is airing a special birthday broadcast just for you. Tap to open the party.">
+  <meta property="og:title" content="Kitty Kang is throwing you a birthday party 🎂">
+  <meta property="og:description" content="GBS is airing a special birthday broadcast just for you. Tap to open the party.">
+  <meta property="og:image" content="https://goyang.si/og/birthday-ko.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Kitty Kang in a party hat with a birthday cake and a clapping mouse">
+  <meta property="og:url" content="https://goyang.si/birthday/en/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="goyang.si">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kitty Kang is throwing you a birthday party 🎂">
+  <meta name="twitter:description" content="GBS is airing a special birthday broadcast just for you. Tap to open the party.">
+  <meta name="twitter:image" content="https://goyang.si/og/birthday-ko.jpg">
+  <style>html{color-scheme:dark}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#17130f;color:#f3e6cf;font-family:system-ui,sans-serif}a{color:#e9c14d}</style>
+</head>
+<body>
+  <p>Opening the birthday party… <a id="open" href="/">Open the party</a></p>
+  <script>
+    // 이모지가 반으로 잘리지 않게 코드 포인트 단위로 자른다. 이름이 없으면 그냥 방으로
+    const name=Array.from((new URLSearchParams(location.search).get('n')||'').trim()).slice(0,24).join('').trim();
+    const target=name?'/?birthday='+encodeURIComponent(name):'/';
+    document.getElementById('open').href=target;
+    location.replace(target);
+  </script>
+</body>
+</html>

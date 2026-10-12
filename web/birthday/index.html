@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>강고양이 씨의 생일 파티</title>
+  <meta name="description" content="고양.방송에서 당신을 위한 축하 방송을 준비했어요. 눌러서 파티를 열어 보세요.">
+  <meta property="og:title" content="강고양이 씨가 생일 파티를 준비했어요 🎂">
+  <meta property="og:description" content="고양.방송에서 당신을 위한 축하 방송을 준비했어요. 눌러서 파티를 열어 보세요.">
+  <meta property="og:image" content="https://goyang.si/og/birthday-ko.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="고깔모자를 쓴 강고양이 씨와 생일 케이크, 박수치는 쥐야쥐">
+  <meta property="og:url" content="https://goyang.si/birthday/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="고양.시">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="강고양이 씨가 생일 파티를 준비했어요 🎂">
+  <meta name="twitter:description" content="고양.방송에서 당신을 위한 축하 방송을 준비했어요. 눌러서 파티를 열어 보세요.">
+  <meta name="twitter:image" content="https://goyang.si/og/birthday-ko.jpg">
+  <style>html{color-scheme:dark}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#17130f;color:#f3e6cf;font-family:system-ui,sans-serif}a{color:#e9c14d}</style>
+</head>
+<body>
+  <p>생일 파티를 여는 중이에요… <a id="open" href="/">파티 열기</a></p>
+  <script>
+    // 이모지가 반으로 잘리지 않게 코드 포인트 단위로 자른다. 이름이 없으면 그냥 방으로
+    const name=Array.from((new URLSearchParams(location.search).get('n')||'').trim()).slice(0,24).join('').trim();
+    const target=name?'/?birthday='+encodeURIComponent(name):'/';
+    document.getElementById('open').href=target;
+    location.replace(target);
+  </script>
+</body>
+</html>

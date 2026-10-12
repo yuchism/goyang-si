@@ -2,6 +2,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>고양.시</title>
 <meta name="description" content="강고양이 씨가 사는 방. 실제 시간에 맞춰 졸고, 햇빛을 따라가고, 가끔 쥐야쥐를 쫓는다.">
+<meta property="og:title" content="고양.시">
+<meta property="og:description" content="강고양이 씨가 사는 방. 실제 시간에 맞춰 졸고, 햇빛을 따라가고, 가끔 쥐야쥐를 쫓는다.">
+<meta property="og:image" content="https://goyang.si/og/room.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="햇살 드는 방에서 쉬고 있는 강고양이 씨">
+<meta property="og:url" content="https://goyang.si/">
+<link rel="canonical" href="https://goyang.si/"><!-- GoatCounter가 주소 뒤(?birthday=이름 등)를 기록하지 않게 -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="고양.시">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="고양.시">
+<meta name="twitter:description" content="강고양이 씨가 사는 방. 실제 시간에 맞춰 졸고, 햇빛을 따라가고, 가끔 쥐야쥐를 쫓는다.">
+<meta name="twitter:image" content="https://goyang.si/og/room.jpg">
 <meta name="theme-color" content="#17130F">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -51,7 +65,7 @@
       <button id="sp1440" aria-pressed="false" data-i18n="sp1440">1분 = 하루</button>
     </div>
     <div class="grp"><label for="hour" data-i18n="devHour">시각</label><input id="hour" type="range" min="0" max="23.75" step="0.25"><span id="hourv"></span></div>
-    <div class="grp"><label data-i18n="devDay">요일</label><button id="dayNext" data-i18n="dayNext">다음 날로</button></div>
+    <div class="grp"><label data-i18n="devDay">요일</label><button id="dayNext" data-i18n="dayNext">다음 날로</button><span id="moonv"></span></div>
     <div class="grp"><label data-i18n="devCall">불러오기</label>
       <button id="dMouse" data-i18n="dMouse">쥐야쥐</button><button id="dBfly" data-i18n="dBfly">나비</button><button id="dMan" data-i18n="dMan">만득 씨</button><button id="dRain" data-i18n="dRain">비</button><button id="dBox" data-i18n="dBox">택배 상자</button><button id="dSecret" data-i18n="dSecret">노트북</button><button id="dKnock" data-i18n="dKnock">컵 툭</button><button id="dUfo" data-i18n="dUfo">UFO</button><button id="dTv" data-i18n="dTv">TV 사건</button><button id="dSeason" data-i18n="dSeason">계절</button><button id="dXmas" data-i18n="dXmas">크리스마스</button><button id="dSanta" data-i18n="dSanta">산타</button><button id="dOdd" data-i18n="dOdd">이상한 책</button><button id="dHw" data-i18n="dHw">할로윈</button><button id="dWitch" data-i18n="dWitch">마녀</button><button id="dBat" data-i18n="dBat">박쥐</button><button id="dGhost" data-i18n="dGhost">유령</button>
     </div>
@@ -63,7 +77,7 @@
       <button id="bSound" aria-pressed="false" data-i18n="soundOn">소리 켜기</button>
       <button id="bAwake" aria-pressed="false" data-i18n="bAwake">켜 두기</button>
       <button id="bFull" data-i18n="bFull">전체 화면</button>
-      <button id="bDev" aria-pressed="false" data-i18n="bDev">미리보기 도구</button>
+      <button id="bDev" aria-pressed="false" data-i18n="bDev" hidden>미리보기 도구</button>
     </div>
   </footer>
 </div>
