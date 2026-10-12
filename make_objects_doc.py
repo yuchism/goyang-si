@@ -13,7 +13,7 @@ WHEN = {None: '항상', 'always': '항상', 'summer': '여름', 'winter': '겨�
         'christmas': '크리스마스', 'boxDay': '상자 있는 날 (9일 중 3일)', 'treat': '기념일 간식을 받은 날', 'doorClosed': '문이 닫혀 있을 때'}
 LAYER = {'background': '배경', 'wall': '벽', 'floor-flat': '바닥에 깔림', 'floor': '바닥 (앞뒤 정렬)', None: '-'}
 WHO = {'cat': '강고양이 씨', 'mouse': '쥐야쥐'}
-TOUCH = {'note': '오늘의 메모 보기', 'screen': '노트북 화면 보기', 'shelf': '책장 메뉴 열기', 'tv': 'TV 편성표 보기'}
+TOUCH = {'note': '오늘의 메모 보기', 'screen': '노트북 화면 보기', 'shelf': '책장 메뉴 열기', 'tv': 'TV 편성표 보기', 'frame': '액자 사진 넘기기'}
 SPOTNAME = {'watch': '바라보기', 'side': '올라가고 내려오는 곳', 'behind': 'TV 뒤 빼꼼', 'rainCat': '비 구경(고양이)', 'rainMouse': '비 구경(쥐야쥐)', 'bird': '새 구경',
             'wait': '기다리기', 'greet': '마중', 'nap': '낮잠', 'push': '앞발로 밀기', 'type': '타자',
             'enter': '들어가기 전', 'inside': '안', 'check': '기웃거리기', 'hide': '숨기', 'popout': '튀어나오기',
@@ -82,6 +82,8 @@ w('| 자리 | `spots` | 캐릭터가 서는 곳 [x, y, 바라보는 방향]. 행
 w('| 상태 | `states` | 상태별로 모습·자리·분류를 덮어쓴다. 상태 판단은 코드의 `STATE` |')
 w('| 등장 조건 | `when` | 계절, 기념일, 상자 있는 날 등. 코드의 `WHEN` |')
 w('| 터치 | `touch` | 보는 사람이 눌렀을 때. 캐릭터 인터랙션과 따로 둔다. 코드의 `TOUCH` |')
+w('| 누르는 범위 | `hitPad` | 누르는 범위를 그림보다 사방으로 넓히는 양(기본 6). 범위가 겹치면 그림에 더 가까운 물건이 눌린다 |')
+w('| 사진 | `photos` | 액자 사진 목록(`web/r/` 그림 이름). 날짜마다 한 장씩 돌아간다. 코드는 `frame.js` |')
 w('')
 w('## 2. 분류')
 w('')

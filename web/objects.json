@@ -265,6 +265,15 @@
       "kind": "decor",
       "layer": "wall",
       "look": "frame",
+      "photos": [
+        "frame_family_1",
+        "frame_family_2",
+        "frame_family_3",
+        "frame_family_4"
+      ],
+      "touch": "frame",
+      "hitPad": 12,
+      "note": "벽 액자. photos에서 날짜마다 한 장(같은 날 누구나 같은 사진). 누르면 다음 사진으로 넘어가며 조금씩 삐뚤어지고(최대 10도), 만득 씨가 밥·퇴근·불 끄기·기념일에 다녀가면 반듯해진다. 넘긴 사진은 그 기기에서 그날만 유지. hitPad는 누르는 범위를 사방으로 넓히는 양. 그림이 하나도 없으면 look(frame)을 그린다. FRAME_PHOTOS_PLAN.md",
       "pos": {
         "x": 895,
         "y": 236,

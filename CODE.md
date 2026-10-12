@@ -58,6 +58,7 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `tv-cat.js` | TV · 강고양이 씨 반응(보기·위에서 낮잠·뒤 빼꼼·달려오기)과 편성표 창 |
 | `birthday.js` | 생일 파티(`?birthday=이름`): 배너, 케이크, 꽃비, 무대 조명, 노트북 자막, 쥐야쥐 박수 |
 | `shelf.js` | 책장 메뉴 (`objects.json`의 `bookshelf.books`) |
+| `frame.js` | 벽 액자: 날짜마다 바뀌는 가족사진(`objects.json`의 `frame.photos`), 누르면 다음 사진·조금씩 삐뚤어짐, 만득 씨가 다녀가면 반듯. 넘긴 사진·기울기는 그 기기에 저장. FRAME_PHOTOS_PLAN.md |
 | `ui.js` | 캔버스 누르기, 쪽지·노트북 창, 소리·켜 두기·전체 화면 버튼(화면 꺼짐 방지), 미리보기 도구 |
 | `install.js` | 홈 화면 앱: 홈 화면 앱으로 열었는지(`STANDALONE`), 설치 신호, 책장의 **이상한 책**(그리기·빛·누르기)과 「이 방을 데려가는 법」 창, 포스트잇 힌트, 강고양이 씨 올려다보기, 세로 화면 안내, 홈 화면 앱 통계. MOBILE_PLAN.md 참고 |
 | `halloween.js` | 할로윈(10/24~11/1): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자와 강고양이 씨 반응. HALLOWEEN_PLAN.md 참고 |

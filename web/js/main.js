@@ -15,7 +15,8 @@ import { Snd } from './sound.js';
 import { drawActor, drawBubble, drawCaptions } from './sprites.js';
 import { H, W, cam, ctx, fit, updateCam, view } from './stage.js';
 import { bub, fn, go, hold, run, tickActor } from './steps.js';
-import { advanceClock, darkness, dayKey, hourOf, inBeam, isAnniversary, isWeekend, mandukAsleep, mandukHome, moonName, moonPhase, now, rainNow, resetClock, season, snowing, speed, sunTimes, sunbeam } from './time.js';
+import { advanceClock, darkness, dayKey, hourOf, inBeam, isWeekend, mandukAsleep, mandukHome, moonName, moonPhase, now, rainNow, resetClock, season, snowing, speed, sunTimes, sunbeam, visitHours } from './time.js';
+import { frameTick } from './frame.js';
 import { tvOn, tvTick } from './tv.js';
 import { tvBig } from './tv-cat.js';
 import { drawTVNight, drawTvBuf, tvBuf } from './tv-screen.js';
@@ -47,7 +48,7 @@ function scheduled(d) {
     world.notes.cleared = false;
     world.treat = false;
   }
-  const h = hourOf(d), we = isWeekend(d);
+  const h = hourOf(d), vh = visitHours(d);
   const at = (name, hr, fnc) => {
     if (world.doneToday[name])
       return;
@@ -58,7 +59,7 @@ function scheduled(d) {
     else if (h >= hr + 0.35)
       world.doneToday[name] = true;
   };
-  const fh = we ? 9 : 7.4;
+  const fh = vh.feed;
   at('wait', fh - 0.25, () => {
     if (!world.manduk)
       run(cat, [
@@ -71,16 +72,16 @@ function scheduled(d) {
       ], 'wait');
   });
   at('feed', fh, () => startVisit('feed'));
-  if (!we) {
+  if (vh.ret) {
     at('leave', 8.5, () => caption(tr('capLeave'), 3.5));
-    at('ret', 18.6, () => startVisit('ret'));
+    at('ret', vh.ret, () => startVisit('ret'));
   }
   at('lampOn', sunTimes(d)[1] - 0.3, () => {
     world.lampOn = true;
   });
-  at('lights', 23, () => startVisit('lights'));
-  if (isAnniversary(d))
-    at('anniv', we ? 15 : 19.2, () => startVisit('anniv'));
+  at('lights', vh.lights, () => startVisit('lights'));
+  if (vh.anniv)
+    at('anniv', vh.anniv, () => startVisit('anniv'));
 }
 /* ───────── 메인 루프 ───────── */
 let mouseT = rnd(10, 25), ambT = 0;
@@ -204,6 +205,7 @@ function frame(tNow) {
   maybeBats(d, real);
   maybeGhost(d, real);
   tvTick(d);
+  frameTick(d, real);
   // 컵
   const c = world.cup;
   if (c.state === 'falling') {

@@ -87,5 +87,9 @@
   "fx/bat_2": [180, 162],
   "fx/bat_3": [180, 162],
   "book_odd": [256, 640],
-  "book_odd_ribbon": [64, 256]
+  "book_odd_ribbon": [64, 256],
+  "frame_family_1": [140, 173],
+  "frame_family_2": [140, 173],
+  "frame_family_3": [140, 173],
+  "frame_family_4": [140, 173]
 }

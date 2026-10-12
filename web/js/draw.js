@@ -2,6 +2,7 @@
 import { imageReady, img } from './assets.js';
 import { drawPartyScreen } from './birthday.js';
 import { O, OBJ, P, objView, present, socketOf, zOf } from './objects.js';
+import { drawFrame } from './frame.js';
 import { drawOutside } from './outside.js';
 import { BGK, FLOOR, ctx } from './stage.js';
 import { now, season, sunbeam } from './time.js';
@@ -231,6 +232,10 @@ export function drawObj(o, d) {
       ctx.drawImage(im, 0, 0, 1200, im.height * BGK);
     return;
   } // 화면 전체 그림(배경)
+  if (v.photos) {
+    drawFrame(v, zOf(o));
+    return;
+  } // 액자 (frame.js)
   drawProp(L, v.pos.x, v.pos.y - zOf(o), v.pos.w);
   if (v.screen)
     drawScreen(v);

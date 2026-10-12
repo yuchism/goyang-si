@@ -54,6 +54,15 @@ export function sunTimes(d) {
   return s === 'summer' ? [5.5, 20] : s === 'winter' ? [7.2, 17.2] : [6.3, 18.6];
 }
 export const isWeekend = d => d.getDay() === 0 || d.getDay() === 6;
+// 만득 씨가 정해진 시각에 오는 방문 (시각, 시간 단위). main.js 일정과 액자 바로잡기(frame.js)가 함께 쓴다
+export function visitHours(d) {
+  const we = isWeekend(d), v = { feed: we ? 9 : 7.4, lights: 23 };
+  if (!we)
+    v.ret = 18.6;
+  if (isAnniversary(d))
+    v.anniv = we ? 15 : 19.2;
+  return v;
+}
 export function mandukHome(d) {
   const h = hourOf(d);
   return isWeekend(d) || h < 8.5 || h >= 18.5;

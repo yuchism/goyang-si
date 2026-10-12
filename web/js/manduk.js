@@ -1,4 +1,5 @@
 /* 김만득 씨: 방문(밥, 소음, 귀가, 불 끄기, 기념일), 말풍선, 포스트잇 메모 */
+import { straightenFrame } from './frame.js';
 import { play } from './anim.js';
 import { inked, rr } from './draw.js';
 import { mouseHide, mouseHideTime } from './mouse.js';
@@ -177,6 +178,7 @@ export function updateManduk(dt) {
   if (m.phase === 'close') {
     if (m.t > 0.9) {
       world.manduk = null;
+      straightenFrame(m.type); // 다녀가면서 삐뚤어진 액자를 바로잡아 놓았다
     }
   }
 }

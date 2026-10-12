@@ -15,6 +15,7 @@ import { TVP } from './tv.js';
 import { closeTvGuide, openTvGuide } from './tv-cat.js';
 import { bannerText } from './birthday.js';
 import { $, esc, pick, store } from './util.js';
+import { flipFrame } from './frame.js';
 import { STANDALONE, closeOdd, oddAt, openOdd, toggleOdd } from './install.js';
 import { caption, cat, mouse, say, world } from './world.js';
 /* ───────── 입력 ───────── */
@@ -40,6 +41,7 @@ const TOUCH = {
     noteEl.focus();
   },
   tv: () => openTvGuide(),
+  frame: () => flipFrame(),
   screen: () => {
     scrEl.textContent = world.laptop ? world.laptop.split('\n').slice(-8).join('\n') : tr('blankScreen');
     scrEl.hidden = false;
@@ -128,17 +130,30 @@ export function initUI() {
       openShelf(b && b.id);
       return;
     }
+    // 누르는 범위는 그림보다 사방 6(hitPad로 바꿈). 범위가 겹치면 그림에 더 가까운 물건 (같으면 목록 앞쪽)
+    let hit = null, hitD = Infinity;
     for (const o of OBJ) {
       if (!o.touch || !present(o))
         continue;
-      const v = objView(o), im = img(v.look);
+      const v = objView(o);
+      let im = img(v.look);
+      if (!imageReady(im) && v.photos)
+        im = img(v.photos[0]);
       if (!v.pos || !imageReady(im))
         continue;
-      const w = v.pos.w, h = w * im.height / im.width, by = v.pos.y - zOf(o);
-      if (x > v.pos.x - w / 2 - 6 && x < v.pos.x + w / 2 + 6 && y > by - h - 6 && y < by + 6) {
-        TOUCH[o.touch]();
-        return;
+      const w = v.pos.w, h = w * im.height / im.width, by = v.pos.y - zOf(o), pad = v.hitPad != null ? v.hitPad : 6;
+      const x0 = v.pos.x - w / 2, x1 = v.pos.x + w / 2, y0 = by - h;
+      if (x > x0 - pad && x < x1 + pad && y > y0 - pad && y < by + pad) {
+        const dd = Math.hypot(Math.max(x0 - x, 0, x - x1), Math.max(y0 - y, 0, y - by));
+        if (dd < hitD) {
+          hitD = dd;
+          hit = o;
+        }
       }
+    }
+    if (hit) {
+      TOUCH[hit.touch]();
+      return;
     }
   });
   noteEl.addEventListener('click', () => noteEl.hidden = true);
@@ -153,6 +168,7 @@ export function initUI() {
   document.getElementById('aNote').onclick = TOUCH.note;
   document.getElementById('aScreen').onclick = TOUCH.screen;
   document.getElementById('aTv').onclick = TOUCH.tv;
+  document.getElementById('aFrame').onclick = TOUCH.frame;
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible')
       wakeLock(); // 다른 앱에 다녀오면 풀려 있으니 다시 요청 (켜 둘 이유가 있을 때만)

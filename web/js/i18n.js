@@ -18,6 +18,7 @@ export const STR = {
   aScreen: { ko: '노트북 화면 읽기', en: 'Read the laptop screen' },
   aTv: { ko: 'TV 편성표 보기', en: 'See the TV schedule' },
   aShelf: { ko: '책장 보기', en: 'Look at the bookshelf' },
+  aFrame: { ko: '액자 사진 넘기기', en: 'Flip the photo frame' },
   noteDlg: { ko: '오늘의 포스트잇', en: "Today's sticky note" },
   screenDlg: { ko: '노트북 화면', en: 'Laptop screen' },
   shelfDlg: { ko: '책장', en: 'Bookshelf' },
