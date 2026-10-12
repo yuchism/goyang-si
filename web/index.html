@@ -151,11 +151,15 @@ const ROOM={"door_closed":[131,248],"curtain_l":[99,256],"laptop_off":[228,140],
 Object.assign(FRAMES,{ // TV 앞 반응 (512칸 그림): 뒷모습 보기·고개 따라가기, 귀 쫑긋, TV 위 낮잠, TV 뒤 빼꼼(x 112가 TV 모서리)
   cat_tv_watch_back_1of2:[512,512,274,496],cat_tv_watch_back_2of2:[512,512,274,496],cat_tv_track_left:[512,512,274,496],cat_tv_track_center:[512,512,274,496],cat_tv_track_right:[512,512,274,496],
   cat_tv_ear_turn:[512,512,244,487],cat_tv_top_sleep_1of2:[512,512,259,460],cat_tv_top_sleep_2of2:[512,512,259,460],cat_tv_behind_peek_1of2:[512,512,112,434],cat_tv_behind_peek_2of2:[512,512,112,434]});
+Object.assign(FRAMES,{ // 생일 파티 (512칸): 모자 쓰기 2장, 짠·꾸벅 마무리, 모자 쓴 식빵. 쥐야쥐는 쥐구멍에서 박수 2장
+  cat_bday_hat_on_1:[512,512,286,496],cat_bday_hat_on_2:[512,512,282,496],cat_bday_tada:[512,512,290,496],cat_bday_bow:[512,512,290,496],cat_bday_hat_loaf:[512,512,276,496],
+  mouse_bday_clap_1:[512,512,320,472],mouse_bday_clap_2:[512,512,320,472]});
 const SRC={};
 Object.keys(FRAMES).forEach(k=>SRC['f_'+k]='f/'+k+'.webp');
 ['bg','apt_day','apt_night',...Object.keys(ROOM)].forEach(k=>SRC['r_'+k]='r/'+k+'.webp');
 ['tv_body','screen_off','screen_signoff','screen_testcard','screen_sunrise_1of2','screen_sunrise_2of2',
   ...[['news',3],['drama',5],['baseball',5],['football',4],['actress',4]].flatMap(([k,n])=>Array.from({length:n},(_,i)=>`tv_${k}_${i+1}of${n}`))].forEach(k=>SRC['r_tv/'+k]='r/tv/'+k+'.webp');
+SRC['r_fx/santa_1']='r/fx/santa_1.webp';SRC['r_fx/santa_2']='r/fx/santa_2.webp'; // 산타 썰매 실루엣 2장
 SRC.f_birthday_dance='f/cat-birthday-dance-sheet-v1.png';
 const DANCE_CELLS=[[54,553],[599,1085],[1098,1591],[1710,2122]]; // 춤 시트 4장의 가로 범위(px)
 SRC.r_birthday_cake='r/birthday-cake-v1.png';
@@ -534,6 +538,7 @@ function mouseFleeAround(){if(mouse.hidden)return;mouse.state='chased';
   const tx=clamp(mouse.x+(mouse.x<cat.x?-1:1)*rnd(180,300),60,1140);
   run(mouse,[go(tx,rnd(630,730),180),hold(0.6,'walk'),fn(a=>{if(Math.random()<0.5)mouseHide(false);else{a.state='';run(a,[hold(rnd(4,8),'walk')])}})],'chased')}
 function spawnMouse(d,force){
+  if(world.party)return; // 파티 중에는 쥐구멍에서 박수만
   if(!mouse.hidden||world.manduk)return;
   const s=nearestHideSpotFor(mouse.where||'hole');
   mouse.x=s[0];mouse.y=s[1];mouse.hidden=false;mouse.state='';mouse.outFor=rnd(160,380);
@@ -852,6 +857,7 @@ function drawTvBuf(st){const T=world.tv,t=world.t;tb.setTransform(1,0,0,1,0,0);t
     else if(st.p==='drama'){const i=Math.floor(st.tIn/14),u=st.tIn%14;if(u>2&&u<5.5)tvText(P.subs[i%P.subs.length],160,214,19,{lw:4})}
     if(P.sport){const s=st.score,tx=`${P.teams[0]} ${s[0]} : ${s[1]} ${P.teams[1]}`;tb.save();tb.font=`700 15px ${HAND}`;const w=tb.measureText(tx).width+16;tb.fillStyle='rgba(16,20,40,.82)';tbRR(8,8,w,22,5);tb.fill();tb.restore();tvText(tx,16,19.5,15,{align:'left',lw:0})}
     if(T.osd!=null&&t-T.osd<5){tb.globalAlpha=clamp(5-(t-T.osd),0,1);tvText(st.sg.title,P.sport?160:12,P.sport?48:22,16,{align:P.sport?'center':'left',lw:4});tb.globalAlpha=1}}
+  if(world.party&&partyLevel()>0.05){tb.globalAlpha=Math.min(1,partyLevel()*1.5);tvBand('🎂 축하 방송 · '+(birthdayName?birthdayName+'님':'')+' 생일 축하해요',st.mode==='prog'&&TVP[st.p].sport?46:20,15,{bg:'rgba(120,30,60,.85)',fill:'#ffe9a8'});tb.globalAlpha=1}
   if(st.noise){noiseFill();tb.globalAlpha=st.noise;tb.drawImage(tvNoise,0,0,320,240);tb.globalAlpha=1}
   // 켜질 때: 점 → 가로줄 → 화면
   if(st.tOn!=null&&st.tOn>=0&&st.tOn<0.9){const p=st.tOn;
@@ -1012,7 +1018,7 @@ function drawOutside(d,w){
   } else if(rain){drawRain(w)}
 }
 /* ───────── 생일: 케이크 촛불과 창밖 꽃비 ───────── */
-const CAKE={x:590,y:598,w:142};
+const CAKE={x:616,y:600,w:142}; // TV 오른쪽 뒤, 책 더미 왼쪽 뒤
 // 케이크 그림(993×1584) 안의 촛불 끝 위치
 const CAKE_FLAMES=[[255,236],[362,170],[495,86],[640,170],[750,236]];
 const PETAL_FADE=6,PETAL_COLORS=['#ffb7c9','#ff8fab','#fff1f4','#ffe08a','#f7a8d8','#ffd0dc'];
@@ -1051,20 +1057,11 @@ function startUFO(){if(world.ufo)return;world.ufo={t:0,dur:rnd(16,24),y:rnd(60,1
     if(!mouse.hidden&&!mouse.peek){mouse.react={t:2.5};say(mouse,'‼️',2.5)}},4000)}
 // 산타 썰매: 크리스마스 무렵 밤에 아주 멀리 하늘을 지나가는 실루엣. 24일 밤에는 꼭 한 번
 function drawSanta(w){const u=world.santa;if(!u)return;const k=u.t/u.dur;if(k>=1){world.santa=null;return}
-  const x=w.x+w.w+60-k*(w.w+200),y=u.y-Math.sin(k*Math.PI)*28,s=0.9,leg=Math.sin(world.t*10)*3;
-  ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle=ctx.strokeStyle=world.dark>0.3?'rgba(18,20,38,.9)':'rgba(70,60,70,.75)';ctx.lineWidth=1.6;ctx.lineCap='round';
-  // 순록 넷 (왼쪽으로 달림)
-  for(let i=0;i<4;i++){const rx=-28-i*17+(i%2)*2,ry=(i%2)*-2;ctx.beginPath();ctx.ellipse(rx,ry,6.5,2.8,0,0,7);ctx.fill();
-    ctx.beginPath();ctx.moveTo(rx-5,ry-1);ctx.lineTo(rx-8,ry-6);ctx.stroke();ctx.beginPath();ctx.ellipse(rx-9,ry-7,2.4,1.6,-0.4,0,7);ctx.fill();
-    ctx.beginPath();ctx.moveTo(rx-9,ry-8);ctx.lineTo(rx-7,ry-12);ctx.moveTo(rx-9,ry-8);ctx.lineTo(rx-11,ry-11);ctx.stroke();
-    const l=(i%2?leg:-leg);ctx.beginPath();ctx.moveTo(rx-4,ry+2);ctx.lineTo(rx-6+l,ry+7);ctx.moveTo(rx+4,ry+2);ctx.lineTo(rx+6-l,ry+7);ctx.stroke()}
-  ctx.beginPath();ctx.moveTo(-10,-1);ctx.lineTo(-24,-1);ctx.stroke(); // 고삐
-  // 썰매와 산타
-  ctx.beginPath();ctx.moveTo(-8,4);ctx.quadraticCurveTo(6,8,16,3);ctx.lineTo(18,-1);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(-6,-4);ctx.lineTo(14,-4);ctx.lineTo(16,3);ctx.lineTo(-4,3);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.arc(4,-8,4.5,0,7);ctx.fill();ctx.beginPath();ctx.moveTo(1,-11);ctx.lineTo(8,-11);ctx.lineTo(3,-17);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.arc(12,-9,4,0,7);ctx.fill(); // 선물 자루
-  ctx.restore()}
+  const im=img('fx/santa_'+(RM?1:Math.floor(world.t*4)%2+1));if(!imageReady(im))return;
+  const sw=170,sh=sw*im.height/im.width,x=w.x+w.w+100-k*(w.w+280),y=u.y-Math.sin(k*Math.PI)*28,night=world.dark>0.3;
+  ctx.save();ctx.globalAlpha=night?0.95:0.8;ctx.drawImage(im,x-sw/2,y-sh/2,sw,sh);ctx.restore();
+  if(night){const nx=x-sw/2+48*sw/im.width,ny=y-sh/2+220*sh/im.height,g=ctx.createRadialGradient(nx,ny,0,nx,ny,9); // 루돌프 코가 밤하늘에서 반짝
+    g.addColorStop(0,`rgba(255,90,80,${0.55+0.25*Math.sin(world.t*6)})`);g.addColorStop(1,'rgba(255,90,80,0)');ctx.save();ctx.globalCompositeOperation='lighter';ctx.fillStyle=g;ctx.fillRect(nx-9,ny-9,18,18);ctx.restore()}}
 function maybeSanta(d,dt){if(world.santa){world.santa.t+=dt;return}
   if(holiday(d)!=='christmas')return;const h=hourOf(d);if(!(h>=19||h<4))return;
   const eve=d.getMonth()===11&&d.getDate()===24&&h>=21;
@@ -1122,6 +1119,9 @@ const CLIP={
   sulk:{f:['sulk_1','sulk_2'],fps:0.6,loop:1,base:'loaf'},
   bsleep:{f:['bsleep_1','bsleep_2','bsleep_3','bsleep_2'],fps:0.9,loop:1,base:'roll'},
   box:{f:['box_1','box_1','box_2','box_2','box_2','box_3','box_2','box_2','box_1'],fps:0.45,loop:1,base:'loaf'},
+  hatOn:{f:['bday_hat_on_1','bday_hat_on_2','bday_hat_on_2'],fps:3,base:'stand'},
+  tada:{f:['bday_tada'],fps:0.55,base:'stand'},bow:{f:['bday_bow'],fps:0.55,base:'stand'},
+  hatloaf:{f:['bday_hat_loaf'],fps:0.2,loop:1,base:'loaf'},
   tvwatch:{f:['tv_watch_back_1of2'],fps:1,loop:1,base:'stand',fn:()=>tvWatchFrame()},
   tvtop:{f:['tv_top_sleep_1of2','tv_top_sleep_2of2'],fps:0.32,loop:1,base:'loaf'},
   tvpeek:{f:['tv_behind_peek_1of2','tv_behind_peek_1of2','tv_behind_peek_2of2'],fps:0.9,loop:1,base:'stand'},
@@ -1151,9 +1151,9 @@ function drawFrame(name,x,y,face,sc,sy=1){const im=IMG['f_'+name];if(!imageReady
   ctx.save();ctx.translate(x,y);ctx.scale(-face*sc,sc*sy);ctx.drawImage(im,-ax,-ay);ctx.restore()}
 function drawCat(a){
   const dp=DEPTH(a.y),sc=FSC*dp;
-  if(a.dance){const im=IMG.f_birthday_dance,i=Math.floor(a.dance.t/0.34)%4,h=250*dp;a.frame='cat_stand';ctx.beginPath();ctx.ellipse(a.x,a.y+2,72*dp,12*dp,0,0,7);ctx.fillStyle='rgba(50,30,15,.22)';ctx.fill();
+  if(a.dance){const im=IMG.f_birthday_dance,i=Math.floor(a.dance.t/0.34)%4,h=213*dp;a.frame='cat_stand';ctx.beginPath();ctx.ellipse(a.x,a.y+2,72*dp,12*dp,0,0,7);ctx.fillStyle='rgba(50,30,15,.22)';ctx.fill();
     // 시트의 칸 폭이 고르지 않아(1번 꼬리가 2번 칸으로 넘어감) 실제 그림 범위로 자른다
-    if(imageReady(im)){const [x0,x1]=DANCE_CELLS[i],k=h/im.height,dw=(x1-x0)*k;ctx.drawImage(im,x0,0,x1-x0,im.height,a.x-dw/2,a.y-h,dw,h)}return}
+    if(imageReady(im)){const [x0,x1]=DANCE_CELLS[i],k=h/im.height,dw=(x1-x0)*k;ctx.drawImage(im,x0,0,x1-x0,im.height,a.x-dw/2,a.y-h*690/724,dw,h)}return}
   const fr='cat_'+catFrame(a);a.frame=fr;const lift=a.onTV?topOf('tv'):0;
   if(!fr.startsWith('cat_box_')&&!a.onTV&&!a.tvPeek){ctx.beginPath();ctx.ellipse(a.x,a.y+2,96*dp,13*dp,0,0,7);ctx.fillStyle='rgba(50,30,15,.22)';ctx.fill()}
   const br=(!RM&&a.closed&&a.dp==='loaf'&&!a.tr&&!a.act)?1+Math.sin(world.t*1.5+a.phase)*0.012:1;
@@ -1174,6 +1174,10 @@ function drawPeek(){const im=IMG.f_mouse_peek_1;if(!imageReady(im))return;
   ctx.save();ctx.beginPath();ctx.moveTo(HOLE.cx-r,HOLE.bottom+1);ctx.lineTo(HOLE.cx-r,top);ctx.arc(HOLE.cx,top,r,Math.PI,0);ctx.lineTo(HOLE.cx+r,HOLE.bottom+1);ctx.closePath();
   ctx.rect(HOLE.cx-r-120,HOLE.bottom-26,120,27);ctx.clip();
   ctx.drawImage(im,HOLE.cx-hx*s,HOLE.bottom-PEEK_HOLE.bottom*s,im.width*s,im.height*s);ctx.restore()}
+// 생일 파티: 쥐야쥐가 꼬깔모자를 쓰고 쥐구멍에서 몸을 반쯤 내밀고 박수
+function drawPartyMouse(){const lv=partyLevel();if(!lv||world.manduk||!mouse.hidden||(mouse.where||'hole')!=='hole')return;
+  const p=world.party,since=p.end==null?-1:p.t-p.end,fr='mouse_bday_clap_'+(since<2&&!RM?Math.floor(world.t*3.2)%2+1:2),im=IMG['f_'+fr];if(!imageReady(im))return;const [,,ax,ay]=FRAMES[fr],s=0.21;
+  ctx.save();ctx.globalAlpha=since<0?Math.min(1,lv*1.5):clamp((PETAL_FADE-since)/2,0,1); /* 춤이 끝나도 조금 더 박수 치다가 웃으며 쏙 */ctx.beginPath();ctx.rect(HOLE.cx-160,HOLE.bottom-140,240,140);ctx.clip();ctx.drawImage(im,HOLE.cx-ax*s,HOLE.bottom+4-ay*s,im.width*s,im.height*s);ctx.restore()}
 function drawMouse(a){if(a.hidden)return;
   const dp=DEPTH(a.y),fr='mouse_'+mouseFrame(a);a.frame=fr;
   if(a.peek){drawPeek();return}
@@ -1342,7 +1346,7 @@ function frame(tNow){
 }
 function render(d,real){
   world.renderDt=real;tickParty(real);if(world.tv.st)drawTvBuf(world.tv.st);updateCam(real);const {s,dpr}=view;ctx.setTransform(s*dpr,0,0,s*dpr,-cam.x*s*dpr,0);ctx.clearRect(cam.x,0,W,H);
-  drawRoom(d);drawBooks(real);drawSunbeam(d);
+  drawRoom(d);drawBooks(real);drawSunbeam(d);drawPartyMouse();
   // 소품과 캐릭터를 바닥에 닿는 위치 순서로 그린다 (뒤에 있으면 가려짐)
   const L=OBJ.filter(o=>o.layer==='floor'&&present(o)).map(o=>[depthOf(objView(o)),()=>drawObj(o,d)]);
   if(birthdayMode)L.push([598,()=>{drawProp('birthday_cake',CAKE.x,CAKE.y,CAKE.w);drawCakeGlow()}]);
@@ -1462,7 +1466,10 @@ let birthdayPartyStarted=false;
 function startBirthdayParty(){if(!birthdayMode||birthdayPartyStarted)return;birthdayPartyStarted=true;const banner=$('birthday');banner.classList.add('party-started');banner.setAttribute('aria-pressed','true');
   Snd.init();if(Snd.ac){Snd.on=true;Snd.ac.resume();$('bSound').setAttribute('aria-pressed','true');$('bSound').textContent='소리 끄기'}
   const sec=Snd.birthdaySong()||13;world.party={t:0,limit:sec+20,end:null};
-  run(cat,[go(500,690,85),bub('🎂❤️✨',2),dance(sec),fn(()=>endBirthdayParty()),hold(1,'stand'),hold(rnd(20,45),'loaf')],'birthday');}
+  // 쥐야쥐도 쥐구멍으로 가서 박수 (밤이든 낮이든, 만득 씨 없을 때)
+  if(!mouse.hidden&&!world.manduk){const o=S('hole.out');run(mouse,[go(o[0],o[1],150),fn(a=>{a.hidden=true;a.peek=false;a.where='hole';a.state=''})],'party')}
+  run(cat,[go(500,690,85),bub('🎂❤️✨',2),play('hatOn'),dance(sec),fn(()=>endBirthdayParty()),play(pick(['tada','bow'])),fn(a=>say(a,'❤️',3)),
+    fn(a=>{a.dp=a.pose='loaf';a.tr=null}),play('hatloaf',rnd(25,50)),hold(rnd(20,45),'loaf',true)],'birthday');}
 function endBirthdayParty(){const p=world.party;if(p&&p.end==null)p.end=p.t;birthdayPartyStarted=false;const banner=$('birthday');banner.classList.remove('party-started');banner.setAttribute('aria-pressed','false')}
 function tickParty(dt){const p=world.party;if(!p)return;p.t+=dt;if(p.end==null&&p.t>p.limit)endBirthdayParty();if(p.end!=null&&p.t-p.end>PETAL_FADE)world.party=null}
 // 0(없음)~1(한창): 시작할 때 서서히 내리고, 끝나면 서서히 그친다
