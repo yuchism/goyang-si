@@ -8,6 +8,9 @@
 ```
 web/                      ← GitHub Pages로 배포되는 폴더 (이 안만 사이트에 올라간다)
   index.html              ← 화면 뼈대(HTML)만
+  manifest.webmanifest    ← 홈 화면 앱 정보 (이름 Kitty Kang, 아이콘, 색). MOBILE_PLAN.md 4-1
+  sw.js                   ← 오프라인 캐시 (코드는 네트워크 먼저, 그림은 캐시 먼저). 배포 때 __VERSION__이 커밋 해시로 바뀐다. MOBILE_PLAN.md 4-2
+  icon-*.png, apple-touch-icon.png, favicon* ← assets/icons/의 1024 원본에서 만든 아이콘
   style.css               ← 스타일
   objects.json            ← 방의 사물 (위치·상태·자리·소켓). 사람이 고치는 곳. OBJECTS.md 참고
   f/meta.json             ← 캐릭터 프레임 크기와 발 기준점  [폭, 높이, 기준점 x, y, (크기 보정)]  5번째 값은 그 그림만 키우거나 줄일 때 (예: 새 걷기 그림 1.1)
@@ -20,6 +23,8 @@ tools/
   compare.py              ← 점검 화면 두 벌을 픽셀 단위로 비교
 make_objects_doc.py       ← objects.json → OBJECTS.md
 ```
+
+**오프라인 캐시:** `sw.js`의 `__VERSION__`이 그대로면(로컬) 그림도 네트워크 먼저라 그림을 바꿔도 바로 보인다. 배포본은 그림을 캐시해 두므로, 그림을 바꾼 배포는 다음다음 열 때쯤 새 그림이 보인다(코드는 바로).
 
 **주의:** JS 모듈은 서버로 열어야 한다. `index.html`을 더블클릭하면 화면이 안 뜬다.
 
@@ -53,7 +58,8 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `tv-cat.js` | TV · 강고양이 씨 반응(보기·위에서 낮잠·뒤 빼꼼·달려오기)과 편성표 창 |
 | `birthday.js` | 생일 파티(`?birthday=이름`): 배너, 케이크, 꽃비, 무대 조명, 노트북 자막, 쥐야쥐 박수 |
 | `shelf.js` | 책장 메뉴 (`objects.json`의 `bookshelf.books`) |
-| `ui.js` | 캔버스 누르기, 쪽지·노트북 창, 소리·전체 화면 버튼, 미리보기 도구 |
+| `ui.js` | 캔버스 누르기, 쪽지·노트북 창, 소리·켜 두기·전체 화면 버튼(화면 꺼짐 방지), 미리보기 도구 |
+| `install.js` | 홈 화면 앱: 홈 화면 앱으로 열었는지(`STANDALONE`), 설치 신호, 책장의 **이상한 책**(그리기·빛·누르기)과 「이 방을 데려가는 법」 창, 포스트잇 힌트, 강고양이 씨 올려다보기, 세로 화면 안내, 홈 화면 앱 통계. MOBILE_PLAN.md 참고 |
 | `halloween.js` | 할로윈(10/24~11/1): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자와 강고양이 씨 반응. HALLOWEEN_PLAN.md 참고 |
 | `i18n.js` | 말: 화면 글자 한국어·영어 표 `STR`, `tr('키')`, 언어 고르기·저장·전환(`setLang`). 새 글자는 여기 한 곳에. ENGLISH_PLAN.md 참고 |
 | `util.js` | 난수·범위·해시, localStorage, 손글씨 글꼴, 색 섞기, `$` |

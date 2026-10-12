@@ -12,7 +12,7 @@
 }
 html,body{height:100%;min-height:100%}
 body{margin:0;background:var(--night);color:var(--paper);font-family:var(--font-body);overflow:hidden}
-.app{height:100vh;height:100dvh;min-height:0;display:flex;flex-direction:column;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));gap:8px;box-sizing:border-box;max-width:1400px;margin:0 auto}
+.app{height:100vh;height:100dvh;min-height:0;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) calc(16px + env(safe-area-inset-left,0px));gap:8px;box-sizing:border-box;max-width:1400px;margin:0 auto}
 header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .mark{font-family:var(--font-hand);font-weight:700;font-size:1.9rem;letter-spacing:.02em;line-height:1}
 .mark b{color:var(--bell);font-weight:700}
@@ -52,7 +52,7 @@ button[aria-pressed="true"]{background:var(--bell);color:#2a1f0e;border-color:va
 .a11y:focus-within{width:auto;height:auto;margin:0;overflow:visible;clip:auto;clip-path:none;white-space:normal;display:flex;gap:6px}
 .a11y button{background:#17130f}
 @media (max-width:560px){.mark{font-size:1.5rem}.hint{display:none}.status{font-size:.74rem}}
-@media (max-height:520px){header{display:none}.hint{display:none}.app{padding-block:6px;gap:6px}footer{flex-wrap:nowrap;justify-content:flex-end}}
+@media (max-height:520px){header{display:none}.hint{display:none}.app{padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));gap:6px}footer{flex-wrap:nowrap;justify-content:flex-end}}
 @media (max-height:520px),(max-width:560px){.dev{position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 48px);max-height:42vh;overflow:auto;z-index:5;background:rgba(30,26,22,.88);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);gap:8px 12px;padding:8px 10px}.dev input[type=range]{width:120px}}
 .stagewrap canvas{border-radius:6px}
 /* 책장 메뉴: 책등을 크게 늘어놓은 선반. 폰에서도 손가락으로 고를 수 있게 */
@@ -92,3 +92,30 @@ html[lang="en"] .spine{text-orientation:mixed;font-size:1rem}
 .hright{display:flex;align-items:center;gap:10px;min-width:0}
 .lang{font-size:.72rem;padding:3px 9px;flex:0 0 auto;color:var(--muted)}
 .lang b{color:var(--bell);font-weight:700}
+
+/* 홈 화면 앱 (MOBILE_PLAN.md 4장): 이상한 책 페이지 — 오래된 책의 누런 종이 한 장 */
+.oddp{position:absolute;left:50%;bottom:5%;transform:translateX(-50%) rotate(.6deg);z-index:5;width:min(380px,calc(100% - 24px));max-height:90%;overflow:auto;box-sizing:border-box;padding:20px 22px 14px;color:#3a2a1c;background:radial-gradient(ellipse at 50% 40%,#f4e7c8 0%,#ead6ac 70%,#d9bf8d 100%);border:2px solid #6b4b2e;border-radius:4px 10px 6px 12px;box-shadow:0 14px 40px rgba(0,0,0,.55),inset 0 0 0 5px rgba(107,75,46,.12),inset 0 0 40px rgba(120,80,40,.25);font-family:var(--font-body)}
+.oddp[hidden]{display:none}
+.oddp .x{position:absolute;right:6px;top:4px;background:none;border:0;border-radius:6px;font-size:1.4rem;line-height:1;padding:6px 10px;color:#5a3f27}
+.oddp .x:hover{border-color:transparent;color:#2b1d16}
+.oddp h2{font-family:var(--font-hand);font-weight:700;font-size:1.6rem;line-height:1.15;margin:2px 26px 8px 0;color:#2b1d16;letter-spacing:.01em}
+.oddp h2::before{content:"";display:block;width:46px;height:2px;margin-bottom:8px;background:#b58a3c;box-shadow:0 4px 0 #b58a3c}
+.oddp p{margin:0 0 10px;font-size:.9rem;line-height:1.55}
+.oddp .intro{font-style:italic;color:#5a4330}
+.oddp ol{margin:0 0 10px;padding-left:1.4em;font-size:.92rem;line-height:1.6}
+.oddp li{margin:2px 0}
+.oddp .share{width:1.05em;height:1.25em;vertical-align:-.25em;color:#2f6fd6}
+.oddp .warn{font-weight:700}
+.oddp .sub{color:#6a5038;font-size:.84rem}
+.oddp .take{display:block;margin:4px auto 10px;font-size:.95rem;padding:9px 20px;color:#f6e7c4;background:#243553;border:2px solid #b58a3c}
+.oddp .take:hover{border-color:#e2bf6a}
+.oddp .sign{text-align:center;color:#b58a3c;font-size:.8rem;letter-spacing:.3em;margin:6px 0 0}
+.oddp button:focus-visible{outline-color:#243553}
+/* 책장 목록 맨 끝의 이상한 책 */
+.spine.odd{--c:#243553;--h:118px;width:52px;margin-left:8px;color:#e2bf6a;background:linear-gradient(90deg,#1c2a44,#2b3f63 45%,#1c2a44);border-color:#2b1d16;box-shadow:inset 0 10px 0 -6px #c99a45,inset 0 -10px 0 -6px #c99a45;transform:rotate(-6deg);transform-origin:bottom left;font-size:1.2rem}
+.spine.odd:hover{transform:rotate(-3deg) translateY(-5px)}
+/* 세로 화면 안내: 방 아래에 작고 조용하게, 한 번만 */
+.turnhint{position:absolute;left:50%;transform:translateX(-50%);z-index:4;padding:6px 14px;border-radius:999px;background:rgba(42,35,29,.88);border:1px solid var(--line);color:var(--paper);font-size:.8rem;white-space:nowrap;opacity:0;transition:opacity .4s;cursor:pointer}
+.turnhint.on{opacity:1}
+.turnhint[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){.turnhint{transition:none}.spine.odd,.spine.odd:hover{transform:none}}

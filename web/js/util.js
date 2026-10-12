@@ -22,6 +22,21 @@ export const store = { get(k, d) {
     }
     catch (e) { }
   } };
+// 기록(localStorage)이 실제로 되는 브라우저인지 (사생활 보호 모드 등에서는 안 될 수 있다)
+let _sok = null;
+export function storageOK() {
+  if (_sok === null) {
+    try {
+      localStorage.setItem('goyang.__t', '1');
+      _sok = localStorage.getItem('goyang.__t') === '1';
+      localStorage.removeItem('goyang.__t');
+    }
+    catch (e) {
+      _sok = false;
+    }
+  }
+  return _sok;
+}
 export const rnd = (a, b) => a + Math.random() * (b - a);
 export const pick = a => a[Math.floor(Math.random() * a.length)];
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));

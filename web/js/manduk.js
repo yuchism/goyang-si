@@ -6,6 +6,7 @@ import { P, S } from './objects.js';
 import { Snd } from './sound.js';
 import { DEPTH, cam, ctx } from './stage.js';
 import { bub, fn, go, hold, run, until } from './steps.js';
+import { oddHintToday } from './install.js';
 import { FIRST, dayNum, isAnniversary, now, rainNow } from './time.js';
 import { HAND, INK, RM, ease, lerp, pick, rnd, store } from './util.js';
 import { caption, cat, mouse, say, world } from './world.js';
@@ -250,6 +251,8 @@ export function todaysNote(d) {
     return tr('noteLaptop');
   if (rainNow(d))
     return tr('noteRain');
+  if (oddHintToday(d))
+    return tr('noteOddHint'); // 설치 안 한 사람에게, 두 번째 방문부터 가끔 (MOBILE_PLAN.md 4-3)
   const NOTES = tr('notes'), idx = Math.floor((dayNum(d) - dayNum(FIRST) + NOTES.length * 100)) % NOTES.length;
   return NOTES[idx];
 }

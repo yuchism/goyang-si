@@ -1,0 +1,16 @@
+{
+  "name": "Kitty Kang",
+  "short_name": "Kitty Kang",
+  "description": "강고양이 씨가 사는 방 · The room where Kitty Kang lives",
+  "start_url": "./?src=home",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#2A231D",
+  "theme_color": "#17130F",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

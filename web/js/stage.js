@@ -41,7 +41,7 @@ export function fit() {
 export const cam = { x: 0 };
 // 카메라가 볼 곳: 만득 씨가 오면 문, UFO·산타는 창, 둘이 함께면 둘 사이, 평소엔 강고양이 씨
 function camTarget() {
-  if (shelfUI.open)
+  if (shelfUI.open || shelfUI.oddOpen)
     return 692;
   if (world.manduk && world.manduk.phase !== 'steps')
     return 1080;

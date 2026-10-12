@@ -1,7 +1,7 @@
 /* 시작점: 하루 일정, 매 프레임 진행(frame)과 그리기(render), 처음 시작 */
 import { play } from './anim.js';
 import { drawCurtainShadow, drawPumpkinGlow, maybeBats, maybeGhost, maybeWitch, pumpkinNight } from './halloween.js';
-import { loadImages, loadMeta } from './assets.js';
+import { SRC, loadImages, loadMeta } from './assets.js';
 import { CAKE, bannerText, birthdayMode, drawCakeGlow, drawPartyLights, drawPartyMouse, tickParty } from './birthday.js';
 import { calmDown, catBrain } from './cat.js';
 import { exposeDebug } from './debug.js';
@@ -22,6 +22,7 @@ import { drawTVNight, drawTvBuf, tvBuf } from './tv-screen.js';
 import { devOpen, initUI } from './ui.js';
 import { pick, rnd } from './util.js';
 import { applyDom, tr } from './i18n.js';
+import { drawOddBook, drawOddGlow, initInstall, portraitHint } from './install.js';
 import { caption, cat, mouse, say, world } from './world.js';
 /* ───────── 상태 표시 ───────── */
 function statusText(d) {
@@ -260,6 +261,7 @@ function render(d, real) {
   ctx.clearRect(cam.x, 0, W, H);
   drawRoom(d);
   drawBooks(real);
+  drawOddBook(real);
   drawSunbeam(d);
   drawPartyMouse();
   // 소품과 캐릭터를 바닥에 닿는 위치 순서로 그린다 (뒤에 있으면 가려짐)
@@ -301,6 +303,7 @@ function render(d, real) {
   }
   drawTVNight(dk);
   drawPumpkinGlow(dk);
+  drawOddGlow(dk);
   drawCurtainShadow(dk);
   drawPartyLights(dk);
   drawManduk('say');
@@ -327,6 +330,7 @@ applyDom();
 bannerText();
 initShelf();
 initUI();
+initInstall();
 exposeDebug();
 // 사물 목록과 그림 정보를 읽은 뒤 그림을 불러오고 시작
 Promise.all([fetch('objects.json', { cache: 'no-store' }).then(r => r.json()).then(initObjects), loadMeta()])
@@ -354,5 +358,14 @@ export function start() {
   requestAnimationFrame(t => {
     resetClock(t);
     frame(t);
+    portraitHint();
   });
+}
+/* ───────── 오프라인 캐시 (sw.js, MOBILE_PLAN.md 4-2) ─────────
+   실패해도 조용히 넘어간다. 이미 받은 파일(지금 보이는 방)도 담아 두라고 알려 준다 (이미 담긴 것은 건너뜀) */
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready).then(reg => {
+    const urls = [location.href, ...performance.getEntriesByType('resource').map(e => e.name), ...Object.values(SRC).map(u => new URL(u, location.href).href)];
+    reg.active && reg.active.postMessage({ type: 'warm', urls: [...new Set(urls)] });
+  }).catch(() => { });
 }

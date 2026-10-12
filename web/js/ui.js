@@ -15,6 +15,7 @@ import { TVP } from './tv.js';
 import { closeTvGuide, openTvGuide } from './tv-cat.js';
 import { bannerText } from './birthday.js';
 import { $, esc, pick, store } from './util.js';
+import { STANDALONE, closeOdd, oddAt, openOdd, toggleOdd } from './install.js';
 import { caption, cat, mouse, say, world } from './world.js';
 /* ───────── 입력 ───────── */
 export function toStage(e) {
@@ -46,14 +47,43 @@ const TOUCH = {
   },
 };
 export let devOpen = false, wake = null;
+/* 화면 꺼짐 방지 (MOBILE_PLAN.md 5장)
+   켜는 경우: 「켜 두기」를 켰을 때(충전 상태를 알 수 있는 브라우저에서는 충전 중일 때만), 소리를 켰을 때, 전체 화면일 때 */
+let keepAwake = store.get('awake', false), battery = null;
+const wantAwake = () => (keepAwake && (!battery || battery.charging)) || Snd.on || !!document.fullscreenElement;
+let asking = false;
 async function wakeLock() {
-  try {
-    if (navigator.wakeLock && !wake) {
-      wake = await navigator.wakeLock.request('screen');
-      wake.addEventListener('release', () => wake = null);
+  if (!navigator.wakeLock || document.visibilityState !== 'visible')
+    return;
+  if (!wantAwake()) {
+    if (wake) {
+      const w = wake;
+      wake = null;
+      try {
+        await w.release();
+      }
+      catch (e) { }
     }
+    return;
+  }
+  if (wake || asking)
+    return;
+  asking = true;
+  try {
+    const w = await navigator.wakeLock.request('screen');
+    wake = w;
+    w.addEventListener('release', () => {
+      if (wake === w)
+        wake = null;
+    });
   }
   catch (e) { }
+  asking = false;
+}
+function awakeLabel() {
+  const b = $('bAwake');
+  b.setAttribute('aria-pressed', keepAwake);
+  b.title = tr(battery ? 'bAwakeCharge' : 'bAwakeTip');
 }
 const SEASONS = [null, 'spring', 'summer', 'autumn', 'winter'];
 // 입력과 버튼 연결
@@ -62,6 +92,8 @@ export function initUI() {
   $('bLang').onclick = () => setLang(LANG === 'ko' ? 'en' : 'ko');
   window.addEventListener('langchange', () => {
     $('bSound').textContent = tr(Snd.on ? 'soundOff' : 'soundOn');
+    if (navigator.wakeLock)
+      awakeLabel();
     if (!noteEl.hidden)
       TOUCH.note();
     if (!scrEl.hidden)
@@ -77,6 +109,7 @@ export function initUI() {
     scrEl.hidden = true;
     closeShelf();
     closeTvGuide();
+    closeOdd();
     if (hitActor(mouse, x, y)) {
       say(mouse, '‼️', 1.5);
       mouseHide(true);
@@ -84,6 +117,10 @@ export function initUI() {
     }
     if (hitActor(cat, x, y)) {
       petCat();
+      return;
+    }
+    if (oddAt(x, y)) {
+      openOdd();
       return;
     }
     if (onShelf(x, y)) {
@@ -117,17 +154,42 @@ export function initUI() {
   document.getElementById('aScreen').onclick = TOUCH.screen;
   document.getElementById('aTv').onclick = TOUCH.tv;
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && (Snd.on || document.fullscreenElement))
-      wakeLock();
+    if (document.visibilityState === 'visible')
+      wakeLock(); // 다른 앱에 다녀오면 풀려 있으니 다시 요청 (켜 둘 이유가 있을 때만)
   });
+  // 켜 두기 버튼: 화면 꺼짐 방지를 못 하는 브라우저에서는 숨긴다
+  if (!navigator.wakeLock)
+    $('bAwake').hidden = true;
+  else {
+    awakeLabel();
+    $('bAwake').onclick = () => {
+      keepAwake = !keepAwake;
+      store.set('awake', keepAwake);
+      awakeLabel();
+      wakeLock();
+    };
+    // 안드로이드 등 충전 상태를 알 수 있으면: 충전 중이면 켜고, 충전이 끝나면 풀어 준다
+    if (navigator.getBattery)
+      navigator.getBattery().then(b => {
+        battery = b;
+        awakeLabel();
+        b.addEventListener('chargingchange', wakeLock);
+        wakeLock();
+      }).catch(() => { });
+    if (keepAwake)
+      wakeLock();
+  }
+  document.addEventListener('fullscreenchange', () => wakeLock());
+  // 전체 화면 버튼: 홈 화면 앱(이미 주소창 없음)이거나 전체 화면을 못 하는 브라우저(아이폰 사파리)면 숨김
+  if (STANDALONE || !document.documentElement.requestFullscreen)
+    $('bFull').hidden = true;
   $('bSound').onclick = () => {
     const on = Snd.toggle();
     $('bSound').setAttribute('aria-pressed', on);
     $('bSound').textContent = tr(on ? 'soundOff' : 'soundOn');
-    if (on) {
-      wakeLock();
+    wakeLock();
+    if (on)
       Snd.bell();
-    }
   };
   $('bFull').onclick = async () => {
     try {
@@ -212,6 +274,7 @@ export function initUI() {
     caption(holidayOverride ? tr('devXmas') : tr('devRealDate'), 2.5);
   };
   $('dSanta').onclick = () => startSanta();
+  $('dOdd').onclick = () => caption(toggleOdd() ? '📕✨' : '📕…', 2);
   // 할로윈: 휴일 강제와 마녀·박쥐·유령 바로 부르기
   $('dHw').onclick = () => {
     setOverride('holiday', holidayOverride === 'halloween' ? null : 'halloween');

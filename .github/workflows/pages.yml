@@ -25,6 +25,8 @@ jobs:
         uses: actions/checkout@v6
       - name: Configure Pages
         uses: actions/configure-pages@v5
+      - name: Stamp service worker version
+        run: sed -i "s/__VERSION__/${GITHUB_SHA::8}/" web/sw.js
       - name: Upload site
         uses: actions/upload-pages-artifact@v4
         with:
