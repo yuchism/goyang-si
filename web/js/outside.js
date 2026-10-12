@@ -6,7 +6,7 @@ import { drawPetals } from './birthday.js';
 import { P } from './objects.js';
 import { ctx } from './stage.js';
 import { fn, hold, run, until } from './steps.js';
-import { darkness, dayKey, holiday, hourOf, rainNow, season, skyAt, sunTimes } from './time.js';
+import { MOON_SOUTH, darkness, dayKey, holiday, hourOf, moonPhase, rainNow, season, skyAt, sunTimes } from './time.js';
 import { RM, clamp, hash, pick, rnd } from './util.js';
 import { cat, mouse, say, world } from './world.js';
 /* ───────── 나비 ───────── */
@@ -101,6 +101,43 @@ function drawRain(w) {
   }
   ctx.restore();
 }
+// 달: 실제 날짜의 위상대로, 빛나는 부분만 직접 그린다 (MOON_PLAN.md 5장)
+// 빛나는 쪽 반원 + 명암 경계 타원(가로 반지름 R·|cos 2πk|)을 이은 한 도형. 하늘색 원으로 덮지 않으니 노을·구름에도 자국이 없다
+const MOON_RGB = '244,238,210';
+function drawMoon(d, cx, cy, R) {
+  const m = moonPhase(d);
+  if (m.lit < 0.03)
+    return; // 삭 앞뒤 하루쯤은 달이 없다
+  const vis = clamp((m.lit - 0.03) / 0.07, 0, 1), right = m.waxing !== MOON_SOUTH, side = right ? 1 : -1;
+  ctx.save();
+  // 달무리: 빛나는 비율만큼. 보름에 가장 크고 초승달엔 거의 없다
+  const hx = cx + side * R * (1 - m.lit) * 0.6, hr = R * (1.3 + 1.9 * m.lit);
+  const g = ctx.createRadialGradient(hx, cy, R * 0.8, hx, cy, hr);
+  g.addColorStop(0, `rgba(${MOON_RGB},${0.2 * m.lit * vis})`);
+  g.addColorStop(1, `rgba(${MOON_RGB},0)`);
+  ctx.fillStyle = g;
+  ctx.fillRect(hx - hr, cy - hr, hr * 2, hr * 2);
+  ctx.translate(cx, cy);
+  // 어두운 쪽: 지구빛으로 둥근 윤곽만 은은하게
+  ctx.beginPath();
+  ctx.arc(0, 0, R, 0, 7);
+  ctx.fillStyle = `rgba(${MOON_RGB},${0.08 * vis})`;
+  ctx.fill();
+  // 빛나는 부분
+  if (!right)
+    ctx.scale(-1, 1);
+  const rx = R * Math.abs(Math.cos(2 * Math.PI * m.k));
+  ctx.beginPath();
+  ctx.arc(0, 0, R, -Math.PI / 2, Math.PI / 2); // 오른쪽 반원 (위 → 아래)
+  ctx.ellipse(0, 0, rx, R, 0, Math.PI / 2, -Math.PI / 2, m.lit < 0.5); // 아래 → 위: 초승·그믐은 안쪽으로 파이고, 반달 넘게 찬 달은 왼쪽으로 부푼다
+  ctx.closePath();
+  ctx.globalAlpha = 0.35 + 0.65 * vis;
+  ctx.shadowColor = `rgba(${MOON_RGB},.7)`;
+  ctx.shadowBlur = 1.5; // 가장자리를 살짝 부드럽게
+  ctx.fillStyle = `rgb(${MOON_RGB})`;
+  ctx.fill();
+  ctx.restore();
+}
 export function drawOutside(d, w) {
   const h = hourOf(d), [r, s] = sunTimes(d), day = h > r && h < s, rain = rainNow(d);
   const night = clamp(darkness(d) / 0.62, 0, 1);
@@ -131,7 +168,7 @@ export function drawOutside(d, w) {
     ctx.globalAlpha = 1;
   }
   // 새벽·노을 빛
-  const [top, bot] = skyAt(d);
+  const [, bot] = skyAt(d);
   const tw = (h > r - 1 && h < r + 1.5) || (h > s - 1.5 && h < s + 1) ? 0.28 : 0;
   if (tw) {
     ctx.fillStyle = bot;
@@ -159,16 +196,8 @@ export function drawOutside(d, w) {
     ctx.fillStyle = 'rgba(255,243,196,.95)';
     ctx.fill();
   }
-  if (!day && !rain) {
-    ctx.beginPath();
-    ctx.arc(w.x + w.w * 0.74, 70, 17, 0, 7);
-    ctx.fillStyle = '#f4eed2';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(w.x + w.w * 0.74 + 8, 64, 14, 0, 7);
-    ctx.fillStyle = top;
-    ctx.fill();
-  }
+  if (!day && !rain)
+    drawMoon(d, w.x + w.w * 0.74, 70, 17);
   if (rain) {
     const sn = season(d) === 'winter', c1 = sn ? 'rgba(236,238,242,.95)' : 'rgba(86,94,108,.95)', c2 = sn ? 'rgba(220,224,230,.95)' : 'rgba(100,108,122,.95)';
     for (let row = 0; row < 2; row++) {

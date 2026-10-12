@@ -31,7 +31,6 @@ export const STR = {
   langAria: { ko: '언어: 한국어. 눌러서 영어로', en: 'Language: English. Tap for Korean' },
   bAwake: { ko: '켜 두기', en: 'Keep awake' },
   bAwakeTip: { ko: '켜 둔 동안 화면이 꺼지지 않아요', en: 'Keeps the screen on while this room is open' },
-  bAwakeCharge: { ko: '충전 중일 때만 화면을 켜 둬요', en: 'Keeps the screen on only while charging' },
   aOdd: { ko: '책장의 처음 보는 책 펼치기', en: 'Open the unfamiliar book on the shelf' },
   portraitHint: { ko: '가로로 보면 방이 더 넓게 보여요', en: 'Turn sideways to see more of the room' },
   /* ── 이상한 책: 이 방을 데려가는 법 (MOBILE_PLAN.md 4-3) ── */
@@ -84,6 +83,8 @@ export const STR = {
   devXmas: { ko: '(크리스마스 시즌)', en: '(Christmas season)' },
   devRealDate: { ko: '(실제 날짜)', en: '(real date)' },
   devNoUfo: { ko: '(만득 씨가 있을 땐 오지 않아요)', en: "(It won't come while Mandeuk is around)" },
+  devMoon: { ko: '{md} · 달: {name} {pct}%', en: '{md} · Moon: {name} {pct}%' },
+  moonName: { ko: { new: '삭(안 보임)', crescent: '초승달', first: '상현', waxgib: '차오르는 달', full: '보름', wangib: '기우는 달', last: '하현', wancres: '그믐달' }, en: { new: 'new (hidden)', crescent: 'waxing crescent', first: 'first quarter', waxgib: 'waxing gibbous', full: 'full', wangib: 'waning gibbous', last: 'last quarter', wancres: 'waning crescent' } },
   devNoProg: { ko: '(지금은 방송 사이예요. 시각을 옮겨 보세요)', en: '(Between shows right now. Try moving the clock)' },
   /* ── 상단 상태 ── */
   dow: { ko: ['일', '월', '화', '수', '목', '금', '토'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] },
@@ -191,6 +192,22 @@ export const STR = {
   tvgScreen: { ko: '지금 TV 화면', en: 'Current TV screen' },
   tvgList: { ko: '오늘 편성표', en: "Today's schedule" },
   tvgFoot: { ko: '고양.방송은 실제 시간에 맞춰 나와요. 새벽 1시부터 5시까지는 쉬어요.', en: 'GBS (Goyang Broadcasting System) runs on real time. Off the air from 1 to 5 AM.' },
+  tvgReq: { ko: '📮 축하 방송 신청하기', en: '📮 Request a birthday broadcast' },
+  /* ── TV: 축하 방송 신청 (BIRTHDAY_LINK_PLAN.md 4장) ── */
+  reqTitle: { ko: '고양.방송 축하 방송 신청', en: 'GBS Birthday Broadcast Request' },
+  reqLead: { ko: '이름을 보내 주시면, 그분이 들어올 때 축하 방송을 해 드려요.', en: "Send us a name, and we'll air a birthday broadcast when they drop by." },
+  reqLabel: { ko: '생일인 분 이름', en: "Birthday person's name" },
+  reqPh: { ko: '예: 김만득', en: 'e.g. Mandeuk' },
+  reqSend: { ko: '보내기', en: 'Send' },
+  reqCopy: { ko: '링크 복사하기', en: 'Copy link' },
+  reqPreview: { ko: '미리 보기', en: 'Preview' },
+  reqBack: { ko: '편성표', en: 'Schedule' },
+  reqCopied: { ko: '링크를 복사했어요. 카톡이나 문자에 붙여 넣어 보내 주세요.', en: 'Link copied. Paste it into a message to send it.' },
+  reqShared: { ko: '보냈어요! 그분이 링크를 열면 축하 방송이 시작돼요.', en: 'Sent! The broadcast starts when they open the link.' },
+  reqManual: { ko: '아래 링크를 복사해서 보내 주세요.', en: 'Copy the link below and send it.' },
+  reqLinkLabel: { ko: '생일 링크', en: 'Birthday link' },
+  reqShareTitle: { ko: '강고양이 씨가 생일 파티를 준비했어요 🎂', en: 'Kitty Kang is throwing you a birthday party 🎂' },
+  reqShareText: { ko: '{name}님, 생일 축하해요! 🎂', en: 'Happy birthday, {name}! 🎂' },
 };
 const pickLang = () => {
   const saved = store.get('lang', null);

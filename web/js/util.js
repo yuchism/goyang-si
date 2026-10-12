@@ -60,3 +60,22 @@ export const ease = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 export const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 /* ───────── 버튼 ───────── */
 export const $ = id => document.getElementById(id);
+// GoatCounter 이벤트: count.js가 늦게 오면 잠깐 기다렸다가 보낸다. 이름 같은 개인 정보는 넣지 않는다
+export function gcEvent(path, title) {
+  let tries = 0;
+  const send = () => {
+    const gc = window.goatcounter;
+    if (gc && gc.count) {
+      try {
+        gc.count({ path, title: title || path, event: true });
+      }
+      catch (e) { }
+      return;
+    }
+    if (++tries <= 40)
+      setTimeout(send, 500);
+  };
+  send();
+}
+// 글자 수 자르기: 이모지가 반으로 잘리지 않게 코드 포인트 단위로
+export const cutChars = (s, n) => Array.from(String(s || '')).slice(0, n).join('');

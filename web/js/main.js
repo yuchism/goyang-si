@@ -15,7 +15,7 @@ import { Snd } from './sound.js';
 import { drawActor, drawBubble, drawCaptions } from './sprites.js';
 import { H, W, cam, ctx, fit, updateCam, view } from './stage.js';
 import { bub, fn, go, hold, run, tickActor } from './steps.js';
-import { advanceClock, darkness, dayKey, hourOf, inBeam, isAnniversary, isWeekend, mandukAsleep, mandukHome, now, rainNow, resetClock, season, snowing, speed, sunTimes, sunbeam } from './time.js';
+import { advanceClock, darkness, dayKey, hourOf, inBeam, isAnniversary, isWeekend, mandukAsleep, mandukHome, moonName, moonPhase, now, rainNow, resetClock, season, snowing, speed, sunTimes, sunbeam } from './time.js';
 import { tvOn, tvTick } from './tv.js';
 import { tvBig } from './tv-cat.js';
 import { drawTVNight, drawTvBuf, tvBuf } from './tv-screen.js';
@@ -246,8 +246,11 @@ function frame(tNow) {
   calmDown(real); // 건드림 짜증 회복
   render(d, real);
   document.getElementById('status').textContent = statusText(d);
-  if (devOpen)
+  if (devOpen) {
     document.getElementById('hourv').textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    const m = moonPhase(d); // 달 모양 확인용: "10/19 · 달: 상현 52%"
+    document.getElementById('moonv').textContent = tr('devMoon', { md: (d.getMonth() + 1) + '/' + d.getDate(), name: tr('moonName')[moonName(m)], pct: Math.round(m.lit * 100) });
+  }
   requestAnimationFrame(frame);
 }
 function render(d, real) {

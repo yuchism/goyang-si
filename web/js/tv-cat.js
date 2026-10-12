@@ -1,6 +1,6 @@
 /* 강고양이 씨 TV · 반응과 편성표 창: TV 보기, TV 위 낮잠, 뒤 빼꼼, 사건 반응, 편성표 창 */
 import { play } from './anim.js';
-import { tr } from './i18n.js';
+import { LANG, tr } from './i18n.js';
 import { loafB } from './cat.js';
 import { O, S, present, socketOf, topOf } from './objects.js';
 import { closeShelf } from './shelf.js';
@@ -9,7 +9,7 @@ import { bub, fn, go, hold, run } from './steps.js';
 import { now } from './time.js';
 import { TVP, fmtH, tvBday, tvCold, tvH, tvOn, tvSegs, tvState } from './tv.js';
 import { noteEl, scrEl } from './ui.js';
-import { esc, pick, rnd } from './util.js';
+import { cutChars, esc, gcEvent, pick, rnd } from './util.js';
 import { cat, say, world } from './world.js';
 /* TV와 강고양이 씨 */
 const TV_BUSY = ['knock', 'zoom', 'chase', 'stalk', 'boxhide', 'greet', 'birthday', 'wait', 'innocent', 'secret', 'box', 'tvrush', 'sulk', 'ufo', 'santa', 'paw', 'bfly', 'window'];
@@ -293,7 +293,16 @@ function tvNowText(st) {
     return tr('tvgNow', { title: esc(st.sg.title), s: fmtH(st.sg.s), e: fmtH(st.sg.e) });
   return { off: tr('tvgOff'), testcard: tr('tvgTestcard'), opening: tr('tvgOpening'), signoff: tr('tvgSignoff') }[st.mode] || '';
 }
+// 편성표 창은 두 화면: 'guide'(편성표) · 'req'(축하 방송 신청, BIRTHDAY_LINK_PLAN.md 4장)
+let tvgView = 'guide', reqName = '', reqLink = '', reqMsg = '';
+const REQ_MAX = 24;
 export function openTvGuide(quiet) {
+  if (!quiet)
+    tvgView = 'guide';
+  if (tvgView === 'req') {
+    renderReq();
+    return;
+  }
   const d = now(), st = world.tv.st || tvState(d), bd = tvBday(d), H = tvH(d), segs = tvSegs(bd);
   const rows = [[5, tr('tvgSignOn')], ...segs.map(s => [s.s, s.title]), [24 + 55 / 60, tr('tvgSignOff')]];
   let cur = -1;
@@ -307,7 +316,7 @@ export function openTvGuide(quiet) {
   closeShelf();
   tvgEl.innerHTML = `<button class="x" type="button" aria-label="${esc(tr('tvgClose'))}">×</button><h2>${esc(tr('tvChannel'))}</h2><canvas width="320" height="240" aria-label="${esc(tr('tvgScreen'))}"></canvas>` +
     `<p class="now">${tvNowText(st)}</p><ol aria-label="${esc(tr('tvgList'))}">` + rows.map((r, i) => `<li${i === cur ? ' class="cur" aria-current="true"' : ''}><time>${fmtH(r[0])}</time><span>${esc(r[1])}</span></li>`).join('') +
-    `</ol><p class="foot">${esc(tr('tvgFoot'))}</p>`;
+    `</ol><p class="foot">${esc(tr('tvgFoot'))}</p><p class="reqline"><button class="reqopen" type="button">${esc(tr('tvgReq'))}</button></p>`;
   tvBig = tvgEl.querySelector('canvas').getContext('2d');
   tvgEl.hidden = false;
   tvgEl.focus({ preventScroll: true });
@@ -319,10 +328,153 @@ export function closeTvGuide() {
     return;
   tvgEl.hidden = true;
   tvBig = null;
+  tvgView = 'guide';
+  reqMsg = '';
+  reqLink = '';
 }
+/* ───────── 축하 방송 신청: 생일 링크 만들기 ───────── */
+const canShare = () => typeof navigator.share === 'function';
+const reqClean = v => cutChars(String(v || '').replace(/\s+/g, ' ').trim(), REQ_MAX);
+// 보내는 링크: 지금 보고 있는 언어의 생일 페이지 (카톡 미리보기 카드 언어가 달라진다)
+const reqUrl = name => location.origin + '/birthday/' + (LANG === 'en' ? 'en/' : '') + '?n=' + encodeURIComponent(name);
+function renderReq() {
+  noteEl.hidden = true;
+  scrEl.hidden = true;
+  closeShelf();
+  tvBig = null;
+  const n = Array.from(reqName.trim()).length;
+  tvgEl.innerHTML = `<button class="x" type="button" aria-label="${esc(tr('tvgClose'))}">×</button>` +
+    `<button class="back" type="button">‹ ${esc(tr('reqBack'))}</button>` +
+    `<div class="req"><h2>${esc(tr('reqTitle'))}</h2><p class="lead">${esc(tr('reqLead'))}</p>` +
+    `<label for="reqName">${esc(tr('reqLabel'))}</label>` +
+    `<div class="field"><input id="reqName" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" placeholder="${esc(tr('reqPh'))}" value="${esc(reqName)}"><span class="count" aria-hidden="true">${n}/${REQ_MAX}</span></div>` +
+    `<div class="acts"><button class="send" type="button"${n ? '' : ' disabled'}>${esc(tr(canShare() ? 'reqSend' : 'reqCopy'))}</button>` +
+    `<button class="pv" type="button"${n ? '' : ' disabled'}>${esc(tr('reqPreview'))}</button></div>` +
+    `<p class="msg" role="status" aria-live="polite">${esc(reqMsg)}</p>` +
+    `<input class="link" type="text" readonly aria-label="${esc(tr('reqLinkLabel'))}" value="${esc(reqLink)}"${reqLink ? '' : ' hidden'}></div>`;
+  tvgEl.hidden = false;
+}
+function openReq() {
+  tvgView = 'req';
+  reqMsg = '';
+  reqLink = '';
+  renderReq();
+  const inp = tvgEl.querySelector('#reqName');
+  inp && inp.focus({ preventScroll: true });
+  gcEvent('birthday-request-open', '축하 방송 신청 창 열기');
+}
+function backToGuide() {
+  tvgView = 'guide';
+  openTvGuide(true);
+  const b = tvgEl.querySelector('.reqopen');
+  b && b.focus({ preventScroll: true });
+}
+// 입력이 바뀔 때: 글자 수와 버튼만 고친다 (다시 그리면 한글 조합이 끊긴다)
+function onReqInput(inp, composing) {
+  if (!composing && Array.from(inp.value).length > REQ_MAX)
+    inp.value = cutChars(inp.value, REQ_MAX);
+  reqName = inp.value;
+  const n = Array.from(reqName.trim()).length, ok = !!reqClean(reqName);
+  tvgEl.querySelector('.count').textContent = `${Math.min(n, REQ_MAX)}/${REQ_MAX}`;
+  tvgEl.querySelector('.send').disabled = !ok;
+  tvgEl.querySelector('.pv').disabled = !ok;
+  if (reqLink) { // 이름을 고치면 예전 링크는 치운다
+    reqLink = '';
+    reqMsg = '';
+    tvgEl.querySelector('.link').hidden = true;
+    tvgEl.querySelector('.msg').textContent = '';
+  }
+}
+function showReqResult(msg, link, select) {
+  reqMsg = msg;
+  reqLink = link;
+  tvgEl.querySelector('.msg').textContent = msg;
+  const li = tvgEl.querySelector('.link');
+  li.value = link;
+  li.hidden = false;
+  if (select) {
+    li.focus({ preventScroll: true });
+    li.select();
+  }
+}
+async function copyText(t, li) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(t);
+      return true;
+    }
+  }
+  catch (e) { }
+  try { // 오래된 브라우저: 선택해 두고 복사 명령
+    li.hidden = false;
+    li.value = t;
+    li.focus({ preventScroll: true });
+    li.select();
+    return document.execCommand('copy');
+  }
+  catch (e) {
+    return false;
+  }
+}
+async function sendReq() {
+  const name = reqClean(reqName);
+  if (!name)
+    return;
+  const url = reqUrl(name), li = tvgEl.querySelector('.link');
+  if (canShare()) {
+    try {
+      await navigator.share({ title: tr('reqShareTitle'), text: tr('reqShareText', { name }), url });
+      showReqResult(tr('reqShared'), url, false);
+      gcEvent('birthday-link-shared', '생일 링크 공유');
+      return;
+    }
+    catch (e) {
+      if (e && e.name === 'AbortError') { // 공유 창을 닫았을 뿐: 링크만 보여 둔다
+        showReqResult('', url, false);
+        return;
+      }
+      // 공유가 막힌 경우(권한 등): 복사로 넘어간다
+    }
+  }
+  if (await copyText(url, li)) {
+    showReqResult(tr('reqCopied'), url, false);
+    gcEvent('birthday-link-copied', '생일 링크 복사');
+  }
+  else
+    showReqResult(tr('reqManual'), url, true);
+}
+function previewReq() {
+  const name = reqClean(reqName);
+  if (name)
+    window.open('/?birthday=' + encodeURIComponent(name), '_blank', 'noopener');
+}
+tvgEl.addEventListener('input', e => {
+  if (e.target.id === 'reqName')
+    onReqInput(e.target, e.isComposing);
+});
+tvgEl.addEventListener('compositionend', e => {
+  if (e.target.id === 'reqName')
+    onReqInput(e.target, false);
+});
+tvgEl.addEventListener('keydown', e => {
+  if (e.target.id === 'reqName' && e.key === 'Enter' && !e.isComposing) {
+    e.preventDefault();
+    sendReq();
+  }
+});
 tvgEl.addEventListener('click', e => {
   if (e.target.closest('.x'))
     closeTvGuide();
+  else if (e.target.closest('.reqopen'))
+    openReq();
+  else if (e.target.closest('.back'))
+    backToGuide();
+  else if (e.target.closest('.send'))
+    sendReq();
+  else if (e.target.closest('.pv'))
+    previewReq();
+  else if (e.target.closest('.link'))
+    e.target.select();
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape')

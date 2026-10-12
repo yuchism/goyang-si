@@ -160,6 +160,30 @@ export function darkness(d) {
     k = Math.max(k, 0.18);
   return k;
 }
+/* ───────── 달 모양 (MOON_PLAN.md) ───────── */
+// 기준 삭(새 달) 2000-01-06 18:14 UTC, 삭망월 29.530588853일. 오차 반나절 안팎
+// 시각(UTC)으로만 계산하니 같은 순간엔 누구에게나 같은 달. 미리보기 도구로 시계를 옮기면 같이 바뀐다
+const SYNODIC = 29.530588853, NEW_MOON0 = Date.UTC(2000, 0, 6, 18, 14);
+// 창밖은 한국(고양시) 하늘: 차오르는 달은 오른쪽이 빛난다. 남반구처럼 보이게 하려면 true
+export const MOON_SOUTH = false;
+export function moonPhase(d) {
+  const age = (((d.getTime() - NEW_MOON0) / 86400000) % SYNODIC + SYNODIC) % SYNODIC;
+  const k = age / SYNODIC;
+  return { age, k, lit: (1 - Math.cos(2 * Math.PI * k)) / 2, waxing: k < 0.5 };
+}
+// 이름 (i18n.js의 moonName 키): new, crescent, first, waxgib, full, wangib, last, wancres
+export function moonName(m) {
+  const { k, lit } = m;
+  if (lit < 0.03)
+    return 'new';
+  if (Math.abs(k - 0.5) < 0.034)
+    return 'full'; // 보름 앞뒤 하루
+  if (Math.abs(k - 0.25) < 0.034)
+    return 'first';
+  if (Math.abs(k - 0.75) < 0.034)
+    return 'last';
+  return k < 0.25 ? 'crescent' : k < 0.5 ? 'waxgib' : k < 0.75 ? 'wangib' : 'wancres';
+}
 export function boxOpen(d) {
   return (dayNum(d) % 9) > 0 || boxOverride !== null;
 }

@@ -48,9 +48,9 @@ const TOUCH = {
 };
 export let devOpen = false, wake = null;
 /* 화면 꺼짐 방지 (MOBILE_PLAN.md 5장)
-   켜는 경우: 「켜 두기」를 켰을 때(충전 상태를 알 수 있는 브라우저에서는 충전 중일 때만), 소리를 켰을 때, 전체 화면일 때 */
-let keepAwake = store.get('awake', false), battery = null;
-const wantAwake = () => (keepAwake && (!battery || battery.charging)) || Snd.on || !!document.fullscreenElement;
+   켜는 경우: 「켜 두기」를 켰을 때(기기·충전 상태와 상관없이), 소리를 켰을 때, 전체 화면일 때 */
+let keepAwake = store.get('awake', false);
+const wantAwake = () => keepAwake || Snd.on || !!document.fullscreenElement;
 let asking = false;
 async function wakeLock() {
   if (!navigator.wakeLock || document.visibilityState !== 'visible')
@@ -83,7 +83,7 @@ async function wakeLock() {
 function awakeLabel() {
   const b = $('bAwake');
   b.setAttribute('aria-pressed', keepAwake);
-  b.title = tr(battery ? 'bAwakeCharge' : 'bAwakeTip');
+  b.title = tr('bAwakeTip');
 }
 const SEASONS = [null, 'spring', 'summer', 'autumn', 'winter'];
 // 입력과 버튼 연결
@@ -168,14 +168,6 @@ export function initUI() {
       awakeLabel();
       wakeLock();
     };
-    // 안드로이드 등 충전 상태를 알 수 있으면: 충전 중이면 켜고, 충전이 끝나면 풀어 준다
-    if (navigator.getBattery)
-      navigator.getBattery().then(b => {
-        battery = b;
-        awakeLabel();
-        b.addEventListener('chargingchange', wakeLock);
-        wakeLock();
-      }).catch(() => { });
     if (keepAwake)
       wakeLock();
   }
@@ -209,7 +201,21 @@ export function initUI() {
     store.set('dev', devOpen);
     requestAnimationFrame(fit);
   };
-  if (store.get('dev', false)) {
+  // 미리보기 도구는 방문자에게 숨긴다. ?dev=1로 열면 켜지고 그 기기에서 기억, ?dev=0으로 끈다 (MOBILE_PLAN.md 13장)
+  // 기록이 안 되는 브라우저에서는 ?dev=1로 연 그 페이지에서만 켜진다
+  let devAllowed = store.get('devTools', false);
+  const devQ = new URLSearchParams(location.search).get('dev');
+  if (devQ === '1') {
+    devAllowed = true;
+    store.set('devTools', true);
+  }
+  else if (devQ === '0') {
+    devAllowed = false;
+    store.set('devTools', false);
+    store.set('dev', false);
+  }
+  $('bDev').hidden = !devAllowed;
+  if (devAllowed && store.get('dev', false)) {
     devOpen = true;
     $('dev').hidden = false;
     $('bDev').setAttribute('aria-pressed', 'true');

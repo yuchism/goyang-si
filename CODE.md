@@ -39,7 +39,7 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 |---|---|
 | `main.js` | 시작점. 하루 일정(밥·출근·귀가·불 끄기), 매 프레임 진행 `frame()`, 그리기 순서 `render()`, 처음 시작 `start()` |
 | `world.js` | 세상 상태 `world`와 배우 `cat`(강고양이 씨)·`mouse`(쥐야쥐), 말풍선 `say`, 자막 `caption` |
-| `time.js` | 방 시계(미리보기 속도 포함), 계절·해 뜨고 지는 시각, 비·눈, 상자 있는 날, 기념일, 명절, 햇빛 조각, 하늘색과 어둠 |
+| `time.js` | 방 시계(미리보기 속도 포함), 계절·해 뜨고 지는 시각, 비·눈, 상자 있는 날, 기념일, 명절, 햇빛 조각, 하늘색과 어둠, 달 모양 `moonPhase`(MOON_PLAN.md) |
 | `objects.js` | `objects.json`을 읽어 위치 `P`, 사물 `O`, 상태 `objView`, 자리 `S('bowl.eat')`, 소켓, 깊이를 알려준다 |
 | `steps.js` | 행동 단계: `go`(길찾기로 걷기), `follow`, `hold`, `bub`, `fn`, `until`, 그리고 순서대로 실행 `run(배우, [단계...])` |
 | `anim.js` | 동작 그림: 자세 전환(서기↔식빵↔배 보이기), 동작 클립 `CLIP`과 `play`, 지금 보여줄 프레임 고르기 |

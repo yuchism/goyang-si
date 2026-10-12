@@ -85,6 +85,27 @@ button[aria-pressed="true"]{background:var(--bell);color:#2a1f0e;border-color:va
 .tvg li.cur,.tvg li.cur time{color:var(--bell);font-weight:700}
 .tvg .foot{font-size:.74rem;color:var(--muted);margin:8px 0 0}
 @media (max-width:560px){.tvg ol{columns:1}}
+/* 축하 방송 신청 (BIRTHDAY_LINK_PLAN.md 4장): 편성표 아래 방송국 안내문 같은 작은 줄 */
+.tvg .reqline{margin:6px 0 0;text-align:right}
+.tvg .reqopen{background:none;border:0;border-radius:6px;padding:4px 2px;font-size:.76rem;color:var(--bell);text-decoration:underline;text-underline-offset:3px}
+.tvg .reqopen:hover{color:#f5d77a}
+.tvg .back{background:none;border:0;border-radius:6px;padding:4px 6px;margin:-2px 0 4px -6px;font-size:.8rem;color:var(--muted)}
+.tvg .back:hover{color:var(--paper)}
+.tvg .req h2{margin-top:2px}
+.tvg .req .lead{font-size:.88rem;line-height:1.5;margin:0 0 14px;color:#e2d3b8}
+.tvg .req label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:4px}
+.tvg .req .field{position:relative}
+.tvg .req input{font:inherit;font-size:1rem;width:100%;box-sizing:border-box;color:var(--paper);background:#17130f;border:1px solid var(--line);border-radius:10px;padding:10px 54px 10px 12px}
+.tvg .req input:focus{outline:2px solid var(--bell);outline-offset:1px;border-color:transparent}
+.tvg .req input::placeholder{color:#6f6252}
+.tvg .req .count{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums;pointer-events:none}
+.tvg .req .acts{display:flex;gap:8px;margin-top:12px}
+.tvg .req .send{background:var(--bell);color:#2a1f0e;border-color:var(--bell);font-weight:700;padding:8px 18px}
+.tvg .req .pv{padding:8px 14px}
+.tvg .req button:disabled{opacity:.4;cursor:default}
+.tvg .req .msg{min-height:1.3em;font-size:.82rem;line-height:1.4;margin:10px 0 6px;color:var(--bell)}
+.tvg .req .link{font-size:.78rem;padding:8px 10px;color:#d9c9ae;font-family:ui-monospace,Menlo,monospace}
+.tvg .req .link[hidden]{display:none}
 
 /* 영어: 손글씨 글꼴을 Patrick Hand로, 책등 글자는 옆으로 눕혀서 */
 html[lang="en"]{--font-hand:"Patrick Hand","Gaegu",cursive}

@@ -7,7 +7,7 @@ import { tr } from './i18n.js';
 import { O, objView, present, zOf } from './objects.js';
 import { cv, ctx } from './stage.js';
 import { bub, fn, go, hold, run, until } from './steps.js';
-import { dayKey, holiday, hourOf, rainNow, sunTimes } from './time.js';
+import { dayKey, holiday, hourOf, moonPhase, rainNow, sunTimes } from './time.js';
 import { RM, clamp, pick, rnd } from './util.js';
 import { caption, cat, say, world } from './world.js';
 export const isHalloween = d => holiday(d) === 'halloween';
@@ -219,8 +219,8 @@ export function maybeGhost(d, dt) {
     }
     return;
   }
-  if (!isHalloween(d) || !batNight(d) || rainNow(d) || world.witch)
-    return; // 달이 떠 있는 밤에만
+  if (!isHalloween(d) || !batNight(d) || rainNow(d) || world.witch || moonPhase(d).lit < 0.1)
+    return; // 달이 떠 있는 밤에만 (빛나는 비율 10% 이상, MOON_PLAN.md 7장). 그믐 무렵엔 유령도 쉰다
   const g = world.ghostNight;
   if (g && g.k === nightKey(d) && g.n >= 2)
     return; // 하룻밤에 두 번까지

@@ -6,15 +6,16 @@ import { Snd } from './sound.js';
 import { HOLE } from './sprites.js';
 import { H, W, ctx } from './stage.js';
 import { bub, dance, fn, go, hold, run } from './steps.js';
-import { $, RM, clamp, hash, pick, rnd } from './util.js';
+import { $, RM, clamp, cutChars, gcEvent, hash, pick, rnd } from './util.js';
 import { tr } from './i18n.js';
 import { cat, mouse, say, world } from './world.js';
 export const DANCE_CELLS = [[54, 553], [599, 1085], [1098, 1591], [1710, 2122]]; // 춤 시트 4장의 가로 범위(px)
 export const pageParams = new URLSearchParams(location.search), birthdayMode = pageParams.has('birthday');
-export const birthdayName = (pageParams.get('birthday') || '').trim().slice(0, 24);
+export const birthdayName = cutChars((pageParams.get('birthday') || '').trim(), 24).trim();
 if (birthdayMode) {
   const banner = document.getElementById('birthday');
   banner.hidden = false;
+  gcEvent('birthday-open', '생일 링크로 방 열림'); // 이름은 보내지 않는다
 }
 export function bannerText() {
   if (birthdayMode)
