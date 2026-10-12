@@ -1,7 +1,7 @@
 /* 사물: objects.json을 읽어 위치·상태·자리·소켓·깊이를 알려준다 */
 import { imageReady, img } from './assets.js';
 import { birthdayMode } from './birthday.js';
-import { boxOpen, boxToday, holiday, now, season } from './time.js';
+import { boxOpen, boxToday, holiday, now, pumpkinLit, season } from './time.js';
 import { cat, mouse, world } from './world.js';
 export let OBJ = [];
 export const O = {};
@@ -35,7 +35,8 @@ const STATE = {
   },
   lamp: () => world.lampOn ? 'on' : 'off', cup: () => world.cup.state, bowl: () => world.bowlFull ? 'full' : 'empty',
   laptop: () => (world.laptop || cat.typing || world.party || mouse.state === 'laptop' && !mouse.hidden) ? 'on' : 'off',
-  box: () => cat.inBox ? 'occupied' : boxOpen(now()) ? 'open' : 'closed'
+  box: () => cat.inBox ? 'occupied' : boxOpen(now()) ? 'open' : 'closed',
+  pumpkin: () => pumpkinLit(now()) ? 'lit' : 'off'
 };
 // 상태가 반영된 모습 (states의 값이 기본값을 덮어씀)
 export function objView(o) {

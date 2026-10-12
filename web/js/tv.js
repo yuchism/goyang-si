@@ -1,8 +1,9 @@
 /* 강고양이 씨 TV · 방송: 고양.방송 편성표, 프로그램과 사건, 지금 상태(tvTick) */
 import { imageReady, img } from './assets.js';
+import { tr } from './i18n.js';
 import { O } from './objects.js';
 import { Snd } from './sound.js';
-import { dayKey, hourOf, isWeekend, rainNow, simMs } from './time.js';
+import { dayKey, holiday, hourOf, isWeekend, rainNow, simMs } from './time.js';
 import { tvEventFired, tvReactBeep, tvReactPower } from './tv-cat.js';
 import { clamp, hash, lerp } from './util.js';
 import { caption, world } from './world.js';
@@ -12,19 +13,22 @@ import { caption, world } from './world.js';
   화면은 320×240 버퍼(tvBuf)에 그린 뒤 본체 그림의 구멍(r/tv/meta.json의 screenTL~screenBR)에 덮어 그린다. 자세한 내용은 TV_CHANNEL_PLAN.md */
 // 프로그램: loop는 평소 장면(초 → 그림), ev는 사건(size 1 작음 · 2 중간 · 3 큼), gap은 사건 사이 간격(초)
 export const TVP = {
-  news: { name: '고양 뉴스', loop: t => t % 4.6 < 0.2 ? 'tv_news_2of3' : 'tv_news_1of3',
-    ev: [{ id: 'breaking', w: 1, size: 3, dur: 6, f: ['tv_news_3of3'], cap: '속보: 츄르 가격 인상', once: 1 }], gap: [240, 600],
-    ticker: ['오늘의 날씨: 낮잠 자기 좋음', '츄르 시세 소폭 상승', '창밖 새 관측 3마리', '택배 상자 품귀 현상 계속', '해 드는 자리 만석', '쥐 목격담 또 나와… 당국은 부인'] },
-  drama: { name: '드라마 「창가에서」', loop: t => t % 7 < 4.2 ? 'tv_drama_1of5' : 'tv_drama_2of5',
-    ev: [{ id: 'turn', w: 3, size: 2, dur: 4, f: ['tv_drama_3of5'], cap: '…흥.' }, { id: 'nose', w: 1, size: 3, dur: 6, f: ['tv_drama_4of5'], cap: '…냥.' }],
-    end: { id: 'next', size: 1, dur: 25, f: ['tv_drama_5of5'], cap: '다음 이 시간에' }, gap: [150, 420],
-    subs: ['…냥.', '…냐앙.', '(창밖을 본다)', '그때 그 상자, 기억해?', '…츄르 때문이야?', '(꼬리를 탁 친다)'] },
-  baseball: { name: '고양이 프로야구', loop: t => t % 3.8 < 2.3 ? 'tv_baseball_1of5' : 'tv_baseball_2of5', sport: 1, teams: ['냥', '묘'],
-    ev: [{ id: 'chase', w: 3, size: 2, dur: 4.4, f: ['tv_baseball_3of5', 'tv_baseball_4of5'], cap: '공 대신 공을 쫓아갑니다' }, { id: 'homerun', w: 0.6, size: 3, dur: 5, f: ['tv_baseball_5of5'], cap: '홈런!', score: 1 }], gap: [90, 300] },
-  football: { name: '고양이 축구', loop: t => Math.floor(t / 3.4) % 2 ? 'tv_football_2of4' : 'tv_football_1of4', sport: 1, teams: ['털', '실'],
-    ev: [{ id: 'box', w: 2, size: 2, dur: 5, f: ['tv_football_3of4'], cap: '경기 중단: 상자 발견' }, { id: 'goal', w: 0.8, size: 3, dur: 5, f: ['tv_football_4of4'], cap: '골!', score: 1 }], gap: [100, 320] },
-  actress: { name: '연예가 고양통신', loop: t => Math.floor(t / 0.75) % 2 ? 'tv_actress_2of4' : 'tv_actress_1of4',
-    ev: [{ id: 'groom', w: 2, size: 1, dur: 4, f: ['tv_actress_3of4'], cap: '우아하게 그루밍 중' }, { id: 'flash', w: 1.3, size: 3, dur: 4, f: ['tv_actress_4of4'], cap: '찰칵!' }], gap: [150, 400] },
+  news: { get name() { return tr('tvNews'); }, loop: t => t % 4.6 < 0.2 ? 'tv_news_2of3' : 'tv_news_1of3',
+    ev: [{ id: 'breaking', w: 1, size: 3, dur: 6, f: ['tv_news_3of3'], get cap() { return tr('tvBreaking'); }, once: 1 }], gap: [240, 600],
+    get ticker() { return tr('tvTicker'); } },
+  drama: { get name() { return tr('tvDrama'); }, loop: t => t % 7 < 4.2 ? 'tv_drama_1of5' : 'tv_drama_2of5',
+    ev: [{ id: 'turn', w: 3, size: 2, dur: 4, f: ['tv_drama_3of5'], get cap() { return tr('tvDramaTurn'); } }, { id: 'nose', w: 1, size: 3, dur: 6, f: ['tv_drama_4of5'], get cap() { return tr('tvDramaNose'); } }],
+    end: { id: 'next', size: 1, dur: 25, f: ['tv_drama_5of5'], get cap() { return tr('tvDramaNext'); } }, gap: [150, 420],
+    get subs() { return tr('tvDramaSubs'); } },
+  baseball: { get name() { return tr('tvBaseball'); }, loop: t => t % 3.8 < 2.3 ? 'tv_baseball_1of5' : 'tv_baseball_2of5', sport: 1, get teams() { return tr('tvBaseballTeams'); },
+    ev: [{ id: 'chase', w: 3, size: 2, dur: 4.4, f: ['tv_baseball_3of5', 'tv_baseball_4of5'], get cap() { return tr('tvBaseballChase'); } }, { id: 'homerun', w: 0.6, size: 3, dur: 5, f: ['tv_baseball_5of5'], get cap() { return tr('tvHomerun'); }, score: 1 }], gap: [90, 300] },
+  football: { get name() { return tr('tvSoccer'); }, loop: t => Math.floor(t / 3.4) % 2 ? 'tv_football_2of4' : 'tv_football_1of4', sport: 1, get teams() { return tr('tvSoccerTeams'); },
+    ev: [{ id: 'box', w: 2, size: 2, dur: 5, f: ['tv_football_3of4'], get cap() { return tr('tvSoccerBox'); } }, { id: 'goal', w: 0.8, size: 3, dur: 5, f: ['tv_football_4of4'], get cap() { return tr('tvGoal'); }, score: 1 }], gap: [100, 320] },
+  actress: { get name() { return tr('tvActress'); }, loop: t => Math.floor(t / 0.75) % 2 ? 'tv_actress_2of4' : 'tv_actress_1of4',
+    ev: [{ id: 'groom', w: 2, size: 1, dur: 4, f: ['tv_actress_3of4'], get cap() { return tr('tvGroom'); } }, { id: 'flash', w: 1.3, size: 3, dur: 4, f: ['tv_actress_4of4'], get cap() { return tr('tvFlash'); } }], gap: [150, 400] },
+  // 할로윈 특집(할로윈 기간 22~24시만): 어두운 복도를 촛불 들고 걷는 고양이, 가끔 뒤돌아봄. 큰 사건은 뒤에 놓인 오이
+  horror: { get name() { return tr('tvHorror'); }, loop: t => t % 9 > 7.4 ? 'tv_horror_2of3' : 'tv_horror_1of3',
+    ev: [{ id: 'creak', w: 2, size: 1, dur: 4, f: ['tv_horror_2of3'], get cap() { return tr('tvCreak'); } }, { id: 'cucumber', w: 1, size: 3, dur: 5, f: ['tv_horror_3of3'], get cap() { return tr('tvCucumber'); } }], gap: [120, 360] },
 };
 // 편성표: [시작, 끝, 한 칸(시간), 후보]. 24시가 넘는 시각은 같은 방송일의 새벽. sports는 평일 야구, 주말 축구
 const TV_GRID = [[5 + 10 / 60, 9, 0.5, ['news', 'news', 'drama']], [9, 12, 0.5, ['actress', 'news', 'drama']], [12, 18, 1, ['drama', 'football', 'actress', 'baseball']],
@@ -41,25 +45,29 @@ export const fmtH = h => {
 function tvTitle(sg) {
   const p = TVP[sg.p];
   if (sg.p === 'drama')
-    return p.name + (sg.s >= 21 && sg.s < 22 ? ' (본방)' : ' (재)');
+    return tr(sg.s >= 21 && sg.s < 22 ? 'tvFirstRun' : 'tvRerun', { name: p.name });
   if (sg.p === 'news')
-    return sg.s < 9 ? '아침 ' + p.name : sg.s >= 23.5 ? '마감 ' + p.name : p.name;
+    return sg.s < 9 ? tr('tvMorning', { name: p.name }) : sg.s >= 23.5 ? tr('tvLate', { name: p.name }) : p.name;
   if (p.sport)
-    return p.name + (sg.s >= 18 && sg.s < 21 ? ' 중계' : ' (재)');
+    return tr(sg.s >= 18 && sg.s < 21 ? 'tvLive' : 'tvRerun', { name: p.name });
+  if (sg.p === 'horror')
+    return tr('tvHorrorSpecial', { name: p.name });
   return p.name;
 }
 const tvDays = {};
 export function tvSegs(bd) {
-  const k = dayKey(bd);
+  const hw = holiday(bd) === 'halloween', dk = dayKey(bd), k = dk + (hw ? ':hw' : '');
   if (tvDays[k])
     return tvDays[k];
   const we = isWeekend(bd), out = [];
   for (const [b0, b1, len, c] of TV_GRID) {
     for (let s = b0; s < b1 - 1e-6;) {
       const e = Math.min(b1, (Math.floor(s / len + 1e-6) + 1) * len);
-      let p = c[Math.floor(hash('tv' + k + ':' + s.toFixed(3)) * c.length)];
+      let p = c[Math.floor(hash('tv' + dk + ':' + s.toFixed(3)) * c.length)];
       if (p === 'sports')
         p = we ? 'football' : 'baseball';
+      if (hw && s >= 22 - 1e-6 && s < 24 - 1e-6)
+        p = 'horror'; // 할로윈 특집: 22~24시 한 칸
       const l = out[out.length - 1];
       if (l && l.p === p && Math.abs(l.e - s) < 1e-6 && !(s === 18 || s === 21 || s === 22))
         l.e = e;
@@ -68,7 +76,7 @@ export function tvSegs(bd) {
       s = e;
     }
   }
-  out.forEach(sg => sg.title = tvTitle(sg));
+  out.forEach(sg => Object.defineProperty(sg, 'title', { get: () => tvTitle(sg) })); // 언어를 바꾸면 바로 따라가도록 그때그때 만든다
   if (Object.keys(tvDays).length > 3)
     for (const kk in tvDays)
       delete tvDays[kk];
@@ -206,7 +214,7 @@ export function tvTick(d) {
     return; // 처음 한 번은 알리지 않음
   if (pv.mode === 'off' && st.mode !== 'off') {
     Snd.tvClick(true);
-    caption('…탁.', 2);
+    caption(tr('capTvOn'), 2);
     tvReactPower();
   }
   if (pv.mode !== 'off' && st.mode === 'off') {
@@ -214,7 +222,7 @@ export function tvTick(d) {
   }
   if (st.mode === 'testcard' && pv.mode === 'signoff') {
     Snd.tvBeep(2.5);
-    caption('…삐—…', 3);
+    caption(tr('capBeep'), 3);
     tvReactBeep();
   }
   if (st.mode === 'prog' && (pv.mode !== 'prog' || pv.sg !== st.sg))

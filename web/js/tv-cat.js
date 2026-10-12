@@ -1,5 +1,6 @@
 /* 강고양이 씨 TV · 반응과 편성표 창: TV 보기, TV 위 낮잠, 뒤 빼꼼, 사건 반응, 편성표 창 */
 import { play } from './anim.js';
+import { tr } from './i18n.js';
 import { loafB } from './cat.js';
 import { O, S, present, socketOf, topOf } from './objects.js';
 import { closeShelf } from './shelf.js';
@@ -214,6 +215,10 @@ export function tvEventFired(e) {
       ], 'sulk');
       return;
     }
+    if (e.id === 'cucumber') { // 오이다!!! TV 앞에 있으면 같이 펄쩍
+      run(cat, [play('startle'), bub('‼️', 2), hold(0.6, 'stand'), play('tvwatch', rnd(20, 60), () => !tvOn()), hold(rnd(5, 12), 'loaf')], 'tv');
+      return;
+    }
     if (e.size >= 3)
       say(cat, e.id === 'nose' ? '❤️' : '‼️', 2.5);
     else if (e.size === 2 && Math.random() < 0.5)
@@ -285,12 +290,12 @@ function tvNowText(st) {
   if (!st)
     return '';
   if (st.mode === 'prog')
-    return `지금 <b>${esc(st.sg.title)}</b> · ${fmtH(st.sg.s)}–${fmtH(st.sg.e)}`;
-  return { off: '지금은 방송을 쉬는 시간이에요. 새벽 5시에 다시 켜져요.', testcard: '화면조정 중', opening: '방송을 시작합니다', signoff: '오늘 방송을 마치는 중' }[st.mode] || '';
+    return tr('tvgNow', { title: esc(st.sg.title), s: fmtH(st.sg.s), e: fmtH(st.sg.e) });
+  return { off: tr('tvgOff'), testcard: tr('tvgTestcard'), opening: tr('tvgOpening'), signoff: tr('tvgSignoff') }[st.mode] || '';
 }
-export function openTvGuide() {
+export function openTvGuide(quiet) {
   const d = now(), st = world.tv.st || tvState(d), bd = tvBday(d), H = tvH(d), segs = tvSegs(bd);
-  const rows = [[5, '방송 시작 · 화면조정과 아침 해'], ...segs.map(s => [s.s, s.title]), [24 + 55 / 60, '방송 마침 · 화면조정']];
+  const rows = [[5, tr('tvgSignOn')], ...segs.map(s => [s.s, s.title]), [24 + 55 / 60, tr('tvgSignOff')]];
   let cur = -1;
   if (st.mode !== 'off')
     rows.forEach((r, i) => {
@@ -300,13 +305,13 @@ export function openTvGuide() {
   noteEl.hidden = true;
   scrEl.hidden = true;
   closeShelf();
-  tvgEl.innerHTML = '<button class="x" type="button" aria-label="TV 닫기">×</button><h2>고양.방송</h2><canvas width="320" height="240" aria-label="지금 TV 화면"></canvas>' +
-    `<p class="now">${tvNowText(st)}</p><ol aria-label="오늘 편성표">` + rows.map((r, i) => `<li${i === cur ? ' class="cur" aria-current="true"' : ''}><time>${fmtH(r[0])}</time><span>${esc(r[1])}</span></li>`).join('') +
-    '</ol><p class="foot">고양.방송은 실제 시간에 맞춰 나와요. 새벽 1시부터 5시까지는 쉬어요.</p>';
+  tvgEl.innerHTML = `<button class="x" type="button" aria-label="${esc(tr('tvgClose'))}">×</button><h2>${esc(tr('tvChannel'))}</h2><canvas width="320" height="240" aria-label="${esc(tr('tvgScreen'))}"></canvas>` +
+    `<p class="now">${tvNowText(st)}</p><ol aria-label="${esc(tr('tvgList'))}">` + rows.map((r, i) => `<li${i === cur ? ' class="cur" aria-current="true"' : ''}><time>${fmtH(r[0])}</time><span>${esc(r[1])}</span></li>`).join('') +
+    `</ol><p class="foot">${esc(tr('tvgFoot'))}</p>`;
   tvBig = tvgEl.querySelector('canvas').getContext('2d');
   tvgEl.hidden = false;
   tvgEl.focus({ preventScroll: true });
-  if (!cat.closed && !world.manduk && Math.random() < 0.4)
+  if (!quiet && !cat.closed && !world.manduk && Math.random() < 0.4)
     say(cat, '👀', 1.6);
 }
 export function closeTvGuide() {

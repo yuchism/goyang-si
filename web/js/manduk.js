@@ -9,23 +9,14 @@ import { bub, fn, go, hold, run, until } from './steps.js';
 import { FIRST, dayNum, isAnniversary, now, rainNow } from './time.js';
 import { HAND, INK, RM, ease, lerp, pick, rnd, store } from './util.js';
 import { caption, cat, mouse, say, world } from './world.js';
+import { tr } from './i18n.js';
 /* ───────── 김만득 씨 ───────── */
-const LINES = {
-  feed: [['밥 먹자~', '천천히 먹어'], ['고양아 밥~', '많이 먹어라']],
-  noise: [['아 왜~ 또 뭐 깼어?', '강고양이!!']],
-  quiet: [['...뭐야, 조용하네']],
-  ret: [['다녀왔다~', '고양아~ 잘 있었어?']],
-  lights: [['불 끈다~', '잘 자라 고양아']],
-  check: [['뭐 하냐~', '고양아~'], ['물 마셨어?', '그래그래'], ['어디 있나~', '거기 있었구나']],
-  night: [['자다 깼잖아…', '강고양이…']],
-  anniv: [['오늘 너 우리 집 온 날이다.', '간식!']],
-  leave: [['다녀올게~']]
-};
+const LINES = () => tr('manduk'); // 방문 종류별 대사 묶음 (i18n.js의 manduk)
 export function startVisit(type) {
   if (world.manduk)
     return;
   const d = now();
-  world.manduk = { type, phase: 'steps', t: 0, legX: 1320, stride: 0, say: null, hand: null, lines: pick(LINES[type] || LINES.check), li: 0 };
+  world.manduk = { type, phase: 'steps', t: 0, legX: 1320, stride: 0, say: null, hand: null, lines: pick(LINES()[type] || LINES().check), li: 0 };
   world.lastVisit = world.t;
   world.visitsToday++;
   // 규칙: 만득 씨는 절대 쥐야쥐를 보면 안 된다
@@ -90,7 +81,7 @@ export function startVisit(type) {
   if (!cat.inBox)
     cat.act = null;
   innocent();
-  caption('뚜벅 뚜벅…', 2.4);
+  caption(tr('capSteps'), 2.4);
   Snd.thump(0.6);
 }
 export function updateManduk(dt) {
@@ -108,7 +99,7 @@ export function updateManduk(dt) {
       if (!mouse.hidden) {
         m.phase = 'pause';
         m.t = 0;
-        caption('어? 슬리퍼 한 짝 어디 갔지…', 3);
+        caption(tr('capSlipper'), 3);
       }
       else {
         m.phase = 'open';
@@ -209,7 +200,7 @@ function act(m) {
       }, 1100);
     }
     else {
-      m.lines = LINES.quiet[0];
+      m.lines = LINES().quiet[0];
       m.say = m.lines[0];
     }
   }
@@ -241,7 +232,7 @@ function act2(m) {
   if (m.extra) {
     setTimeout(() => {
       if (world.manduk) {
-        world.manduk.say = '또 키보드 밟았네';
+        world.manduk.say = tr('mandukKeyboard');
         world.laptop = '';
         store.set('laptop', '');
         world.notes.cleared = true;
@@ -250,16 +241,16 @@ function act2(m) {
   }
 }
 /* ───────── 포스트잇 ───────── */
-const NOTES = ['고양이 밥 줌 8시', '택배 상자 버리지 말 것\n(고양이가 씀)', '츄르 사기', '요즘 상자에 구멍이 났네?', '치즈가 조금씩 없어진다.\n고양아 너지?', '벽 쪽에서 사각사각 소리.\n집이 낡았나', '모래 갈기', '고양이 발톱 깎기 (도전)', '햇빛 드는 자리 비워둘 것', '고양이가 나를 보고 하품함.\n무슨 뜻이지', '노트북 덮어 두기', '빵 봉지에 작은 구멍…\n고양이 이빨이 이렇게 작았나', '휴지 사기', '슬리퍼 한 짝 또 없어짐', '나비 들어오면 창문 닫기?\n(고양이가 좋아함. 그냥 둠)'];
+// 포스트잇 글은 i18n.js의 notes (날마다 하나씩 차례로)
 world.notes = { cleared: false };
 export function todaysNote(d) {
   if (isAnniversary(d))
-    return '오늘은 강고양이 온 날!\n간식 챙기기';
+    return tr('noteAnniv');
   if (world.notes.cleared)
-    return '노트북 덮어 두기!!\n(또 밟음)';
+    return tr('noteLaptop');
   if (rainNow(d))
-    return '우산 챙기기';
-  const idx = Math.floor((dayNum(d) - dayNum(FIRST) + NOTES.length * 100)) % NOTES.length;
+    return tr('noteRain');
+  const NOTES = tr('notes'), idx = Math.floor((dayNum(d) - dayNum(FIRST) + NOTES.length * 100)) % NOTES.length;
   return NOTES[idx];
 }
 export function drawManduk(part) {

@@ -106,7 +106,13 @@ export function catFrame(a) {
     if (a.moving && !RM) {
       if (a.fast)
         return 'run_' + (Math.floor(a.walkPh * 0.9) % 6 + 1);
-      const cyc = ['walk_1', 'walk_2', 'walk_3', 'walk_2'];
+      // 착지 → 지나감 → 반대발 착지 → 지나감. 앞발이 실제로 바닥을 짚는 4단계 걸음.
+      const cyc = [
+        'walk_contact_right',
+        'walk_pass_after_right',
+        'walk_contact_left',
+        'walk_pass_after_left',
+      ];
       return cyc[Math.floor(a.walkPh * 1.25) % 4];
     }
     return 'stand';

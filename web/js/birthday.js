@@ -7,21 +7,25 @@ import { HOLE } from './sprites.js';
 import { H, W, ctx } from './stage.js';
 import { bub, dance, fn, go, hold, run } from './steps.js';
 import { $, RM, clamp, hash, pick, rnd } from './util.js';
+import { tr } from './i18n.js';
 import { cat, mouse, say, world } from './world.js';
 export const DANCE_CELLS = [[54, 553], [599, 1085], [1098, 1591], [1710, 2122]]; // 춤 시트 4장의 가로 범위(px)
 export const pageParams = new URLSearchParams(location.search), birthdayMode = pageParams.has('birthday');
 export const birthdayName = (pageParams.get('birthday') || '').trim().slice(0, 24);
 if (birthdayMode) {
   const banner = document.getElementById('birthday');
-  document.getElementById('birthdayText').textContent = birthdayName ? birthdayName + '님, 생일 축하해요!' : '생일 축하해요!';
   banner.hidden = false;
+}
+export function bannerText() {
+  if (birthdayMode)
+    document.getElementById('birthdayText').textContent = birthdayName ? tr('bdayBanner', { name: birthdayName }) : tr('bdayBannerNoName');
 }
 // 생일 파티 중 노트북 화면: 축하 문구가 오른쪽에서 왼쪽으로 흘러간다
 export function drawPartyScreen(v) {
   const p = socketOf(O[v.id], 'screenTL'), q = socketOf(O[v.id], 'screenBR');
   if (!p || !q)
     return;
-  const x = p[0], y = p[1], w = q[0] - p[0], h = q[1] - p[1], t = world.t, msg = '🎂 ' + (birthdayName || '김만득') + '님 생일을 축하합니다. 🎉';
+  const x = p[0], y = p[1], w = q[0] - p[0], h = q[1] - p[1], t = world.t, msg = tr('bdayLaptop', { name: birthdayName || tr('bdayDefaultName') });
   ctx.save();
   ctx.beginPath();
   ctx.rect(x, y, w, h);
@@ -226,7 +230,7 @@ function startBirthdayParty() {
     Snd.on = true;
     Snd.ac.resume();
     $('bSound').setAttribute('aria-pressed', 'true');
-    $('bSound').textContent = '소리 끄기';
+    $('bSound').textContent = tr('soundOff');
   }
   const sec = Snd.birthdaySong() || 13;
   world.party = { t: 0, limit: sec + 20, end: null };

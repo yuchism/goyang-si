@@ -1,5 +1,7 @@
 /* 입력과 버튼: 누르기, 쪽지·노트북 창, 소리·전체 화면, 미리보기 도구 */
 import { imageReady, img } from './assets.js';
+import { startBats, startGhost, startWitch } from './halloween.js';
+import { LANG, setLang, tr } from './i18n.js';
 import { knockB, petCat, secretB } from './cat.js';
 import { startVisit, todaysNote } from './manduk.js';
 import { mouseHide, spawnMouse } from './mouse.js';
@@ -8,10 +10,11 @@ import { spawnButterfly, startSanta, startUFO } from './outside.js';
 import { bookAt, closeShelf, onShelf, openShelf } from './shelf.js';
 import { Snd } from './sound.js';
 import { DEPTH, H, W, cam, cv, fit, view } from './stage.js';
-import { SEASON_KO, boxToday, dayKey, holidayOverride, hourOf, mandukAsleep, mandukHome, now, rainNow, seasonOverride, setOverride, setSimMs, setSpeed, simMs, sunTimes } from './time.js';
+import { boxToday, dayKey, holidayOverride, hourOf, mandukAsleep, mandukHome, now, rainNow, seasonOverride, setOverride, setSimMs, setSpeed, simMs, sunTimes } from './time.js';
 import { TVP } from './tv.js';
 import { closeTvGuide, openTvGuide } from './tv-cat.js';
-import { $, pick, store } from './util.js';
+import { bannerText } from './birthday.js';
+import { $, esc, pick, store } from './util.js';
 import { caption, cat, mouse, say, world } from './world.js';
 /* ───────── 입력 ───────── */
 export function toStage(e) {
@@ -31,13 +34,13 @@ export const noteEl = document.getElementById('note'), scrEl = document.getEleme
 // 보는 사람이 물건을 눌렀을 때 (objects.json의 touch)
 const TOUCH = {
   note: () => {
-    noteEl.innerHTML = todaysNote(now()).replace(/\n/g, '<br>') + '<small>— 김만득</small>';
+    noteEl.innerHTML = esc(todaysNote(now())).replace(/\n/g, '<br>') + `<small>${esc(tr('noteSign'))}</small>`;
     noteEl.hidden = false;
     noteEl.focus();
   },
   tv: () => openTvGuide(),
   screen: () => {
-    scrEl.textContent = world.laptop ? world.laptop.split('\n').slice(-8).join('\n') : '(빈 화면)';
+    scrEl.textContent = world.laptop ? world.laptop.split('\n').slice(-8).join('\n') : tr('blankScreen');
     scrEl.hidden = false;
     scrEl.focus();
   },
@@ -55,6 +58,18 @@ async function wakeLock() {
 const SEASONS = [null, 'spring', 'summer', 'autumn', 'winter'];
 // 입력과 버튼 연결
 export function initUI() {
+  // 언어: KO / EN 버튼. 바꾸면 열려 있는 창도 다시 채운다
+  $('bLang').onclick = () => setLang(LANG === 'ko' ? 'en' : 'ko');
+  window.addEventListener('langchange', () => {
+    $('bSound').textContent = tr(Snd.on ? 'soundOff' : 'soundOn');
+    if (!noteEl.hidden)
+      TOUCH.note();
+    if (!scrEl.hidden)
+      TOUCH.screen();
+    if (!$('tvg').hidden)
+      openTvGuide(true);
+    bannerText();
+  });
   cv.addEventListener('pointerdown', e => {
     const [x, y] = toStage(e);
     world.lastTouch = performance.now();
@@ -108,7 +123,7 @@ export function initUI() {
   $('bSound').onclick = () => {
     const on = Snd.toggle();
     $('bSound').setAttribute('aria-pressed', on);
-    $('bSound').textContent = on ? '소리 끄기' : '소리 켜기';
+    $('bSound').textContent = tr(on ? 'soundOff' : 'soundOn');
     if (on) {
       wakeLock();
       Snd.bell();
@@ -172,7 +187,7 @@ export function initUI() {
   $('dBfly').onclick = () => spawnButterfly();
   $('dMan').onclick = () => {
     if (!mandukHome(now())) {
-      caption('(만득 씨는 지금 회사에 있어요)', 3);
+      caption(tr('devAtWork'), 3);
       return;
     }
     startVisit(world.cup.state === 'floor' ? 'noise' : mandukAsleep(now()) ? 'night' : 'check');
@@ -190,16 +205,24 @@ export function initUI() {
   };
   $('dSeason').onclick = () => {
     setOverride('season', SEASONS[(SEASONS.indexOf(seasonOverride) + 1) % SEASONS.length]);
-    caption(seasonOverride ? '(' + SEASON_KO[seasonOverride] + ')' : '(실제 계절)', 2.5);
+    caption(seasonOverride ? tr('devSeason', { season: tr('season')[seasonOverride] }) : tr('devRealSeason'), 2.5);
   };
   $('dXmas').onclick = () => {
     setOverride('holiday', holidayOverride === 'christmas' ? null : 'christmas');
-    caption(holidayOverride ? '(크리스마스 시즌)' : '(실제 날짜)', 2.5);
+    caption(holidayOverride ? tr('devXmas') : tr('devRealDate'), 2.5);
   };
   $('dSanta').onclick = () => startSanta();
+  // 할로윈: 휴일 강제와 마녀·박쥐·유령 바로 부르기
+  $('dHw').onclick = () => {
+    setOverride('holiday', holidayOverride === 'halloween' ? null : 'halloween');
+    caption(holidayOverride ? tr('devHw') : tr('devRealDate'), 2.5);
+  };
+  $('dWitch').onclick = () => startWitch(Math.random() < 0.5);
+  $('dBat').onclick = () => startBats();
+  $('dGhost').onclick = () => startGhost();
   $('dUfo').onclick = () => {
     if (world.manduk) {
-      caption('(만득 씨가 있을 땐 오지 않아요)', 3);
+      caption(tr('devNoUfo'), 3);
       return;
     }
     startUFO();
@@ -207,7 +230,7 @@ export function initUI() {
   $('dTv').onclick = () => {
     const st = world.tv.st;
     if (!st || st.mode !== 'prog') {
-      caption('(지금은 방송 사이예요. 시각을 옮겨 보세요)', 3);
+      caption(tr('devNoProg'), 3);
       return;
     }
     const P = TVP[st.p], big = P.ev.filter(e => e.size >= 2);

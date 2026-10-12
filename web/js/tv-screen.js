@@ -1,5 +1,6 @@
 /* 강고양이 씨 TV · 화면: 320×240 화면 버퍼, 브라운관 효과, 방 안에 그리기, 밤 불빛 */
 import { TV_META, imageReady, img } from './assets.js';
+import { tr } from './i18n.js';
 import { birthdayName, partyLevel } from './birthday.js';
 import { drawProp } from './draw.js';
 import { O, P, objView, present, zOf } from './objects.js';
@@ -38,6 +39,11 @@ function tbRR(x, y, w, h, r) {
 function tvText(t, x, y, size, o = {}) {
   tb.save();
   tb.font = `700 ${size}px ${HAND}`;
+  // 화면 폭을 넘으면 글자를 줄인다 (영어가 대체로 길다). 흐르는 뉴스 띠(lw 0, maxW 없음)는 그대로
+  const max = o.maxW || (o.align === 'left' ? 312 - x : 304);
+  if (!o.noFit)
+    while (size > 10 && tb.measureText(t).width > max)
+      tb.font = `700 ${--size}px ${HAND}`;
   tb.textAlign = o.align || 'center';
   tb.textBaseline = 'middle';
   tb.lineJoin = 'round';
@@ -53,7 +59,11 @@ function tvText(t, x, y, size, o = {}) {
 function tvBand(t, y, size, o = {}) {
   tb.save();
   tb.font = `700 ${size}px ${HAND}`;
-  const w = Math.min(306, tb.measureText(t).width + 26);
+  let w = tb.measureText(t).width + 26;
+  while (w > 306 && size > 10) {
+    tb.font = `700 ${--size}px ${HAND}`;
+    w = tb.measureText(t).width + 26;
+  }
   tb.fillStyle = o.bg || 'rgba(22,18,34,.78)';
   tbRR(160 - w / 2, y - size * 0.78, w, size * 1.56, 7);
   tb.fill();
@@ -104,16 +114,16 @@ export function drawTvBuf(st) {
     pic('screen_sunrise_1of2');
     pic('screen_sunrise_2of2', ease(clamp(st.k, 0, 1)));
     tb.globalAlpha = clamp(st.k * 4, 0, 1);
-    tvText('고양.방송', 160, 50, 46, { fill: '#fff3d6', lw: 6 });
-    tvText('오늘도 방송을 시작합니다', 160, 90, 19, { lw: 4 });
+    tvText(tr('tvChannel'), 160, 50, 46, { fill: '#fff3d6', lw: 6 });
+    tvText(tr('tvOpening'), 160, 90, 19, { lw: 4 });
     tb.globalAlpha = 1;
   }
   else
     pic(T.frame);
   if (st.mode === 'testcard')
-    tvBand('고양.방송   화면조정', 20, 16);
+    tvBand(tr('tvTestcard'), 20, 16);
   if (st.mode === 'signoff')
-    tvBand('오늘 방송을 모두 마쳤습니다. 안녕히 주무세요', 222, 15);
+    tvBand(tr('tvSignoff'), 222, 15);
   if (st.mode === 'prog') {
     const P = TVP[st.p], e = st.ev && st.ev.e;
     if (e && e.cap)
@@ -127,7 +137,7 @@ export function drawTvBuf(st) {
       tb.rect(0, 224, 320, 16);
       tb.clip();
       for (let x = 320 - off - w; x < 320; x += w)
-        tvText(msg, x, 232.5, 15, { align: 'left', lw: 0 });
+        tvText(msg, x, 232.5, 15, { align: 'left', lw: 0, noFit: 1 });
       tb.restore();
     }
     else if (st.p === 'drama') {
@@ -154,7 +164,7 @@ export function drawTvBuf(st) {
   }
   if (world.party && partyLevel() > 0.05) {
     tb.globalAlpha = Math.min(1, partyLevel() * 1.5);
-    tvBand('🎂 축하 방송 · ' + (birthdayName ? birthdayName + '님' : '') + ' 생일 축하해요', st.mode === 'prog' && TVP[st.p].sport ? 46 : 20, 15, { bg: 'rgba(120,30,60,.85)', fill: '#ffe9a8' });
+    tvBand(birthdayName ? tr('bdayTv', { name: birthdayName }) : tr('bdayTvNoName'), st.mode === 'prog' && TVP[st.p].sport ? 46 : 20, 15, { bg: 'rgba(120,30,60,.85)', fill: '#ffe9a8' });
     tb.globalAlpha = 1;
   }
   if (st.noise) {
@@ -269,20 +279,13 @@ export function drawTVNight(dk) {
   ctx.restore();
   if (st.mode === 'off')
     return;
-  const [cr, cg, cb] = T.avg || [190, 200, 225], I = k * (0.78 + 0.22 * clamp(T.flick, 0, 1.6)), cx = r.sx + r.sw / 2, cy = r.sy + r.sh / 2, fy = v.pos.y + 50;
+  const [cr, cg, cb] = T.avg || [190, 200, 225], I = k * (0.78 + 0.22 * clamp(T.flick, 0, 1.6)), cx = r.sx + r.sw / 2, cy = r.sy + r.sh / 2; // 벽에 번지는 빛만 (바닥 빛은 뺐다)
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
-  let g = ctx.createRadialGradient(cx, cy, r.sw * 0.35, cx, cy, 320);
+  const g = ctx.createRadialGradient(cx, cy, r.sw * 0.35, cx, cy, 320);
   g.addColorStop(0, `rgba(${cr},${cg},${cb},${0.15 * I})`);
   g.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
   ctx.fillStyle = g;
   ctx.fillRect(cx - 320, cy - 320, 640, 640);
-  g = ctx.createRadialGradient(cx, fy, 10, cx, fy, 280);
-  g.addColorStop(0, `rgba(${cr},${cg},${cb},${0.2 * I})`);
-  g.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.ellipse(cx, fy, 280, 78, 0, 0, 7);
-  ctx.fill();
   ctx.restore();
 }

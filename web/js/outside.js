@@ -1,5 +1,6 @@
 /* 창밖과 하늘을 나는 것: 하늘·해·달·구름·비·눈, 새, 나비, UFO, 산타 썰매 */
 import { play } from './anim.js';
+import { drawHalloweenSky } from './halloween.js';
 import { IMG, imageReady, img } from './assets.js';
 import { drawPetals } from './birthday.js';
 import { P } from './objects.js';
@@ -201,6 +202,7 @@ export function drawOutside(d, w) {
   }
   drawUFO(w);
   drawSanta(w);
+  drawHalloweenSky(w);
   drawPetals(w);
   if (rain && season(d) === 'winter') {
     ctx.fillStyle = 'rgba(255,255,255,.92)';
@@ -235,8 +237,8 @@ export function maybeUFO(d, dt) {
     return;
   }
   const h = hourOf(d);
-  if (world.manduk || !(h >= 20 || h < 4))
-    return;
+  if (world.manduk || world.witch || world.curtainShadow || !(h >= 20 || h < 4))
+    return; // 마녀가 지나가는 밤에는 미룸
   const boost = world.lastType && world.t - world.lastType < 90 ? 40 : 1;
   if (Math.random() < dt * boost / (3 * 3600))
     startUFO();

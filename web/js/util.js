@@ -1,5 +1,11 @@
 /* 자잘한 도구: 난수, 범위, 해시, 저장소, 손글씨 글꼴, 색 섞기 */
-export const HAND = '"Gaegu","Nanum Pen Script",cursive';
+// 손글씨 글꼴: 한국어는 Gaegu, 영어는 Patrick Hand를 앞에 둔다 (캔버스 글자는 그릴 때마다 HAND를 읽는다)
+export let HAND = '"Gaegu","Nanum Pen Script",cursive';
+export function setHandFont(lang) {
+  HAND = lang === 'en' ? '"Patrick Hand","Gaegu",cursive' : '"Gaegu","Nanum Pen Script",cursive';
+  if (document.fonts)
+    document.fonts.load('700 30px ' + (lang === 'en' ? '"Patrick Hand"' : 'Gaegu')).catch(() => { });
+}
 export const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 export const store = { get(k, d) {
     try {

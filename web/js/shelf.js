@@ -1,5 +1,6 @@
 /* 책장 메뉴: 책 한 권이 메뉴 하나 (objects.json의 bookshelf.books) */
 import { imageReady, img } from './assets.js';
+import { tObj, tr } from './i18n.js';
 import { rr } from './draw.js';
 import { O } from './objects.js';
 import { ctx, cv } from './stage.js';
@@ -59,7 +60,7 @@ export function drawBookTag() {
   const a = O.bookshelf.area, tx = a[0] + a[2] + 8, ty = b.area[1] + b.area[3] / 2;
   ctx.save();
   ctx.font = '700 24px ' + HAND;
-  const tw = ctx.measureText(b.title).width + 24;
+  const tw = ctx.measureText(tObj(b, 'title')).width + 24;
   ctx.fillStyle = 'rgba(247,236,214,.96)';
   ctx.strokeStyle = '#2b1d16';
   ctx.lineWidth = 2.5;
@@ -69,17 +70,17 @@ export function drawBookTag() {
   ctx.fillStyle = '#2b1d16';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillText(b.title, tx + 12, ty + 1);
+  ctx.fillText(tObj(b, 'title'), tx + 12, ty + 1);
   ctx.restore();
 }
 function renderShelf(sel) {
   const bs = BOOKS(), cur = bs.find(b => b.id === sel);
   const ext = h => /^https?:/i.test(h) && !/^https?:\/\/(www\.)?goyang\.si(\/|$)/i.test(h);
-  shelfEl.innerHTML = '<button class="x" type="button" aria-label="책장 닫기">×</button><p class="lbl">책장</p>' +
-    '<div class="spines">' + bs.map(b => `<button class="spine" type="button" data-id="${esc(b.id)}" aria-pressed="${b.id === sel}" style="--c:${esc(b.color || '#a0785a')};--h:${Math.round(96 + b.area[3] * 0.3)}px">${esc(b.title)}</button>`).join('') + '</div>' +
-    '<div class="bookd" aria-live="polite">' + (cur ? `<h2>${esc(cur.title)}</h2><p>${esc(cur.desc || '')}</p>` +
-    (cur.href ? `<a class="open" href="${esc(cur.href)}"${ext(cur.href) ? ' target="_blank" rel="noopener"' : ''}>펼치기 →</a>` : '<span class="empty">아직 빈 책이에요.</span>')
-    : '<p>읽을 책을 골라 보세요.</p>') + '</div>';
+  shelfEl.innerHTML = `<button class="x" type="button" aria-label="${esc(tr('shelfClose'))}">×</button><p class="lbl">${esc(tr('shelfDlg'))}</p>` +
+    '<div class="spines">' + bs.map(b => `<button class="spine" type="button" data-id="${esc(b.id)}" aria-pressed="${b.id === sel}" style="--c:${esc(b.color || '#a0785a')};--h:${Math.round(96 + b.area[3] * 0.3)}px">${esc(tObj(b, 'title'))}</button>`).join('') + '</div>' +
+    '<div class="bookd" aria-live="polite">' + (cur ? `<h2>${esc(tObj(cur, 'title'))}</h2><p>${esc(tObj(cur, 'desc') || '')}</p>` +
+    (cur.href ? `<a class="open" href="${esc(cur.href)}"${ext(cur.href) ? ' target="_blank" rel="noopener"' : ''}>${esc(tr('shelfOpen'))}</a>` : `<span class="empty">${esc(tr('shelfEmpty'))}</span>`)
+    : `<p>${esc(tr('shelfPick'))}</p>`) + '</div>';
 }
 export function openShelf(id) {
   shelfUI.open = true;
@@ -129,6 +130,10 @@ export function initShelf() {
   cv.addEventListener('pointerleave', () => {
     shelfUI.hover = null;
     cv.style.cursor = '';
+  });
+  window.addEventListener('langchange', () => {
+    if (shelfUI.open)
+      renderShelf(shelfUI.pull);
   });
   document.getElementById('aShelf').onclick = () => openShelf(null);
   document.getElementById('bShelf').onclick = () => shelfUI.open ? closeShelf() : openShelf(null);

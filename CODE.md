@@ -10,7 +10,7 @@ web/                      ← GitHub Pages로 배포되는 폴더 (이 안만 �
   index.html              ← 화면 뼈대(HTML)만
   style.css               ← 스타일
   objects.json            ← 방의 사물 (위치·상태·자리·소켓). 사람이 고치는 곳. OBJECTS.md 참고
-  f/meta.json             ← 캐릭터 프레임 크기와 발 기준점  [폭, 높이, 기준점 x, y]
+  f/meta.json             ← 캐릭터 프레임 크기와 발 기준점  [폭, 높이, 기준점 x, y, (크기 보정)]  5번째 값은 그 그림만 키우거나 줄일 때 (예: 새 걷기 그림 1.1)
   r/meta.json             ← 방 그림 크기  [폭, 높이]
   r/tv/meta.json          ← TV 본체(화면 구멍 위치)와 TV 화면 그림 목록
   js/                     ← 코드 (JS 모듈)
@@ -42,7 +42,7 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `duet.js` | 강고양이 씨와 쥐야쥐가 함께: 인사, 술래잡기, 노려보기, 상자 숨바꼭질, 같이 자기 |
 | `mouse.js` | 쥐야쥐: 숨는 곳, 나오기, 도망, 혼자 하는 행동 |
 | `manduk.js` | 김만득 씨: 방문 단계, 말풍선, 포스트잇 메모 |
-| `outside.js` | 창밖: 하늘·해·달·구름·비·눈, 새, 나비, UFO, 산타 썰매 |
+| `outside.js` | 창밖: 하늘·해·달·구름·비·눈, 새, 나비, UFO, 산타 썰매 (박쥐·마녀는 halloween.js) |
 | `draw.js` | 방 그리기: 소품, 코드로 그리는 것(창밖·문·커튼·트리·난로·선풍기), 노트북 화면, 햇빛 |
 | `sprites.js` | 배우 그리기: 고양이·쥐 프레임, 그림자, 쥐구멍 빼꼼, 말풍선 아이콘, 자막 |
 | `stage.js` | 캔버스, 화면 맞추기, 카메라, 깊이 비율 `DEPTH`, 다른 캔버스에 잠깐 그리기 `withCtx` |
@@ -54,6 +54,8 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `birthday.js` | 생일 파티(`?birthday=이름`): 배너, 케이크, 꽃비, 무대 조명, 노트북 자막, 쥐야쥐 박수 |
 | `shelf.js` | 책장 메뉴 (`objects.json`의 `bookshelf.books`) |
 | `ui.js` | 캔버스 누르기, 쪽지·노트북 창, 소리·전체 화면 버튼, 미리보기 도구 |
+| `halloween.js` | 할로윈(10/24~11/1): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자와 강고양이 씨 반응. HALLOWEEN_PLAN.md 참고 |
+| `i18n.js` | 말: 화면 글자 한국어·영어 표 `STR`, `tr('키')`, 언어 고르기·저장·전환(`setLang`). 새 글자는 여기 한 곳에. ENGLISH_PLAN.md 참고 |
 | `util.js` | 난수·범위·해시, localStorage, 손글씨 글꼴, 색 섞기, `$` |
 | `debug.js` | 점검용으로 `window.__goyang`에 행동 함수들을 내보낸다 |
 

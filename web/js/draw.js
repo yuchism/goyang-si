@@ -6,7 +6,8 @@ import { drawOutside } from './outside.js';
 import { BGK, FLOOR, ctx } from './stage.js';
 import { now, season, sunbeam } from './time.js';
 import { drawTV } from './tv-screen.js';
-import { INK, RM, lerp, pick } from './util.js';
+import { HAND, INK, RM, lerp, pick } from './util.js';
+import { LANG, tr } from './i18n.js';
 import { world } from './world.js';
 export function rr(x, y, w, h, r) {
   ctx.beginPath();
@@ -114,6 +115,11 @@ function drawHeater(v) {
   ctx.restore();
 }
 // 코드로 그리는 모습 (look이 "code:이름"인 것)
+// 커튼 흔들림(봄·여름 바람): 커튼 그림과 커튼 그림자(halloween.js)가 같은 값을 쓴다
+export const curtainSkew = v => {
+  const ss = season(now());
+  return ((ss === 'summer' || ss === 'spring') && !RM ? Math.sin(world.t * 0.9) * 0.05 : 0) * (v.id === 'curtain_l' ? 1 : -1);
+};
 const CODE = {
   outside: (v, d) => {
     const w = P.window;
@@ -129,7 +135,7 @@ const CODE = {
     const im = img(v.img);
     if (!imageReady(im))
       return;
-    const ss = season(now()), sk = ((ss === 'summer' || ss === 'spring') && !RM ? Math.sin(world.t * 0.9) * 0.05 : 0) * (v.id === 'curtain_l' ? 1 : -1);
+    const sk = curtainSkew(v);
     ctx.save();
     ctx.translate(v.pos.x - v.pos.w / 2, 0);
     ctx.transform(1, 0, sk, 1, -sk * 460, 0);
@@ -188,6 +194,22 @@ function drawScreen(v) {
   if (!imageReady(im) || !p || !q)
     return;
   ctx.drawImage(im, p[0], p[1], q[0] - p[0], q[1] - p[1]);
+  if (screenPick.img === 'cat-tuna-search' && LANG !== 'ko')
+    drawSearchWord(p, q);
+}
+// 참치캔 검색 화면: 그림 속 한국어 검색어를 지우고 지금 언어로 다시 쓴다 (그림 좌표 320×200 기준)
+function drawSearchWord(p, q) {
+  const k = (q[0] - p[0]) / 320;
+  ctx.save();
+  ctx.translate(p[0], p[1]);
+  ctx.scale(k, (q[1] - p[1]) / 200);
+  ctx.fillStyle = '#fef9ee';
+  ctx.fillRect(52, 43, 184, 26);
+  ctx.fillStyle = '#1d1612';
+  ctx.font = `700 19px ${HAND}`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText(tr('tunaSearch'), 58, 56.5);
+  ctx.restore();
 }
 export function drawObj(o, d) {
   const v = objView(o), L = v.look;

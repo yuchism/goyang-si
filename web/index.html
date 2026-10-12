@@ -4,50 +4,53 @@
 <meta name="description" content="강고양이 씨가 사는 방. 실제 시간에 맞춰 졸고, 햇빛을 따라가고, 가끔 쥐야쥐를 쫓는다.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&family=Patrick+Hand&display=swap">
 <script data-goatcounter="https://goyangsi.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <link rel="stylesheet" href="style.css">
 
 <div class="app">
   <header>
-    <div class="mark">고양<b>.</b>시</div>
-    <div class="status" id="status">…</div>
+    <div class="mark" data-i18n-html="mark">고양<b>.</b>시</div>
+    <div class="hright">
+      <div class="status" id="status">…</div>
+      <button id="bLang" class="lang" type="button" aria-label="언어: 한국어. 눌러서 영어로"><b>KO</b> / EN</button>
+    </div>
   </header>
   <div class="stagewrap" id="wrap">
-    <canvas id="cv" aria-label="강고양이 씨의 방"></canvas>
-    <button class="birthday" id="birthday" type="button" hidden><span class="birthday-lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span id="birthdayText"></span><small class="birthday-hint">눌러서 파티 시작</small></button>
-    <div class="a11y" aria-label="방 상호작">
-      <button id="aCat">강고양이 씨 쓰다듬기</button>
-      <button id="aMouse">쥐야쥐 놀라게 하기</button>
-      <button id="aNote">오늘의 포스트잇 읽기</button>
-      <button id="aScreen">노트북 화면 읽기</button>
-      <button id="aTv">TV 편성표 보기</button>
-      <button id="aShelf">책장 보기</button>
+    <canvas id="cv" aria-label="강고양이 씨의 방" data-i18n-aria="canvas"></canvas>
+    <button class="birthday" id="birthday" type="button" hidden><span class="birthday-lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span id="birthdayText"></span><small class="birthday-hint" data-i18n="partyHint">눌러서 파티 시작</small></button>
+    <div class="a11y" aria-label="방 상호작용" data-i18n-aria="a11y">
+      <button id="aCat" data-i18n="aCat">강고양이 씨 쓰다듬기</button>
+      <button id="aMouse" data-i18n="aMouse">쥐야쥐 놀라게 하기</button>
+      <button id="aNote" data-i18n="aNote">오늘의 포스트잇 읽기</button>
+      <button id="aScreen" data-i18n="aScreen">노트북 화면 읽기</button>
+      <button id="aTv" data-i18n="aTv">TV 편성표 보기</button>
+      <button id="aShelf" data-i18n="aShelf">책장 보기</button>
     </div>
-    <div class="note" id="note" role="dialog" aria-label="오늘의 포스트잇" tabindex="-1" hidden></div>
-    <div class="screen" id="screen" role="dialog" aria-label="노트북 화면" tabindex="-1" hidden></div>
-    <div class="shelfp" id="shelf" role="dialog" aria-label="책장" tabindex="-1" hidden></div>
-    <div class="tvg" id="tvg" role="dialog" aria-label="고양.방송" tabindex="-1" hidden></div>
+    <div class="note" id="note" role="dialog" aria-label="오늘의 포스트잇" data-i18n-aria="noteDlg" tabindex="-1" hidden></div>
+    <div class="screen" id="screen" role="dialog" aria-label="노트북 화면" data-i18n-aria="screenDlg" tabindex="-1" hidden></div>
+    <div class="shelfp" id="shelf" role="dialog" aria-label="책장" data-i18n-aria="shelfDlg" tabindex="-1" hidden></div>
+    <div class="tvg" id="tvg" role="dialog" aria-label="고양.방송" data-i18n-aria="tvDlg" tabindex="-1" hidden></div>
   </div>
   <div class="dev" id="dev" hidden>
-    <div class="grp"><label>시간 흐름</label>
-      <button id="sp1" aria-pressed="true">실시간</button>
-      <button id="sp60" aria-pressed="false">1분 = 1시간</button>
-      <button id="sp1440" aria-pressed="false">1분 = 하루</button>
+    <div class="grp"><label data-i18n="devFlow">시간 흐름</label>
+      <button id="sp1" aria-pressed="true" data-i18n="sp1">실시간</button>
+      <button id="sp60" aria-pressed="false" data-i18n="sp60">1분 = 1시간</button>
+      <button id="sp1440" aria-pressed="false" data-i18n="sp1440">1분 = 하루</button>
     </div>
-    <div class="grp"><label for="hour">시각</label><input id="hour" type="range" min="0" max="23.75" step="0.25"><span id="hourv"></span></div>
-    <div class="grp"><label>요일</label><button id="dayNext">다음 날로</button></div>
-    <div class="grp"><label>불러오기</label>
-      <button id="dMouse">쥐야쥐</button><button id="dBfly">나비</button><button id="dMan">만득 씨</button><button id="dRain">비</button><button id="dBox">택배 상자</button><button id="dSecret">노트북</button><button id="dKnock">컵 툭</button><button id="dUfo">UFO</button><button id="dTv">TV 사건</button><button id="dSeason">계절</button><button id="dXmas">크리스마스</button><button id="dSanta">산타</button>
+    <div class="grp"><label for="hour" data-i18n="devHour">시각</label><input id="hour" type="range" min="0" max="23.75" step="0.25"><span id="hourv"></span></div>
+    <div class="grp"><label data-i18n="devDay">요일</label><button id="dayNext" data-i18n="dayNext">다음 날로</button></div>
+    <div class="grp"><label data-i18n="devCall">불러오기</label>
+      <button id="dMouse" data-i18n="dMouse">쥐야쥐</button><button id="dBfly" data-i18n="dBfly">나비</button><button id="dMan" data-i18n="dMan">만득 씨</button><button id="dRain" data-i18n="dRain">비</button><button id="dBox" data-i18n="dBox">택배 상자</button><button id="dSecret" data-i18n="dSecret">노트북</button><button id="dKnock" data-i18n="dKnock">컵 툭</button><button id="dUfo" data-i18n="dUfo">UFO</button><button id="dTv" data-i18n="dTv">TV 사건</button><button id="dSeason" data-i18n="dSeason">계절</button><button id="dXmas" data-i18n="dXmas">크리스마스</button><button id="dSanta" data-i18n="dSanta">산타</button><button id="dHw" data-i18n="dHw">할로윈</button><button id="dWitch" data-i18n="dWitch">마녀</button><button id="dBat" data-i18n="dBat">박쥐</button><button id="dGhost" data-i18n="dGhost">유령</button>
     </div>
   </div>
   <footer>
-    <div class="hint">강고양이 씨를 톡 건드려 보세요. 너무 자주는 말고요. 벽의 노란 쪽지, 노트북, TV, 책장의 책도 눌러볼 수 있어요.</div>
+    <div class="hint" data-i18n="hint">강고양이 씨를 톡 건드려 보세요. 너무 자주는 말고요. 문의 노란 쪽지, 노트북, TV, 책장의 책도 눌러볼 수 있어요.</div>
     <div class="btns">
-      <button id="bShelf" aria-haspopup="dialog">책장</button>
-      <button id="bSound" aria-pressed="false">소리 켜기</button>
-      <button id="bFull">전체 화면</button>
-      <button id="bDev" aria-pressed="false">미리보기 도구</button>
+      <button id="bShelf" aria-haspopup="dialog" data-i18n="bShelf">책장</button>
+      <button id="bSound" aria-pressed="false" data-i18n="soundOn">소리 켜기</button>
+      <button id="bFull" data-i18n="bFull">전체 화면</button>
+      <button id="bDev" aria-pressed="false" data-i18n="bDev">미리보기 도구</button>
     </div>
   </footer>
 </div>

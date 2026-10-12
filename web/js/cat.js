@@ -11,6 +11,7 @@ import { boxToday, hourOf, inBeam, mandukAsleep, mandukHome, rainNow, sunbeam, w
 import { TVP, tvOn } from './tv.js';
 import { tvTopB, tvTopBlockedB, tvWatchB } from './tv-cat.js';
 import { pick, rnd, store } from './util.js';
+import { tr } from './i18n.js';
 import { cat, mouse, say, world } from './world.js';
 // 타자 프레임의 앞발 끝: 발 기준점에서 [앞쪽 거리, 위로 높이] (프레임 픽셀)
 const PAW_TYPE = [240, 162];
@@ -222,8 +223,7 @@ export function boxB() {
     go(rnd(380, 760), rnd(660, 725), 55)
   ], 'box');
 }
-const LAPTOP_MESS = ['ㅁㅁㅁㅁㅁㅁㅁㅁ', 'ㅠㅠㅠㅠㅠ;;;;;;;;', 'fffffffffffffff', 'ㅇㅇㅇㅇㅇㅇ\\\\\\\\', 'zzzzzzzzzzzzzzzz', 'ㅎㅎㅎㅎㅎㅎㅎ======', 'ㅁㅁㅁ;;;;;;;;;;;;;;;;;'];
-const LAPTOP_REAL = ['∇·E = ρ/ε₀', 'while (!bowl.full) { wait(); }', 'argmax(낮잠) = 햇빛', 'e^{iπ} + 1 = 0', 'if (만득.home) return 고양이();', 'sum(츄르) → ∞', 'P(쥐야쥐 잡힘) = 0'];
+// 노트북 글자는 i18n.js의 laptopMess(키보드 밟기)·laptopReal(가끔 진짜 수식)
 export function secretB() {
   const kb = socketOf(O.laptop, 'keyboard'), pw = FRAMES.cat_type_1 && PAW_TYPE, sc = FSC * DEPTH(S('laptop.type')[1]);
   const seat = kb && pw ? [kb[0] + pw[0] * sc, S('laptop.type')[1]] : S('laptop.type');
@@ -237,7 +237,7 @@ export function secretB() {
       screenEvent('catTyping');
     }),
     fn(a => {
-      world.laptop += pick(LAPTOP_MESS) + (Math.random() < 0.35 ? '\n' + pick(LAPTOP_REAL) + '\n' : '\n');
+      world.laptop += pick(tr('laptopMess')) + (Math.random() < 0.35 ? '\n' + pick(tr('laptopReal')) + '\n' : '\n');
       store.set('laptop', world.laptop);
     }),
     play('type', 2.2),

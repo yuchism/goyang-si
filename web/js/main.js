@@ -1,7 +1,8 @@
 /* 시작점: 하루 일정, 매 프레임 진행(frame)과 그리기(render), 처음 시작 */
 import { play } from './anim.js';
+import { drawCurtainShadow, drawPumpkinGlow, maybeBats, maybeGhost, maybeWitch, pumpkinNight } from './halloween.js';
 import { loadImages, loadMeta } from './assets.js';
-import { CAKE, birthdayMode, drawCakeGlow, drawPartyLights, drawPartyMouse, tickParty } from './birthday.js';
+import { CAKE, bannerText, birthdayMode, drawCakeGlow, drawPartyLights, drawPartyMouse, tickParty } from './birthday.js';
 import { calmDown, catBrain } from './cat.js';
 import { exposeDebug } from './debug.js';
 import { drawCup, drawObj, drawProp, drawRoom, drawSunbeam } from './draw.js';
@@ -14,25 +15,25 @@ import { Snd } from './sound.js';
 import { drawActor, drawBubble, drawCaptions } from './sprites.js';
 import { H, W, cam, ctx, fit, updateCam, view } from './stage.js';
 import { bub, fn, go, hold, run, tickActor } from './steps.js';
-import { SEASON_KO, advanceClock, darkness, dayKey, hourOf, inBeam, isAnniversary, isWeekend, mandukAsleep, mandukHome, now, rainNow, resetClock, season, snowing, speed, sunTimes, sunbeam } from './time.js';
+import { advanceClock, darkness, dayKey, hourOf, inBeam, isAnniversary, isWeekend, mandukAsleep, mandukHome, now, rainNow, resetClock, season, snowing, speed, sunTimes, sunbeam } from './time.js';
 import { tvOn, tvTick } from './tv.js';
 import { tvBig } from './tv-cat.js';
 import { drawTVNight, drawTvBuf, tvBuf } from './tv-screen.js';
 import { devOpen, initUI } from './ui.js';
 import { pick, rnd } from './util.js';
+import { applyDom, tr } from './i18n.js';
 import { caption, cat, mouse, say, world } from './world.js';
 /* ───────── 상태 표시 ───────── */
-const DOW = ['일', '월', '화', '수', '목', '금', '토'];
 function statusText(d) {
   const h = d.getHours(), mi = String(d.getMinutes()).padStart(2, '0');
-  const ap = h < 12 ? '오전' : '오후', hh = ((h + 11) % 12) + 1;
-  const parts = [`${DOW[d.getDay()]}요일 ${ap} ${hh}:${mi}`, SEASON_KO[season(d)], rainNow(d) ? '비' : ''];
+  const ap = tr(h < 12 ? 'am' : 'pm'), hh = ((h + 11) % 12) + 1;
+  const parts = [tr('clock', { dow: tr('dow')[d.getDay()], ap, h: hh, m: mi }), tr('season')[season(d)], rainNow(d) ? tr('rain') : ''];
   if (mandukAsleep(d))
-    parts.push('만득 씨 자는 중');
+    parts.push(tr('stAsleep'));
   else if (!mandukHome(d))
-    parts.push('만득 씨 출근');
+    parts.push(tr('stWork'));
   else
-    parts.push('만득 씨 집에 있음');
+    parts.push(tr('stHome'));
   return parts.filter(Boolean).join(' · ');
 }
 /* ───────── 일정 ───────── */
@@ -70,7 +71,7 @@ function scheduled(d) {
   });
   at('feed', fh, () => startVisit('feed'));
   if (!we) {
-    at('leave', 8.5, () => caption('(현관에서) 다녀올게~', 3.5));
+    at('leave', 8.5, () => caption(tr('capLeave'), 3.5));
     at('ret', 18.6, () => startVisit('ret'));
   }
   at('lampOn', sunTimes(d)[1] - 0.3, () => {
@@ -198,6 +199,9 @@ function frame(tNow) {
   updateButterfly(real * Math.min(bf, 3));
   maybeUFO(d, real);
   maybeSanta(d, real);
+  maybeWitch(d, real);
+  maybeBats(d, real);
+  maybeGhost(d, real);
   tvTick(d);
   // 컵
   const c = world.cup;
@@ -236,7 +240,7 @@ function frame(tNow) {
     const tv = home && !asleep && isWeekend(d) && hr > 10 && hr < 22 && !world.manduk;
     Snd.setAmb(rainNow(d) && !snowing(d), tv || tvOn(), world.dark > 0.5);
     if (tv && Math.random() < 0.012)
-      caption(pick(['…TV 소리…', '…설거지 소리…', '…통화 중: 네네~ 엄마…', '…청소기 소리…']), 3);
+      caption(pick(tr('capAmbient')), 3);
   }
   calmDown(real); // 건드림 짜증 회복
   render(d, real);
@@ -276,7 +280,7 @@ function render(d, real) {
   // 어둠과 램프
   const dk = world.dark;
   if (dk > 0) {
-    ctx.fillStyle = `rgba(16,20,46,${world.lampOn ? dk * 0.6 : dk})`;
+    ctx.fillStyle = `rgba(16,20,46,${world.lampOn ? dk * 0.6 : dk + (pumpkinNight() ? dk * 0.2 : 0)})`;
     ctx.fillRect(0, 0, W, H);
     ctx.save();
     ctx.beginPath();
@@ -296,6 +300,8 @@ function render(d, real) {
     ctx.restore();
   }
   drawTVNight(dk);
+  drawPumpkinGlow(dk);
+  drawCurtainShadow(dk);
   drawPartyLights(dk);
   drawManduk('say');
   drawBubble(cat);
@@ -317,6 +323,8 @@ function render(d, real) {
     tvBig.drawImage(tvBuf, 0, 0);
 }
 /* ───────── 시작 ───────── */
+applyDom();
+bannerText();
 initShelf();
 initUI();
 exposeDebug();

@@ -27,7 +27,7 @@ const SCEN=[
 (async()=>{const port=process.argv[2],out=process.argv[3],only=process.argv[4];fs.mkdirSync(out,{recursive:true});
  const b=await chromium.launch();const errs={};
  for(const sc of SCEN){if(only&&!only.split(',').includes(sc.n))continue;
-  const ctx=await b.newContext({viewport:{width:sc.vp[0],height:sc.vp[1]},deviceScaleFactor:sc.dpr||1,timezoneId:'Australia/Sydney',locale:'ko-KR'});
+  const ctx=await b.newContext({viewport:{width:sc.vp[0],height:sc.vp[1]},deviceScaleFactor:sc.dpr||1,timezoneId:'Australia/Sydney',locale:process.env.VC_LOCALE||'ko-KR'});
   const p=await ctx.newPage();errs[sc.n]=[];p.on('pageerror',e=>errs[sc.n].push('PAGEERR '+e.message));p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource/.test(m.text()))errs[sc.n].push(m.text())});
   await p.addInitScript(INIT);await p.route(/goatcounter|zgo\.at|fonts\.(googleapis|gstatic)/,r=>r.abort());
   await p.goto(`http://localhost:${port}/index.html${sc.url}`);

@@ -43,7 +43,12 @@ export function season(d) {
     s = { winter: 'summer', summer: 'winter', spring: 'autumn', autumn: 'spring' }[s];
   return s;
 }
-export const SEASON_KO = { spring: '봄', summer: '여름', autumn: '가을', winter: '겨울' };
+// 계절 이름은 i18n.js의 season
+// 할로윈 호박 불: 해 질 무렵부터 다음 날 아침까지 (만득 씨가 끄지 않음)
+export function pumpkinLit(d) {
+  const h = hourOf(d), [r, s] = sunTimes(d);
+  return h >= s - 0.3 || h < r + 0.3;
+}
 export function sunTimes(d) {
   const s = season(d);
   return s === 'summer' ? [5.5, 20] : s === 'winter' ? [7.2, 17.2] : [6.3, 18.6];

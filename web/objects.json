@@ -103,7 +103,11 @@
           "title": "빨간 책",
           "desc": "아직 비어 있어요.",
           "href": null,
-          "drawn": false
+          "drawn": false,
+          "en": {
+            "title": "Red Book",
+            "desc": "Nothing here yet."
+          }
         },
         {
           "id": "yellow",
@@ -117,7 +121,11 @@
           "title": "노란 책",
           "desc": "아직 비어 있어요.",
           "href": null,
-          "drawn": false
+          "drawn": false,
+          "en": {
+            "title": "Yellow Book",
+            "desc": "Nothing here yet."
+          }
         },
         {
           "id": "blue",
@@ -131,7 +139,11 @@
           "title": "파란 책",
           "desc": "아직 비어 있어요.",
           "href": null,
-          "drawn": false
+          "drawn": false,
+          "en": {
+            "title": "Blue Book",
+            "desc": "Nothing here yet."
+          }
         },
         {
           "id": "green",
@@ -145,7 +157,11 @@
           "title": "초록 책",
           "desc": "아직 비어 있어요.",
           "href": null,
-          "drawn": false
+          "drawn": false,
+          "en": {
+            "title": "Green Book",
+            "desc": "Nothing here yet."
+          }
         },
         {
           "id": "blue2",
@@ -159,7 +175,11 @@
           "title": "하늘 책",
           "desc": "아직 비어 있어요.",
           "href": null,
-          "drawn": false
+          "drawn": false,
+          "en": {
+            "title": "Sky Book",
+            "desc": "Nothing here yet."
+          }
         },
         {
           "id": "green2",
@@ -173,10 +193,14 @@
           "title": "풀잎 책",
           "desc": "아직 비어 있어요.",
           "href": null,
-          "drawn": false
+          "drawn": false,
+          "en": {
+            "title": "Leaf Book",
+            "desc": "Nothing here yet."
+          }
         }
       ],
-      "note": "책 한 권이 메뉴 하나. title·desc·href(링크)를 고치면 된다. href가 없으면 '아직 빈 책'. 배경 그림에 있는 6권은 drawn:false, 빈 칸에 새로 꽂는 책은 drawn:true로 두면 코드가 color로 책등을 그린다(가운데 칸 오른쪽 빈자리 x 684~776, y 195~336). 폰에서는 책장 아무 데나 누르면 큰 목록이 뜬다"
+      "note": "책 한 권이 메뉴 하나. title·desc·href(링크)를 고치면 된다. 영어는 en의 title·desc. href가 없으면 '아직 빈 책'. 배경 그림에 있는 6권은 drawn:false, 빈 칸에 새로 꽂는 책은 drawn:true로 두면 코드가 color로 책등을 그린다(가운데 칸 오른쪽 빈자리 x 684~776, y 195~336). 폰에서는 책장 아무 데나 누르면 큰 목록이 뜬다"
     },
     {
       "id": "door",
@@ -398,16 +422,16 @@
       "look": "code:tvShelf",
       "img": "tv_shelf",
       "pos": {
-        "x": 897,
+        "x": 889,
         "y": 512,
         "w": 240
       },
       "h": 86,
-      "top": 78,
+      "top": 70,
       "body": {
         "rect": [
-          994,
-          1014,
+          986,
+          1006,
           504,
           514
         ],
@@ -733,7 +757,15 @@
       },
       "when": "halloween",
       "on": "tv",
-      "note": "할로윈에는 강고양이 씨 TV 위에 올려 둔다(on: tv). 그동안 강고양이 씨는 TV 위에서 자지 않는다"
+      "note": "할로윈에는 강고양이 씨 TV 위에 올려 둔다(on: tv). 그동안 강고양이 씨는 TV 위에서 자지 않는다. 해 질 무렵부터 아침까지 불이 켜지고(lit) 촛불처럼 일렁이며 둘레에 옅은 주황빛(halloween.js). 만득 씨가 끄지 않는다",
+      "states": {
+        "off": {
+          "look": "pumpkin"
+        },
+        "lit": {
+          "look": "pumpkin_lit"
+        }
+      }
     },
     {
       "id": "tree",

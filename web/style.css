@@ -85,3 +85,10 @@ button[aria-pressed="true"]{background:var(--bell);color:#2a1f0e;border-color:va
 .tvg li.cur,.tvg li.cur time{color:var(--bell);font-weight:700}
 .tvg .foot{font-size:.74rem;color:var(--muted);margin:8px 0 0}
 @media (max-width:560px){.tvg ol{columns:1}}
+
+/* 영어: 손글씨 글꼴을 Patrick Hand로, 책등 글자는 옆으로 눕혀서 */
+html[lang="en"]{--font-hand:"Patrick Hand","Gaegu",cursive}
+html[lang="en"] .spine{text-orientation:mixed;font-size:1rem}
+.hright{display:flex;align-items:center;gap:10px;min-width:0}
+.lang{font-size:.72rem;padding:3px 9px;flex:0 0 auto;color:var(--muted)}
+.lang b{color:var(--bell);font-weight:700}

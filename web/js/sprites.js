@@ -11,10 +11,10 @@ function drawFrame(name, x, y, face, sc, sy = 1) {
   const im = IMG['f_' + name];
   if (!imageReady(im))
     return;
-  const [fw, fh, ax, ay] = FRAMES[name];
+  const [fw, fh, ax, ay, k = 1] = FRAMES[name]; // k: 이 그림만의 크기 보정 (그림마다 고양이 크기가 조금 다를 때, meta.json 5번째 값)
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(-face * sc, sc * sy);
+  ctx.scale(-face * sc * k, sc * sy * k);
   ctx.drawImage(im, -ax, -ay);
   ctx.restore();
 }
@@ -97,10 +97,10 @@ const TV_HEAD = { cat_tv_ear_turn: [95, 240], cat_tv_top_sleep_1of2: [120, 270],
 function headPos(a) {
   const dp = DEPTH(a.y), lift = liftOf(a);
   if (a.frame && a.frame.startsWith('cat_tv_')) {
-    const f = FRAMES[a.frame], hd = TV_HEAD[a.frame] || [276, 110], sc = FSC * dp;
+    const f = FRAMES[a.frame], hd = TV_HEAD[a.frame] || [276, 110], sc = FSC * dp * (f[4] || 1);
     return [a.x + (-a.face) * (hd[0] - f[2]) * sc, a.y - lift - (f[3] - hd[1]) * sc];
   }
-  const fr = FRAMES[a.frame] || FRAMES[a.kind === 'cat' ? 'cat_loaf_1' : 'mouse_idle_1'], sc = (a.kind === 'cat' ? FSC : MSC) * dp;
+  const fr = FRAMES[a.frame] || FRAMES[a.kind === 'cat' ? 'cat_loaf_1' : 'mouse_idle_1'], sc = (a.kind === 'cat' ? FSC : MSC) * dp * (fr[4] || 1);
   if (a.kind === 'mouse' && a.peek)
     return [HOLE.cx - 20, HOLE.bottom - 30];
   return [a.x + (-a.face) * (fr[0] * 0.3 - fr[2]) * sc, a.y - lift - (fr[3] - fr[1] * 0.08) * sc];
