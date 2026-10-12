@@ -1,0 +1,36 @@
+{
+  "screenSize": [320, 240],
+  "body": {
+    "file": "tv_body.webp",
+    "size": [768, 512],
+    "screenTL": [81, 96],
+    "screenBR": [529, 419]
+  },
+  "baseScreens": {
+    "off": "screen_off.webp",
+    "signoff": "screen_signoff.webp",
+    "testcard": "screen_testcard.webp",
+    "sunrise": ["screen_sunrise_1of2.webp", "screen_sunrise_2of2.webp"]
+  },
+  "programFrames": {
+    "news": ["tv_news_1of3.webp", "tv_news_2of3.webp", "tv_news_3of3.webp"],
+    "drama": ["tv_drama_1of5.webp", "tv_drama_2of5.webp", "tv_drama_3of5.webp", "tv_drama_4of5.webp", "tv_drama_5of5.webp"],
+    "baseball": ["tv_baseball_1of5.webp", "tv_baseball_2of5.webp", "tv_baseball_3of5.webp", "tv_baseball_4of5.webp", "tv_baseball_5of5.webp"],
+    "football": ["tv_football_1of4.webp", "tv_football_2of4.webp", "tv_football_3of4.webp", "tv_football_4of4.webp"],
+    "actress": ["tv_actress_1of4.webp", "tv_actress_2of4.webp", "tv_actress_3of4.webp", "tv_actress_4of4.webp"]
+  },
+  "catReactions": {
+    "size": [512, 512],
+    "files": {
+      "watch": ["../../f/cat_tv_watch_back_1of2.webp", "../../f/cat_tv_watch_back_2of2.webp"],
+      "track": ["../../f/cat_tv_track_left.webp", "../../f/cat_tv_track_center.webp", "../../f/cat_tv_track_right.webp"],
+      "earTurn": ["../../f/cat_tv_ear_turn.webp"],
+      "topSleep": ["../../f/cat_tv_top_sleep_1of2.webp", "../../f/cat_tv_top_sleep_2of2.webp"],
+      "behindPeek": ["../../f/cat_tv_behind_peek_1of2.webp", "../../f/cat_tv_behind_peek_2of2.webp"]
+    },
+    "watchTrackGroundAnchor": [340, 497],
+    "behindPeekEdgeAnchorX": [112, 112],
+    "behindPeekGroundY": 435,
+    "behindPeekLayer": "behind-tv"
+  }
+}

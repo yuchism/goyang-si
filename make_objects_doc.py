@@ -13,8 +13,8 @@ WHEN = {None: '항상', 'always': '항상', 'summer': '여름', 'winter': '겨�
         'christmas': '크리스마스', 'boxDay': '상자 있는 날 (9일 중 3일)', 'treat': '기념일 간식을 받은 날'}
 LAYER = {'background': '배경', 'wall': '벽', 'floor-flat': '바닥에 깔림', 'floor': '바닥 (앞뒤 정렬)', None: '-'}
 WHO = {'cat': '강고양이 씨', 'mouse': '쥐야쥐'}
-TOUCH = {'note': '오늘의 메모 보기', 'screen': '노트북 화면 보기'}
-SPOTNAME = {'watch': '바라보기', 'rainCat': '비 구경(고양이)', 'rainMouse': '비 구경(쥐야쥐)', 'bird': '새 구경',
+TOUCH = {'note': '오늘의 메모 보기', 'screen': '노트북 화면 보기', 'shelf': '책장 메뉴 열기', 'tv': 'TV 편성표 보기'}
+SPOTNAME = {'watch': '바라보기', 'side': '올라가고 내려오는 곳', 'behind': 'TV 뒤 빼꼼', 'rainCat': '비 구경(고양이)', 'rainMouse': '비 구경(쥐야쥐)', 'bird': '새 구경',
             'wait': '기다리기', 'greet': '마중', 'nap': '낮잠', 'push': '앞발로 밀기', 'type': '타자',
             'enter': '들어가기 전', 'inside': '안', 'check': '기웃거리기', 'hide': '숨기', 'popout': '튀어나오기',
             'eat': '밥 먹기', 'out': '나오는 곳', 'tap': '화면 톡'}
