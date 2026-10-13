@@ -16,16 +16,19 @@ web/                      ← GitHub Pages로 배포되는 폴더 (이 안만 �
   f/meta.json             ← 캐릭터 프레임 크기와 발 기준점  [폭, 높이, 기준점 x, y, (크기 보정)]  5번째 값은 그 그림만 키우거나 줄일 때 (예: 새 걷기 그림 1.1)
   r/meta.json             ← 방 그림 크기  [폭, 높이]
   r/tv/meta.json          ← TV 본체(화면 구멍 위치)와 기본 화면 그림(꺼짐·화면조정·마침·해돋이)
-  r/tv/programs.json      ← TV 프로그램 표: 장면·사건·자막·화면 장식·강고양이 씨 반응. 사람이 고치는 곳. TV_CHANNEL_PLAN.md 14장
+  r/tv/programs.json      ← TV 프로그램 표: 장면·사건·자막·화면 장식·강고양이 씨 반응 + 편성(길이 runtime·방영 조건·하루 상한·회차). 사람이 고치는 곳. TV_CHANNEL_PLAN.md 14장
+  r/tv/schedule.json      ← 고양.방송 방송국 틀: 시간대·기간·마감 뉴스·낮잠 정파·개편(3개월마다). TV_SCHEDULE_PLAN.md
   js/                     ← 코드 (JS 모듈)
 tools/
   build_meta.py           ← 새 그림을 넣으면 f/·r/ meta.json을 채운다
   visual_check.js         ← 화면 점검 (같은 장면을 매번 똑같이 찍는다)
   compare.py              ← 점검 화면 두 벌을 픽셀 단위로 비교
   clock_check.js          ← 시계 점검: 화면 끄기·뒤 탭·서머타임·빨리 감기를 흉내 내서 CLOCK_PLAN.md 10장 확인
-  check_tv.mjs            ← TV 검사 (배포 전 `node tools/check_tv.mjs`): 그림·번역·편성표·400일·회귀 확인. TV_STABILITY_PLAN.md 6장
+  check_tv.mjs            ← TV 검사 (배포 전 `node tools/check_tv.mjs`): 그림·번역·방송국 틀·편성 규칙 400일·가짜 프로그램 시험·사건 400일·회귀 확인. TV_STABILITY_PLAN.md 6장, TV_SCHEDULE_PLAN.md 6장
+                            편성을 일부러 바꿨으면 `--write-baseline`으로 회귀 기준을 다시 뽑는다
+  tv_fake_programs.json   ← 편성 시험용 가짜 프로그램 (check_tv.mjs만 씀, 웹에 안 올라감)
   tv_sample.mjs           ← TV 회귀 확인 표본 뽑기 (check_tv.mjs가 쓴다)
-  tv_baseline.json.gz     ← 회귀 기준: 안정화 작업 전 코드로 뽑은 35일 × 하루 여러 시각의 방송 (한국어·영어)
+  tv_baseline.json.gz     ← 회귀 기준: 35일 × 하루 여러 시각의 방송 (한국어·영어). 2026-10-14 편성 개선 후 다시 뽑음
   node_env.mjs            ← 노드에서 i18n·time·tv-core 모듈을 불러오기 위한 최소 흉내 (시간대 서울 고정)
 make_objects_doc.py       ← objects.json → OBJECTS.md
 ```
@@ -60,12 +63,12 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `stage.js` | 캔버스, 화면 맞추기, 카메라, 깊이 비율 `DEPTH`, 다른 캔버스에 잠깐 그리기 `withCtx` |
 | `assets.js` | meta.json 세 개를 읽어 그림 목록을 만들고 그림을 불러온다 |
 | `sound.js` | Web Audio로 만든 소리 (방 잡음, 비, 방울, 문, 생일 노래, TV) |
-| `tv-core.js` | TV · 계산(화면 없이, 노드에서도 돈다): `programs.json` 검사 `setPrograms`, 편성표 `TV_GRID`·`tvSegs`, 사건 `tvEvents`, 지금 상태 `tvState`, 장면 그림 `tvFrameName`, 제목 규칙(`titleKind`) |
-| `tv.js` | TV · 방송: 프로그램 표 불러오기 `loadPrograms`, 그림 미리 받기 `tvNeed`(지금·다음 칸, 매분), 매 프레임 `tvTick`, 오류 격리 `tvBreak`(그 칸 끝까지 "화면 조정 중"), 미리보기 `tvPreview`·`tvForce` |
-| `tv-screen.js` | TV · 화면: 320×240 버퍼, 화면 장식(`overlay`), "수신 중"·"화면 조정 중", 브라운관 효과, 방 안에 그리기, 밤 불빛 |
-| `tv-cat.js` | TV · 강고양이 씨: 보기(`watch`)·위에서 낮잠·뒤 빼꼼·달려오기, 반응 목록 `REACT`(사건의 `react`가 고른다) |
-| `tv-guide.js` | TV · 편성표 창과 축하 방송 신청 화면 |
-| `tv-dev.js` | 미리보기 도구의 TV 칸: 틀어 보기, 사건 고르기, 7일 편성표, 특집 날짜로 가기, 문제 있는 프로그램 수 |
+| `tv-core.js` | TV · 계산(화면 없이, 노드에서도 돈다): `programs.json` 검사 `setPrograms`, 방송국 틀 `setSchedule`, 하루 편성 `tvDay`·`tvSegs`·`tvNaps`(조건·고정 칸·틈 메우기·회차·정파 여러 번, 씨앗 = 시즌 + 요일), 구간 `segAt`·`segOrder`(홈쇼핑 상품, 요일마다 다른 순서), 사건 `tvEvents`, 지금 상태 `tvState`(낮잠 정파 포함), 장면 그림 `tvFrameName`, 제목 `tvTitle` |
+| `tv.js` | TV · 방송: 프로그램 표·방송국 틀 불러오기 `loadPrograms`, 그림 미리 받기 `tvNeed`(지금·다음 칸, 매분), 매 프레임 `tvTick`, 오류 격리 `tvBreak`(그 칸 끝까지 "화면 조정 중"), 미리보기 `tvPreview`·`tvForce` |
+| `tv-screen.js` | TV · 화면: 320×240 버퍼, 화면 장식(`overlay`: 뉴스 띠·대사·점수판·홈쇼핑 띠), "수신 중"·"화면 조정 중", 브라운관 효과, 방 안에 그리기, 밤 불빛 |
+| `tv-cat.js` | TV · 강고양이 씨: 보기(`watch`)·위에서 낮잠·뒤 빼꼼·달려오기, 반응 목록 `REACT`(사건의 `react`가 고른다: 시무룩·펄쩍·하트·빼꼼·졸기·화면 툭툭·달려들기) |
+| `tv-guide.js` | TV · 편성표 창(낮잠 정파 줄 포함)과 축하 방송 신청 화면 |
+| `tv-dev.js` | 미리보기 도구의 TV 칸: 틀어 보기, 사건 고르기, 7일 편성표, 특집 날짜·낮잠 정파로 가기, 문제 있는 프로그램 수 |
 | `birthday.js` | 생일 파티(`?birthday=이름`): 배너, 케이크, 꽃비, 무대 조명, 노트북 자막, 쥐야쥐 박수 |
 | `shelf.js` | 책장 메뉴 (`objects.json`의 `bookshelf.books`) |
 | `frame.js` | 벽 액자: 날짜마다 바뀌는 가족사진(`objects.json`의 `frame.photos`), 누르면 다음 사진·조금씩 삐뚤어짐, 만득 씨가 다녀가면 반듯. 넘긴 사진·기울기는 그 기기에 저장. FRAME_PHOTOS_PLAN.md |
@@ -90,7 +93,7 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 2. `python3 tools/build_meta.py` → meta.json에 크기가 들어간다. 캐릭터는 발 기준점이 그림 아래 가운데로 일단 들어가니, 필요하면 손으로 고친다
 3. 코드에서 이름으로 쓴다: 캐릭터는 `CLIP`에 프레임 이름, 소품은 `objects.json`의 `look`
 
-TV 프로그램은 코드를 고치지 않는다: 그림을 `r/tv/`에 → `r/tv/programs.json`에 한 덩어리 → `i18n.js` 번역 → `node tools/check_tv.mjs`. 자세한 것은 TV_CHANNEL_PLAN.md 14장. 프로그램 그림은 시작을 기다리게 하지 않고 필요할 때 받는다(`assets.js` `loadLazy`).
+TV 프로그램은 코드를 고치지 않는다: 그림을 `r/tv/`에 → `r/tv/programs.json`에 한 덩어리(길이 `runtime`과 방영 조건 `"air": [["주말", "오전"]]` 같은 것까지) → `i18n.js` 번역 → `node tools/check_tv.mjs`. 편성에는 조건에 맞춰 저절로 들어간다. 자세한 것은 TV_CHANNEL_PLAN.md 14장. 프로그램 그림은 시작을 기다리게 하지 않고 필요할 때 받는다(`assets.js` `loadLazy`).
 
 ## 화면 점검 (코드를 크게 고칠 때)
 

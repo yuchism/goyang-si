@@ -2,12 +2,12 @@
    틀어 보기·사건은 그 기기에서만 (편성은 그대로, 다른 방문자와 상관없음). TV_STABILITY_PLAN.md 7장 */
 import { tr } from './i18n.js';
 import { now } from './time.js';
-import { TVP, fmtH, tvForce, tvPreview, tvProblems, tvSegs } from './tv.js';
+import { TVP, fmtH, tvDay, tvForce, tvPreview, tvProblems } from './tv.js';
 import { $, esc, pick } from './util.js';
 import { caption, world } from './world.js';
 
 const GO = [ // [번역 키, 월(1~12, 0이면 오늘), 일, 시, 분]
-  ['devTvGoOn', 0, 0, 4, 59], ['devTvGoPrime', 0, 0, 21, 0], ['devTvGoOff', 0, 0, 24, 54],
+  ['devTvGoOn', 0, 0, 4, 59], ['devTvGoNap', 0, 0, 13, 54], ['devTvGoShop', 0, 0, 14, 29], ['devTvGoNapEnd', 0, 0, 15, 54], ['devTvGoPrime', 0, 0, 21, 0], ['devTvGoOff', 0, 0, 24, 54],
   ['devTvGoHw', 10, 31, 22, 0], ['devTvGoXmas', 12, 24, 21, 0], ['devTvGoNy', 1, 1, 7, 0]];
 // 다음에 오는 그 날짜·시각 (오늘 것이면 오늘)
 function goTarget([, m, d, h, mi]) {
@@ -53,7 +53,8 @@ function renderWeek() {
   for (let i = 0; i < 7; i++) {
     const bd = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + i, 12);
     const head = bd.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', weekday: 'short' });
-    const rows = tvSegs(bd).map(s => `<li${s.p ? '' : ' class="bad"'}><time>${fmtH(s.s)}</time>${esc(s.title)}</li>`).join('');
+    const day = tvDay(bd), list = [...day.segs.map(s => [s.s, s.title, !s.p]), ...day.naps.map(n => [n.a / 60, tr('tvgNap'), false])].sort((a, b) => a[0] - b[0]);
+    const rows = list.map(([s, t, bad]) => `<li${bad ? ' class="bad"' : ''}><time>${fmtH(s)}</time>${esc(t)}</li>`).join('');
     out.push(`<section><h3>${esc(head)}</h3><ol>${rows}</ol></section>`);
   }
   box.innerHTML = out.join('');

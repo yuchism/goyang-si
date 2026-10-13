@@ -1,5 +1,6 @@
 /* 강고양이 씨 TV · 방송: 프로그램 표 불러오기, 그림 미리 받기, 매 프레임 tvTick, 오류 격리.
-   계산(편성표·사건·지금 상태)은 tv-core.js, 프로그램 내용은 r/tv/programs.json. 자세한 내용은 TV_CHANNEL_PLAN.md, TV_STABILITY_PLAN.md
+   계산(편성표·사건·지금 상태)은 tv-core.js, 프로그램 내용은 r/tv/programs.json, 방송국 틀(시간대·기간·마감 뉴스·낮잠 정파·개편)은 r/tv/schedule.json.
+   자세한 내용은 TV_CHANNEL_PLAN.md, TV_STABILITY_PLAN.md, TV_SCHEDULE_PLAN.md
    화면은 320×240 버퍼(tvBuf)에 그린 뒤 본체 그림의 구멍(r/tv/meta.json의 screenTL~screenBR)에 덮어 그린다. */
 import { imageReady, img, lazyFailed, loadLazy } from './assets.js';
 import { tr } from './i18n.js';
@@ -7,26 +8,30 @@ import { O } from './objects.js';
 import { Snd } from './sound.js';
 import { rainNow } from './time.js';
 import { checkReacts, tvEventFired, tvReactBeep, tvReactPower } from './tv-cat.js';
-import { TVP, TV_PROBLEMS, TV_WARNINGS, progState, programFrames, setPrograms, tvBday, tvFrameName, tvH, tvSegs, tvState } from './tv-core.js';
+import { TVP, TV_PROBLEMS, TV_WARNINGS, progState, programFrames, setPrograms, setSchedule, tvBday, tvFrameName, tvH, tvSegs, tvState } from './tv-core.js';
 import { clamp, hash, lerp } from './util.js';
 import { caption, world } from './world.js';
-export { TVP, fmtH, tvBday, tvH, tvPrime, tvSegs, tvState } from './tv-core.js';
+export { TVP, fmtH, tvBday, tvDay, tvH, tvNaps, tvPrime, tvSegs, tvState } from './tv-core.js';
 
 /* ───────── 프로그램 표 ───────── */
 // 시작할 때 한 번. 실패하거나 문제가 있어도 방은 연다 (문제 있는 프로그램만 편성에서 빠진다)
-export async function loadPrograms() {
-  let raw = {};
+async function getJson(path, what) {
   try {
-    const r = await fetch('r/tv/programs.json', { cache: 'no-store' });
+    const r = await fetch(path, { cache: 'no-store' });
     if (!r.ok)
-      throw new Error('r/tv/programs.json ' + r.status);
-    raw = await r.json();
+      throw new Error(path + ' ' + r.status);
+    return await r.json();
   }
   catch (e) {
-    console.error('TV: 프로그램 표를 읽지 못했어요. 모든 칸이 화면 조정으로 나와요', e);
+    console.error(`TV: ${what}를 읽지 못했어요. 모든 칸이 화면 조정으로 나와요`, e);
+    return null;
   }
+}
+export async function loadPrograms() {
+  const [raw, sched] = await Promise.all([getJson('r/tv/programs.json', '프로그램 표'), getJson('r/tv/schedule.json', '방송국 틀')]);
   checkReacts();
-  const { problems, warnings } = setPrograms(raw);
+  setSchedule(sched); // 방송국 틀 먼저 (프로그램의 방영 조건이 시간대·기간 이름을 쓴다)
+  const { problems, warnings } = setPrograms(raw || {});
   problems.forEach(p => console.warn(`TV: 문제 있는 프로그램 ${p.id} → 편성에서 뺌\n  ` + p.errors.join('\n  ')));
   warnings.forEach(w => console.warn('TV: ' + w));
   window.dispatchEvent(new Event('tvprograms')); // 미리보기 도구가 목록·문제 수를 다시 그린다

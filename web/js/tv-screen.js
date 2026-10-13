@@ -7,7 +7,8 @@ import { O, P, objView, present, zOf } from './objects.js';
 import { drawActor } from './sprites.js';
 import { ctx, cv, withCtx } from './stage.js';
 import { now } from './time.js';
-import { TVP, tvBreak } from './tv.js';
+import { TVP, fmtH, tvBreak } from './tv.js';
+import { segAt } from './tv-core.js';
 import { HAND, clamp, ease } from './util.js';
 import { cat, mouse, world } from './world.js';
 /* 화면 버퍼 그리기 */
@@ -153,7 +154,7 @@ function drawBuf(st) {
   if (st.mode === 'testcard')
     tvBand(tr('tvTestcard'), 20, 16);
   if (st.mode === 'signoff')
-    tvBand(tr('tvSignoff'), 222, 15);
+    tvBand(st.nap ? tr('tvNapSignoff', { t: fmtH(st.napTo / 60) }) : tr('tvSignoff'), 222, 15);
   // 프로그램 그림을 아직 못 받았다: 노이즈 + "…수신 중…" (받아지면 바로 정상 화면)
   else if (st.mode === 'prog' && st.tuning) {
     noiseFill(true);
@@ -162,8 +163,20 @@ function drawBuf(st) {
   }
   const P = st.mode === 'prog' && TVP[st.p], board = P && P.ovl('scoreboard');
   if (P && !st.tuning && !st.missing) {
-    const e = st.ev && st.ev.e, ticker = P.ovl('ticker'), subs = P.ovl('subs');
-    if (e && e.cap)
+    const e = st.ev && st.ev.e, ticker = P.ovl('ticker'), subs = P.ovl('subs'), shop = P.ovl('shop');
+    if (shop && P.segs) { // 홈쇼핑 띠: 상품 이름 · 가격, 오른쪽에 전화번호. 자막은 그 위에
+      const g = segAt(P, st.sg, st.tIn).g, item = g.shop;
+      tb.fillStyle = 'rgba(28,38,92,.88)';
+      tb.fillRect(0, 216, 320, 24);
+      tb.fillStyle = 'rgba(255,214,90,.95)';
+      tb.fillRect(0, 216, 320, 2);
+      if (item)
+        tvText(`${item[0]} · ${item[1]}`, 8, 228.5, 14, { align: 'left', lw: 0, maxW: 196 });
+      tvText(shop.list, 312, 228.5, 13, { align: 'right', lw: 0, fill: '#ffe28a', maxW: 104 });
+      if (e && e.cap)
+        tvBand(e.cap, 192, e.size >= 3 ? 22 : 17, { fill: e.size >= 2 ? '#ffe28a' : undefined });
+    }
+    else if (e && e.cap)
       tvBand(e.cap, 214, e.size >= 3 ? 24 : 18, { fill: e.size >= 3 ? '#ffe28a' : undefined });
     else if (ticker) { // 뉴스 띠
       const msg = ticker.list.join('   ·   ') + '   ·   ', w = (tb.font = `700 15px ${HAND}`, tb.measureText(msg).width), off = (st.tIn * 38) % w;

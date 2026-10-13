@@ -8,7 +8,10 @@
     "gap": [240, 600],
     "overlay": { "type": "ticker", "text": "tvTicker" },
     "watch": "normal",
-    "titleKind": "news"
+    "runtime": 60,
+    "flex": true,
+    "maxPerDay": 240,
+    "air": [{ "when": ["새벽"], "title": "tvMorning" }, { "when": ["아침"], "title": "tvMorning" }, ["오전"], ["낮"]]
   },
   "drama": {
     "name": "tvDrama",
@@ -21,7 +24,11 @@
     "gap": [150, 420],
     "overlay": { "type": "subs", "text": "tvDramaSubs" },
     "watch": "long",
-    "titleKind": "drama"
+    "runtime": 60,
+    "maxPerDay": { "평일": 120, "주말": 240 },
+    "episodes": { "from": "2026-09-07" },
+    "first": [["평일", "21:00"]],
+    "rerun": [["새벽"], ["오전"], ["낮"], ["밤"], ["심야"]]
   },
   "baseball": {
     "name": "tvBaseball",
@@ -33,7 +40,11 @@
     "gap": [90, 300],
     "overlay": { "type": "scoreboard", "teams": "tvBaseballTeams" },
     "watch": "track",
-    "titleKind": "sport"
+    "runtime": 180,
+    "rerunRuntime": 60,
+    "maxPerDay": 60,
+    "live": [["평일", "18:00"]],
+    "rerun": [["낮"], ["밤"]]
   },
   "football": {
     "name": "tvSoccer",
@@ -45,7 +56,11 @@
     "gap": [100, 320],
     "overlay": { "type": "scoreboard", "teams": "tvSoccerTeams" },
     "watch": "track",
-    "titleKind": "sport"
+    "runtime": 180,
+    "rerunRuntime": 60,
+    "maxPerDay": 60,
+    "live": [["주말", "18:00"]],
+    "rerun": [["낮"], ["밤"]]
   },
   "actress": {
     "name": "tvActress",
@@ -56,7 +71,10 @@
     ],
     "gap": [150, 400],
     "watch": "normal",
-    "titleKind": "plain"
+    "runtime": 60,
+    "flex": true,
+    "maxPerDay": 180,
+    "air": [["아침"], ["오전"], ["낮"], ["밤"], ["심야"]]
   },
   "horror": {
     "name": "tvHorror",
@@ -67,6 +85,155 @@
     ],
     "gap": [120, 360],
     "watch": "normal",
-    "titleKind": "special"
+    "runtime": 120,
+    "special": [["할로윈", "22:00"]]
+  },
+  "weather": {
+    "name": "tvWeather",
+    "loop": [["tv_weather_1of3", 3.2], ["tv_weather_2of3", 1.6]],
+    "events": [
+      { "id": "sunnap", "w": 1, "size": 2, "dur": 7, "frames": ["tv_weather_3of3"], "cap": "tvWeatherNap", "once": true, "react": { "type": "doze", "p": 0.5 } }
+    ],
+    "gap": [60, 180],
+    "watch": "normal",
+    "runtime": 10,
+    "short": true,
+    "air": [["매일"]]
+  },
+  "ad_phone": {
+    "name": "tvAdPhone",
+    "loop": [["tv_ad_phone_1of3", 2.6], ["tv_ad_phone_2of3", 2.0]],
+    "events": [
+      { "id": "slogan", "w": 2, "size": 1, "dur": 5, "frames": ["tv_ad_phone_2of3"], "cap": "tvAdPhoneSlogan" },
+      { "id": "ring", "w": 1, "size": 3, "dur": 5, "frames": ["tv_ad_phone_3of3"], "cap": "tvAdPhoneRing" }
+    ],
+    "gap": [50, 140],
+    "watch": "normal",
+    "runtime": 10,
+    "short": true,
+    "air": [["매일"]]
+  },
+  "ad_cider": {
+    "name": "tvAdCider",
+    "loop": [["tv_ad_cider_1of4", 2.2], ["tv_ad_cider_2of4", 2.2]],
+    "events": [
+      { "id": "psst", "w": 1, "size": 3, "dur": 4, "frames": ["tv_ad_cider_3of4"], "cap": "tvAdCiderPsst", "react": "startle" }
+    ],
+    "end": { "id": "bowl", "size": 1, "dur": 25, "frames": ["tv_ad_cider_4of4"], "cap": "tvAdCiderEnd" },
+    "gap": [60, 160],
+    "watch": "normal",
+    "runtime": 10,
+    "short": true,
+    "air": [["매일"]]
+  },
+  "ad_car": {
+    "name": "tvAdCar",
+    "loop": [["tv_ad_car_1of3", 1.4], ["tv_ad_car_2of3", 1.4]],
+    "events": [
+      { "id": "box", "w": 1, "size": 3, "dur": 6, "frames": ["tv_ad_car_3of3"], "cap": "tvAdCarBox", "react": { "type": "peekBehind", "p": 0.3 } }
+    ],
+    "gap": [60, 160],
+    "watch": "normal",
+    "runtime": 10,
+    "short": true,
+    "air": [["매일"]]
+  },
+  "cooking": {
+    "name": "tvCooking",
+    "loop": [["tv_cooking_1of3", 2.4], ["tv_cooking_2of3", 2.4]],
+    "events": [
+      { "id": "still", "w": 1, "size": 1, "dur": 5, "frames": ["tv_cooking_2of3"], "cap": "tvCookingStill" }
+    ],
+    "end": { "id": "done", "size": 3, "dur": 30, "frames": ["tv_cooking_3of3"], "cap": "tvCookingDone", "react": "heart" },
+    "gap": [200, 420],
+    "watch": "normal",
+    "runtime": 30,
+    "maxPerDay": 60,
+    "air": [["오전"], ["낮"]]
+  },
+  "noir": {
+    "name": "tvNoir",
+    "loop": [["tv_noir_1of3", 3.0], ["tv_noir_2of3", 3.0]],
+    "events": [
+      { "id": "shadow", "w": 1, "size": 3, "dur": 6, "frames": ["tv_noir_3of3"], "cap": "tvNoirIt", "react": { "type": "pounce", "p": 0.3 } }
+    ],
+    "gap": [240, 600],
+    "overlay": { "type": "subs", "text": "tvNoirSubs" },
+    "watch": "long",
+    "runtime": 55,
+    "air": [["금", "토", "심야"]]
+  },
+  "nature": {
+    "name": "tvNature",
+    "loop": [["tv_nature_1of3", 2.8], ["tv_nature_2of3", 1.6]],
+    "events": [
+      { "id": "peck", "w": 2, "size": 1, "dur": 4, "frames": ["tv_nature_2of3"], "react": { "type": "pawScreen", "p": 0.2 } },
+      { "id": "ears", "w": 1, "size": 2, "dur": 5, "frames": ["tv_nature_3of3"], "cap": "tvNatureOh", "react": "sulk" }
+    ],
+    "gap": [150, 360],
+    "overlay": { "type": "subs", "text": "tvNatureSubs" },
+    "watch": "track",
+    "runtime": 60,
+    "maxPerDay": 60,
+    "air": [["주말", "오전"], ["주말", "낮"]]
+  },
+  "hero": {
+    "name": "tvHero",
+    "loop": [["tv_hero_1of4", 2.0], ["tv_hero_2of4", 2.0]],
+    "events": [
+      { "id": "leap", "w": 1, "size": 3, "dur": 7, "frames": ["tv_hero_3of4", "tv_hero_4of4"], "cap": "tvHeroLand", "react": "startle" }
+    ],
+    "gap": [240, 540],
+    "overlay": { "type": "subs", "text": "tvHeroSubs" },
+    "watch": "track",
+    "runtime": 120,
+    "air": [{ "when": ["토", "21:00"], "title": "tvFilm" }]
+  },
+  "scifi": {
+    "name": "tvScifi",
+    "loop": [["tv_scifi_1of3", 1.8], ["tv_scifi_2of3", 1.8]],
+    "events": [
+      { "id": "dot", "w": 1, "size": 3, "dur": 5, "frames": ["tv_scifi_3of3"], "cap": "tvScifiDot", "react": "pounce" }
+    ],
+    "gap": [240, 540],
+    "overlay": { "type": "subs", "text": "tvScifiSubs" },
+    "watch": "track",
+    "runtime": 120,
+    "air": [{ "when": ["일", "21:00"], "title": "tvFilm" }]
+  },
+  "music": {
+    "name": "tvMusic",
+    "loop": [["tv_music_1of4", 0.6], ["tv_music_2of4", 0.6]],
+    "events": [
+      { "id": "laser", "w": 1, "size": 2, "dur": 5, "frames": ["tv_music_3of4"], "cap": "tvMusicLaser", "react": { "type": "pawScreen", "p": 0.5 } }
+    ],
+    "end": { "id": "no1", "size": 3, "dur": 30, "frames": ["tv_music_4of4"], "cap": "tvMusicNo1", "sfx": "cheer", "react": "heart" },
+    "gap": [150, 360],
+    "watch": "track",
+    "runtime": 60,
+    "air": [["금", "16:00"]]
+  },
+  "homeshop": {
+    "name": "tvHomeshop",
+    "segments": {
+      "min": 12,
+      "list": [
+        { "id": "coat", "loop": [["tv_homeshop_coat_1of2", 2.2], ["tv_homeshop_coat_2of2", 2.2]], "shop": "tvShopCoat" },
+        { "id": "cooker", "loop": [["tv_homeshop_cooker_1of2", 3.0], ["tv_homeshop_cooker_2of2", 3.0]], "shop": "tvShopCooker" },
+        { "id": "facepack", "loop": [["tv_homeshop_facepack_1of2", 6.0], ["tv_homeshop_facepack_2of2", 3.0]], "shop": "tvShopFacepack" },
+        { "id": "fitness", "loop": [["tv_homeshop_fitness_1of2", 6.0], ["tv_homeshop_fitness_2of2", 3.0]], "shop": "tvShopFitness" },
+        { "id": "hiking", "loop": [["tv_homeshop_hiking_1of2", 5.0]], "shop": "tvShopHiking",
+          "end": { "id": "summit", "size": 2, "dur": 90, "frames": ["tv_homeshop_hiking_2of2"], "cap": "tvShopSummit", "react": "heart" } }
+      ]
+    },
+    "events": [
+      { "id": "rush", "w": 2, "size": 2, "dur": 5, "frames": ["@"], "cap": "tvShopRush" },
+      { "id": "soon", "w": 1, "size": 1, "dur": 5, "frames": ["@"], "cap": "tvShopSoon" }
+    ],
+    "gap": [200, 480],
+    "overlay": { "type": "shop", "phone": "tvShopPhone" },
+    "watch": "normal",
+    "runtime": 60,
+    "air": [["매일", "14:30"]]
   }
 }

@@ -219,13 +219,33 @@ const REACT = {
           tvPeekB();
       }, 1500);
   },
-  // 이후 프로그램용: 이름과 자리만. 실제 동작은 새 프로그램을 넣을 때 그림과 함께 만든다
+  // 보다가 졸기 (날씨 캐스터가 해 위에서 낮잠): 화면 앞에서 식빵 자세로 눈을 감는다. p: 확률
+  doze: r => {
+    if (!chance(r))
+      return;
+    run(cat, [hold(1.2, 'loaf'), bub('💤', 3), hold(rnd(25, 70), 'loaf', true), hold(rnd(3, 6), 'loaf')], 'tv');
+  },
+  // 화면을 앞발로 툭툭 (자연 다큐의 새, 뮤직냥크 응원봉 점). p: 확률
+  pawScreen: r => {
+    const w = S('tv.watch');
+    if (!w || !chance(r))
+      return;
+    run(cat, [go(w[0] - 6, w[1] - 8, 70), fn(faceTV), play('paw', 0.62), play('paw', 0.62), bub('🐾', 2),
+      play('tvwatch', rnd(15, 40), () => !tvOn()), hold(rnd(5, 12), 'loaf')], 'tv');
+  },
+  // TV로 달려들기 (냥성 탈출의 빨간 점, 누아르의 쥐 그림자). p: 확률
+  pounce: r => {
+    const w = S('tv.watch');
+    if (!w || !chance(r))
+      return;
+    run(cat, [play('startle'), go(w[0] - 4, w[1] - 10, 230), fn(faceTV), play('paw', 0.62), bub('😼', 2), hold(0.8, 'stand'),
+      play('tvwatch', rnd(20, 50), () => !tvOn()), hold(rnd(5, 12), 'loaf')], 'tv');
+  },
+  // 이후 프로그램용: 이름과 자리만 (화면을 따라 그루밍·기지개)
   'mimic:groom': () => { },
   'mimic:stretch': () => { },
-  pawScreen: () => { },
-  pounce: () => { },
-  doze: () => { },
 };
+const chance = r => r.p == null || Math.random() < r.p;
 // 반응 이름 목록(tv-core.js)과 여기 동작이 맞는지 (tv.js loadPrograms가 부른다)
 export function checkReacts() {
   TV_REACT_NAMES.forEach(n => {

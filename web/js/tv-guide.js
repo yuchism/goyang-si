@@ -3,7 +3,7 @@
 import { LANG, tr } from './i18n.js';
 import { closeShelf } from './shelf.js';
 import { now } from './time.js';
-import { fmtH, tvBday, tvH, tvNeed, tvSegs, tvState } from './tv.js';
+import { fmtH, tvBday, tvH, tvNaps, tvNeed, tvSegs, tvState } from './tv.js';
 import { noteEl, scrEl } from './ui.js';
 import { cutChars, esc, gcEvent } from './util.js';
 import { cat, say, world } from './world.js';
@@ -15,6 +15,8 @@ function tvNowText(st) {
     return '';
   if (st.mode === 'prog')
     return tr('tvgNow', { title: esc(st.sg.title), s: fmtH(st.sg.s), e: fmtH(st.sg.e) });
+  if (st.nap && st.mode !== 'signoff')
+    return st.mode === 'off' ? tr('tvgNapOff', { t: fmtH(st.napTo / 60) }) : tr('tvgTestcard');
   return { off: tr('tvgOff'), testcard: tr('tvgTestcard'), opening: tr('tvgOpening'), signoff: tr('tvgSignoff'), adjust: tr('tvgAdjusting') }[st.mode] || '';
 }
 // 편성표 창은 두 화면: 'guide'(편성표) · 'req'(축하 방송 신청, BIRTHDAY_LINK_PLAN.md 4장)
@@ -27,12 +29,12 @@ export function openTvGuide(quiet) {
     renderReq();
     return;
   }
-  const d = now(), st = world.tv.st || tvState(d), bd = tvBday(d), H = tvH(d), segs = tvSegs(bd);
+  const d = now(), st = world.tv.st || tvState(d), bd = tvBday(d), H = tvH(d), segs = tvSegs(bd), naps = tvNaps(bd);
   if (st.p)
     tvNeed(st.p); // 창에 크게 보이는 지금 화면 그림
-  const rows = [[5, tr('tvgSignOn')], ...segs.map(s => [s.s, s.title]), [24 + 55 / 60, tr('tvgSignOff')]];
+  const rows = [[5, tr('tvgSignOn')], ...segs.map(s => [s.s, s.title]), ...naps.map(n => [n.a / 60, tr('tvgNap')]), [24 + 55 / 60, tr('tvgSignOff')]].sort((a, b) => a[0] - b[0]);
   let cur = -1;
-  if (st.mode !== 'off')
+  if (st.mode !== 'off' || st.nap)
     rows.forEach((r, i) => {
       if (H >= r[0])
         cur = i;
