@@ -90,6 +90,8 @@ export function timeJumped(prev, d, fx = true) {
   // TV: 화면은 시각으로 계산하니 그대로. 켜짐·꺼짐 알림과 반응이 점프 때 일어나지 않게 처음 상태로
   world.tv.st = null;
   world.tv.force = null;
+  world.tv.preview = null; // 미리보기 도구의 틀어 보기도 끝
+  world.tv.broken = null; // 화면 조정 중이었으면 새 시각에서 다시 시도
   // 연출
   world.jumpFade = fx && !RM && Math.abs(b - a) > FADE_MIN ? { t: 0 } : null;
 }

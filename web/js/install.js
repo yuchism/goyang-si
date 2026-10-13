@@ -10,7 +10,7 @@ import { closeShelf, shelfUI } from './shelf.js';
 import { play } from './anim.js';
 import { bub, fn, go, hold, run } from './steps.js';
 import { dayKey } from './time.js';
-import { closeTvGuide } from './tv-cat.js';
+import { closeTvGuide } from './tv-guide.js';
 import { noteEl, scrEl } from './ui.js';
 import { RM, esc, hash, rnd, store, storageOK } from './util.js';
 import { ctx } from './stage.js';

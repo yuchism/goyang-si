@@ -15,13 +15,18 @@ web/                      ← GitHub Pages로 배포되는 폴더 (이 안만 �
   objects.json            ← 방의 사물 (위치·상태·자리·소켓). 사람이 고치는 곳. OBJECTS.md 참고
   f/meta.json             ← 캐릭터 프레임 크기와 발 기준점  [폭, 높이, 기준점 x, y, (크기 보정)]  5번째 값은 그 그림만 키우거나 줄일 때 (예: 새 걷기 그림 1.1)
   r/meta.json             ← 방 그림 크기  [폭, 높이]
-  r/tv/meta.json          ← TV 본체(화면 구멍 위치)와 TV 화면 그림 목록
+  r/tv/meta.json          ← TV 본체(화면 구멍 위치)와 기본 화면 그림(꺼짐·화면조정·마침·해돋이)
+  r/tv/programs.json      ← TV 프로그램 표: 장면·사건·자막·화면 장식·강고양이 씨 반응. 사람이 고치는 곳. TV_CHANNEL_PLAN.md 14장
   js/                     ← 코드 (JS 모듈)
 tools/
   build_meta.py           ← 새 그림을 넣으면 f/·r/ meta.json을 채운다
   visual_check.js         ← 화면 점검 (같은 장면을 매번 똑같이 찍는다)
   compare.py              ← 점검 화면 두 벌을 픽셀 단위로 비교
   clock_check.js          ← 시계 점검: 화면 끄기·뒤 탭·서머타임·빨리 감기를 흉내 내서 CLOCK_PLAN.md 10장 확인
+  check_tv.mjs            ← TV 검사 (배포 전 `node tools/check_tv.mjs`): 그림·번역·편성표·400일·회귀 확인. TV_STABILITY_PLAN.md 6장
+  tv_sample.mjs           ← TV 회귀 확인 표본 뽑기 (check_tv.mjs가 쓴다)
+  tv_baseline.json.gz     ← 회귀 기준: 안정화 작업 전 코드로 뽑은 35일 × 하루 여러 시각의 방송 (한국어·영어)
+  node_env.mjs            ← 노드에서 i18n·time·tv-core 모듈을 불러오기 위한 최소 흉내 (시간대 서울 고정)
 make_objects_doc.py       ← objects.json → OBJECTS.md
 ```
 
@@ -55,9 +60,12 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `stage.js` | 캔버스, 화면 맞추기, 카메라, 깊이 비율 `DEPTH`, 다른 캔버스에 잠깐 그리기 `withCtx` |
 | `assets.js` | meta.json 세 개를 읽어 그림 목록을 만들고 그림을 불러온다 |
 | `sound.js` | Web Audio로 만든 소리 (방 잡음, 비, 방울, 문, 생일 노래, TV) |
-| `tv.js` | TV · 방송: 편성표 `TV_GRID`, 프로그램 `TVP`, 지금 상태 `tvState`, 매 프레임 `tvTick` |
-| `tv-screen.js` | TV · 화면: 320×240 버퍼, 브라운관 효과, 방 안에 그리기, 밤 불빛 |
-| `tv-cat.js` | TV · 강고양이 씨 반응(보기·위에서 낮잠·뒤 빼꼼·달려오기)과 편성표 창 |
+| `tv-core.js` | TV · 계산(화면 없이, 노드에서도 돈다): `programs.json` 검사 `setPrograms`, 편성표 `TV_GRID`·`tvSegs`, 사건 `tvEvents`, 지금 상태 `tvState`, 장면 그림 `tvFrameName`, 제목 규칙(`titleKind`) |
+| `tv.js` | TV · 방송: 프로그램 표 불러오기 `loadPrograms`, 그림 미리 받기 `tvNeed`(지금·다음 칸, 매분), 매 프레임 `tvTick`, 오류 격리 `tvBreak`(그 칸 끝까지 "화면 조정 중"), 미리보기 `tvPreview`·`tvForce` |
+| `tv-screen.js` | TV · 화면: 320×240 버퍼, 화면 장식(`overlay`), "수신 중"·"화면 조정 중", 브라운관 효과, 방 안에 그리기, 밤 불빛 |
+| `tv-cat.js` | TV · 강고양이 씨: 보기(`watch`)·위에서 낮잠·뒤 빼꼼·달려오기, 반응 목록 `REACT`(사건의 `react`가 고른다) |
+| `tv-guide.js` | TV · 편성표 창과 축하 방송 신청 화면 |
+| `tv-dev.js` | 미리보기 도구의 TV 칸: 틀어 보기, 사건 고르기, 7일 편성표, 특집 날짜로 가기, 문제 있는 프로그램 수 |
 | `birthday.js` | 생일 파티(`?birthday=이름`): 배너, 케이크, 꽃비, 무대 조명, 노트북 자막, 쥐야쥐 박수 |
 | `shelf.js` | 책장 메뉴 (`objects.json`의 `bookshelf.books`) |
 | `frame.js` | 벽 액자: 날짜마다 바뀌는 가족사진(`objects.json`의 `frame.photos`), 누르면 다음 사진·조금씩 삐뚤어짐, 만득 씨가 다녀가면 반듯. 넘긴 사진·기울기는 그 기기에 저장. FRAME_PHOTOS_PLAN.md |
@@ -82,7 +90,7 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 2. `python3 tools/build_meta.py` → meta.json에 크기가 들어간다. 캐릭터는 발 기준점이 그림 아래 가운데로 일단 들어가니, 필요하면 손으로 고친다
 3. 코드에서 이름으로 쓴다: 캐릭터는 `CLIP`에 프레임 이름, 소품은 `objects.json`의 `look`
 
-TV 화면 그림은 `r/tv/meta.json`에 목록이 있다. 새 프로그램은 그 목록과 `tv.js`의 `TVP`, `TV_GRID`에 함께 넣는다.
+TV 프로그램은 코드를 고치지 않는다: 그림을 `r/tv/`에 → `r/tv/programs.json`에 한 덩어리 → `i18n.js` 번역 → `node tools/check_tv.mjs`. 자세한 것은 TV_CHANNEL_PLAN.md 14장. 프로그램 그림은 시작을 기다리게 하지 않고 필요할 때 받는다(`assets.js` `loadLazy`).
 
 ## 화면 점검 (코드를 크게 고칠 때)
 

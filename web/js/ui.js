@@ -12,10 +12,10 @@ import { Snd } from './sound.js';
 import { DEPTH, H, W, cam, cv, fit, view } from './stage.js';
 import { boxToday, holidayOverride, mandukAsleep, mandukHome, now, rainNow, resetSim, seasonOverride, setOverride, setSimMs, setSpeed } from './time.js';
 import { timeJumped } from './jump.js';
-import { TVP } from './tv.js';
-import { closeTvGuide, openTvGuide } from './tv-cat.js';
+import { closeTvGuide, openTvGuide } from './tv-guide.js';
+import { initTvDev } from './tv-dev.js';
 import { bannerText } from './birthday.js';
-import { $, esc, pick, store } from './util.js';
+import { $, esc, store } from './util.js';
 import { flipFrame } from './frame.js';
 import { STANDALONE, closeOdd, oddAt, openOdd, toggleOdd } from './install.js';
 import { caption, cat, mouse, say, world } from './world.js';
@@ -310,15 +310,7 @@ export function initUI() {
     }
     startUFO();
   };
-  $('dTv').onclick = () => {
-    const st = world.tv.st;
-    if (!st || st.mode !== 'prog') {
-      caption(tr('devNoProg'), 3);
-      return;
-    }
-    const P = TVP[st.p], big = P.ev.filter(e => e.size >= 2);
-    world.tv.force = { p: st.p, e: pick(big.length ? big : P.ev), t0: world.t };
-  };
+  initTvDev(jumpTo); // TV 칸: 틀어 보기, 사건 고르기(예전 "TV 사건" 버튼 포함), 7일 편성표, 특집 날짜 (tv-dev.js)
   $('dKnock').onclick = () => {
     if (world.manduk)
       return;

@@ -217,13 +217,14 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
   tvEvent(e) {
     if (!this.on)
       return;
-    if (e.id === 'homerun') {
+    // 사건의 소리는 programs.json의 sfx
+    if (e.sfx === 'homerun') {
       this.thump(0.35, 2600);
       setTimeout(() => this.tvCheer(1), 120);
     }
-    else if (e.id === 'goal')
+    else if (e.sfx === 'cheer')
       this.tvCheer(1.2);
-    else if (e.id === 'flash')
+    else if (e.sfx === 'click')
       this.click();
   },
   setAmb(rain, tv, dark) {

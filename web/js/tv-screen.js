@@ -6,7 +6,8 @@ import { drawProp } from './draw.js';
 import { O, P, objView, present, zOf } from './objects.js';
 import { drawActor } from './sprites.js';
 import { ctx, cv, withCtx } from './stage.js';
-import { TVP } from './tv.js';
+import { now } from './time.js';
+import { TVP, tvBreak } from './tv.js';
 import { HAND, clamp, ease } from './util.js';
 import { cat, mouse, world } from './world.js';
 /* 화면 버퍼 그리기 */
@@ -18,10 +19,18 @@ const tvNoise = document.createElement('canvas');
 tvNoise.width = 80;
 tvNoise.height = 60;
 const tn = tvNoise.getContext('2d'), tnImg = tn.createImageData(80, 60);
-function noiseFill() {
-  const a = tnImg.data;
+// 노이즈. "수신 중" 노이즈는 따로 만든 난수를 쓴다 (Math.random을 쓰면 그림을 받는 속도에 따라 고양이 행동의 난수가 달라진다)
+let nz = 2463534242;
+const nrand = () => {
+  nz ^= nz << 13;
+  nz ^= nz >>> 17;
+  nz ^= nz << 5;
+  return (nz >>> 0) / 4294967296;
+};
+function noiseFill(own) {
+  const a = tnImg.data, R = own ? nrand : Math.random;
   for (let i = 0; i < a.length; i += 4) {
-    const v = Math.random() * 255 | 0;
+    const v = R() * 255 | 0;
     a[i] = a[i + 1] = a[i + 2] = v;
     a[i + 3] = 255;
   }
@@ -70,7 +79,20 @@ function tvBand(t, y, size, o = {}) {
   tb.restore();
   tvText(t, 160, y + 1, size, { lw: 0, fill: o.fill });
 }
+// TV 화면 그리기. 오류가 나면 그 칸이 끝날 때까지 "잠시 화면 조정 중입니다" (tv.js tvBreak). 방은 계속 그린다
 export function drawTvBuf(st) {
+  try {
+    drawBuf(st);
+  }
+  catch (e) {
+    tvBreak(now(), e, '화면 그리기');
+    try {
+      drawBuf({ mode: 'adjust', broken: true });
+    }
+    catch (e2) { }
+  }
+}
+function drawBuf(st) {
   const T = world.tv, t = world.t;
   tb.setTransform(1, 0, 0, 1, 0, 0);
   tb.globalAlpha = 1;
@@ -118,18 +140,33 @@ export function drawTvBuf(st) {
     tvText(tr('tvOpening'), 160, 90, 19, { lw: 4 });
     tb.globalAlpha = 1;
   }
-  else
+  else if (st.mode === 'adjust')
+    pic('screen_testcard');
+  else if (!st.tuning && !st.missing)
     pic(T.frame);
+  if (st.mode === 'adjust')
+    tvBand(tr('tvAdjusting'), 214, 17);
+  if (st.mode === 'prog' && st.missing) { // 그림 파일이 없는 프로그램
+    pic('screen_testcard');
+    tvBand(tr('tvAdjusting'), 214, 17);
+  }
   if (st.mode === 'testcard')
     tvBand(tr('tvTestcard'), 20, 16);
   if (st.mode === 'signoff')
     tvBand(tr('tvSignoff'), 222, 15);
-  if (st.mode === 'prog') {
-    const P = TVP[st.p], e = st.ev && st.ev.e;
+  // 프로그램 그림을 아직 못 받았다: 노이즈 + "…수신 중…" (받아지면 바로 정상 화면)
+  else if (st.mode === 'prog' && st.tuning) {
+    noiseFill(true);
+    tb.drawImage(tvNoise, 0, 0, 320, 240);
+    tvBand(tr('tvTuning'), 214, 18);
+  }
+  const P = st.mode === 'prog' && TVP[st.p], board = P && P.ovl('scoreboard');
+  if (P && !st.tuning && !st.missing) {
+    const e = st.ev && st.ev.e, ticker = P.ovl('ticker'), subs = P.ovl('subs');
     if (e && e.cap)
       tvBand(e.cap, 214, e.size >= 3 ? 24 : 18, { fill: e.size >= 3 ? '#ffe28a' : undefined });
-    else if (st.p === 'news') {
-      const msg = P.ticker.join('   ·   ') + '   ·   ', w = (tb.font = `700 15px ${HAND}`, tb.measureText(msg).width), off = (st.tIn * 38) % w;
+    else if (ticker) { // 뉴스 띠
+      const msg = ticker.list.join('   ·   ') + '   ·   ', w = (tb.font = `700 15px ${HAND}`, tb.measureText(msg).width), off = (st.tIn * 38) % w;
       tb.fillStyle = 'rgba(150,30,40,.88)';
       tb.fillRect(0, 224, 320, 16);
       tb.save();
@@ -140,13 +177,13 @@ export function drawTvBuf(st) {
         tvText(msg, x, 232.5, 15, { align: 'left', lw: 0, noFit: 1 });
       tb.restore();
     }
-    else if (st.p === 'drama') {
-      const i = Math.floor(st.tIn / 14), u = st.tIn % 14;
+    else if (subs) { // 드라마 대사: 14초마다
+      const i = Math.floor(st.tIn / 14), u = st.tIn % 14, L = subs.list;
       if (u > 2 && u < 5.5)
-        tvText(P.subs[i % P.subs.length], 160, 214, 19, { lw: 4 });
+        tvText(L[i % L.length], 160, 214, 19, { lw: 4 });
     }
-    if (P.sport) {
-      const s = st.score, tx = `${P.teams[0]} ${s[0]} : ${s[1]} ${P.teams[1]}`;
+    if (board) { // 점수판
+      const s = st.score, tm = board.list, tx = `${tm[0]} ${s[0]} : ${s[1]} ${tm[1]}`;
       tb.save();
       tb.font = `700 15px ${HAND}`;
       const w = tb.measureText(tx).width + 16;
@@ -158,13 +195,13 @@ export function drawTvBuf(st) {
     }
     if (T.osd != null && t - T.osd < 5) {
       tb.globalAlpha = clamp(5 - (t - T.osd), 0, 1);
-      tvText(st.sg.title, P.sport ? 160 : 12, P.sport ? 48 : 22, 16, { align: P.sport ? 'center' : 'left', lw: 4 });
+      tvText(st.sg.title, board ? 160 : 12, board ? 48 : 22, 16, { align: board ? 'center' : 'left', lw: 4 });
       tb.globalAlpha = 1;
     }
   }
   if (world.party && partyLevel() > 0.05) {
     tb.globalAlpha = Math.min(1, partyLevel() * 1.5);
-    tvBand(birthdayName ? tr('bdayTv', { name: birthdayName }) : tr('bdayTvNoName'), st.mode === 'prog' && TVP[st.p].sport ? 46 : 20, 15, { bg: 'rgba(120,30,60,.85)', fill: '#ffe9a8' });
+    tvBand(birthdayName ? tr('bdayTv', { name: birthdayName }) : tr('bdayTvNoName'), board && !st.tuning && !st.missing ? 46 : 20, 15, { bg: 'rgba(120,30,60,.85)', fill: '#ffe9a8' });
     tb.globalAlpha = 1;
   }
   if (st.noise) {
@@ -252,6 +289,14 @@ function redrawDark(draw, a, box) {
 }
 // 밤: 화면은 스스로 빛나므로 어둠 위에 다시 밝게, 앞을 가린 것들은 다시 어둡게. 그리고 방에 번지는 TV 불빛
 export function drawTVNight(dk) {
+  try {
+    drawNight(dk);
+  }
+  catch (e) {
+    tvBreak(now(), e, '밤 불빛');
+  }
+}
+function drawNight(dk) {
   const T = world.tv, st = T.st;
   if (!O.tv || !present(O.tv) || !st)
     return;

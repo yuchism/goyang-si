@@ -31,6 +31,15 @@ button[aria-pressed="true"]{background:var(--bell);color:#2a1f0e;border-color:va
 .dev .grp{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .dev label{color:var(--muted)}
 .dev input[type=range]{width:160px;accent-color:var(--bell)}
+.dev select{font:inherit;max-width:12em}
+.dev .tvwarn{color:#ffb38a}
+.tvweek{flex-basis:100%;display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+.tvweek[hidden]{display:none}
+.tvweek section{flex:0 0 auto;min-width:11em}
+.tvweek h3{margin:0 0 4px;font-size:.8rem;color:var(--muted)}
+.tvweek ol{margin:0;padding:0;list-style:none;font-size:.72rem;line-height:1.45}
+.tvweek time{display:inline-block;width:3.2em;color:var(--muted)}
+.tvweek .bad{color:#ffb38a}
 .note{position:absolute;left:50%;bottom:6%;transform:translateX(-50%) rotate(-1.5deg);background:#f7e27a;color:#2b2416;font-family:var(--font-hand);font-size:1.5rem;line-height:1.25;padding:16px 20px 18px;width:min(320px,80%);box-shadow:0 10px 30px rgba(0,0,0,.4);border-radius:2px;cursor:pointer}
 .note small{display:block;font-size:.95rem;opacity:.65;margin-top:6px}
 .screen{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);background:#101820;color:#cfe3d6;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;line-height:1.5;padding:14px 16px;width:min(420px,86%);border-radius:8px;border:6px solid #2f3a44;white-space:pre-wrap;word-break:break-all;cursor:pointer;max-height:50%;overflow:auto}

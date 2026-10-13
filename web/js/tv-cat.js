@@ -1,15 +1,13 @@
-/* 강고양이 씨 TV · 반응과 편성표 창: TV 보기, TV 위 낮잠, 뒤 빼꼼, 사건 반응, 편성표 창 */
+/* 강고양이 씨 TV · 반응: TV 보기, TV 위 낮잠, 뒤 빼꼼, 달려오기, 사건 반응. 편성표 창은 tv-guide.js
+   프로그램(r/tv/programs.json)은 사건마다 반응 이름만 고른다("react"). 반응을 어떻게 움직일지는 여기 REACT가 안다 */
 import { play } from './anim.js';
-import { LANG, tr } from './i18n.js';
 import { loafB } from './cat.js';
 import { O, S, present, socketOf, topOf } from './objects.js';
-import { closeShelf } from './shelf.js';
 import { Snd } from './sound.js';
 import { bub, fn, go, hold, run } from './steps.js';
-import { now } from './time.js';
-import { TVP, fmtH, tvBday, tvCold, tvH, tvOn, tvSegs, tvState } from './tv.js';
-import { noteEl, scrEl } from './ui.js';
-import { cutChars, esc, gcEvent, pick, rnd } from './util.js';
+import { TVP, tvCold, tvOn } from './tv.js';
+import { TV_REACT_NAMES } from './tv-core.js';
+import { pick, rnd } from './util.js';
 import { cat, say, world } from './world.js';
 /* TV와 강고양이 씨 */
 const TV_BUSY = ['knock', 'zoom', 'chase', 'stalk', 'boxhide', 'greet', 'birthday', 'wait', 'innocent', 'secret', 'box', 'tvrush', 'sulk', 'ufo', 'santa', 'paw', 'bfly', 'window'];
@@ -18,7 +16,7 @@ const faceTV = a => {
 };
 export function tvWatchFrame() {
   const st = world.tv.st;
-  if (st && st.mode === 'prog' && TVP[st.p].sport) {
+  if (st && st.mode === 'prog' && TVP[st.p].watch === 'track') { // 스포츠처럼 고개 따라가기
     const fast = st.ev && st.ev.e.size >= 2, seq = ['tv_track_left', 'tv_track_center', 'tv_track_right', 'tv_track_center'];
     return seq[Math.floor(world.t * (fast ? 2.4 : 0.6)) % 4];
   }
@@ -31,7 +29,7 @@ export function tvWatchB() {
   const w = S('tv.watch');
   if (!w || !tvOn())
     return loafB();
-  const st = world.tv.st, long = st.mode === 'prog' && (st.p === 'drama' || TVP[st.p].sport);
+  const st = world.tv.st, w0 = st.mode === 'prog' ? TVP[st.p].watch : 'normal', long = w0 === 'long' || w0 === 'track'; // bored(TV 앞에서 졸기)는 그림과 함께 만든다
   const side = Math.random() < 0.65; // 대개는 화면 오른쪽 앞에서 비스듬히, 가끔은 화면 바로 앞을 가리고 앉는다
   run(cat, [
     go(side ? w[0] + rnd(80, 100) : w[0] + rnd(-14, 14), w[1] + rnd(-4, 6), 60),
@@ -199,6 +197,42 @@ export function tvRush(key) {
     })
   ], 'tvrush');
 }
+/* 반응 목록: 이름 → 동작. 프로그램 데이터의 사건 "react"가 고른다 (TV_STABILITY_PLAN.md 3-1)
+   강고양이 씨가 TV 앞에서 보고 있을 때만 실행한다. replace: true면 크기(size)에 따른 공통 반응을 대신하고, 아니면 공통 반응 뒤에 더한다 */
+const REACT = {
+  // 시무룩 (드라마 "다음 이 시간에")
+  sulk: () => run(cat, [
+    hold(1, 'stand'),
+    bub('…', 3),
+    play('sulk', rnd(20, 40)),
+    hold(rnd(10, 20), 'loaf')
+  ], 'sulk'),
+  // 제자리에서 펄쩍 (할로윈 오이)
+  startle: () => run(cat, [play('startle'), bub('‼️', 2), hold(0.6, 'stand'), play('tvwatch', rnd(20, 60), () => !tvOn()), hold(rnd(5, 12), 'loaf')], 'tv'),
+  // ❤️ 말풍선 (드라마 코 인사)
+  heart: () => say(cat, '❤️', 2.5),
+  // 잠시 뒤 TV 뒤로 돌아가 빼꼼 (공 쫓기, 상자). p: 확률
+  peekBehind: r => {
+    if (Math.random() < (r.p != null ? r.p : 1) && !world.manduk)
+      setTimeout(() => {
+        if (cat.act && cat.act.c === 'tvwatch')
+          tvPeekB();
+      }, 1500);
+  },
+  // 이후 프로그램용: 이름과 자리만. 실제 동작은 새 프로그램을 넣을 때 그림과 함께 만든다
+  'mimic:groom': () => { },
+  'mimic:stretch': () => { },
+  pawScreen: () => { },
+  pounce: () => { },
+  doze: () => { },
+};
+// 반응 이름 목록(tv-core.js)과 여기 동작이 맞는지 (tv.js loadPrograms가 부른다)
+export function checkReacts() {
+  TV_REACT_NAMES.forEach(n => {
+    if (!REACT[n])
+      console.warn('TV: 반응 목록에 동작이 없음', n);
+  });
+}
 export function tvEventFired(e) {
   const T = world.tv;
   T.flash = world.t;
@@ -206,28 +240,18 @@ export function tvEventFired(e) {
   if (world.manduk || cat.inBox || cat.typing || cat.dance)
     return;
   if (cat.act && cat.act.c === 'tvwatch') {
-    if (e.id === 'next') {
-      run(cat, [
-        hold(1, 'stand'),
-        bub('…', 3),
-        play('sulk', rnd(20, 40)),
-        hold(rnd(10, 20), 'loaf')
-      ], 'sulk');
+    const r = e.react && REACT[e.react.type] ? e.react : null;
+    if (r && r.replace) {
+      REACT[r.type](r, e);
       return;
     }
-    if (e.id === 'cucumber') { // 오이다!!! TV 앞에 있으면 같이 펄쩍
-      run(cat, [play('startle'), bub('‼️', 2), hold(0.6, 'stand'), play('tvwatch', rnd(20, 60), () => !tvOn()), hold(rnd(5, 12), 'loaf')], 'tv');
-      return;
-    }
+    // 공통 반응 (크기)
     if (e.size >= 3)
-      say(cat, e.id === 'nose' ? '❤️' : '‼️', 2.5);
+      say(cat, '‼️', 2.5);
     else if (e.size === 2 && Math.random() < 0.5)
       say(cat, '👀', 2);
-    if ((e.id === 'chase' || e.id === 'box') && Math.random() < 0.3 && !world.manduk)
-      setTimeout(() => {
-        if (cat.act && cat.act.c === 'tvwatch')
-          tvPeekB();
-      }, 1500);
+    if (r)
+      REACT[r.type](r, e);
     return;
   }
   if (cat.onTV) {
@@ -283,222 +307,3 @@ export function tvReactBeep() {
   faceTV(cat);
   say(cat, '❔', 3);
 }
-/* TV를 누르면: 지금 화면을 크게 + 오늘 편성표 */
-const tvgEl = document.getElementById('tvg');
-export let tvBig = null;
-function tvNowText(st) {
-  if (!st)
-    return '';
-  if (st.mode === 'prog')
-    return tr('tvgNow', { title: esc(st.sg.title), s: fmtH(st.sg.s), e: fmtH(st.sg.e) });
-  return { off: tr('tvgOff'), testcard: tr('tvgTestcard'), opening: tr('tvgOpening'), signoff: tr('tvgSignoff') }[st.mode] || '';
-}
-// 편성표 창은 두 화면: 'guide'(편성표) · 'req'(축하 방송 신청, BIRTHDAY_LINK_PLAN.md 4장)
-let tvgView = 'guide', reqName = '', reqLink = '', reqMsg = '';
-const REQ_MAX = 24;
-export function openTvGuide(quiet) {
-  if (!quiet)
-    tvgView = 'guide';
-  if (tvgView === 'req') {
-    renderReq();
-    return;
-  }
-  const d = now(), st = world.tv.st || tvState(d), bd = tvBday(d), H = tvH(d), segs = tvSegs(bd);
-  const rows = [[5, tr('tvgSignOn')], ...segs.map(s => [s.s, s.title]), [24 + 55 / 60, tr('tvgSignOff')]];
-  let cur = -1;
-  if (st.mode !== 'off')
-    rows.forEach((r, i) => {
-      if (H >= r[0])
-        cur = i;
-    });
-  noteEl.hidden = true;
-  scrEl.hidden = true;
-  closeShelf();
-  tvgEl.innerHTML = `<button class="x" type="button" aria-label="${esc(tr('tvgClose'))}">×</button><h2>${esc(tr('tvChannel'))}</h2><canvas width="320" height="240" aria-label="${esc(tr('tvgScreen'))}"></canvas>` +
-    `<p class="now">${tvNowText(st)}</p><ol aria-label="${esc(tr('tvgList'))}">` + rows.map((r, i) => `<li${i === cur ? ' class="cur" aria-current="true"' : ''}><time>${fmtH(r[0])}</time><span>${esc(r[1])}</span></li>`).join('') +
-    `</ol><p class="foot">${esc(tr('tvgFoot'))}</p><p class="reqline"><button class="reqopen" type="button">${esc(tr('tvgReq'))}</button></p>`;
-  tvBig = tvgEl.querySelector('canvas').getContext('2d');
-  tvgEl.hidden = false;
-  tvgEl.focus({ preventScroll: true });
-  if (!quiet && !cat.closed && !world.manduk && Math.random() < 0.4)
-    say(cat, '👀', 1.6);
-}
-export function closeTvGuide() {
-  if (tvgEl.hidden)
-    return;
-  tvgEl.hidden = true;
-  tvBig = null;
-  tvgView = 'guide';
-  reqMsg = '';
-  reqLink = '';
-  placeKb();
-}
-/* ───────── 축하 방송 신청: 생일 링크 만들기 ───────── */
-const canShare = () => typeof navigator.share === 'function';
-const reqClean = v => cutChars(String(v || '').replace(/\s+/g, ' ').trim(), REQ_MAX);
-// 보내는 링크: 지금 보고 있는 언어의 생일 페이지 (카톡 미리보기 카드 언어가 달라진다)
-const reqUrl = name => location.origin + '/birthday/' + (LANG === 'en' ? 'en/' : '') + '?n=' + encodeURIComponent(name);
-function renderReq() {
-  noteEl.hidden = true;
-  scrEl.hidden = true;
-  closeShelf();
-  tvBig = null;
-  const n = Array.from(reqName.trim()).length;
-  tvgEl.innerHTML = `<button class="x" type="button" aria-label="${esc(tr('tvgClose'))}">×</button>` +
-    `<button class="back" type="button">‹ ${esc(tr('reqBack'))}</button>` +
-    `<div class="req"><h2>${esc(tr('reqTitle'))}</h2><p class="lead">${esc(tr('reqLead'))}</p>` +
-    `<label for="reqName">${esc(tr('reqLabel'))}</label>` +
-    `<div class="field"><input id="reqName" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" placeholder="${esc(tr('reqPh'))}" value="${esc(reqName)}"><span class="count" aria-hidden="true">${n}/${REQ_MAX}</span></div>` +
-    `<div class="acts"><button class="send" type="button"${n ? '' : ' disabled'}>${esc(tr(canShare() ? 'reqSend' : 'reqCopy'))}</button>` +
-    `<button class="pv" type="button"${n ? '' : ' disabled'}>${esc(tr('reqPreview'))}</button></div>` +
-    `<p class="msg" role="status" aria-live="polite">${esc(reqMsg)}</p>` +
-    `<input class="link" type="text" readonly aria-label="${esc(tr('reqLinkLabel'))}" value="${esc(reqLink)}"${reqLink ? '' : ' hidden'}></div>`;
-  tvgEl.hidden = false;
-  placeKb();
-}
-/* 폰 키보드가 올라오면: 신청 창을 지금 보이는 화면(visualViewport) 위쪽에 붙인다.
-   키보드는 레이아웃을 줄이지 않고 화면 아래를 덮기만 해서, 무대 아래쪽에 붙은 창이 키보드 뒤로 숨는다 */
-const VV = window.visualViewport;
-let kbWas = false;
-function placeKb() {
-  const kb = !!VV && document.documentElement.clientHeight - VV.height > 120;
-  const on = kb && !tvgEl.hidden && tvgView === 'req';
-  tvgEl.classList.toggle('kb', on);
-  tvgEl.style.top = on ? Math.round(VV.offsetTop + 8) + 'px' : '';
-  tvgEl.style.maxHeight = on ? Math.max(140, Math.round(VV.height - 16)) + 'px' : '';
-  // 키보드가 내려가면: 입력창을 보여 주려고 밀려 올라간 페이지를 제자리로
-  if (kbWas && !kb && (window.scrollY || document.documentElement.scrollTop))
-    window.scrollTo(0, 0);
-  kbWas = kb;
-}
-if (VV) {
-  VV.addEventListener('resize', placeKb);
-  VV.addEventListener('scroll', placeKb);
-}
-function openReq() {
-  tvgView = 'req';
-  reqMsg = '';
-  reqLink = '';
-  renderReq();
-  const inp = tvgEl.querySelector('#reqName');
-  inp && inp.focus({ preventScroll: true });
-  gcEvent('birthday-request-open', '축하 방송 신청 창 열기');
-}
-function backToGuide() {
-  tvgView = 'guide';
-  openTvGuide(true);
-  placeKb();
-  const b = tvgEl.querySelector('.reqopen');
-  b && b.focus({ preventScroll: true });
-}
-// 입력이 바뀔 때: 글자 수와 버튼만 고친다 (다시 그리면 한글 조합이 끊긴다)
-function onReqInput(inp, composing) {
-  if (!composing && Array.from(inp.value).length > REQ_MAX)
-    inp.value = cutChars(inp.value, REQ_MAX);
-  reqName = inp.value;
-  const n = Array.from(reqName.trim()).length, ok = !!reqClean(reqName);
-  tvgEl.querySelector('.count').textContent = `${Math.min(n, REQ_MAX)}/${REQ_MAX}`;
-  tvgEl.querySelector('.send').disabled = !ok;
-  tvgEl.querySelector('.pv').disabled = !ok;
-  if (reqLink) { // 이름을 고치면 예전 링크는 치운다
-    reqLink = '';
-    reqMsg = '';
-    tvgEl.querySelector('.link').hidden = true;
-    tvgEl.querySelector('.msg').textContent = '';
-  }
-}
-function showReqResult(msg, link, select) {
-  reqMsg = msg;
-  reqLink = link;
-  tvgEl.querySelector('.msg').textContent = msg;
-  const li = tvgEl.querySelector('.link');
-  li.value = link;
-  li.hidden = false;
-  if (select) {
-    li.focus({ preventScroll: true });
-    li.select();
-  }
-}
-async function copyText(t, li) {
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(t);
-      return true;
-    }
-  }
-  catch (e) { }
-  try { // 오래된 브라우저: 선택해 두고 복사 명령
-    li.hidden = false;
-    li.value = t;
-    li.focus({ preventScroll: true });
-    li.select();
-    return document.execCommand('copy');
-  }
-  catch (e) {
-    return false;
-  }
-}
-async function sendReq() {
-  const name = reqClean(reqName);
-  if (!name)
-    return;
-  const url = reqUrl(name), li = tvgEl.querySelector('.link');
-  if (canShare()) {
-    try {
-      await navigator.share({ title: tr('reqShareTitle'), text: tr('reqShareText', { name }), url });
-      showReqResult(tr('reqShared'), url, false);
-      gcEvent('birthday-link-shared', '생일 링크 공유');
-      return;
-    }
-    catch (e) {
-      if (e && e.name === 'AbortError') { // 공유 창을 닫았을 뿐: 링크만 보여 둔다
-        showReqResult('', url, false);
-        return;
-      }
-      // 공유가 막힌 경우(권한 등): 복사로 넘어간다
-    }
-  }
-  if (await copyText(url, li)) {
-    showReqResult(tr('reqCopied'), url, false);
-    gcEvent('birthday-link-copied', '생일 링크 복사');
-  }
-  else
-    showReqResult(tr('reqManual'), url, true);
-}
-function previewReq() {
-  const name = reqClean(reqName);
-  if (name)
-    window.open('/?birthday=' + encodeURIComponent(name), '_blank', 'noopener');
-}
-tvgEl.addEventListener('input', e => {
-  if (e.target.id === 'reqName')
-    onReqInput(e.target, e.isComposing);
-});
-tvgEl.addEventListener('compositionend', e => {
-  if (e.target.id === 'reqName')
-    onReqInput(e.target, false);
-});
-tvgEl.addEventListener('keydown', e => {
-  if (e.target.id === 'reqName' && e.key === 'Enter' && !e.isComposing) {
-    e.preventDefault();
-    sendReq();
-  }
-});
-tvgEl.addEventListener('click', e => {
-  if (e.target.closest('.x'))
-    closeTvGuide();
-  else if (e.target.closest('.reqopen'))
-    openReq();
-  else if (e.target.closest('.back'))
-    backToGuide();
-  else if (e.target.closest('.send'))
-    sendReq();
-  else if (e.target.closest('.pv'))
-    previewReq();
-  else if (e.target.closest('.link'))
-    e.target.select();
-});
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape')
-    closeTvGuide();
-});

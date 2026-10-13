@@ -2,7 +2,7 @@
    크기와 기준점은 각 폴더의 meta.json 한 곳에만 적는다 (tools/build_meta.py가 새 그림을 찾아 채운다).
    f/meta.json   : 캐릭터 프레임. [폭, 높이, 발 기준점 x, y]. 모두 왼쪽을 보는 그림
    r/meta.json   : 방 배경과 소품. [폭, 높이]
-   r/tv/meta.json: TV 본체(화면 구멍 위치)와 화면 그림 목록 */
+   r/tv/meta.json: TV 본체(화면 구멍 위치)와 기본 화면 그림. 프로그램 그림은 r/tv/programs.json에서, 필요할 때 받는다(loadLazy, tv.js) */
 import { start } from './main.js';
 
 export const FRAMES = {};
@@ -35,7 +35,7 @@ export async function loadMeta() {
   Object.assign(TV_META, tv);
   Object.keys(FRAMES).forEach(k => SRC['f_' + k] = 'f/' + k + '.webp');
   Object.keys(ROOM).forEach(k => SRC['r_' + k] = 'r/' + k + '.webp');
-  const tvFiles = [tv.body.file, ...Object.values(tv.baseScreens).flat(), ...Object.values(tv.programFrames).flat()];
+  const tvFiles = [tv.body.file, ...Object.values(tv.baseScreens).flat()]; // 시작을 기다리게 하는 TV 그림은 본체와 기본 화면만
   tvFiles.forEach(file => SRC['r_tv/' + file.replace(/\.webp$/, '')] = 'r/tv/' + file);
   Object.assign(SRC, EXTRA_SRC);
 }
@@ -59,3 +59,29 @@ export function loadImages() {
     IMG[k] = im;
   });
 }
+// 시작을 기다리게 하지 않는 그림 (TV 프로그램 그림): 처음 부를 때 받기 시작한다. 실패하면 조금 뒤 다시 부를 수 있게 지운다
+const lazyBusy = new Set(), lazyBad = new Set();
+export function loadLazy(k, src) {
+  if (IMG[k])
+    return IMG[k];
+  const im = new Image();
+  lazyBusy.add(k);
+  im.onload = () => {
+    lazyBusy.delete(k);
+    lazyBad.delete(k);
+  };
+  im.onerror = () => {
+    lazyBusy.delete(k);
+    lazyBad.add(k);
+    setTimeout(() => {
+      if (IMG[k] === im)
+        delete IMG[k];
+    }, 60000);
+  };
+  im.src = src;
+  IMG[k] = im;
+  SRC[k] = src;
+  return im;
+}
+export const lazyPending = () => lazyBusy.size; // 점검용: 아직 받는 중인 그림 수
+export const lazyFailed = k => lazyBad.has(k); // 받지 못한 그림 (없는 파일 등)

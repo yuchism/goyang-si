@@ -8,7 +8,7 @@ import { Snd } from './sound.js';
 import { DEPTH } from './stage.js';
 import { bub, fn, go, hold, run } from './steps.js';
 import { boxToday, hourOf, inBeam, mandukAsleep, mandukHome, rainNow, sunbeam, wx } from './time.js';
-import { TVP, tvOn } from './tv.js';
+import { TVP, tvOn, tvPrime } from './tv.js';
 import { tvTopB, tvTopBlockedB, tvWatchB } from './tv-cat.js';
 import { pick, rnd, store } from './util.js';
 import { tr } from './i18n.js';
@@ -39,8 +39,8 @@ export function catBrain(d) {
   add(1.4, groomB);
   add(dark ? 0.3 : 1.4, wanderB);
   if (tvOn()) {
-    const st = world.tv.st, pr = st.mode === 'prog' ? st.p : null, prime = pr === 'drama' && st.sg.s >= 21 && st.sg.s < 22;
-    add(dark ? 0.5 : prime ? 4 : pr && TVP[pr].sport ? 2 : 0.9, tvWatchB);
+    const st = world.tv.st, pr = st.mode === 'prog' ? st.p : null, prime = !!pr && tvPrime(st.sg);
+    add(dark ? 0.5 : prime ? 4 : pr && TVP[pr].watch === 'track' ? 2 : 0.9, tvWatchB);
     if (!present(O.pumpkin))
       add((h >= 19 || h < 1) ? 1.3 : 0.5, tvTopB);
     else

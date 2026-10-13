@@ -1,5 +1,5 @@
 /* 할로윈(10/24 ~ 11/1, time.js의 holiday): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자
-   자세한 내용은 HALLOWEEN_PLAN.md, 고친 것은 HALLOWEEN_FIX_PLAN.md. 공포 영화 특집은 tv.js(TVP.horror, tvSegs) */
+   자세한 내용은 HALLOWEEN_PLAN.md, 고친 것은 HALLOWEEN_FIX_PLAN.md. 공포 영화 특집은 r/tv/programs.json(horror)과 tv-core.js(tvSegs) */
 import { play } from './anim.js';
 import { imageReady, img } from './assets.js';
 import { curtainSkew, drawProp } from './draw.js';

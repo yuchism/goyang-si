@@ -1,0 +1,72 @@
+{
+  "news": {
+    "name": "tvNews",
+    "loop": [["tv_news_2of3", 0.2], ["tv_news_1of3", 4.4]],
+    "events": [
+      { "id": "breaking", "w": 1, "size": 3, "dur": 6, "frames": ["tv_news_3of3"], "cap": "tvBreaking", "once": true }
+    ],
+    "gap": [240, 600],
+    "overlay": { "type": "ticker", "text": "tvTicker" },
+    "watch": "normal",
+    "titleKind": "news"
+  },
+  "drama": {
+    "name": "tvDrama",
+    "loop": [["tv_drama_1of5", 4.2], ["tv_drama_2of5", 2.8]],
+    "events": [
+      { "id": "turn", "w": 3, "size": 2, "dur": 4, "frames": ["tv_drama_3of5"], "cap": "tvDramaTurn" },
+      { "id": "nose", "w": 1, "size": 3, "dur": 6, "frames": ["tv_drama_4of5"], "cap": "tvDramaNose", "react": "heart" }
+    ],
+    "end": { "id": "next", "size": 1, "dur": 25, "frames": ["tv_drama_5of5"], "cap": "tvDramaNext", "react": { "type": "sulk", "replace": true } },
+    "gap": [150, 420],
+    "overlay": { "type": "subs", "text": "tvDramaSubs" },
+    "watch": "long",
+    "titleKind": "drama"
+  },
+  "baseball": {
+    "name": "tvBaseball",
+    "loop": [["tv_baseball_1of5", 2.3], ["tv_baseball_2of5", 1.5]],
+    "events": [
+      { "id": "chase", "w": 3, "size": 2, "dur": 4.4, "frames": ["tv_baseball_3of5", "tv_baseball_4of5"], "cap": "tvBaseballChase", "react": { "type": "peekBehind", "p": 0.3 } },
+      { "id": "homerun", "w": 0.6, "size": 3, "dur": 5, "frames": ["tv_baseball_5of5"], "cap": "tvHomerun", "score": true, "sfx": "homerun" }
+    ],
+    "gap": [90, 300],
+    "overlay": { "type": "scoreboard", "teams": "tvBaseballTeams" },
+    "watch": "track",
+    "titleKind": "sport"
+  },
+  "football": {
+    "name": "tvSoccer",
+    "loop": [["tv_football_1of4", 3.4], ["tv_football_2of4", 3.4]],
+    "events": [
+      { "id": "box", "w": 2, "size": 2, "dur": 5, "frames": ["tv_football_3of4"], "cap": "tvSoccerBox", "react": { "type": "peekBehind", "p": 0.3 } },
+      { "id": "goal", "w": 0.8, "size": 3, "dur": 5, "frames": ["tv_football_4of4"], "cap": "tvGoal", "score": true, "sfx": "cheer" }
+    ],
+    "gap": [100, 320],
+    "overlay": { "type": "scoreboard", "teams": "tvSoccerTeams" },
+    "watch": "track",
+    "titleKind": "sport"
+  },
+  "actress": {
+    "name": "tvActress",
+    "loop": [["tv_actress_1of4", 0.75], ["tv_actress_2of4", 0.75]],
+    "events": [
+      { "id": "groom", "w": 2, "size": 1, "dur": 4, "frames": ["tv_actress_3of4"], "cap": "tvGroom" },
+      { "id": "flash", "w": 1.3, "size": 3, "dur": 4, "frames": ["tv_actress_4of4"], "cap": "tvFlash", "sfx": "click" }
+    ],
+    "gap": [150, 400],
+    "watch": "normal",
+    "titleKind": "plain"
+  },
+  "horror": {
+    "name": "tvHorror",
+    "loop": [["tv_horror_1of3", 7.4], ["tv_horror_2of3", 1.6]],
+    "events": [
+      { "id": "creak", "w": 2, "size": 1, "dur": 4, "frames": ["tv_horror_2of3"], "cap": "tvCreak" },
+      { "id": "cucumber", "w": 1, "size": 3, "dur": 5, "frames": ["tv_horror_3of3"], "cap": "tvCucumber", "react": { "type": "startle", "replace": true } }
+    ],
+    "gap": [120, 360],
+    "watch": "normal",
+    "titleKind": "special"
+  }
+}

@@ -32,6 +32,9 @@ const SCEN=[
   await p.addInitScript(INIT);await p.route(/goatcounter|zgo\.at|fonts\.(googleapis|gstatic)/,r=>r.abort());
   await p.goto(`http://localhost:${port}/index.html${sc.url}`);
   for(let i=0;i<100;i++){if(await p.evaluate(()=>!!(window.__ready&&window.__ready())))break;await new Promise(r=>setTimeout(r,200))}await new Promise(r=>setTimeout(r,300));
+  // TV 프로그램 그림은 필요할 때 받는다(TV_STABILITY_PLAN.md 4장). 점검에서는 처음에 모두 받아 두고 시작한다 (받는 속도에 따라 화면이 달라지지 않게)
+  await p.evaluate(()=>{const g=window.__goyang;if(g&&g.tvNeed)Object.keys(g.TVP).forEach(g.tvNeed)});
+  for(let i=0;i<100;i++){if(await p.evaluate(()=>!(window.__goyang&&__goyang.lazyPending&&__goyang.lazyPending())))break;await new Promise(r=>setTimeout(r,100))}
   await p.evaluate(()=>{document.getElementById('bDev').click()});await p.evaluate(()=>{__reseed(777);__step(1)});
   let k=0;
   for(const st of sc.steps){

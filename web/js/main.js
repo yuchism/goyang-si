@@ -18,8 +18,8 @@ import { bub, fn, go, hold, run, tickActor } from './steps.js';
 import { advanceClock, darkness, dayEvents, dayKey, hourOf, inBeam, isWeekend, mandukAsleep, mandukHome, markClock, moonName, moonPhase, now, rainNow, resetClock, season, snowing, speed, sunTimes, sunbeam } from './time.js';
 import { drawJumpFade, initJump, jumpTick, newDay, settleCat } from './jump.js';
 import { frameTick } from './frame.js';
-import { tvOn, tvTick } from './tv.js';
-import { tvBig } from './tv-cat.js';
+import { loadPrograms, tvOn, tvTick } from './tv.js';
+import { tvBig } from './tv-guide.js';
 import { drawTVNight, drawTvBuf, tvBuf } from './tv-screen.js';
 import { devOpen, initUI } from './ui.js';
 import { pick, rnd } from './util.js';
@@ -338,7 +338,7 @@ initInstall();
 initJump();
 exposeDebug();
 // 사물 목록과 그림 정보를 읽은 뒤 그림을 불러오고 시작
-Promise.all([fetch('objects.json', { cache: 'no-store' }).then(r => r.json()).then(initObjects), loadMeta()])
+Promise.all([fetch('objects.json', { cache: 'no-store' }).then(r => r.json()).then(initObjects), loadMeta(), loadPrograms()])
   .catch(e => console.error('고양.시를 여는 데 필요한 파일을 읽지 못했어요', e))
   .finally(loadImages);
 export function start() {
