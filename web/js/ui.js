@@ -10,7 +10,8 @@ import { spawnButterfly, startSanta, startUFO } from './outside.js';
 import { bookAt, closeShelf, onShelf, openShelf } from './shelf.js';
 import { Snd } from './sound.js';
 import { DEPTH, H, W, cam, cv, fit, view } from './stage.js';
-import { boxToday, dayKey, holidayOverride, hourOf, mandukAsleep, mandukHome, now, rainNow, seasonOverride, setOverride, setSimMs, setSpeed, simMs, sunTimes } from './time.js';
+import { boxToday, holidayOverride, mandukAsleep, mandukHome, now, rainNow, resetSim, seasonOverride, setOverride, setSimMs, setSpeed } from './time.js';
+import { timeJumped } from './jump.js';
 import { TVP } from './tv.js';
 import { closeTvGuide, openTvGuide } from './tv-cat.js';
 import { bannerText } from './birthday.js';
@@ -236,32 +237,29 @@ export function initUI() {
     $('dev').hidden = false;
     $('bDev').setAttribute('aria-pressed', 'true');
   }
+  const speedBtns = v => [['sp1', 1], ['sp60', 60], ['sp1440', 1440]].forEach(([i, x]) => $(i).setAttribute('aria-pressed', x === v));
   [['sp1', 1], ['sp60', 60], ['sp1440', 1440]].forEach(([id, v]) => $(id).onclick = () => {
     setSpeed(v);
-    ['sp1', 'sp60', 'sp1440'].forEach(i => $(i).setAttribute('aria-pressed', i === id));
+    speedBtns(v);
   });
-  $('hour').oninput = e => {
-    const d = now();
-    const target = new Date(d);
-    const hv = +e.target.value;
-    target.setHours(Math.floor(hv), Math.round((hv % 1) * 60), 0, 0);
-    setSimMs(target.getTime());
-    // 건너뛴 일정은 실행하지 않음
-    const h = hourOf(now());
-    world.doneToday = {};
-    world.dayKey = dayKey(now());
-    world.lampOn = h >= sunTimes(now())[1] - 0.3 && h < 23;
-    world.tv.st = null;
-    world.tv.force = null;
-    if (!world.manduk) {
-      cat.steps = [];
-      cat.cur = null;
-    }
+  // 시각 옮기기는 모두 시간 점프로 처리한다 (jump.js, CLOCK_PLAN.md 8장). fx: 어두워졌다 밝아지는 연출
+  const jumpTo = (ms, fx = false) => {
+    const prev = now();
+    setSimMs(ms);
+    timeJumped(prev, now(), fx);
   };
-  $('dayNext').onclick = () => {
-    setSimMs(simMs + 86400000);
-    world.dayKey = '';
-    world.tv.st = null;
+  $('hour').oninput = e => {
+    const target = now(), hv = +e.target.value;
+    target.setHours(Math.floor(hv), Math.round((hv % 1) * 60), 0, 0);
+    jumpTo(target.getTime()); // 슬라이더는 연달아 옮기니 연출 없이
+  };
+  $('dayNext').onclick = () => jumpTo(now().getTime() + 86400000);
+  $('devJump').onclick = () => jumpTo(now().getTime() + 3600000, true); // 화면을 끄고 1시간 뒤 켠 것처럼
+  $('devNow').onclick = () => { // 실제 시각, 실시간으로
+    const prev = now();
+    resetSim();
+    speedBtns(1);
+    timeJumped(prev, now(), false);
   };
   $('dMouse').onclick = () => {
     world.mouseCool = 0;

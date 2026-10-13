@@ -4,7 +4,7 @@ import { store } from './util.js';
 export const world = {
   cup: { state: 'table', x: 560, y: 546, fall: 0, fy: 0 }, bowlFull: false, treat: false,
   lampOn: false, laptop: store.get('laptop', ''), noise: 0, manduk: null, visitsToday: 0, lastVisit: -1e9,
-  doneToday: {}, dayKey: '', bfly: null, bird: null, lastTouch: performance.now(), captions: [], t: 0, mouseCool: 0,
+  doneToday: {}, dayKey: '', bfly: null, bird: null, lastTouch: performance.now(), captions: [], t: 0, mouseCool: 0, jumpFade: null,
   tv: { st: null, frame: 'screen_off', avg: null, flick: 0 }
 };
 /* ───────── 배우 ───────── */

@@ -184,23 +184,22 @@ export function updateManduk(dt) {
 }
 function act(m) {
   const d = now();
+  const later = (ms, f) => setTimeout(() => {
+    if (world.manduk === m)
+      f();
+  }, ms); // 시간 점프로 방문이 먼저 끝났으면 하지 않는다 (결과는 endVisitNow가 이미 적용)
   if (m.type === 'feed' || m.type === 'ret') {
     m.hand = { x: P.bowl.x, y: P.bowl.y - 20, k: 0 };
-    setTimeout(() => {
+    later(700, () => {
       world.bowlFull = true;
       Snd.clink();
       if (world.cup.state === 'floor')
-        world.cup.state = 'table';
-    }, 700);
+        cupToTable();
+    });
   }
   if (m.type === 'noise') {
     if (world.cup.state === 'floor') {
-      setTimeout(() => {
-        world.cup.state = 'table';
-        world.cup.fall = 0;
-        world.cup.x = P.cup.x;
-        world.cup.y = P.cup.y;
-      }, 1100);
+      later(1100, cupToTable);
     }
     else {
       m.lines = LINES().quiet[0];
@@ -208,33 +207,63 @@ function act(m) {
     }
   }
   if (m.type === 'lights') {
-    setTimeout(() => {
+    later(900, () => {
       world.lampOn = false;
       Snd.click();
-    }, 900);
+    });
   }
   if (m.type === 'anniv') {
-    setTimeout(() => {
+    later(800, () => {
       world.treat = true;
-    }, 800);
+    });
   }
   if (world.laptop && m.type !== 'lights') {
     m.extra = true;
   }
 }
+// 컵을 탁자 위 제자리로
+export function cupToTable() {
+  const c = world.cup;
+  c.state = 'table';
+  c.fall = 0;
+  c.x = P.cup.x;
+  c.y = P.cup.y;
+}
+// 시간 점프 (jump.js): 하던 방문을 바로 끝내고 그 방문의 결과만 남긴다. 문은 닫힌 채
+export function endVisitNow() {
+  const m = world.manduk;
+  if (!m)
+    return;
+  const t = m.type;
+  if ((t === 'feed' || t === 'ret' || t === 'noise') && (world.cup.state === 'floor' || world.cup.state === 'falling'))
+    cupToTable();
+  if (t === 'feed' || t === 'ret')
+    world.bowlFull = true;
+  if (t === 'lights')
+    world.lampOn = false;
+  if (t === 'anniv')
+    world.treat = true;
+  if (world.laptop && t !== 'lights') { // 노트북에 쓴 글을 치우고 간다 (act2의 extra와 같은 결과)
+    world.laptop = '';
+    store.set('laptop', '');
+    world.notes.cleared = true;
+  }
+  world.manduk = null;
+  straightenFrame(t);
+}
 function act2(m) {
   if (m.type === 'noise' && m.lines[1]) {
-    setTimeout(() => say(cat, '🙉', 4), 600);
+    setTimeout(() => world.manduk === m && say(cat, '🙉', 4), 600);
   }
   if (m.type === 'ret' || m.type === 'anniv') {
     m.hand = { x: cat.x, y: cat.y - 100 * DEPTH(cat.y), k: 0 };
     Snd.purr(3);
     if (m.type === 'anniv')
-      setTimeout(() => say(cat, '🎂❤️', 5), 500);
+      setTimeout(() => world.manduk === m && say(cat, '🎂❤️', 5), 500);
   }
   if (m.extra) {
     setTimeout(() => {
-      if (world.manduk) {
+      if (world.manduk === m) {
         world.manduk.say = tr('mandukKeyboard');
         world.laptop = '';
         store.set('laptop', '');

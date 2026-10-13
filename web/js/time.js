@@ -1,24 +1,57 @@
 /* 시간: 방 시계, 계절·해 뜨고 지는 시각, 비·눈, 상자 있는 날, 기념일, 명절, 햇빛 조각, 하늘색과 어둠 */
 import { clamp, hash, lerp, lerpCol, store } from './util.js';
 /* ───────── 시간 ───────── */
+/* 시계는 둘이다 (CLOCK_PLAN.md)
+   - 방 시계 now(): "몇 시인가". 매번 기기 시계를 읽는다 = 기기 시계 + offset. 평소 offset은 0
+   - 애니메이션 시계: advanceClock()이 돌려주는 real(초, 한 장면 최대 0.1). "얼마나 움직였나"에 쓴다.
+     화면이 꺼졌다 켜져도 동작이 한꺼번에 튀지 않게 제한을 둔다 */
 export let speed = 1, lastReal = performance.now();
-export let simMs = Date.now();
-// 실제로 흐른 시간(초, 최대 0.1)을 돌려주고 방 시계를 speed배로 진행
+let offset = 0; // 방 시계 - 기기 시계 (ms). 미리보기 도구로 시각을 옮기거나 빨리 감을 때만 0이 아니다
+export const now = () => new Date(Date.now() + offset);
+// 실제로 흐른 시간(초, 최대 0.1)을 돌려준다. 빨리 감기 중이면 방 시계를 그만큼 더 앞으로
 export function advanceClock(tNow) {
-  const real = Math.min(0.1, (tNow - lastReal) / 1000);
+  const real = Math.min(0.1, Math.max(0, (tNow - lastReal) / 1000));
   lastReal = tNow;
-  simMs += real * 1000 * speed;
+  if (speed !== 1)
+    offset += real * 1000 * (speed - 1); // 기기 시계가 이미 1배로 흐르니 나머지만
   return real;
 }
 export function resetClock(tNow) {
   lastReal = tNow;
 }
+/* 시간 점프 감지: 매 장면, 방 시계가 기대(real × speed)보다 JUMP_MS 넘게 어긋났거나
+   시간대 오프셋(서머타임)이 바뀌었으면 직전 방 시각을 돌려준다. 아니면 null */
+const JUMP_MS = 5000;
+let lastMs = null, lastTz = null;
+export function clockJump(real) {
+  const d = now(), ms = d.getTime(), tz = d.getTimezoneOffset();
+  let prev = null;
+  if (lastMs !== null && (Math.abs(ms - lastMs - real * 1000 * speed) > JUMP_MS || tz !== lastTz))
+    prev = new Date(lastMs);
+  lastMs = ms;
+  lastTz = tz;
+  return prev;
+}
+// 지금 방 시각을 "본 것"으로 적어 둔다 (다음 장면에서 점프로 잡지 않게)
+export function markClock() {
+  const d = now();
+  lastMs = d.getTime();
+  lastTz = d.getTimezoneOffset();
+}
 // 미리보기 도구
 export function setSpeed(v) {
   speed = v;
 }
+// 방 시계를 ms로 옮긴다. 이후에도 실제 시각과 같은 속도로 흐른다. 점프 정리는 부르는 쪽에서 (jump.js timeJumped)
 export function setSimMs(ms) {
-  simMs = ms;
+  offset = ms - Date.now();
+  markClock();
+}
+// 실제 시각으로 돌아오기
+export function resetSim() {
+  offset = 0;
+  speed = 1;
+  markClock();
 }
 const TZ = (() => {
   try {
@@ -29,7 +62,6 @@ const TZ = (() => {
   }
 })();
 const SOUTH = /^(Australia|Antarctica|Pacific\/(Auckland|Chatham|Fiji|Tongatapu|Noumea)|America\/(Argentina|Santiago|Sao_Paulo|Montevideo|Asuncion|La_Paz|Lima)|Africa\/(Johannesburg|Maputo|Harare|Windhoek|Gaborone|Lusaka)|Indian\/(Mauritius|Reunion))/.test(TZ);
-export const now = () => new Date(simMs);
 export const hourOf = d => d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
 export const dayKey = d => d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
 export const dayNum = d => Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000);
@@ -62,6 +94,35 @@ export function visitHours(d) {
   if (isAnniversary(d))
     v.anniv = we ? 15 : 19.2;
   return v;
+}
+// 하루 일정 (이름, 시각). main.js scheduled()가 차례로 일으키고, 점프하면 jump.js가 지난 것을 "한 일"로 표시한다
+export function dayEvents(d) {
+  const vh = visitHours(d), ev = [['wait', vh.feed - 0.25], ['feed', vh.feed]];
+  if (vh.ret)
+    ev.push(['leave', 8.5], ['ret', vh.ret]);
+  ev.push(['lampOn', sunTimes(d)[1] - 0.3], ['lights', vh.lights]);
+  if (vh.anniv)
+    ev.push(['anniv', vh.anniv]);
+  return ev;
+}
+// a(ms) 뒤부터 b(ms)까지 지나간 정해진 방문 이름들 (visitHours의 이름, 지난 순서대로)
+export function visitsBetween(a, b) {
+  const out = [];
+  if (!(b > a))
+    return out;
+  const day = new Date(a);
+  day.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 400 && day.getTime() <= b; i++) {
+    const vh = visitHours(day), list = [];
+    for (const k in vh) {
+      const h = vh[k], t = new Date(day.getFullYear(), day.getMonth(), day.getDate(), Math.floor(h), Math.round((h % 1) * 60)).getTime();
+      if (t > a && t <= b)
+        list.push([t, k]);
+    }
+    list.sort((p, q) => p[0] - q[0]).forEach(p => out.push(p[1]));
+    day.setDate(day.getDate() + 1);
+  }
+  return out;
 }
 export function mandukHome(d) {
   const h = hourOf(d);

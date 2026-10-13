@@ -3,7 +3,7 @@ import { imageReady, img } from './assets.js';
 import { tr } from './i18n.js';
 import { O } from './objects.js';
 import { Snd } from './sound.js';
-import { dayKey, holiday, hourOf, isWeekend, rainNow, simMs } from './time.js';
+import { dayKey, holiday, hourOf, isWeekend, rainNow } from './time.js';
 import { tvEventFired, tvReactBeep, tvReactPower } from './tv-cat.js';
 import { clamp, hash, lerp } from './util.js';
 import { caption, world } from './world.js';
@@ -194,7 +194,7 @@ export function tvTick(d) {
   if (st.mode !== 'off' && st.mode !== 'signoff') {
     if (world.ufo)
       st.noise = 0.55;
-    else if (rainNow(d) && hash('tvn' + Math.floor(simMs / 60000)) < 0.12 && (simMs / 1000) % 60 < 1.6)
+    else if (rainNow(d) && hash('tvn' + Math.floor(d.getTime() / 60000)) < 0.12 && (d.getTime() / 1000) % 60 < 1.6)
       st.noise = 0.45;
   }
   const pv = T.st;

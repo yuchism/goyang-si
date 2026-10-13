@@ -70,7 +70,7 @@ export function catBrain(d) {
   }
   loafB(d);
 }
-function napSpot(d) {
+export function napSpot(d) {
   const b = sunbeam(d);
   if (b && b.k > 0.4) {
     const side = (!mouse.hidden && mouse.state === 'nap') ? (mouse.x < b.cx ? 1 : -1) : pick([-1, 1]);

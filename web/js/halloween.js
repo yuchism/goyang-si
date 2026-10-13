@@ -7,7 +7,7 @@ import { tr } from './i18n.js';
 import { O, objView, present, zOf } from './objects.js';
 import { cv, ctx } from './stage.js';
 import { bub, fn, go, hold, run, until } from './steps.js';
-import { dayKey, holiday, hourOf, moonPhase, rainNow, sunTimes } from './time.js';
+import { dayKey, holiday, hourOf, moonPhase, now, rainNow, sunTimes } from './time.js';
 import { RM, clamp, pick, rnd } from './util.js';
 import { caption, cat, say, world } from './world.js';
 export const isHalloween = d => holiday(d) === 'halloween';
@@ -103,7 +103,7 @@ export function startWitch(shadow) {
     return;
   world.bats = null;
   if (shadow == null)
-    shadow = !rainNow(new Date()) && Math.random() < 0.3;
+    shadow = !rainNow(now()) && Math.random() < 0.3;
   if (shadow) { // 가끔 반전: 오른쪽 커튼에 크게 부풀린 그림자가 먼저 비치고, 곧 창밖에 작게 지나간다
     world.curtainShadow = { kind: 'witch', id: 'curtain_r', t: 0, dur: 3.4 };
     return;
@@ -178,7 +178,7 @@ export function startGhost() {
     return;
   const id = pick(['curtain_l', 'curtain_r']);
   world.curtainShadow = { kind: 'ghost', id, t: 0, dur: rnd(7, 9), y: rnd(190, 260) };
-  const nk = nightKey(new Date());
+  const nk = nightKey(now());
   world.ghostNight = world.ghostNight && world.ghostNight.k === nk ? { k: nk, n: world.ghostNight.n + 1 } : { k: nk, n: 1 };
   if (Math.random() < 0.5)
     setTimeout(() => world.curtainShadow && caption(tr('capGhost'), 2.5), 1200);

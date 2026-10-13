@@ -60,6 +60,8 @@ export const STR = {
   devHour: { ko: '시각', en: 'Time' },
   devDay: { ko: '요일', en: 'Day' },
   dayNext: { ko: '다음 날로', en: 'Next day' },
+  devNow: { ko: '지금으로', en: 'Back to now' },
+  devJump: { ko: '+1시간 점프', en: '+1 hour jump' },
   devCall: { ko: '불러오기', en: 'Summon' },
   dMouse: { ko: '쥐야쥐', en: 'Mousey' },
   dBfly: { ko: '나비', en: 'Butterfly' },

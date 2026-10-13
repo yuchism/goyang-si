@@ -15,7 +15,8 @@ import { Snd } from './sound.js';
 import { drawActor, drawBubble, drawCaptions } from './sprites.js';
 import { H, W, cam, ctx, fit, updateCam, view } from './stage.js';
 import { bub, fn, go, hold, run, tickActor } from './steps.js';
-import { advanceClock, darkness, dayKey, hourOf, inBeam, isWeekend, mandukAsleep, mandukHome, moonName, moonPhase, now, rainNow, resetClock, season, snowing, speed, sunTimes, sunbeam, visitHours } from './time.js';
+import { advanceClock, darkness, dayEvents, dayKey, hourOf, inBeam, isWeekend, mandukAsleep, mandukHome, markClock, moonName, moonPhase, now, rainNow, resetClock, season, snowing, speed, sunTimes, sunbeam } from './time.js';
+import { drawJumpFade, initJump, jumpTick, newDay, settleCat } from './jump.js';
 import { frameTick } from './frame.js';
 import { tvOn, tvTick } from './tv.js';
 import { tvBig } from './tv-cat.js';
@@ -41,26 +42,25 @@ function statusText(d) {
 /* ───────── 일정 ───────── */
 function scheduled(d) {
   const k = dayKey(d);
-  if (world.dayKey !== k) {
-    world.dayKey = k;
-    world.doneToday = {};
-    world.visitsToday = 0;
-    world.notes.cleared = false;
-    world.treat = false;
-  }
-  const h = hourOf(d), vh = visitHours(d);
-  const at = (name, hr, fnc) => {
+  if (world.dayKey !== k)
+    newDay(k);
+  const h = hourOf(d);
+  // 정해진 시각부터 0.35시간 안에 처음 확인하면 장면을 일으키고, 그보다 늦으면 "지났음"만 표시
+  // (시간이 건너뛰었을 때의 결과 적용은 jump.js timeJumped가 먼저 해 둔다)
+  for (const [name, hr] of dayEvents(d)) {
     if (world.doneToday[name])
-      return;
+      continue;
     if (h >= hr && h < hr + 0.35) {
       world.doneToday[name] = true;
-      fnc();
+      EVENT[name]();
     }
     else if (h >= hr + 0.35)
       world.doneToday[name] = true;
-  };
-  const fh = vh.feed;
-  at('wait', fh - 0.25, () => {
+  }
+}
+// 일정 이름(time.js dayEvents)별 장면
+const EVENT = {
+  wait: () => {
     if (!world.manduk)
       run(cat, [
         go(S('door.wait')[0], S('door.wait')[1], 60),
@@ -70,19 +70,16 @@ function scheduled(d) {
         bub('🐟❗❗', 4),
         play('wait', 400, () => !!world.manduk)
       ], 'wait');
-  });
-  at('feed', fh, () => startVisit('feed'));
-  if (vh.ret) {
-    at('leave', 8.5, () => caption(tr('capLeave'), 3.5));
-    at('ret', vh.ret, () => startVisit('ret'));
-  }
-  at('lampOn', sunTimes(d)[1] - 0.3, () => {
+  },
+  feed: () => startVisit('feed'),
+  leave: () => caption(tr('capLeave'), 3.5),
+  ret: () => startVisit('ret'),
+  lampOn: () => {
     world.lampOn = true;
-  });
-  at('lights', vh.lights, () => startVisit('lights'));
-  if (vh.anniv)
-    at('anniv', vh.anniv, () => startVisit('anniv'));
-}
+  },
+  lights: () => startVisit('lights'),
+  anniv: () => startVisit('anniv')
+};
 /* ───────── 메인 루프 ───────── */
 let mouseT = rnd(10, 25), ambT = 0;
 function frame(tNow) {
@@ -90,6 +87,7 @@ function frame(tNow) {
   const bf = speed === 1 ? 1 : speed === 60 ? 4 : 12;
   const dt = real * bf;
   world.t += real;
+  jumpTick(real); // 시간 점프면 방을 그 시각에 맞춘다. 일정보다 먼저
   const d = now();
   scheduled(d);
   world.dark = darkness(d);
@@ -327,6 +325,7 @@ function render(d, real) {
   }
   drawCaptions(real);
   drawBookTag();
+  drawJumpFade(real, W, H);
   if (tvBig)
     tvBig.drawImage(tvBuf, 0, 0);
 }
@@ -336,6 +335,7 @@ bannerText();
 initShelf();
 initUI();
 initInstall();
+initJump();
 exposeDebug();
 // 사물 목록과 그림 정보를 읽은 뒤 그림을 불러오고 시작
 Promise.all([fetch('objects.json', { cache: 'no-store' }).then(r => r.json()).then(initObjects), loadMeta()])
@@ -347,21 +347,10 @@ export function start() {
   world.dayKey = dayKey(d);
   const h = hourOf(d);
   world.lampOn = h >= sunTimes(d)[1] - 0.3 && h < 23;
-  const b = sunbeam(d);
-  if (b && b.k > 0.4) {
-    cat.x = b.cx;
-    cat.y = 684;
-    run(cat, [hold(rnd(30, 90), 'loaf', true)], 'nap');
-    cat.closed = true;
-  }
-  else {
-    cat.x = 560;
-    cat.y = 690;
-    run(cat, [hold(rnd(15, 30), 'loaf')], 'loaf');
-  }
-  cat.dp = cat.pose = 'loaf';
+  settleCat(d);
   requestAnimationFrame(t => {
     resetClock(t);
+    markClock();
     frame(t);
     portraitHint();
   });

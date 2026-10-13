@@ -21,6 +21,7 @@ tools/
   build_meta.py           ← 새 그림을 넣으면 f/·r/ meta.json을 채운다
   visual_check.js         ← 화면 점검 (같은 장면을 매번 똑같이 찍는다)
   compare.py              ← 점검 화면 두 벌을 픽셀 단위로 비교
+  clock_check.js          ← 시계 점검: 화면 끄기·뒤 탭·서머타임·빨리 감기를 흉내 내서 CLOCK_PLAN.md 10장 확인
 make_objects_doc.py       ← objects.json → OBJECTS.md
 ```
 
@@ -39,7 +40,8 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 |---|---|
 | `main.js` | 시작점. 하루 일정(밥·출근·귀가·불 끄기), 매 프레임 진행 `frame()`, 그리기 순서 `render()`, 처음 시작 `start()` |
 | `world.js` | 세상 상태 `world`와 배우 `cat`(강고양이 씨)·`mouse`(쥐야쥐), 말풍선 `say`, 자막 `caption` |
-| `time.js` | 방 시계(미리보기 속도 포함), 계절·해 뜨고 지는 시각, 비·눈, 상자 있는 날, 기념일, 명절, 햇빛 조각, 하늘색과 어둠, 달 모양 `moonPhase`(MOON_PLAN.md) |
+| `time.js` | 방 시계 `now()`(기기 시계 + 미리보기 offset)와 시간 점프 감지 `clockJump`, 하루 일정 `dayEvents`, 계절·해 뜨고 지는 시각, 비·눈, 상자 있는 날, 기념일, 명절, 햇빛 조각, 하늘색과 어둠, 달 모양 `moonPhase`(MOON_PLAN.md) |
+| `jump.js` | 시간 점프 정리 `timeJumped`: 화면이 꺼졌다 켜지거나 서머타임·미리보기로 시계가 건너뛰면 방 상태(스탠드·밥그릇·컵·만득 씨 방문·고양이 자리 `settleCat`)를 그 시각에 맞추고 짧게 어두워졌다 밝아진다. CLOCK_PLAN.md |
 | `objects.js` | `objects.json`을 읽어 위치 `P`, 사물 `O`, 상태 `objView`, 자리 `S('bowl.eat')`, 소켓, 깊이를 알려준다 |
 | `steps.js` | 행동 단계: `go`(길찾기로 걷기), `follow`, `hold`, `bub`, `fn`, `until`, 그리고 순서대로 실행 `run(배우, [단계...])` |
 | `anim.js` | 동작 그림: 자세 전환(서기↔식빵↔배 보이기), 동작 클립 `CLIP`과 `play`, 지금 보여줄 프레임 고르기 |
