@@ -766,13 +766,13 @@
       },
       "when": "halloween",
       "on": "tv",
-      "note": "할로윈에는 강고양이 씨 TV 위에 올려 둔다(on: tv). 그동안 강고양이 씨는 TV 위에서 자지 않는다. 해 질 무렵부터 아침까지 불이 켜지고(lit) 촛불처럼 일렁이며 둘레에 옅은 주황빛(halloween.js). 만득 씨가 끄지 않는다",
+      "note": "할로윈에는 강고양이 씨 TV 위에 올려 둔다(on: tv). 그동안 강고양이 씨는 TV 위에서 자지 않는다. 해 질 무렵부터 아침까지 불이 켜지고(lit) 촛불처럼 일렁이며 둘레에 옅은 주황빛(halloween.js). 불 켜진 그림은 따로 없고 같은 그림을 코드로 밝힌다(HALLOWEEN_FIX_PLAN.md 2-1). 만득 씨가 끄지 않는다",
       "states": {
         "off": {
           "look": "pumpkin"
         },
         "lit": {
-          "look": "pumpkin_lit"
+          "look": "pumpkin"
         }
       }
     },

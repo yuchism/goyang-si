@@ -1,5 +1,5 @@
 /* 할로윈(10/24 ~ 11/1, time.js의 holiday): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자
-   자세한 내용은 HALLOWEEN_PLAN.md. 공포 영화 특집은 tv.js(TVP.horror, tvSegs) */
+   자세한 내용은 HALLOWEEN_PLAN.md, 고친 것은 HALLOWEEN_FIX_PLAN.md. 공포 영화 특집은 tv.js(TVP.horror, tvSegs) */
 import { play } from './anim.js';
 import { imageReady, img } from './assets.js';
 import { curtainSkew, drawProp } from './draw.js';
@@ -19,7 +19,32 @@ const batNight = d => {
 const nightKey = d => dayKey(new Date(d.getTime() - 12 * 3600e3)); // 저녁~새벽을 한 밤으로
 const flick = () => RM ? 1 : 1 + 0.06 * Math.sin(world.t * 2.3) + 0.04 * Math.sin(world.t * 5.9 + 1.3); // 촛불처럼 ±10%
 /* ───────── 호박 불빛 ───────── */
-// 어둠을 덮은 뒤에 부른다: 불 켜진 호박을 다시 밝게 그리고, 둘레 벽·TV 윗면에 옅은 주황빛
+// 불 켜진 그림은 따로 쓰지 않는다(HALLOWEEN_FIX_PLAN.md 2-1). 원본 그림에서 뚫린 눈(귀 모양)·입의 연주황 픽셀만
+// 골라 노란 불빛 마스크를 한 번 만들어 두고, 어둠 위에 덧그려서 안에서 촛불이 비치는 것처럼 한다
+let glowMask = null;
+function pumpkinMask(im) {
+  if (glowMask !== null)
+    return glowMask;
+  try {
+    const c = document.createElement('canvas');
+    c.width = im.naturalWidth;
+    c.height = im.naturalHeight;
+    const x = c.getContext('2d');
+    x.drawImage(im, 0, 0);
+    const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+    for (let i = 0; i < p.length; i += 4) {
+      const on = p[i] > 220 && p[i + 1] > 150 && p[i + 2] < 150 && p[i + 3] > 200;
+      p[i] = 255; p[i + 1] = 228; p[i + 2] = 105; p[i + 3] = on ? 255 : 0;
+    }
+    x.putImageData(d, 0, 0);
+    glowMask = c;
+  }
+  catch (e) {
+    glowMask = false; // file:// 등으로 픽셀을 못 읽으면 마스크 없이(몸통 빛만)
+  }
+  return glowMask;
+}
+// 어둠을 덮은 뒤에 부른다: 불 켜진 호박을 다시 밝게 그리고, 눈·입에 노란 불빛, 둘레 벽·TV 윗면에 옅은 주황빛
 export function drawPumpkinGlow(dk) {
   const o = O.pumpkin;
   if (!o || !present(o) || dk < 0.04)
@@ -38,6 +63,16 @@ export function drawPumpkinGlow(dk) {
   ctx.globalCompositeOperation = 'lighter';
   ctx.globalAlpha = clamp(dk * 0.45 * f, 0, 0.35);
   drawProp(v.look, v.pos.x, by, w);
+  // 눈·입: 촛불 노란빛 (그림 위치는 drawProp과 같게: 가운데 아래 기준)
+  const mk = pumpkinMask(im);
+  if (mk) {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = clamp(dk * 1.6 * f, 0, 0.9);
+    ctx.drawImage(mk, v.pos.x - w / 2, by - h, w, h);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = clamp(dk * 0.5 * f, 0, 0.3);
+    ctx.drawImage(mk, v.pos.x - w / 2, by - h, w, h);
+  }
   ctx.globalAlpha = 1;
   const cx = v.pos.x, cy = by - h * 0.42, R = 170;
   const g = ctx.createRadialGradient(cx, cy, 6, cx, cy, R);
@@ -53,17 +88,53 @@ export function pumpkinNight() {
   const o = O.pumpkin;
   return !!(o && present(o) && objView(o).state === 'lit' && !world.lampOn && !(world.tv.st && world.tv.st.mode !== 'off'));
 }
+/* ───────── 밤하늘 실루엣 대비 (HALLOWEEN_FIX_PLAN.md 2-3) ─────────
+   박쥐·마녀 그림은 짙은 갈색이라 깊은 밤 남색 하늘에 묻힌다. 어두운 밤일수록(world.dark)
+   가장자리에 옅은 달빛 테두리(연노랑, 약 1px)를 두르고 몸도 살짝 밝힌다. 노을 직후처럼 하늘이 밝을 때는 거의 그대로 */
+const skyTintC = {};
+function skyTint(name, kind) {
+  const key = name + kind;
+  if (skyTintC[key])
+    return skyTintC[key];
+  const im = img(name);
+  if (!imageReady(im))
+    return null;
+  const c = document.createElement('canvas');
+  c.width = im.naturalWidth;
+  c.height = im.naturalHeight;
+  const x = c.getContext('2d');
+  x.drawImage(im, 0, 0);
+  x.globalCompositeOperation = 'source-atop';
+  x.fillStyle = kind === 'rim' ? 'rgb(255,238,176)' : 'rgba(196,186,232,0.24)';
+  x.fillRect(0, 0, c.width, c.height);
+  return skyTintC[key] = c;
+}
+const skyNight = () => clamp((world.dark - 0.35) / 0.4, 0, 1);
+// (x, y)는 그림 왼쪽 위. 지금 변환(회전 등) 그대로 그린다
+function drawSkySprite(name, im, x, y, w, h, alpha) {
+  const nk = skyNight(), rim = nk > 0 && skyTint(name, 'rim'), lift = nk > 0 && skyTint(name, 'lift');
+  if (rim) {
+    ctx.globalAlpha = alpha * 0.6 * nk;
+    for (const [dx, dy] of [[-1.1, 0], [1.1, 0], [0, -1.1], [0, 1.1]])
+      ctx.drawImage(rim, x + dx, y + dy, w, h);
+  }
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(im, x, y, w, h);
+  if (lift) {
+    ctx.globalAlpha = alpha * nk;
+    ctx.drawImage(lift, x, y, w, h);
+  }
+  ctx.globalAlpha = 1;
+}
 /* ───────── 박쥐 ───────── */
 // 지그재그: 위아래로 짧게 꺾이는 삼각파
 const zig = u => 2 * Math.abs(2 * (u - Math.floor(u + 0.5))) - 1;
 function drawBat(x, y, sc, ph, alpha) {
-  const im = img('fx/bat_' + [1, 2, 3, 2][Math.floor(ph) % 4]);
+  const name = 'fx/bat_' + [1, 2, 3, 2][Math.floor(ph) % 4], im = img(name);
   if (!imageReady(im))
     return;
   const bw = 46 * sc, bh = bw * im.height / im.width;
-  ctx.globalAlpha = alpha;
-  ctx.drawImage(im, x - bw / 2, y - bh / 2, bw, bh);
-  ctx.globalAlpha = 1;
+  drawSkySprite(name, im, x - bw / 2, y - bh / 2, bw, bh, alpha);
 }
 export function startBats() {
   if (world.bats)
@@ -146,6 +217,10 @@ export function maybeWitch(d, dt) {
   if (Math.random() < dt / (2 * 3600))
     startWitch();
 }
+// 마녀 그림은 1번 한 장만 쓴다. 2번은 몸·빗자루 각도가 달라 번갈아 쓰면 자세가 툭툭 바뀌어 보여서,
+// 대신 코드로 아주 작게 기울어 흔들리게 한다 (±2.5도, 1.3초 주기). HALLOWEEN_FIX_PLAN.md 2-2
+const WITCH = 'fx/witch_1';
+const witchTilt = () => RM ? 0 : 2.5 * Math.PI / 180 * Math.sin(world.t * 2 * Math.PI / 1.3);
 function witchAt(w, k, y0) {
   return [w.x + w.w + 100 - k * (w.w + 280), y0 - Math.sin(k * Math.PI) * 28 + Math.sin(k * Math.PI * 7) * 6];
 }
@@ -153,13 +228,14 @@ function drawWitch(w) {
   const u = world.witch;
   if (!u)
     return;
-  const k = u.t / u.dur, im = img('fx/witch_' + (RM ? 1 : Math.floor(world.t * 4) % 2 + 1));
+  const k = u.t / u.dur, im = img(WITCH);
   if (!imageReady(im))
     return;
   const sw = 150, sh = sw * im.height / im.width, [x, y] = witchAt(w, k, u.y);
   ctx.save();
-  ctx.globalAlpha = world.dark > 0.3 ? 0.95 : 0.8;
-  ctx.drawImage(im, x - sw / 2, y - sh / 2, sw, sh);
+  ctx.translate(x, y);
+  ctx.rotate(witchTilt());
+  drawSkySprite(WITCH, im, -sw / 2, -sh / 2, sw, sh, world.dark > 0.3 ? 0.95 : 0.8);
   ctx.restore();
   // 수행단: 마녀보다 살짝 늦게, 주위를 맴돌며 흩어졌다 모인다
   u.m.forEach((m, i) => {
@@ -267,7 +343,7 @@ export function drawCurtainShadow(dk) {
   }
   else {
     // 마녀 반전: 크게, 흐리게. 오른쪽에서 왼쪽으로 커튼을 스쳐 지나간다
-    sil = silhouette('fx/witch_' + (RM ? 1 : Math.floor(world.t * 4) % 2 + 1));
+    sil = silhouette(WITCH);
     gw = 260;
     gx = cw + gw * 0.5 - k * (cw + gw);
     gy = 170 - Math.sin(k * Math.PI) * 20;
@@ -290,7 +366,13 @@ export function drawCurtainShadow(dk) {
   tmx.globalCompositeOperation = 'source-in';
   tmx.globalAlpha = alpha * (0.75 + 0.25 * clamp(dk / 0.6, 0, 1));
   tmx.filter = s.kind === 'witch' ? 'blur(5px)' : 'blur(1.5px)';
-  tmx.drawImage(sil, gx - gw / 2, gy - gh / 2, gw, gh);
+  if (s.kind === 'witch') {
+    tmx.translate(gx, gy);
+    tmx.rotate(witchTilt());
+    tmx.drawImage(sil, -gw / 2, -gh / 2, gw, gh);
+  }
+  else
+    tmx.drawImage(sil, gx - gw / 2, gy - gh / 2, gw, gh);
   tmx.filter = 'none';
   tmx.globalAlpha = 1;
   tmx.globalCompositeOperation = 'source-over';
