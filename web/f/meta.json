@@ -101,5 +101,11 @@
   "cat_walk_contact_left": [512, 512, 272.6, 453.0, 1.1],
   "cat_walk_contact_right": [512, 512, 271.9, 451.0, 1.1],
   "cat_walk_pass_after_left": [512, 512, 272.7, 449.0, 1.1],
-  "cat_walk_pass_after_right": [512, 512, 271.7, 446.0, 1.1]
+  "cat_walk_pass_after_right": [512, 512, 271.7, 446.0, 1.1],
+  "cat_wiggle_1": [654, 319, 265.4, 311.3],
+  "cat_wiggle_2": [658, 285, 265.4, 277.8],
+  "cat_pounce_1": [597, 429, 298.1, 469.0],
+  "cat_pounce_2": [522, 430, 224.6, 423.4],
+  "cat_pawcheck_1": [580, 398, 339.0, 391.0],
+  "cat_wallreach_1": [548, 550, 251.7, 542.9]
 }

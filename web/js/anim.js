@@ -46,11 +46,11 @@ const CLIP = {
   tvwatch: { f: ['tv_watch_back_1of2'], fps: 1, loop: 1, base: 'stand', fn: () => tvWatchFrame() },
   tvtop: { f: ['tv_top_sleep_1of2', 'tv_top_sleep_2of2'], fps: 0.32, loop: 1, base: 'loaf' },
   tvpeek: { f: ['tv_behind_peek_1of2', 'tv_behind_peek_1of2', 'tv_behind_peek_2of2'], fps: 0.9, loop: 1, base: 'stand' },
-  // 레이저 놀이 (laser.js). 임시: 새 그림(cat_wiggle_1~2, cat_pounce_1~2, cat_pawcheck_1, cat_wallreach_1)이 오면 이름만 바꾼다
-  wiggle: { f: ['startle_3', 'startle_4'], fps: 5, loop: 1, base: 'stand' },
-  pounce: { f: ['run_2', 'stretch'], fps: 4.5, base: 'stand' },
-  pawcheck: { f: ['paw_2'], fps: 1, base: 'stand' },
-  wallreach: { f: ['lookup_3'], fps: 1, loop: 1, base: 'stand' },
+  // 레이저 놀이 (laser.js). LASER_SPRITE_PLAN.md
+  wiggle: { f: ['wiggle_1', 'wiggle_2'], fps: 5, loop: 1, base: 'stand' },
+  pounce: { f: ['pounce_1', 'pounce_2'], fps: 4.5, base: 'stand' },
+  pawcheck: { f: ['pawcheck_1'], fps: 1, base: 'stand' },
+  wallreach: { f: ['wallreach_1'], fps: 1, loop: 1, base: 'stand' },
   groom: { f: ['groom_1', 'groom_2', 'groom_3', 'groom_4', 'groom_3', 'groom_4', 'groom_3', 'groom_4', 'groom_2', 'groom_1', 'groom_1'], fps: 6, loop: 1, base: 'sit' },
 };
 const BRIDGE = 0.3;

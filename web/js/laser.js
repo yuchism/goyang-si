@@ -1,7 +1,7 @@
 /* 레이저 놀이: 보는 사람이 탁자 위 레이저 포인터를 누르면 잠깐(40초) 빨간 점을 움직여 강고양이 씨와 논다.
    컴퓨터는 점이 마우스를 따라가고, 폰은 누르고 끄는 곳으로 간다. 고양이는 쫓다가 덮치고, 앞발 밑을 확인하면 없다.
    한참 놀면 지쳐서 한동안(3분) 점을 봐도 무시한다. CAT_PLAY_PLAN.md 5-1
-   임시: 새 그림 전까지 anim.js CLIP의 wiggle·pounce·pawcheck·wallreach는 지금 프레임을 빌려 쓴다 (CAT_PLAY_PLAN.md 9장) */
+   그림: anim.js CLIP의 wiggle·pounce·pawcheck·wallreach (LASER_SPRITE_PLAN.md) */
 import { play } from './anim.js';
 import { inked, rr } from './draw.js';
 import { tr } from './i18n.js';

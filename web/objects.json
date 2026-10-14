@@ -269,7 +269,8 @@
         "frame_family_1",
         "frame_family_2",
         "frame_family_3",
-        "frame_family_4"
+        "frame_family_4",
+        "frame_family_5"
       ],
       "touch": "frame",
       "hitPad": 12,
