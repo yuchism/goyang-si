@@ -3,6 +3,7 @@ import { imageReady, img } from './assets.js';
 import { birthdayMode } from './birthday.js';
 import { boxOpen, boxToday, holiday, now, pumpkinLit, season } from './time.js';
 import { cat, mouse, world } from './world.js';
+import { fishRodOut } from './fish.js';
 export let OBJ = [];
 export const O = {};
 export const P = {}; // P: 위치 바로가기 (objects.json에서 만들어짐)
@@ -36,7 +37,8 @@ const STATE = {
   lamp: () => world.lampOn ? 'on' : 'off', cup: () => world.cup.state, bowl: () => world.bowlFull ? 'full' : 'empty',
   laptop: () => (world.laptop || cat.typing || world.party || mouse.state === 'laptop' && !mouse.hidden) ? 'on' : 'off',
   box: () => cat.inBox ? 'occupied' : boxOpen(now()) ? 'open' : 'closed',
-  pumpkin: () => pumpkinLit(now()) ? 'lit' : 'off'
+  pumpkin: () => pumpkinLit(now()) ? 'lit' : 'off',
+  rod: () => fishRodOut() ? 'out' : 'wall'
 };
 // 상태가 반영된 모습 (states의 값이 기본값을 덮어씀)
 export function objView(o) {

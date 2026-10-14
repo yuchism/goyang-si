@@ -93,10 +93,11 @@ export function drawActor(a) {
   else
     drawMouse(a);
 }
-const TV_HEAD = { cat_tv_ear_turn: [95, 240], cat_tv_top_sleep_1of2: [120, 270], cat_tv_top_sleep_2of2: [120, 270], cat_tv_behind_peek_1of2: [250, 110], cat_tv_behind_peek_2of2: [250, 110] }; // TV 그림의 머리 위치
+const TV_HEAD = { cat_tv_ear_turn: [95, 240], cat_tv_top_sleep_1of2: [120, 270], cat_tv_top_sleep_2of2: [120, 270], cat_tv_behind_peek_1of2: [250, 110], cat_tv_behind_peek_2of2: [250, 110],
+  cat_fish_sit_1: [411, 131], cat_fish_sit_2: [411, 140], cat_fish_yank_1: [529, 73], cat_fish_yank_2: [215, 271] }; // TV·낚시 그림의 머리 위치 (말풍선)
 function headPos(a) {
   const dp = DEPTH(a.y), lift = liftOf(a);
-  if (a.frame && a.frame.startsWith('cat_tv_')) {
+  if (a.frame && (a.frame.startsWith('cat_tv_') || TV_HEAD[a.frame])) {
     const f = FRAMES[a.frame], hd = TV_HEAD[a.frame] || [276, 110], sc = FSC * dp * (f[4] || 1);
     return [a.x + (-a.face) * (hd[0] - f[2]) * sc, a.y - lift - (f[3] - hd[1]) * sc];
   }

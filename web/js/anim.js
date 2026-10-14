@@ -51,6 +51,12 @@ const CLIP = {
   pounce: { f: ['pounce_1', 'pounce_2'], fps: 4.5, base: 'stand' },
   pawcheck: { f: ['pawcheck_1'], fps: 1, base: 'stand' },
   wallreach: { f: ['wallreach_1'], fps: 1, loop: 1, base: 'stand' },
+  // 어항 낚시 (fish.js). FISH_SPRITE_PLAN.md
+  sitdown: { f: ['sit_1'], fps: 3, base: 'stand' },
+  fishsit: { f: ['fish_sit_1'], fps: 1, loop: 1, base: 'stand' },
+  fishdoze: { f: ['fish_sit_2', 'fish_sit_2', 'fish_sit_2', 'fish_sit_2', 'fish_sit_1'], fps: 0.4, loop: 1, base: 'stand' },
+  yank1: { f: ['fish_yank_1'], fps: 2, base: 'stand' },
+  yank2: { f: ['fish_yank_2'], fps: 0.7, base: 'stand' },
   groom: { f: ['groom_1', 'groom_2', 'groom_3', 'groom_4', 'groom_3', 'groom_4', 'groom_3', 'groom_4', 'groom_2', 'groom_1', 'groom_1'], fps: 6, loop: 1, base: 'sit' },
 };
 const BRIDGE = 0.3;

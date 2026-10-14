@@ -1,5 +1,6 @@
 /* 방 그리기: 소품, 코드로 그리는 것(창밖·문·커튼·트리·난로·선풍기), 노트북 화면, 햇빛 */
 import { drawLaserPen } from './laser.js';
+import { drawFishbowl } from './fish.js';
 import { imageReady, img } from './assets.js';
 import { drawPartyScreen } from './birthday.js';
 import { O, OBJ, P, objView, present, socketOf, zOf } from './objects.js';
@@ -124,6 +125,7 @@ export const curtainSkew = v => {
 };
 const CODE = {
   laser: v => drawLaserPen(v), // 탁자 위 레이저 포인터 (laser.js)
+  fishbowl: v => drawFishbowl(v), // 어항: 뒤판·금붕어·앞판 (fish.js)
   outside: (v, d) => {
     const w = P.window;
     ctx.save();

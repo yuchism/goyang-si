@@ -38,6 +38,7 @@ export const BEHAVIOR = {
   santa:      [N, N], // 산타 구경
   paw:        [N, N], // 화면 톡
   laser:      [N, N], // 레이저 놀이 (보는 사람과)
+  fish:       [N, N], // 어항 낚시
 };
 const row = tag => BEHAVIOR[tag] || BEHAVIOR[''];
 // TV 사건에 반응해도 되나

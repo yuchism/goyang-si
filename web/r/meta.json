@@ -90,5 +90,13 @@
   "frame_family_2": [140, 173],
   "frame_family_3": [140, 173],
   "frame_family_4": [140, 173],
-  "frame_family_5": [140, 173]
+  "fishbowl_back": [384, 391],
+  "fishbowl_front": [384, 391],
+  "rod": [132, 312],
+  "fish_swim_1": [73, 46],
+  "fish_swim_2": [73, 52],
+  "fish_sigh_1": [71, 53],
+  "fish_carry_1": [79, 47],
+  "fish_hello_1": [71, 59],
+  "boong": [84, 49]
 }

@@ -18,6 +18,7 @@ import { bannerText } from './birthday.js';
 import { $, esc, store } from './util.js';
 import { flipFrame } from './frame.js';
 import { endLaser, laserOn, moveDot, penAt, startLaser, toggleLaser } from './laser.js';
+import { fishAt, fishB, tapBowl } from './fish.js';
 import { STANDALONE, closeOdd, oddAt, openOdd, toggleOdd } from './install.js';
 import { caption, cat, mouse, say, world } from './world.js';
 /* ───────── 입력 ───────── */
@@ -45,6 +46,7 @@ const TOUCH = {
   tv: () => openTvGuide(),
   frame: () => flipFrame(),
   laser: () => toggleLaser(), // 누르기 판정은 위 penAt (코드 그림)
+  fishbowl: () => tapBowl(), // 누르기 판정은 위 fishAt (코드 그림)
   screen: () => {
     scrEl.textContent = world.laptop ? world.laptop.split('\n').slice(-8).join('\n') : tr('blankScreen');
     scrEl.hidden = false;
@@ -134,6 +136,10 @@ export function initUI() {
     }
     if (hitActor(cat, x, y)) {
       petCat();
+      return;
+    }
+    if (fishAt(x, y)) { // 어항: 금붕어가 유리 쪽으로 와서 뻐끔 (코드 그림이라 아래 일반 판정 대신)
+      tapBowl();
       return;
     }
     if (oddAt(x, y)) {
@@ -331,6 +337,10 @@ export function initUI() {
   };
   initTvDev(jumpTo); // TV 칸: 틀어 보기, 사건 고르기(예전 "TV 사건" 버튼 포함), 7일 편성표, 특집 날짜 (tv-dev.js)
   $('dLaser').onclick = () => toggleLaser();
+  $('dFish').onclick = () => {
+    if (!world.manduk)
+      fishB();
+  };
   $('dKnock').onclick = () => {
     if (world.manduk)
       return;

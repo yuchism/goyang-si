@@ -12,6 +12,7 @@ import { moonPhase, now, setOverride, setSimMs } from './time.js';
 import { settleCat, timeJumped } from './jump.js';
 import { lazyPending } from './assets.js';
 import { endLaser, laserState, moveDot, startLaser } from './laser.js';
+import { fishB, fishState, tapBowl } from './fish.js';
 import { TVP, tvForce, tvNeed, tvPreview, tvProblems, tvSegs, tvState } from './tv.js';
 import { tvPeekB, tvRush, tvTopB, tvTopBlockedB, tvWatchB } from './tv-cat.js';
 import { openTvGuide } from './tv-guide.js';
@@ -20,5 +21,5 @@ import { cat, mouse, say, world } from './world.js';
 // window.__goyang 내보내기
 export function exposeDebug() {
   // 확인용 (화면에는 영향 없음)
-  window.__goyang = { tvState, tvSegs, tvForce, tvPreview, tvProblems, lazyPending, tvBuf, TVP, tvNeed, tvWatchB, tvTopB, tvTopBlockedB, tvPeekB, tvRush, openTvGuide, O, startUFO, greetS, chaseS, stalkS, boxHideS, napNextTo, duetB, cat, mouse, world, run, play, hold, go, fn, bub, say, startVisit, spawnMouse, spawnButterfly, groomB, boxB, rollB, windowB, pawB, secretB, knockB, petCat, now, setOverride, moonPhase, flipFrame, frameIndex, frameTilt, straightenFrame, missedFix, setSimMs, timeJumped, settleCat, startLaser, endLaser, moveDot, laserState };
+  window.__goyang = { tvState, tvSegs, tvForce, tvPreview, tvProblems, lazyPending, tvBuf, TVP, tvNeed, tvWatchB, tvTopB, tvTopBlockedB, tvPeekB, tvRush, openTvGuide, O, startUFO, greetS, chaseS, stalkS, boxHideS, napNextTo, duetB, cat, mouse, world, run, play, hold, go, fn, bub, say, startVisit, spawnMouse, spawnButterfly, groomB, boxB, rollB, windowB, pawB, secretB, knockB, petCat, now, setOverride, moonPhase, flipFrame, frameIndex, frameTilt, straightenFrame, missedFix, setSimMs, timeJumped, settleCat, startLaser, endLaser, moveDot, laserState, fishB, fishState, tapBowl };
 }

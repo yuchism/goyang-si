@@ -71,6 +71,7 @@ export const STR = {
   dSecret: { ko: '노트북', en: 'Laptop' },
   dKnock: { ko: '컵 툭', en: 'Knock cup' },
   dLaser: { ko: '레이저', en: 'Laser' },
+  dFish: { ko: '낚시', en: 'Fishing' },
   dUfo: { ko: 'UFO', en: 'UFO' },
   dTv: { ko: 'TV 사건', en: 'TV event' },
   devTv: { ko: 'TV', en: 'TV' },

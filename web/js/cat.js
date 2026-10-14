@@ -14,6 +14,7 @@ import { pick, rnd, store } from './util.js';
 import { tr } from './i18n.js';
 import { oddLookB, oddLookWeight } from './install.js';
 import { cat, mouse, say, world } from './world.js';
+import { fishB, fishOk } from './fish.js';
 // 타자 프레임의 앞발 끝: 발 기준점에서 [앞쪽 거리, 위로 높이] (프레임 픽셀)
 const PAW_TYPE = [240, 162];
 /* ───────── 강고양이 씨의 뇌 ───────── */
@@ -60,7 +61,9 @@ export function catBrain(d) {
   if (performance.now() - world.lastTouch > 20 * 60e3)
     add(0.15, pawB);
   if (!dark)
-    add(oddLookWeight(d), oddLookB); // 책장의 이상한 책 올려다보기 (하루 한두 번)
+    add(oddLookWeight(d), oddLookB);
+  if (fishOk(d))
+    add(1.6, fishB); // 어항 낚시 (방 시각으로 4시간에 한 번까지, 낮에만) // 책장의 이상한 책 올려다보기 (하루 한두 번)
   let tot = opts.reduce((s, o) => s + o[0], 0), r = Math.random() * tot;
   for (const [w, f] of opts) {
     if ((r -= w) <= 0) {

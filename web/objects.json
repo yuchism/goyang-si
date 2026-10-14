@@ -269,8 +269,7 @@
         "frame_family_1",
         "frame_family_2",
         "frame_family_3",
-        "frame_family_4",
-        "frame_family_5"
+        "frame_family_4"
       ],
       "touch": "frame",
       "hitPad": 12,
@@ -709,6 +708,53 @@
           -1
         ]
       }
+    },
+    {
+      "id": "fishbowl",
+      "name": "어항",
+      "kind": "interactive",
+      "layer": "floor",
+      "look": "code:fishbowl",
+      "pos": {
+        "x": 86,
+        "y": 612,
+        "w": 150
+      },
+      "body": {
+        "rect": [
+          16,
+          156,
+          596,
+          616
+        ],
+        "blocks": [
+          "cat",
+          "mouse"
+        ]
+      },
+      "touch": "fishbowl",
+      "note": "왼쪽 커튼 바로 앞, 낮은 받침 위 둥근 어항. 금붕어 한 마리. 그림은 뒤판(fishbowl_back)·앞판(fishbowl_front) 두 장이고 그 사이에 금붕어·바늘·거품을 코드로 그린다(fish.js). 강고양이 씨가 가끔 낚시를 하면 금붕어가 붕어빵을 매달아 준다. 누르면 금붕어가 유리 쪽으로 와서 뻐끔. 낚시 자리는 낚싯대 끝이 바늘 위에 오도록 코드가 계산(fishSpot). CAT_PLAY_PLAN.md 5-2"
+    },
+    {
+      "id": "rod",
+      "name": "낚싯대",
+      "kind": "decor",
+      "layer": "floor",
+      "look": "rod",
+      "pos": {
+        "x": 158,
+        "y": 602,
+        "w": 46
+      },
+      "states": {
+        "wall": {
+          "look": "rod"
+        },
+        "out": {
+          "look": ""
+        }
+      },
+      "note": "어항 오른쪽 뒤 벽에 기대어 둔 장난감 낚싯대. 강고양이 씨가 낚시하는 동안은 고양이 그림 쪽에 있으므로 숨긴다(상태 out)"
     },
     {
       "id": "fan",
