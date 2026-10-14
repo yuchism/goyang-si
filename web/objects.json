@@ -424,6 +424,22 @@
       "note": "강고양이 씨가 앞발로 밀어 떨어뜨림 → 소리 → 만득 씨가 와서 치움"
     },
     {
+      "id": "laser",
+      "name": "레이저 포인터",
+      "kind": "interactive",
+      "layer": "floor",
+      "parent": "table",
+      "depth": 620.15,
+      "pos": {
+        "x": 486,
+        "y": 548,
+        "w": 40
+      },
+      "look": "code:laser",
+      "touch": "laser",
+      "note": "탁자 위, 스탠드와 컵 사이. 보는 사람이 누르면 40초 동안 레이저 놀이(빨간 점이 마우스·손가락을 따라감). 누르기 판정과 그리기는 laser.js(코드 그림이라 일반 터치 판정 대신). CAT_PLAY_PLAN.md 5-1"
+    },
+    {
       "id": "tv_shelf",
       "name": "TV 선반",
       "kind": "solid",

@@ -17,6 +17,7 @@ import { initTvDev } from './tv-dev.js';
 import { bannerText } from './birthday.js';
 import { $, esc, store } from './util.js';
 import { flipFrame } from './frame.js';
+import { endLaser, laserOn, moveDot, penAt, startLaser, toggleLaser } from './laser.js';
 import { STANDALONE, closeOdd, oddAt, openOdd, toggleOdd } from './install.js';
 import { caption, cat, mouse, say, world } from './world.js';
 /* ───────── 입력 ───────── */
@@ -43,6 +44,7 @@ const TOUCH = {
   },
   tv: () => openTvGuide(),
   frame: () => flipFrame(),
+  laser: () => toggleLaser(), // 누르기 판정은 위 penAt (코드 그림)
   screen: () => {
     scrEl.textContent = world.laptop ? world.laptop.split('\n').slice(-8).join('\n') : tr('blankScreen');
     scrEl.hidden = false;
@@ -113,6 +115,18 @@ export function initUI() {
     closeShelf();
     closeTvGuide();
     closeOdd();
+    // 레이저 놀이 중에는 방을 눌러도 점만 움직인다. 포인터를 다시 누르면 끝
+    if (laserOn()) {
+      if (penAt(x, y))
+        endLaser();
+      else
+        moveDot(x, y);
+      return;
+    }
+    if (penAt(x, y)) {
+      startLaser();
+      return;
+    }
     if (hitActor(mouse, x, y)) {
       say(mouse, '‼️', 1.5);
       mouseHide(true);
@@ -156,6 +170,11 @@ export function initUI() {
       TOUCH[hit.touch]();
       return;
     }
+  });
+  // 레이저 점: 컴퓨터는 마우스를 따라가고, 폰은 누른 채 끄는 곳으로
+  cv.addEventListener('pointermove', e => {
+    if (laserOn() && (e.pointerType === 'mouse' || e.buttons))
+      moveDot(...toStage(e));
   });
   noteEl.addEventListener('click', () => noteEl.hidden = true);
   scrEl.addEventListener('click', () => scrEl.hidden = true);
@@ -311,6 +330,7 @@ export function initUI() {
     startUFO();
   };
   initTvDev(jumpTo); // TV 칸: 틀어 보기, 사건 고르기(예전 "TV 사건" 버튼 포함), 7일 편성표, 특집 날짜 (tv-dev.js)
+  $('dLaser').onclick = () => toggleLaser();
   $('dKnock').onclick = () => {
     if (world.manduk)
       return;

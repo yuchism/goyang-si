@@ -1,6 +1,7 @@
 /* 강고양이 씨 TV · 반응: TV 보기, TV 위 낮잠, 뒤 빼꼼, 달려오기, 사건 반응. 편성표 창은 tv-guide.js
    프로그램(r/tv/programs.json)은 사건마다 반응 이름만 고른다("react"). 반응을 어떻게 움직일지는 여기 REACT가 안다 */
 import { play } from './anim.js';
+import { tvFree } from './behave.js';
 import { loafB } from './cat.js';
 import { O, S, present, socketOf, topOf } from './objects.js';
 import { Snd } from './sound.js';
@@ -10,7 +11,6 @@ import { TV_REACT_NAMES } from './tv-core.js';
 import { pick, rnd } from './util.js';
 import { cat, say, world } from './world.js';
 /* TV와 강고양이 씨 */
-const TV_BUSY = ['knock', 'zoom', 'chase', 'stalk', 'boxhide', 'greet', 'birthday', 'wait', 'innocent', 'secret', 'box', 'tvrush', 'sulk', 'ufo', 'santa', 'paw', 'bfly', 'window'];
 const faceTV = a => {
   a.face = O.tv.pos.x > a.x ? 1 : -1;
 };
@@ -279,7 +279,7 @@ export function tvEventFired(e) {
       say(cat, '❔', 2);
     return;
   }
-  if (TV_BUSY.includes(cat.tag) || cat.moving || cat.tr)
+  if (!tvFree(cat) || cat.moving || cat.tr)
     return;
   if (cat.closed) {
     if (e.size >= 3 && Math.random() < 0.35)
@@ -318,11 +318,11 @@ export function tvReactPower() {
       cat.react = { f: 'tv_ear_turn', t: 1.3 };
     return;
   }
-  if (!TV_BUSY.includes(cat.tag) && !cat.moving)
+  if (tvFree(cat) && !cat.moving)
     say(cat, '❗', 2);
 }
 export function tvReactBeep() {
-  if (world.manduk || cat.closed || cat.onTV || TV_BUSY.includes(cat.tag) || cat.moving)
+  if (world.manduk || cat.closed || cat.onTV || !tvFree(cat) || cat.moving)
     return;
   faceTV(cat);
   say(cat, '❔', 3);

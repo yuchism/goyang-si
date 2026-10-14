@@ -14,10 +14,11 @@ import { drawBookTag, drawBooks, initShelf } from './shelf.js';
 import { Snd } from './sound.js';
 import { drawActor, drawBubble, drawCaptions } from './sprites.js';
 import { H, W, cam, ctx, fit, updateCam, view } from './stage.js';
-import { bub, fn, go, hold, run, tickActor } from './steps.js';
+import { bub, fn, go, hold, inSpot, run, tickActor } from './steps.js';
 import { advanceClock, darkness, dayEvents, dayKey, hourOf, inBeam, isWeekend, mandukAsleep, mandukHome, markClock, moonName, moonPhase, now, rainNow, resetClock, season, snowing, speed, sunTimes, sunbeam } from './time.js';
 import { drawJumpFade, initJump, jumpTick, newDay, settleCat } from './jump.js';
 import { frameTick } from './frame.js';
+import { drawLaserDot, laserTick } from './laser.js';
 import { loadPrograms, tvOn, tvTick } from './tv.js';
 import { tvBig } from './tv-guide.js';
 import { drawTVNight, drawTvBuf, tvBuf } from './tv-screen.js';
@@ -136,7 +137,6 @@ function frame(tNow) {
     mouse.napTogether = (mouse.napTogether || 0) + dt;
     if (mouse.napTogether > rnd(40, 90)) {
       mouse.napTogether = 0;
-      const keep = cat.steps;
       cat.pose = 'roll';
       cat.rock = 1;
       setTimeout(() => {
@@ -159,7 +159,6 @@ function frame(tNow) {
   // 자는 강고양이 씨 앞을 지나가는 쥐야쥐
   if (!mouse.hidden && cat.closed && cat.tag === 'nap' && mouse.state !== 'nap' && Math.abs(cat.x - mouse.x) < 120 && !cat.peeked) {
     cat.peeked = true;
-    const rest = cat.steps, cur = cat.cur;
     run(cat, [
       hold(2.5, 'loaf', false),
       bub('🐭 … 🙄', 3),
@@ -171,7 +170,7 @@ function frame(tNow) {
   // 서로 의식하기
   if (!mouse.hidden && !mouse.peek && !world.manduk) {
     const dd = Math.hypot(cat.x - mouse.x, cat.y - mouse.y);
-    if (dd < 420 && !cat.moving && !cat.act && !cat.tr && !cat.closed && !cat.inBox && !cat.onTV && !cat.tvPeek && cat.tag !== 'window')
+    if (dd < 420 && !cat.moving && !cat.act && !cat.tr && !cat.closed && !inSpot(cat) && cat.tag !== 'window')
       cat.face = mouse.x > cat.x ? 1 : -1;
     if (dd < 300 && !mouse.moving && !mouse.closed && mouse.state !== 'flee')
       mouse.face = cat.x > mouse.x ? 1 : -1;
@@ -244,6 +243,7 @@ function frame(tNow) {
       caption(pick(tr('capAmbient')), 3);
   }
   calmDown(real); // 건드림 짜증 회복
+  laserTick(real); // 레이저 놀이 시간
   render(d, real);
   document.getElementById('status').textContent = statusText(d);
   if (devOpen) {
@@ -308,6 +308,7 @@ function render(d, real) {
   drawPumpkinGlow(dk);
   drawOddGlow(dk);
   drawCurtainShadow(dk);
+  drawLaserDot();
   drawPartyLights(dk);
   drawManduk('say');
   drawBubble(cat);

@@ -51,7 +51,8 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `time.js` | 방 시계 `now()`(기기 시계 + 미리보기 offset)와 시간 점프 감지 `clockJump`, 하루 일정 `dayEvents`, 계절·해 뜨고 지는 시각, 비·눈, 상자 있는 날, 기념일, 명절, 햇빛 조각, 하늘색과 어둠, 달 모양 `moonPhase`(MOON_PLAN.md) |
 | `jump.js` | 시간 점프 정리 `timeJumped`: 화면이 꺼졌다 켜지거나 서머타임·미리보기로 시계가 건너뛰면 방 상태(스탠드·밥그릇·컵·만득 씨 방문·고양이 자리 `settleCat`)를 그 시각에 맞추고 짧게 어두워졌다 밝아진다. CLOCK_PLAN.md |
 | `objects.js` | `objects.json`을 읽어 위치 `P`, 사물 `O`, 상태 `objView`, 자리 `S('bowl.eat')`, 소켓, 깊이를 알려준다 |
-| `steps.js` | 행동 단계: `go`(길찾기로 걷기), `follow`, `hold`, `bub`, `fn`, `until`, 그리고 순서대로 실행 `run(배우, [단계...])` |
+| `steps.js` | 행동 단계: `go`(길찾기로 걷기), `follow`, `hold`, `bub`, `fn`, `until`, 그리고 순서대로 실행 `run(배우, [단계...])`. 바닥이 아닌 자리(TV 위·TV 뒤·상자 안) 표 `SPOTS`와 `inSpot`·`spotOf` |
+| `behave.js` | 강고양이 씨 행동 성격표 `BEHAVIOR`: 이름표(tag)마다 TV 사건·유령 그림자가 끼어들어도 되는지. `tvFree(cat)`, `ghostFree(cat)` |
 | `anim.js` | 동작 그림: 자세 전환(서기↔식빵↔배 보이기), 동작 클립 `CLIP`과 `play`, 지금 보여줄 프레임 고르기 |
 | `cat.js` | 강고양이 씨의 뇌 `catBrain`(하고 싶은 일 고르기)과 혼자 하는 행동들(`napB`, `windowB`…), 쓰다듬기 |
 | `duet.js` | 강고양이 씨와 쥐야쥐가 함께: 인사, 술래잡기, 노려보기, 상자 숨바꼭질, 같이 자기 |
@@ -69,6 +70,7 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `tv-cat.js` | TV · 강고양이 씨: 보기(`watch`)·위에서 낮잠·뒤 빼꼼·달려오기, 반응 목록 `REACT`(사건의 `react`가 고른다: 시무룩·펄쩍·하트·빼꼼·졸기·화면 툭툭·달려들기) |
 | `tv-guide.js` | TV · 편성표 창(낮잠 정파 줄 포함)과 축하 방송 신청 화면 |
 | `tv-dev.js` | 미리보기 도구의 TV 칸: 틀어 보기, 사건 고르기, 7일 편성표, 특집 날짜·낮잠 정파로 가기, 문제 있는 프로그램 수 |
+| `laser.js` | 레이저 놀이: 탁자 위 포인터(`penAt`, 코드 그림 `drawLaserPen`)를 누르면 40초 동안 빨간 점이 마우스·손가락을 따라가고 강고양이 씨가 쫓는다(`chase` 단계). 지치면 3분 동안 무시. CAT_PLAY_PLAN.md 5-1 |
 | `birthday.js` | 생일 파티(`?birthday=이름`): 배너, 케이크, 꽃비, 무대 조명, 노트북 자막, 쥐야쥐 박수 |
 | `shelf.js` | 책장 메뉴 (`objects.json`의 `bookshelf.books`) |
 | `frame.js` | 벽 액자: 날짜마다 바뀌는 가족사진(`objects.json`의 `frame.photos`), 누르면 다음 사진·조금씩 삐뚤어짐, 만득 씨가 다녀가면 반듯. 넘긴 사진·기울기는 그 기기에 저장. FRAME_PHOTOS_PLAN.md |
@@ -86,6 +88,9 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 - 다른 모듈의 `let` 변수는 직접 바꾸지 못한다(JS 모듈 규칙). 바꿀 일이 있으면 그 모듈에 함수를 둔다.
   예: 시계 `setSpeed`, `setSimMs`, `setOverride('rain', true)` / 캔버스 `withCtx(다른캔버스, 그리기)`
 - 새 행동은 `run(cat, [go(...S('물건.자리')), hold(3, 'loaf'), ...], '이름표')`로 만든다. 이름표(`tag`)는 다른 반응이 끼어들지 판단하는 데 쓴다.
+  이름표를 새로 만들면 `behave.js`의 `BEHAVIOR`에 한 줄 더한다(TV 사건·유령 그림자가 끼어들어도 되는지). 빠뜨리면 미리보기(`?dev=1`)에서 콘솔에 알려 준다.
+  고양이가 바닥이 아닌 곳(쳇바퀴 안처럼)에 들어가는 행동은 `steps.js`의 `SPOTS`에 자리 하나를 더한다: 들어가 있는지(`on`)와, 다른 행동이 시작될 때 바닥으로 내려놓는 법(`exit`).
+  (2026-10-14 정리: 예전 `TV_BUSY`·`NO_GHOST` 목록과 `run()` 안의 TV 위·뒤·상자 처리를 이 두 표로 옮겼다. 화면 점검 결과 같음)
 
 ## 그림을 새로 넣을 때
 

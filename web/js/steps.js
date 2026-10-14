@@ -1,5 +1,6 @@
 /* 행동 단계와 길찾기: 걷기(go), 따라가기, 기다리기, 말풍선 단계, 순서대로 실행(run) */
 import { EDGE, nextHop } from './anim.js';
+import { checkTag } from './behave.js';
 import { OBJ, S, objView, present } from './objects.js';
 import { clamp, lerp } from './util.js';
 // step helpers
@@ -47,14 +48,14 @@ function detour(rs, x0, y0, tx, ty, depth) {
   }
   return out;
 }
-function routeTo(a, tx, ty, free) {
+export function routeTo(a, tx, ty, free) {
   const rs = blockers(a.kind, free === true ? ['box'] : free);
   for (const r of rs)
     if (inRect(r, tx, ty))
       ty = (a.y < (r.y0 + r.y1) / 2 && r.y0 - 8 >= 592) ? r.y0 - 8 : Math.min(r.y1 + 10, 740);
   return detour(rs, a.x, a.y, tx, ty, 4);
 }
-function stepToward(a, tx, ty, sp, dt) {
+export function stepToward(a, tx, ty, sp, dt) {
   const dx = tx - a.x, dy = ty - a.y, d = Math.hypot(dx, dy);
   if (d < 3)
     return true;
@@ -161,42 +162,55 @@ export const until = (cond, max = 60) => ({ init(a) {
     a.left -= dt;
     return cond() || a.left <= 0;
   } });
+/* ───────── 들어가 있는 자리 ─────────
+   TV 위, TV 뒤, 상자 안처럼 바닥이 아닌 곳. 다른 행동이 시작되면(run) exit가 바닥의 제자리로 내려놓는다.
+   새 자리(쳇바퀴 안, 어항 옆 받침대 등)는 여기에 한 덩어리 더한다. 순서대로 확인한다 */
+export const SPOTS = [
+  { id: 'tv', on: a => a.onTV, exit(a) { // TV 위에서 내려와서 시작
+      a.onTV = false;
+      const s = S('tv.side');
+      if (s) {
+        a.x = s[0];
+        a.y = s[1];
+      }
+      a.dp = a.pose = 'stand';
+      a.tr = null;
+    } },
+  { id: 'tvPeek', on: a => a.tvPeek, exit(a) {
+      a.tvPeek = false;
+      const s = S('tv.behind');
+      if (s) {
+        a.x = s[0] + 20;
+        a.y = s[1];
+      }
+    } },
+  { id: 'box', on: a => a.inBox, exit(a) {
+      a.inBox = false;
+      const e = S('box.enter');
+      a.x = e[0];
+      a.y = e[1] + 6;
+      a.dp = a.pose = 'loaf';
+      a.tr = null;
+    } },
+];
+// 바닥이 아닌 자리에 있나 (어느 자리인지는 spotOf)
+export const spotOf = a => SPOTS.find(s => s.on(a)) || null;
+export const inSpot = a => !!spotOf(a);
 export function run(a, steps, tag = '') {
   if (a.act)
     a.act = null;
-  if (a.kind === 'cat')
+  if (a.kind === 'cat') {
     a.typing = false;
+    checkTag(tag);
+  }
   if (a.jump) {
     if (a.jump.up)
       a.onTV = true;
     a.jump = null;
   } // 점프 중에 끊기면 TV 위에 있던 것으로 치고 아래 규칙대로 내려놓는다
-  if (a.onTV) {
-    a.onTV = false;
-    const s = S('tv.side');
-    if (s) {
-      a.x = s[0];
-      a.y = s[1];
-    }
-    a.dp = a.pose = 'stand';
-    a.tr = null;
-  } // TV 위에서 내려와서 시작
-  if (a.tvPeek) {
-    a.tvPeek = false;
-    const s = S('tv.behind');
-    if (s) {
-      a.x = s[0] + 20;
-      a.y = s[1];
-    }
-  }
-  if (a.inBox) {
-    a.inBox = false;
-    const e = S('box.enter');
-    a.x = e[0];
-    a.y = e[1] + 6;
-    a.dp = a.pose = 'loaf';
-    a.tr = null;
-  }
+  for (const s of SPOTS)
+    if (s.on(a))
+      s.exit(a);
   a.steps = steps.slice();
   a.cur = null;
   a.tag = tag;

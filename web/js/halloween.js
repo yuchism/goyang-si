@@ -1,6 +1,7 @@
 /* 할로윈(10/24 ~ 11/1, time.js의 holiday): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자
    자세한 내용은 HALLOWEEN_PLAN.md, 고친 것은 HALLOWEEN_FIX_PLAN.md. 공포 영화 특집은 r/tv/programs.json(horror의 "special": [["할로윈", "22:00"]])과 r/tv/schedule.json(기간 할로윈) */
 import { play } from './anim.js';
+import { ghostFree } from './behave.js';
 import { imageReady, img } from './assets.js';
 import { curtainSkew, drawProp } from './draw.js';
 import { tr } from './i18n.js';
@@ -260,11 +261,10 @@ export function startGhost() {
     setTimeout(() => world.curtainShadow && caption(tr('capGhost'), 2.5), 1200);
   setTimeout(() => ghostReaction(id), 1600);
 }
-const NO_GHOST = ['knock', 'zoom', 'chase', 'stalk', 'boxhide', 'greet', 'birthday', 'wait', 'innocent', 'secret', 'box', 'tvrush', 'tvtop', 'ufo', 'santa', 'witch', 'paw', 'ghost'];
 // 강고양이 씨: 깜짝 → 확인하러 감 → 이미 없음 → 시무룩 또는 그루밍 (TV 큰 사건을 늘 놓치는 것과 같은 개그)
 function ghostReaction(id) {
   const o = O[id];
-  if (!o || !world.curtainShadow || world.manduk || cat.closed || cat.inBox || cat.onTV || cat.typing || cat.dance || NO_GHOST.includes(cat.tag))
+  if (!o || !world.curtainShadow || world.manduk || cat.closed || cat.inBox || cat.onTV || cat.typing || cat.dance || !ghostFree(cat))
     return;
   const left = id === 'curtain_l', spot = left ? [150, 684] : [560, 682], cx = o.pos.x;
   run(cat, [
