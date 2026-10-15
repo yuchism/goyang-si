@@ -217,3 +217,41 @@ export function drawCaptions(dt) {
     y -= 30;
   });
 }
+/* ───────── 밤하늘 실루엣 대비 (HALLOWEEN_FIX_PLAN.md 2-3, 예전 halloween.js) ─────────
+   박쥐·마녀·검은 고양이 그림은 짙은 갈색이라 깊은 밤 남색 하늘에 묻힌다. 어두운 밤일수록(world.dark)
+   가장자리에 옅은 달빛 테두리(연노랑, 약 1px)를 두르고 몸도 살짝 밝힌다. 노을 직후처럼 하늘이 밝을 때는 거의 그대로 */
+const skyTintC = {};
+function skyTint(name, kind) {
+  const key = name + kind;
+  if (skyTintC[key])
+    return skyTintC[key];
+  const im = img(name);
+  if (!imageReady(im))
+    return null;
+  const c = document.createElement('canvas');
+  c.width = im.naturalWidth;
+  c.height = im.naturalHeight;
+  const x = c.getContext('2d');
+  x.drawImage(im, 0, 0);
+  x.globalCompositeOperation = 'source-atop';
+  x.fillStyle = kind === 'rim' ? 'rgb(255,238,176)' : 'rgba(196,186,232,0.24)';
+  x.fillRect(0, 0, c.width, c.height);
+  return skyTintC[key] = c;
+}
+const skyNight = () => clamp((world.dark - 0.35) / 0.4, 0, 1);
+// (x, y)는 그림 왼쪽 위. 지금 변환(회전 등) 그대로 그린다
+export function drawSkySprite(name, im, x, y, w, h, alpha) {
+  const nk = skyNight(), rim = nk > 0 && skyTint(name, 'rim'), lift = nk > 0 && skyTint(name, 'lift');
+  if (rim) {
+    ctx.globalAlpha = alpha * 0.6 * nk;
+    for (const [dx, dy] of [[-1.1, 0], [1.1, 0], [0, -1.1], [0, 1.1]])
+      ctx.drawImage(rim, x + dx, y + dy, w, h);
+  }
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(im, x, y, w, h);
+  if (lift) {
+    ctx.globalAlpha = alpha * nk;
+    ctx.drawImage(lift, x, y, w, h);
+  }
+  ctx.globalAlpha = 1;
+}

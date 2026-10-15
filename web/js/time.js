@@ -444,3 +444,169 @@ export function moonName(m) {
 export function boxOpen(d) {
   return (dayNum(d) % 9) > 0 || boxOverride !== null;
 }
+/* ───────── 창밖 일정 (WINDOW_PLAN.md) ─────────
+   "언제 나오나"는 날짜 씨앗(해시)으로 정한다. 누구에게나, 새로 고침해도 같다. 결과는 모두 방 시각(ms).
+   실행 중에 겹치는 것만 events.js 교통정리가 푼다 */
+const HOUR = 3600000;
+// 그날(day) h시의 ms. 24 이상이면 다음 날로 넘어간다 (벽시계 기준이라 서머타임에도 hourOf와 맞다)
+const hourAt = (day, h) => new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0, Math.round(h * HOUR)).getTime();
+export const clockText = ms => {
+  const d = new Date(ms);
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+};
+// 그날(calDay) 비가 오면 { start, end } (ms), 안 오면 null. rainNow와 같은 씨앗·계산이고 자정에서 끊긴다(rainNow도 자정에 날짜 키가 바뀌어 끊긴다).
+// 미리보기의 비 켜기/끄기(rainOverride)와는 상관없다
+export function rainSpan(d) {
+  const k = dayKey(d);
+  if (hash('rain' + k) > (season(d) === 'summer' ? 0.28 : 0.2))
+    return null;
+  const st = 6 + hash('rs' + k) * 10, len = 2 + hash('rl' + k) * 7;
+  return { start: hourAt(d, st), end: hourAt(d, Math.min(st + len, 24)) };
+}
+// 천둥번개: 비 오는 날 중 여름 35%, 그 밖 10%. 눈 오는 날은 없음. 미리보기 「천둥번개」는 thunderOverride
+let thunderOverride = null;
+export const thunderDay = d => !!rainSpan(d) && season(d) !== 'winter' && hash('thunder' + dayKey(d)) < (season(d) === 'summer' ? 0.35 : 0.1);
+export function thunderNow(d) {
+  if (!rainNow(d) || snowing(d))
+    return false;
+  if (thunderOverride !== null)
+    return thunderOverride;
+  const sp = rainSpan(d), t = d.getTime();
+  return thunderDay(d) && !!sp && t >= sp.start && t < sp.end;
+}
+// 번쩍임 시각: 그날 0시부터 1~3분 간격으로 씨앗이 정한 시각들 [{ t, big }] (천둥 칠 때만 쓴다)
+const flashCache = {};
+function flashList(d) {
+  const k = dayKey(d);
+  if (flashCache.k === k)
+    return flashCache.v;
+  const v = [], end = hourAt(d, 24);
+  let t = hourAt(d, 0);
+  for (let i = 0; t < end; i++) {
+    t += (60 + hash('fl' + k + i) * 120) * 1000;
+    v.push({ t, big: hash('fb' + k + i) < 0.35 });
+  }
+  flashCache.k = k;
+  flashCache.v = v;
+  return v;
+}
+// a(ms) 뒤 ~ d까지 지나간 번쩍임 중 마지막 것 (여러 개가 지나갔어도 하나만). 없으면 null
+export function flashSince(a, d) {
+  const b = d.getTime();
+  if (!(b > a))
+    return null;
+  let hit = null;
+  for (const f of flashList(d))
+    if (f.t > a && f.t <= b)
+      hit = f;
+    else if (f.t > b)
+      break;
+  return hit;
+}
+// 무지개 밝기 0~1: 비가 그친 시각(rainSpan end)이 해 지기 1시간 전보다 이르면 50%. 5분에 걸쳐 나타나 20~40분 동안 흐려진다.
+// 시각의 함수라 새로 고침·시간 점프에도 정리가 필요 없다. 미리보기 버튼은 rainbowOverride(시작 시각)
+let rainbowOverride = null;
+export function rainbowAt(d) {
+  const t = d.getTime(), k = dayKey(d);
+  let end = rainbowOverride;
+  if (end == null) {
+    const sp = rainSpan(d);
+    if (!sp || season(d) === 'winter' || hash('rainbow' + k) >= 0.5 || sp.end > hourAt(d, sunTimes(d)[1] - 1))
+      return 0;
+    end = sp.end;
+  }
+  if (rainNow(d))
+    return 0;
+  const m = (t - end) / 60000, fade = 20 + hash('rbd' + k) * 20;
+  if (m < 0 || m > 5 + fade)
+    return 0;
+  const x = m < 5 ? m / 5 : 1 - (m - 5) / fade;
+  return x * x * (3 - 2 * x);
+}
+// 무지개를 그릴 해 반대쪽: 해가 창의 어느 쪽으로 기울었나 (sunArc 0.5보다 크면 오른쪽 → 무지개는 왼쪽)
+export const rainbowSide = d => sunArc(d) > 0.5 ? -1 : 1;
+// 비행기: 하루 2~4번 (calDay), 6시 ~ 23시 반. { id, at, dur(초), dir, y }
+export function planeSlots(d) {
+  const k = dayKey(d), n = 2 + Math.floor(hash('pn' + k) * 3), out = [];
+  for (let i = 0; i < n; i++)
+    out.push({ id: 'plane' + k + i, at: hourAt(d, 6 + hash('pt' + k + i) * 17.5), dur: 40 + hash('pd' + k + i) * 30, dir: hash('px' + k + i) < 0.5 ? 1 : -1, y: 26 + hash('py' + k + i) * 70 });
+  return out;
+}
+// 난간의 새: 하루 4~8번 (calDay). 아침(해 뜬 뒤 30분 ~ 11시)과 늦은 오후(해 지기 3시간 전 ~ 1시간 전)에 잦다.
+// { id, at, dur(초), kind: 'pigeon'|'magpie', pair, x(0~1), face }
+export function birdSlots(d) {
+  const k = dayKey(d), [r, s] = sunTimes(d), n = 4 + Math.floor(hash('bn' + k) * 5), out = [];
+  for (let i = 0; i < n; i++) {
+    const u = hash('bu' + k + i), v = hash('bt' + k + i);
+    const h = u < 0.4 ? lerp(r + 0.5, Math.max(r + 1, 11), v) : u < 0.8 ? lerp(s - 3, s - 1, v) : lerp(r + 1, s - 1, v);
+    const magpie = hash('bk' + k + i) < 0.45;
+    out.push({ id: 'bird' + k + i, at: hourAt(d, h), dur: 20 + hash('bd' + k + i) * 40, kind: magpie ? 'magpie' : 'pigeon', pair: magpie && hash('bp' + k + i) < 0.35, x: hash('bx' + k + i), face: hash('bf' + k + i) < 0.5 ? -1 : 1 });
+  }
+  return out.sort((a, b) => a.at - b.at);
+}
+// 작은 검은 고양이: 하룻밤(nightOf)에 약 33% (3일에 1번 꼴), 해질녘 ~ 새벽 1시. { id, at, dur(초), mode: 'peek'|'walk', x(0~1), dir } 또는 null
+export function blackcatSlot(d, tonight = false) { // tonight: 아침·낮이면 오늘 밤 것 (미리보기 한 줄)
+  const day = nightStart(d) || (tonight ? noonOf(d, 0) : null);
+  if (!day)
+    return null;
+  const k = dayKey(day);
+  if (hash('blackcat' + k) >= 1 / 3)
+    return null;
+  const [, s] = sunTimes(day), u = hash('bcu' + k), v = hash('bct' + k);
+  const h = u < 0.6 ? s - 1.5 + v * 4.5 : s + 3 + v * Math.max(0.5, 25 - (s + 3));
+  const peek = hash('bcm' + k) < 0.5;
+  return { id: 'blackcat' + k, at: hourAt(day, h), dur: peek ? 7 + hash('bcd' + k) * 6 : 32 + hash('bcd' + k) * 12, mode: peek ? 'peek' : 'walk', x: hash('bcx' + k), dir: hash('bcr' + k) < 0.5 ? -1 : 1 };
+}
+// 슬롯 목록에서 지금 할 것: 시작 시각 ~ 시작 + 기다림(wait, 초) 안에 든 것. 없으면 null
+export function slotDue(slots, d, wait) {
+  const t = d.getTime();
+  for (const s of slots)
+    if (s && t >= s.at && t < s.at + Math.max(wait, s.dur || 0) * 1000)
+      return { slot: s, late: (t - s.at) / 1000 };
+  return null;
+}
+// 건너편 창 불빛: 창 n개의 지금 상태 (0 꺼짐, 1 켜짐, 2 TV처럼 푸르스름). 아침·낮이면 null. 창마다 그 밤(nightOf)의 씨앗으로 켜고 끄는 시각이 정해진다.
+// 해 진 뒤 하나둘 켜져 저녁엔 40~60%, 22시부터 하나둘 꺼져 새벽 2시엔 5~10%. 금·토 밤은 30분~1시간 늦게. 새벽엔 일찍 일어난 집 몇 개
+let litCache = { key: '', v: null };
+export function aptLightsAt(d, n) {
+  const key = Math.floor(d.getTime() / 15000) + ':' + n;
+  if (litCache.key === key)
+    return litCache.v;
+  const day = nightStart(d);
+  if (!day) { // 아침·낮: 그리지 않는다 (낮 그림 그대로. 비 오는 낮에 밤 그림이 살짝 섞여도 그림 속 불빛 그대로)
+    litCache = { key, v: null };
+    return null;
+  }
+  const v = new Uint8Array(n);
+  {
+    const K = dayKey(day), [, s] = sunTimes(day), [r1] = sunTimes(noonOf(day, 1)), t = d.getTime();
+    const weekend = day.getDay() === 5 || day.getDay() === 6;
+    const tvs = [Math.floor(hash('atv1' + K) * n), hash('atv2' + K) < 0.5 ? Math.floor(hash('atv3' + K) * n) : -1];
+    for (let i = 0; i < n; i++) {
+      const e = 'w' + i + K;
+      let on = false;
+      if (hash('wl' + e) < 0.55) { // 이 밤에 불을 켜는 집
+        const a = hourAt(day, s + 0.1 + hash('wa' + e) * 2.6);
+        const owl = hash('wo' + e) < 0.16;
+        const b = owl ? hourAt(day, 24 + r1 + 0.5) : hourAt(day, 22 + hash('wb' + e) * 4.2 + (weekend ? 0.5 + hash('ww' + e) * 0.5 : 0));
+        on = t >= a && t < b;
+      }
+      else if (hash('wd' + e) < 0.12) // 새벽에 일찍 일어난 집
+        on = t >= hourAt(day, 24 + r1 - 1 + hash('wdt' + e) * 0.6) && t < hourAt(day, 24 + r1 + 0.5);
+      v[i] = on ? (tvs.includes(i) ? 2 : 1) : 0;
+    }
+  }
+  litCache = { key, v };
+  return v;
+}
+export function setWindowOverride(kind, v) {
+  if (kind === 'thunder')
+    thunderOverride = v;
+  else if (kind === 'rainbow')
+    rainbowOverride = v;
+}
+// 미리보기: d 다음에 오는 h시 (오늘 h시가 지났으면 내일 h시). ms
+export function nextAtHour(d, h) {
+  const t = hourAt(d, h);
+  return t > d.getTime() ? t : hourAt(noonOf(d, 1), h);
+}

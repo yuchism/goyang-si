@@ -6,6 +6,7 @@ import { drawPartyScreen } from './birthday.js';
 import { O, OBJ, P, objView, present, socketOf, zOf } from './objects.js';
 import { drawFrame } from './frame.js';
 import { drawOutside } from './outside.js';
+import { eventsVeranda } from './events.js';
 import { BGK, FLOOR, ctx } from './stage.js';
 import { now, season, sunbeam } from './time.js';
 import { drawTV } from './tv-screen.js';
@@ -250,8 +251,30 @@ const drawLayer = (layer, d) => OBJ.forEach(o => {
 });
 export function drawRoom(d) {
   drawLayer('background', d);
+  drawVeranda();
   drawLayer('wall', d);
   drawLayer('floor-flat', d);
+}
+/* 베란다 층 (WINDOW_PLAN.md 3장): 유리창과 난간 사이. 난간에 앉은 새, 작은 검은 고양이 (events.js veranda)
+   방 배경(난간 포함)을 그린 뒤에 베란다 손님을 그리고, 그 자리만 창틀(window_frame: 방 배경에서 난간을 뺀 창틀, tools/split_railing.py)을 다시 덮는다.
+   → 손님은 난간 앞, 창틀·창 아랫단 뒤. 손님이 없으면 아무것도 그리지 않아 화면이 전과 같다 */
+function drawVeranda() {
+  const w = P.window;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(w.x - 4, w.y, w.w + 8, w.h + 4);
+  ctx.clip();
+  const boxes = eventsVeranda(w); // 그린 곳 [x0, y0, x1, y1] 목록
+  if (boxes.length) {
+    const fr = img('window_frame');
+    if (imageReady(fr)) {
+      ctx.beginPath();
+      boxes.forEach(b => ctx.rect(Math.floor(b[0]) - 2, Math.floor(b[1]) - 2, Math.ceil(b[2] - b[0]) + 4, Math.ceil(b[3] - b[1]) + 4));
+      ctx.clip();
+      ctx.drawImage(fr, 0, 0, 1200, fr.height * BGK);
+    }
+  }
+  ctx.restore();
 }
 function drawDoor(v) {
   const o = P.door, open = v.state === 'open', glow = v.state === 'glow';

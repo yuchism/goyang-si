@@ -1,6 +1,8 @@
-/* 창밖과 하늘을 나는 것: 하늘·해·달·구름·비·눈, 새, 나비, UFO, 산타 썰매 */
+/* 창밖과 하늘을 나는 것: 하늘·해·달·구름·비·눈, 새, 나비, UFO, 산타 썰매.
+   그리는 순서는 WINDOW_PLAN.md 3장: 하늘 → 아파트(낮·밤 하늘 덮개·밤) → skyBack(무지개·번개 하늘) → 아파트 마스크 → apt(창 불빛)
+   → 노을 → 비 덮개 → 해·달 → 구름 → 멀리 나는 새 → sky(비행기·UFO·산타·마녀·박쥐) → 꽃잎 → 눈·비. 난간과 베란다 층은 draw.js */
 import { play } from './anim.js';
-import { eventsSky } from './events.js';
+import { canStart, eventsApt, eventsSky, eventsSkyBack } from './events.js';
 import { IMG, imageReady, img } from './assets.js';
 import { drawPetals } from './birthday.js';
 import { P } from './objects.js';
@@ -168,6 +170,18 @@ export function drawOutside(d, w) {
       ctx.drawImage(an, ax, ay, aw, ah);
     ctx.globalAlpha = 1;
   }
+  // 무지개·번개 하늘(skyBack)을 그렸으면 아파트 마스크(하늘을 뺀 건물만)를 다시 덮어 건물이 앞에 오게 한다. 밤 마스크는 밤 비율로
+  if (eventsSkyBack(w)) {
+    const md = IMG.r_apt_day_mask, mn = IMG.r_apt_night_mask;
+    if (imageReady(md))
+      ctx.drawImage(md, ax, ay, aw, ah);
+    if (night > 0 && imageReady(mn)) {
+      ctx.globalAlpha = night;
+      ctx.drawImage(mn, ax, ay, aw, ah);
+      ctx.globalAlpha = 1;
+    }
+  }
+  eventsApt(w, { ax, ay, aw, ah, night, d }); // 건너편 창 불빛 (weather.js)
   // 새벽·노을 빛
   const [, bot] = skyAt(d);
   const tw = twilightGlow(d) ? 0.28 : 0;
@@ -178,16 +192,19 @@ export function drawOutside(d, w) {
     ctx.globalAlpha = 1;
   }
   if (rain) {
-    const snow = season(d) === 'winter', g = ctx.createLinearGradient(0, w.y, 0, w.y + w.h);
+    // 번개가 번쩍이는 동안은 비 덮개 두 장을 번쩍임 세기만큼 걷어 낸다 (weather.js, WINDOW_PLAN.md 7-1). 평소 world.flash는 0
+    const snow = season(d) === 'winter', g = ctx.createLinearGradient(0, w.y, 0, w.y + w.h), lift = 1 - (world.flash || 0);
     g.addColorStop(0, snow ? 'rgba(200,206,214,.92)' : 'rgba(104,113,128,.95)');
     g.addColorStop(0.62, snow ? 'rgba(210,215,222,.82)' : 'rgba(124,133,147,.85)');
     g.addColorStop(1, snow ? 'rgba(225,228,234,.45)' : 'rgba(140,148,160,.5)');
+    ctx.globalAlpha = lift;
     ctx.fillStyle = g;
     ctx.fillRect(w.x, w.y, w.w, w.h);
     if (night > 0) {
       ctx.fillStyle = `rgba(20,24,40,${0.55 * night})`;
       ctx.fillRect(w.x, w.y, w.w, w.h);
     }
+    ctx.globalAlpha = 1;
   }
   // 해 / 달 (하늘 띠 안에서만)
   if (day && !rain) {
@@ -264,9 +281,9 @@ export function maybeUFO(d, dt) {
     world.ufo.t += dt;
     return;
   }
-  if (world.manduk || world.witch || world.curtainShadow || !isNight(d))
-    return; // 밤(time.js isNight)에만. 마녀가 지나가는 밤에는 미룸
   const boost = world.lastType && world.t - world.lastType < 90 ? 40 : 1;
+  if (world.manduk || !isNight(d) || !canStart('sky', { noRest: boost > 1 }))
+    return; // 밤(time.js isNight)에만. 하늘에 다른 큰 것(마녀 등)이 있거나 쉬는 중이면 미룸 (events.js 교통정리). 노트북 개그 직후엔 쉼 무시
   if (Math.random() < dt * boost / (3 * 3600))
     startUFO();
 }
@@ -333,10 +350,12 @@ export function maybeSanta(d, dt) {
     return;
   // 이브 밤 9시 이후에는 꼭 한 번 (calendar.js christmasEveNight. 자정을 넘어도 같은 밤)
   if (momentNow('christmasEveNight', d) && world.santaEve !== nightOf(d)) {
+    if (!canStart('sky', { special: true }))
+      return; // 특별한 순간: 줄을 서지 않지만 지나가는 큰 것이 끝날 때까지는 기다린다 (events.js)
     world.santaEve = nightOf(d);
     return startSanta();
   }
-  if (Math.random() < dt / (2 * 3600))
+  if (canStart('sky') && Math.random() < dt / (2 * 3600))
     startSanta();
 }
 export function startSanta() {
@@ -377,6 +396,7 @@ export function drawButterfly() {
 // 나비: 봄·여름 낮, 비가 안 오고 만득 씨가 없을 때 (여름엔 7분, 봄엔 12분에 한 번 꼴)
 export const butterflyEvent = {
   id: 'bfly',
+  cls: 'bg',
   tick(d, real, bf) {
     const dt = real * bf, ss = season(d);
     if (!world.bfly && !world.manduk && butterflyTime(d) && !rainNow(d) && (ss === 'spring' || ss === 'summer') && Math.random() < dt / (ss === 'summer' ? 420 : 700))
@@ -393,6 +413,8 @@ export const butterflyEvent = {
 // UFO: 밤(해 진 뒤 30분 ~ 동틀 녘 시작, time.js isNight), 3시간에 한 번 꼴 (고양이가 몰래 노트북을 친 직후엔 훨씬 자주)
 export const ufoEvent = {
   id: 'ufo',
+  cls: 'sky',
+  active: () => !!world.ufo,
   tick: (d, real) => maybeUFO(d, real),
   sky: drawUFO,
   reset() {
@@ -404,6 +426,8 @@ export const ufoEvent = {
 // 산타 썰매: 크리스마스 무렵 밤, 24일 밤 9시 이후엔 꼭 한 번
 export const santaEvent = {
   id: 'santa',
+  cls: 'sky',
+  active: () => !!world.santa,
   tick: (d, real) => maybeSanta(d, real),
   sky: drawSanta,
   reset() {

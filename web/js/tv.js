@@ -192,6 +192,8 @@ function tick(d) {
   if (st.mode !== 'off' && st.mode !== 'signoff') {
     if (world.ufo)
       st.noise = 0.55;
+    else if (world.flash > 0.05) // 번개가 번쩍일 때 잠깐 지직 (weather.js)
+      st.noise = 0.5;
     else if (rainNow(d) && hash('tvn' + Math.floor(d.getTime() / 60000)) < 0.12 && (d.getTime() / 1000) % 60 < 1.6)
       st.noise = 0.45;
   }

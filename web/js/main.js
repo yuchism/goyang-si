@@ -1,7 +1,7 @@
 /* 시작점: 하루 일정, 매 프레임 진행(frame)과 그리기(render), 처음 시작 */
 import { play } from './anim.js';
 import { drawPumpkinGlow, pumpkinNight } from './halloween.js';
-import { eventsRoom, eventsShadow, eventsTick } from './events.js';
+import { eventsRoom, eventsShadow, eventsTick, trafficLine } from './events.js';
 import { SRC, loadImages, loadMeta } from './assets.js';
 import { CAKE, bannerText, birthdayMode, drawCakeGlow, drawPartyLights, drawPartyMouse, tickParty } from './birthday.js';
 import { calmDown, catBrain, cupTick, sunbeamTick } from './cat.js';
@@ -21,6 +21,7 @@ import { drawJumpFade, initJump, jumpTick, newDay, settleCat } from './jump.js';
 import { frameTick } from './frame.js';
 import { playsLayers, playsLight, playsOverlay, playsTick } from './plays.js';
 import { loadPrograms, tvOn, tvTick } from './tv.js';
+import { loadWindows } from './weather.js';
 import { tvBig } from './tv-guide.js';
 import { drawTVNight, drawTvBuf, tvBuf } from './tv-screen.js';
 import { devOpen, initUI } from './ui.js';
@@ -139,6 +140,7 @@ function frame(tNow) {
     const ti = timeInfo(d); // 시간 기준 확인용 한 줄 (TIME_BASE_PLAN.md 9장)
     document.getElementById('timev').textContent = tr('devTime', { season: tr('season')[ti.season] + (ti.south ? tr('devSouth') : ''), part: tr('daypart')[ti.part],
       cal: ti.cal, bd: ti.bday, night: ti.night || '–', periods: ti.periods.join(', ') || '–' });
+    document.getElementById('winv').textContent = trafficLine(tr); // 창밖 교통정리 (events.js, WINDOW_PLAN.md 11장)
   }
   requestAnimationFrame(frame);
 }
@@ -180,12 +182,6 @@ function render(d, real) {
   if (dk > 0) {
     ctx.fillStyle = `rgba(16,20,46,${world.lampOn ? dk * 0.6 : dk + (pumpkinNight() ? dk * 0.2 : 0)})`;
     ctx.fillRect(0, 0, W, H);
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(P.window.x, 0, P.window.w, P.window.h);
-    ctx.clip();
-    ctx.fillStyle = `rgba(16,20,46,${-dk * 0.5})`;
-    ctx.restore();
   }
   if (world.lampOn && dk > 0.05) {
     ctx.save();
@@ -232,7 +228,7 @@ initInstall();
 initJump();
 exposeDebug();
 // 사물 목록과 그림 정보를 읽은 뒤 그림을 불러오고 시작
-Promise.all([fetch('objects.json', { cache: 'no-store' }).then(r => r.json()).then(initObjects), loadMeta(), loadPrograms()])
+Promise.all([fetch('objects.json', { cache: 'no-store' }).then(r => r.json()).then(initObjects), loadMeta(), loadPrograms(), loadWindows()])
   .catch(e => console.error('고양.시를 여는 데 필요한 파일을 읽지 못했어요', e))
   .finally(loadImages);
 export function start() {

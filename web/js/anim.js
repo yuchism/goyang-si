@@ -36,6 +36,7 @@ const CLIP = {
   startle: { f: rng('startle', 4), fps: 12, base: 'stand' },
   lookup: { f: rng('lookup', 3), fps: 3, base: 'stand' },
   window: { f: ['window_1', 'window_1', 'window_2', 'window_1', 'window_3'], fps: 0.5, loop: 1, base: 'sit' },
+  chatter: { f: ['chatter_1', 'chatter_2'], fps: RM ? 2 : 8, loop: 1, base: 'sit' }, // 창밖 새 보며 턱 떨기 (veranda.js). WINDOW_SPRITE_PLAN.md
   wait: { f: ['wait_1', 'wait_2'], fps: 0.9, loop: 1, base: 'sit' },
   sulk: { f: ['sulk_1', 'sulk_2'], fps: 0.6, loop: 1, base: 'loaf' },
   bsleep: { f: ['bsleep_1', 'bsleep_2', 'bsleep_3', 'bsleep_2'], fps: 0.9, loop: 1, base: 'roll' },

@@ -7,6 +7,8 @@ import { curtainSkew, drawProp } from './draw.js';
 import { tr } from './i18n.js';
 import { O, objView, present, zOf } from './objects.js';
 import { cv, ctx } from './stage.js';
+import { drawSkySprite } from './sprites.js';
+import { canStart } from './events.js';
 import { bub, fn, go, hold, run, until } from './steps.js';
 import { batTime, holiday, isNight, momentNow, moonPhase, nightOf, now, rainNow } from './time.js';
 import { RM, clamp, pick, rnd } from './util.js';
@@ -84,44 +86,7 @@ export function pumpkinNight() {
   const o = O.pumpkin;
   return !!(o && present(o) && objView(o).state === 'lit' && !world.lampOn && !(world.tv.st && world.tv.st.mode !== 'off'));
 }
-/* ───────── 밤하늘 실루엣 대비 (HALLOWEEN_FIX_PLAN.md 2-3) ─────────
-   박쥐·마녀 그림은 짙은 갈색이라 깊은 밤 남색 하늘에 묻힌다. 어두운 밤일수록(world.dark)
-   가장자리에 옅은 달빛 테두리(연노랑, 약 1px)를 두르고 몸도 살짝 밝힌다. 노을 직후처럼 하늘이 밝을 때는 거의 그대로 */
-const skyTintC = {};
-function skyTint(name, kind) {
-  const key = name + kind;
-  if (skyTintC[key])
-    return skyTintC[key];
-  const im = img(name);
-  if (!imageReady(im))
-    return null;
-  const c = document.createElement('canvas');
-  c.width = im.naturalWidth;
-  c.height = im.naturalHeight;
-  const x = c.getContext('2d');
-  x.drawImage(im, 0, 0);
-  x.globalCompositeOperation = 'source-atop';
-  x.fillStyle = kind === 'rim' ? 'rgb(255,238,176)' : 'rgba(196,186,232,0.24)';
-  x.fillRect(0, 0, c.width, c.height);
-  return skyTintC[key] = c;
-}
-const skyNight = () => clamp((world.dark - 0.35) / 0.4, 0, 1);
-// (x, y)는 그림 왼쪽 위. 지금 변환(회전 등) 그대로 그린다
-function drawSkySprite(name, im, x, y, w, h, alpha) {
-  const nk = skyNight(), rim = nk > 0 && skyTint(name, 'rim'), lift = nk > 0 && skyTint(name, 'lift');
-  if (rim) {
-    ctx.globalAlpha = alpha * 0.6 * nk;
-    for (const [dx, dy] of [[-1.1, 0], [1.1, 0], [0, -1.1], [0, 1.1]])
-      ctx.drawImage(rim, x + dx, y + dy, w, h);
-  }
-  ctx.globalAlpha = alpha;
-  ctx.drawImage(im, x, y, w, h);
-  if (lift) {
-    ctx.globalAlpha = alpha * nk;
-    ctx.drawImage(lift, x, y, w, h);
-  }
-  ctx.globalAlpha = 1;
-}
+/* 밤하늘 실루엣 대비(달빛 테두리)는 sprites.js drawSkySprite (검은 고양이도 같이 쓴다, WINDOW_PLAN.md 5-2) */
 /* ───────── 박쥐 ───────── */
 // 지그재그: 위아래로 짧게 꺾이는 삼각파
 const zig = u => 2 * Math.abs(2 * (u - Math.floor(u + 0.5))) - 1;
@@ -149,8 +114,8 @@ export function maybeBats(d, dt) {
       world.bats = null;
     return;
   }
-  if (!isHalloween(d) || !batTime(d) || rainNow(d) || world.witch || world.ufo)
-    return;
+  if (!isHalloween(d) || !batTime(d) || rainNow(d) || !canStart('skySmall'))
+    return; // 하늘에 큰 것(마녀·UFO·산타·비행기)이 있으면 안 나온다 (events.js 교통정리)
   if (Math.random() < dt / 1500) // 25분에 한 번 꼴
     startBats();
 }
@@ -200,16 +165,18 @@ export function maybeWitch(d, dt) {
       world.witch = null;
     return;
   }
-  if (!isHalloween(d) || world.ufo || world.curtainShadow)
-    return;
+  if (!isHalloween(d) || !canStart('curtain'))
+    return; // 커튼 자리(유령 그림자)가 비어 있어야 한다 (마녀 반전 그림자가 같은 자리를 쓴다)
   if (!isNight(d))
     return;
-  // 10/31 밤 9시 이후에는 꼭 한 번 (calendar.js halloweenNight. 자정을 넘어도 같은 밤)
+  // 10/31 밤 9시 이후에는 꼭 한 번 (calendar.js halloweenNight. 자정을 넘어도 같은 밤). 특별한 순간: 쉼·천둥을 무시하고 지나가는 큰 것만 기다린다
   if (momentNow('halloweenNight', d) && world.witchEve !== nightOf(d)) {
+    if (!canStart('sky', { special: true }))
+      return;
     world.witchEve = nightOf(d);
     return startWitch();
   }
-  if (Math.random() < dt / (2 * 3600))
+  if (canStart('sky') && Math.random() < dt / (2 * 3600))
     startWitch();
 }
 // 마녀 그림은 1번 한 장만 쓴다. 2번은 몸·빗자루 각도가 달라 번갈아 쓰면 자세가 툭툭 바뀌어 보여서,
@@ -375,6 +342,8 @@ export function drawCurtainShadow(dk) {
 // 고양이 마녀와 박쥐 수행단 (가끔 커튼 그림자가 먼저). 10/31 밤 9시 이후엔 꼭 한 번
 export const witchEvent = {
   id: 'witch',
+  cls: 'sky',
+  active: () => !!world.witch || !!(world.curtainShadow && world.curtainShadow.kind === 'witch'), // 커튼 마녀 그림자가 비치는 순간부터 하늘 자리를 잡는다
   tick: (d, real) => maybeWitch(d, real),
   sky: drawWitch,
   reset() {
@@ -386,6 +355,8 @@ export const witchEvent = {
 // 창밖 박쥐 두세 마리 (25분에 한 번 꼴)
 export const batsEvent = {
   id: 'bats',
+  cls: 'skySmall',
+  active: () => !!world.bats,
   tick: (d, real) => maybeBats(d, real),
   sky: drawBats,
   reset() {
@@ -397,6 +368,8 @@ export const batsEvent = {
 // 커튼 유령 그림자 (달이 떠 있는 밤, 하룻밤 두 번까지). 마녀 반전 그림자도 이 자리를 쓴다
 export const ghostEvent = {
   id: 'ghost',
+  cls: 'curtain',
+  active: () => !!world.curtainShadow, // 유령과 마녀 반전 그림자가 커튼 자리 하나를 같이 쓴다
   tick: (d, real) => maybeGhost(d, real),
   shadow: drawCurtainShadow,
   reset() {

@@ -23,6 +23,8 @@ const SCEN=[
  {n:'ui',url:'',vp:[1300,900],steps:[{h:19},{s:30},{js:"document.getElementById('aTv').click()"},{s:5,page:1},{js:"document.getElementById('aTv').blur();document.querySelector('#tvg .x').click();document.getElementById('aNote').click()"},{s:5,page:1},{js:"document.getElementById('aShelf').click()"},{s:5,page:1}]},
  {n:'mobile',url:'',vp:[390,780],dpr:2,steps:[{h:14},{s:300,page:1}]},
  {n:'long',url:'',vp:[1300,900],steps:[{h:6},{js:"document.getElementById('sp60').click()"},{s:9000,shot:1},{s:9000,shot:1},{s:9000,shot:1}]},
+ // 창밖 풍경 (WINDOW_PLAN.md): 난간의 새 + 채터링, 검은 고양이 빼꼼(밤 눈), 밤 비행기 불빛, 무지개, 천둥 번쩍임. 창 불빛은 night·late 장면
+ {n:'window',url:'',vp:[1300,900],steps:[{h:14},{js:"(()=>{const g=__goyang;g.run(g.cat,[g.hold(60,'loaf')],'loaf');g.cat.closed=false})()"},{js:"document.getElementById('dBird').click()"},{s:150,shot:1},{h:21},{js:"document.getElementById('dBlackcat').click()"},{s:80,shot:1},{js:"document.getElementById('dPlane').click()"},{s:300,shot:1},{h:15},{js:"document.getElementById('dRainbow').click()"},{s:60,shot:1},{js:"document.getElementById('dThunder').click()"},{s:3,shot:1}]},
 ];
 (async()=>{const port=process.argv[2],out=process.argv[3],only=process.argv[4];fs.mkdirSync(out,{recursive:true});
  const b=await chromium.launch();const errs={};

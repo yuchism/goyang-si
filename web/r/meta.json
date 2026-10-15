@@ -105,5 +105,21 @@
   "yarn": [132, 131],
   "yarn_2": [132, 131],
   "wheel_back": [600, 615],
-  "wheel_front": [600, 615]
+  "wheel_front": [600, 615],
+  "fx/pigeon_sit": [153, 132],
+  "fx/pigeon_peck": [153, 132],
+  "fx/magpie_sit": [194, 132],
+  "fx/magpie_peck": [194, 132],
+  "fx/blackcat_peek": [143, 149],
+  "fx/blackcat_alert": [143, 149],
+  "fx/blackcat_walk_1": [247, 203],
+  "fx/blackcat_walk_2": [247, 203],
+  "fx/blackcat_run": [258, 98],
+  "apt_day_mask": [2086, 377],
+  "apt_night_mask": [2086, 377],
+  "window_frame": [1561, 989],
+  "fx/magpie_fly": [189, 176],
+  "fx/pigeon_fly": [131, 118],
+  "fx/blackcat_walk_3": [247, 203],
+  "fx/blackcat_walk_4": [247, 203]
 }
