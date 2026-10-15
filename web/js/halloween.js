@@ -1,4 +1,4 @@
-/* 할로윈(10/24 ~ 11/1, time.js의 holiday): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자
+/* 할로윈(10/24 ~ 10/31 밤이 끝날 때, calendar.js · time.js의 holiday): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자
    자세한 내용은 HALLOWEEN_PLAN.md, 고친 것은 HALLOWEEN_FIX_PLAN.md. 공포 영화 특집은 r/tv/programs.json(horror의 "special": [["할로윈", "22:00"]])과 r/tv/schedule.json(기간 할로윈) */
 import { play } from './anim.js';
 import { ghostFree } from './behave.js';
@@ -8,16 +8,11 @@ import { tr } from './i18n.js';
 import { O, objView, present, zOf } from './objects.js';
 import { cv, ctx } from './stage.js';
 import { bub, fn, go, hold, run, until } from './steps.js';
-import { dayKey, holiday, hourOf, moonPhase, now, rainNow, sunTimes } from './time.js';
+import { batTime, holiday, isNight, momentNow, moonPhase, nightOf, now, rainNow } from './time.js';
 import { RM, clamp, pick, rnd } from './util.js';
 import { after, caption, cat, say, world } from './world.js';
 export const isHalloween = d => holiday(d) === 'halloween';
-// 밤: 해 지고 조금 뒤 ~ 새벽 4시 (박쥐·유령), 마녀는 19시 ~ 4시
-const batNight = d => {
-  const h = hourOf(d);
-  return h >= sunTimes(d)[1] + 0.3 || h < 4;
-};
-const nightKey = d => dayKey(new Date(d.getTime() - 12 * 3600e3)); // 저녁~새벽을 한 밤으로
+// 박쥐·유령은 time.js batTime(해 진 뒤 18분 ~ 동틀 녘 시작), 마녀는 isNight(해 진 뒤 30분 ~ 동틀 녘 시작). 유령 횟수·10/31 마녀는 하룻밤(time.js nightOf)으로 센다
 const flick = () => RM ? 1 : 1 + 0.06 * Math.sin(world.t * 2.3) + 0.04 * Math.sin(world.t * 5.9 + 1.3); // 촛불처럼 ±10%
 /* ───────── 호박 불빛 ───────── */
 // 불 켜진 그림은 따로 쓰지 않는다(HALLOWEEN_FIX_PLAN.md 2-1). 원본 그림에서 뚫린 눈(귀 모양)·입의 연주황 픽셀만
@@ -154,7 +149,7 @@ export function maybeBats(d, dt) {
       world.bats = null;
     return;
   }
-  if (!isHalloween(d) || !batNight(d) || rainNow(d) || world.witch || world.ufo)
+  if (!isHalloween(d) || !batTime(d) || rainNow(d) || world.witch || world.ufo)
     return;
   if (Math.random() < dt / 1500) // 25분에 한 번 꼴
     startBats();
@@ -207,12 +202,11 @@ export function maybeWitch(d, dt) {
   }
   if (!isHalloween(d) || world.ufo || world.curtainShadow)
     return;
-  const h = hourOf(d);
-  if (!(h >= 19 || h < 4))
+  if (!isNight(d))
     return;
-  const eve = d.getMonth() === 9 && d.getDate() === 31 && h >= 21; // 10/31 밤 9시 이후에는 꼭 한 번
-  if (eve && world.witchEve !== dayKey(d)) {
-    world.witchEve = dayKey(d);
+  // 10/31 밤 9시 이후에는 꼭 한 번 (calendar.js halloweenNight. 자정을 넘어도 같은 밤)
+  if (momentNow('halloweenNight', d) && world.witchEve !== nightOf(d)) {
+    world.witchEve = nightOf(d);
     return startWitch();
   }
   if (Math.random() < dt / (2 * 3600))
@@ -250,7 +244,7 @@ export function startGhost() {
     return;
   const id = pick(['curtain_l', 'curtain_r']);
   world.curtainShadow = { kind: 'ghost', id, t: 0, dur: rnd(7, 9), y: rnd(190, 260) };
-  const nk = nightKey(now());
+  const nk = nightOf(now());
   world.ghostNight = world.ghostNight && world.ghostNight.k === nk ? { k: nk, n: world.ghostNight.n + 1 } : { k: nk, n: 1 };
   if (Math.random() < 0.5)
     after(() => world.curtainShadow && caption(tr('capGhost'), 2.5), 1.2);
@@ -290,10 +284,10 @@ export function maybeGhost(d, dt) {
     }
     return;
   }
-  if (!isHalloween(d) || !batNight(d) || rainNow(d) || world.witch || moonPhase(d).lit < 0.1)
+  if (!isHalloween(d) || !batTime(d) || rainNow(d) || world.witch || moonPhase(d).lit < 0.1)
     return; // 달이 떠 있는 밤에만 (빛나는 비율 10% 이상, MOON_PLAN.md 7장). 그믐 무렵엔 유령도 쉰다
   const g = world.ghostNight;
-  if (g && g.k === nightKey(d) && g.n >= 2)
+  if (g && g.k === nightOf(d) && g.n >= 2)
     return; // 하룻밤에 두 번까지
   if (Math.random() < dt / (2.5 * 3600))
     startGhost();

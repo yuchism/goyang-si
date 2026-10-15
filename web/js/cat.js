@@ -7,7 +7,7 @@ import { O, S, present, socketOf } from './objects.js';
 import { Snd } from './sound.js';
 import { DEPTH } from './stage.js';
 import { bub, fn, go, hold, run } from './steps.js';
-import { boxToday, hourOf, inBeam, mandukAsleep, mandukHome, rainNow, sunbeam, wx } from './time.js';
+import { boxToday, inBeam, inParts, isNight, mandukAsleep, mandukHome, nightDark, rainNow, secretTime, sunbeam, wx } from './time.js';
 import { TVP, tvOn, tvPrime } from './tv.js';
 import { tvTopB, tvTopBlockedB, tvWatchB } from './tv-cat.js';
 import { pick, rnd, store } from './util.js';
@@ -30,14 +30,16 @@ export function calmDown(real) {
   }
 }
 export function catBrain(d) {
-  const h = hourOf(d), b = sunbeam(d), rain = rainNow(d), dark = world.lampOn === false && (h >= 23 || h < 6);
+  // 시간 기준은 time.js (TIME_BASE_PLAN.md 5장): 어두움 = 스탠드 꺼짐 + 불 끈 뒤 ~ 해 뜰 때, 활동 리듬은 자연 시간대
+  const b = sunbeam(d), rain = rainNow(d), dark = world.lampOn === false && nightDark(d);
+  const evening = inParts(d, 'evening', 'night'), lively = inParts(d, 'dusk', 'evening'), night = isNight(d);
   const away = !mandukHome(d) || mandukAsleep(d);
   const opts = [];
   const add = (w, f) => {
     if (w > 0)
       opts.push([w, f]);
   };
-  add(4 + (b && b.k > 0.4 ? 5 : 0) + (dark ? 8 : 0) + (h >= 12 && h < 16 ? 2 : 0), napB);
+  add(4 + (b && b.k > 0.4 ? 5 : 0) + (dark ? 8 : 0) + (inParts(d, 'day') ? 2 : 0), napB); // 낮잠: 낮 칸
   add(3.5, loafB);
   add(1.4, groomB);
   add(dark ? 0.3 : 1.4, wanderB);
@@ -45,19 +47,19 @@ export function catBrain(d) {
     const st = world.tv.st, pr = st.mode === 'prog' ? st.p : null, prime = !!pr && tvPrime(st.sg);
     add(dark ? 0.5 : prime ? 4 : pr && TVP[pr].watch === 'track' ? 2 : 0.9, tvWatchB);
     if (!present(O.pumpkin))
-      add((h >= 19 || h < 1) ? 1.3 : 0.5, tvTopB);
+      add(evening ? 1.3 : 0.5, tvTopB); // TV 위 낮잠: 저녁·밤
     else
-      add((h >= 19 || h < 1) ? 0.35 : 0.15, tvTopBlockedB); // 할로윈: 올라가려다 호박 때문에 포기
+      add(evening ? 0.35 : 0.15, tvTopBlockedB); // 할로윈: 올라가려다 호박 때문에 포기
   }
   add(1 + (b && b.k > 0.4 ? 2.2 : 0), rollB);
   add(dark ? 0 : (1 + (rain ? 2 : 0)), windowB);
   if (world.cup.state === 'table')
-    add((h >= 17 && h < 22 ? 1.1 : 0.3), knockB);
-  add((h >= 17 && h < 22 ? 0.5 : 0.12), zoomiesB);
+    add(lively ? 1.1 : 0.3, knockB); // 컵 치기·우다다: 해질녘·저녁
+  add(lively ? 0.5 : 0.12, zoomiesB);
   if (boxToday(d))
     add(2.2, boxB);
   if (away && !world.manduk)
-    add((h >= 23 || h < 5) ? 0.8 : (!mandukHome(d) ? 0.5 : 0), secretB);
+    add(secretTime(d) ? 0.8 : (!mandukHome(d) ? 0.5 : 0), secretB); // 비밀 타자: 만득 씨 잠든 뒤 ~ 일어나기 2시간 전
   if (mouseFree() && mouse.state !== 'duet')
     add(9, duetB);
   if (performance.now() - world.lastTouch > 20 * 60e3)
@@ -67,7 +69,7 @@ export function catBrain(d) {
   if (fishOk(d))
     add(1.6, fishB); // 어항 낚시 (방 시각으로 4시간에 한 번까지, 낮에만)
   if (bowlWatchOk(d))
-    add(dark ? 0.6 : (h >= 19 || h < 6) ? 1.0 : 0.15, bowlWatchB); // 밤 어항 구경
+    add(dark ? 0.6 : night ? 1.0 : 0.15, bowlWatchB); // 밤 어항 구경
   if (!dark && wheelOk(d))
     add(1.2, wheelB); // 쳇바퀴 (방 시각 4시간에 한 번, 9~20시)
   if (!dark && penStareOk())

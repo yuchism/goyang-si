@@ -17,18 +17,22 @@ web/                      ← GitHub Pages로 배포되는 폴더 (이 안만 �
   r/meta.json             ← 방 그림 크기  [폭, 높이]
   r/tv/meta.json          ← TV 본체(화면 구멍 위치)와 기본 화면 그림(꺼짐·화면조정·마침·해돋이)
   r/tv/programs.json      ← TV 프로그램 표: 장면·사건·자막·화면 장식·강고양이 씨 반응 + 편성(길이 runtime·방영 조건·하루 상한·회차). 사람이 고치는 곳. TV_CHANNEL_PLAN.md 14장
-  r/tv/schedule.json      ← 고양.방송 방송국 틀: 시간대·기간·마감 뉴스·낮잠 정파·개편(3개월마다). TV_SCHEDULE_PLAN.md
+  r/tv/schedule.json      ← 고양.방송 방송국 틀: 편성 칸·기간(이름 참조, 날짜는 js/calendar.js)·마감 뉴스·낮잠 정파·개편(3개월마다). TV_SCHEDULE_PLAN.md, TIME_BASE_PLAN.md 8-1
   js/                     ← 코드 (JS 모듈)
 tools/
   build_meta.py           ← 새 그림을 넣으면 f/·r/ meta.json을 채운다
   visual_check.js         ← 화면 점검 (같은 장면을 매번 똑같이 찍는다)
   compare.py              ← 점검 화면 두 벌을 픽셀 단위로 비교
   clock_check.js          ← 시계 점검: 화면 끄기·뒤 탭·서머타임·빨리 감기를 흉내 내서 CLOCK_PLAN.md 10장 확인
+  check_time.mjs          ← 시간 기준 검사 (배포 전 `node tools/check_time.mjs`): 시간 모듈 밖에서 날짜·시각 직접 보기 금지(허용 목록·`// time-ok`), 달력 표, 네 계절 시간대 표, 약속, 회귀(2026~2030년). 시드니·서울 두 시간대로 프로세스를 따로 띄운다. TIME_BASE_PLAN.md 9장
+                            기준을 일부러 바꿨으면 `--write-baseline`
+  time_sample.mjs         ← 시간 회귀 표본 뽑기 (check_time.mjs가 쓴다)
+  time_baseline.json.gz   ← 시간 회귀 기준: 2026~2030년 모든 날 × 하루 128시각의 명절·계절·방송일·스탠드·만득 씨 (두 시간대). 2026-10-15 시간 기준 정리 전 코드로 뽑음
   check_tv.mjs            ← TV 검사 (배포 전 `node tools/check_tv.mjs`): 그림·번역·방송국 틀·편성 규칙 400일·가짜 프로그램 시험·사건 400일·회귀 확인. TV_STABILITY_PLAN.md 6장, TV_SCHEDULE_PLAN.md 6장
                             편성을 일부러 바꿨으면 `--write-baseline`으로 회귀 기준을 다시 뽑는다
   tv_fake_programs.json   ← 편성 시험용 가짜 프로그램 (check_tv.mjs만 씀, 웹에 안 올라감)
   tv_sample.mjs           ← TV 회귀 확인 표본 뽑기 (check_tv.mjs가 쓴다)
-  tv_baseline.json.gz     ← 회귀 기준: 35일 × 하루 여러 시각의 방송 (한국어·영어). 2026-10-14 편성 개선 후 다시 뽑음
+  tv_baseline.json.gz     ← 회귀 기준: 35일 × 하루 여러 시각의 방송 (한국어·영어). 2026-10-15 시간 기준 정리(할로윈이 방송일 10/31에서 끝남) 후 다시 뽑음
   node_env.mjs            ← 노드에서 i18n·time·tv-core 모듈을 불러오기 위한 최소 흉내 (시간대 서울 고정)
 make_objects_doc.py       ← objects.json → OBJECTS.md
 ```
@@ -46,10 +50,11 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 
 | 파일 | 하는 일 |
 |---|---|
-| `main.js` | 시작점. 하루 일정(밥·출근·귀가·불 끄기), 매 프레임 진행 `frame()`, 그리기 순서 `render()`, 처음 시작 `start()`. `frame()`은 진행 순서만 적는다: 각 파일의 `visitTick`·`mouseTick`·`duetTick`·`sunbeamTick`·`eventsTick`·`cupTick`·`playsTick`을 차례로 부른다(순서가 곧 확률을 뽑는 순서라 바꾸면 화면 점검 결과가 달라진다) |
+| `main.js` | 시작점. 하루 일정(밥·출근·귀가·불 끄기: `scheduled()`가 `passedEvents`의 `due`면 장면, `late`면 지났음 표시), 매 프레임 진행 `frame()`, 그리기 순서 `render()`, 처음 시작 `start()`. `frame()`은 진행 순서만 적는다: 각 파일의 `visitTick`·`mouseTick`·`duetTick`·`sunbeamTick`·`eventsTick`·`cupTick`·`playsTick`을 차례로 부른다(순서가 곧 확률을 뽑는 순서라 바꾸면 화면 점검 결과가 달라진다) |
 | `world.js` | 세상 상태 `world`와 배우 `cat`(강고양이 씨)·`mouse`(쥐야쥐), 말풍선 `say`, 자막 `caption`. **방 시간 타이머 `after(할 일, 초)`**: 행동을 "몇 초 뒤에"로 이을 때 setTimeout 대신 쓴다. 미리보기 배속을 따르고 탭을 떠나면 같이 멈춘다(`main.js`가 `tickTimers`). setTimeout은 화면·소리·설치 같은 바깥 일에만 |
-| `time.js` | 방 시계 `now()`(기기 시계 + 미리보기 offset)와 시간 점프 감지 `clockJump`, 하루 일정 `dayEvents`, 계절·해 뜨고 지는 시각, 비·눈, 상자 있는 날, 기념일, 명절, 햇빛 조각, 하늘색과 어둠, 달 모양 `moonPhase`(MOON_PLAN.md) |
-| `jump.js` | 시간 점프 정리 `timeJumped`: 화면이 꺼졌다 켜지거나 서머타임·미리보기로 시계가 건너뛰면 방 상태(스탠드·밥그릇·컵·만득 씨 방문·고양이 자리 `settleCat`)를 그 시각에 맞추고 짧게 어두워졌다 밝아진다. CLOCK_PLAN.md |
+| `time.js` | **시간 기준은 모두 여기 (TIME_BASE_PLAN.md).** 방 시계 `now()`(기기 시계 + 미리보기 offset)와 시간 점프 감지 `clockJump`. 지역 `REGION`(계절은 방문자 반구, 달은 한국)·계절·해 뜨고 지는 시각. **시간대(자연 시간)** 표 `DAYPARTS`와 `daypart`·`isNight`(해 진 뒤 30분 ~ 동틀 녘 시작)·`inParts`. 해 기준 오프셋 `pumpkinLit`·`batTime`·`butterflyTime`·`sunUp`·`sunArc`·`twilightGlow`·`settleNight`. **생활 시간표** `ROUTINE`(만득 씨 평일·주말, `DUE_WINDOW`, 놀이 제한 `play`, 주말 TV 소리)과 `visitHours`·`dayEvents`·`passedEvents`(지난 일정 `due`/`late`)·`inWindow`·`lampShouldBeOn`·`mandukHome`·`mandukAsleep`·`nightDark`·`secretTime`. **"하루" 세 가지** `calDay`(자정)·`broadcastDay`(새벽 5시, 그 방송일 정오의 Date)·`nightOf`(해질녘 ~ 다음 날 동틀 녘, 아침·낮엔 null), 날 넘기기 `forEachDay`·`atHour`·`visitsBetween`. **달력 함수** `inPeriod`(방·창밖, `through: 'night'` 반영)·`onDate`(TV, 날짜만)·`periodsAt`·`momentNow`·`holiday`(할로윈 → 크리스마스 → 설날 → 새해, 미리보기 `holidayOverride`가 먼저). 비·눈, 상자 있는 날, 기념일, 햇빛 조각, 하늘색과 어둠, 달 모양 `moonPhase`(MOON_PLAN.md), 미리보기 한 줄 `timeInfo`. **규칙: 이 파일과 `calendar.js` 밖에서 `getMonth`·`getDate`·`getDay`·`getHours`·`hourOf`와 시각 숫자 비교를 쓰지 않는다** (`tools/check_time.mjs`) |
+| `calendar.js` | 달력 한 장 `CAL`: 기간(할로윈 10/24 ~ 10/31 밤 끝, 크리스마스 시즌, 이브·당일, 제야, 새해, 고양이의 날, 설날·추석 양력 날짜 표)과 특별한 순간(10/31 밤 마녀, 이브 밤 산타). **데이터만, import 없음.** 함수는 `time.js`. 새 기간은 여기 한 줄 (TV 특집에 쓰려면 `schedule.json` periods에 `{ "period": 이름 }`) |
+| `jump.js` | 시간 점프 정리 `timeJumped`: 화면이 꺼졌다 켜지거나 서머타임·미리보기로 시계가 건너뛰면 방 상태(스탠드 `lampShouldBeOn`·밥그릇·컵·만득 씨 방문·지난 일정 `passedEvents`·고양이 자리 `settleCat`)를 그 시각에 맞추고 짧게 어두워졌다 밝아진다. CLOCK_PLAN.md |
 | `objects.js` | `objects.json`을 읽어 위치 `P`, 사물 `O`, 상태 `objView`, 자리 `S('bowl.eat')`, 소켓, 깊이를 알려준다 |
 | `steps.js` | 행동 단계: `go`(길찾기로 걷기), `follow`, `hold`, `bub`, `fn`, `until`, 그리고 순서대로 실행 `run(배우, [단계...])`. 바닥이 아닌 자리(TV 위·TV 뒤·상자 안·쳇바퀴) 표 `SPOTS`와 `inSpot`·`spotOf`. 자리마다 떠 있는 높이·그림자·누가 그리나를 적고 `actorLift`·`hasShadow`·`ownLayer`로 꺼내 쓴다(`sprites.js` 그리기, `main.js` 그리기 순서, `ui.js` 누르기 판정) |
 | `behave.js` | 강고양이 씨 행동 성격표 `BEHAVIOR`: 이름표(tag)마다 TV 사건·유령 그림자가 끼어들어도 되는지. `tvFree(cat)`, `ghostFree(cat)` |
@@ -72,7 +77,7 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `tv-dev.js` | 미리보기 도구의 TV 칸: 틀어 보기, 사건 고르기, 7일 편성표, 특집 날짜·낮잠 정파로 가기, 문제 있는 프로그램 수 |
 | `plays.js` | 놀이 목록 `plays()`: 레이저·어항·실뭉치·쳇바퀴. 놀이마다 자기 파일 끝에 `{ tick, layers, overlay, light, press, drag, reset, dev, debug }` 물건을 내놓고, `main.js`(매 장면·그리기)·`ui.js`(누르기·미리보기 버튼)·`jump.js`(시간 점프)·`debug.js`는 이 목록만 돈다. 새 놀이는 여기 한 줄 |
 | `events.js` | 가끔 생기는 일 목록 `events()`: 나비, UFO, 산타 썰매, 마녀, 박쥐, 커튼 유령 그림자. 놀이 목록과 같은 방식으로 `{ tick, sky, room, shadow, reset, dev, debug }`을 내놓고 `main.js`·`outside.js`(창밖)·`jump.js`·`ui.js`·`debug.js`는 이 목록만 돈다. 새 사건은 여기 한 줄 |
-| `gate.js` | 놀이가 저절로 시작해도 되는지 `gateOk`/`gateMark`: 시간대·간격 표 `GATES`(방 시각). 만득 씨가 있을 때·생일 파티 중엔 안 함. 간격은 기기에 저장 |
+| `gate.js` | 놀이가 저절로 시작해도 되는지 `gateOk`/`gateMark`: 시작 가능 시각은 `time.js` `ROUTINE.play`(`inWindow`), 간격 표 `GATES`(방 시각). 만득 씨가 있을 때·생일 파티 중엔 안 함. 간격은 기기에 저장 |
 | `laser.js` | 레이저 놀이: 탁자 위 포인터(`penAt`, 코드 그림 `drawLaserPen`)를 누르면 40초 동안 빨간 점이 마우스·손가락을 따라가고 강고양이 씨가 쫓는다(`chase` 단계). 지치면 3분 동안 무시. 가끔 포인터 노려보기 `penStareB`. CAT_PLAY_PLAN.md 5-1 |
 | `fish.js` | 어항 낚시: 어항 그리기(뒤판 → 금붕어·바늘·거품 → 앞판), 금붕어 헤엄과 도와주기(한숨 → 보물상자 → 붕어빵을 바늘에), 강고양이 씨 낚시 `fishB`(방 시각 4시간에 한 번, 8~21시), 붕어빵 날아가기·먹기, 어항 누르기 `tapBowl`. 밤 어항 구경 `bowlWatchB`, 붕어빵 부스러기(쥐야쥐 `mouseCrumbB`, 만득 씨 `sweepCrumbs`). 낚싯대 끝 `ROD_TIP`, 어항 안 자리 `BOWL`. CAT_PLAY_PLAN.md 5-2 |
 | `yarn.js` | 실뭉치: 왼쪽 화면 밖에서 굴러오기 `yarnIn`(방 시각 3시간에 한 번, 8~22시), 바닥 마찰로 굴러가기, 화면 밖까지 이어진 실 한 가닥, 강고양이 씨 쫓기 `yarnB`(툭툭 치기 3~6번, 가끔 껴안고 뒷발 차기), 끌려 나가기, 누르기 `tapYarn`, 쥐야쥐가 코로 밀기. CAT_PLAY_PLAN.md 5-4 |
@@ -82,13 +87,14 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `frame.js` | 벽 액자: 날짜마다 바뀌는 가족사진(`objects.json`의 `frame.photos`), 누르면 다음 사진·조금씩 삐뚤어짐, 만득 씨가 다녀가면 반듯. 넘긴 사진·기울기는 그 기기에 저장. FRAME_PHOTOS_PLAN.md |
 | `ui.js` | 캔버스 누르기, 쪽지·노트북 창, 소리·켜 두기·전체 화면 버튼(화면 꺼짐 방지), 미리보기 도구 |
 | `install.js` | 홈 화면 앱: 홈 화면 앱으로 열었는지(`STANDALONE`), 설치 신호, 책장의 **이상한 책**(그리기·빛·누르기)과 「이 방을 데려가는 법」 창, 포스트잇 힌트, 강고양이 씨 올려다보기, 세로 화면 안내, 홈 화면 앱 통계. MOBILE_PLAN.md 참고 |
-| `halloween.js` | 할로윈(10/24~11/1): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자와 강고양이 씨 반응. 마녀·박쥐·유령은 파일 끝의 사건 물건으로 `events.js` 목록에 실린다. HALLOWEEN_PLAN.md 참고 |
+| `halloween.js` | 할로윈(10/24 ~ 10/31 밤이 끝날 때, `calendar.js`): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자와 강고양이 씨 반응. 마녀·박쥐·유령은 파일 끝의 사건 물건으로 `events.js` 목록에 실린다. HALLOWEEN_PLAN.md 참고 |
 | `i18n.js` | 말: 화면 글자 한국어·영어 표 `STR`, `tr('키')`, 언어 고르기·저장·전환(`setLang`). 새 글자는 여기 한 곳에. ENGLISH_PLAN.md 참고 |
 | `util.js` | 난수·범위·해시, localStorage, 손글씨 글꼴, 색 섞기, `$` |
 | `debug.js` | 점검용으로 `window.__goyang`에 행동 함수들을 내보낸다 |
 
 ### 약속
 
+- **시간은 `time.js`(와 데이터 `calendar.js`)에서만 판단한다.** 기능 파일은 `daypart`·`isNight`·`ROUTINE`·`inWindow`·`lampShouldBeOn`·`inPeriod`·`momentNow`·`nightOf` 같은 이름을 쓰고 `getHours`·`hourOf`·`h >= 19`를 쓰지 않는다. 시간이 아닌 비교(그리기의 높이 `h` 등)는 줄 끝에 `// time-ok`. `node tools/check_time.mjs`가 확인한다 (TIME_BASE_PLAN.md)
 - 모듈끼리 서로 불러 쓰는 곳이 많다(순환). 그래서 **모듈 맨 위에서는 다른 모듈의 값을 바로 쓰지 않는다.**
   화면 요소에 이벤트를 다는 일처럼 시작할 때 할 일은 `initUI()`, `initShelf()`처럼 함수로 만들어 `main.js`에서 부른다.
 - 다른 모듈의 `let` 변수는 직접 바꾸지 못한다(JS 모듈 규칙). 바꿀 일이 있으면 그 모듈에 함수를 둔다.

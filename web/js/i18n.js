@@ -113,6 +113,9 @@ export const STR = {
   devRealDate: { ko: '(실제 날짜)', en: '(real date)' },
   devNoUfo: { ko: '(만득 씨가 있을 땐 오지 않아요)', en: "(It won't come while Mandeuk is around)" },
   devMoon: { ko: '{md} · 달: {name} {pct}%', en: '{md} · Moon: {name} {pct}%' },
+  devTime: { ko: '지금: {season} · {part} · 달력 날 {cal} · 방송일 {bd} · 하룻밤 {night} · 기간 {periods}', en: 'Now: {season} · {part} · day {cal} · broadcast day {bd} · night of {night} · periods {periods}' },
+  devSouth: { ko: '(남반구)', en: ' (southern)' },
+  daypart: { ko: { dawn: '새벽', morning: '아침', day: '낮', dusk: '해질녘', evening: '저녁', night: '밤', late: '한밤' }, en: { dawn: 'dawn', morning: 'morning', day: 'day', dusk: 'dusk', evening: 'evening', night: 'night', late: 'late night' } },
   moonName: { ko: { new: '삭(안 보임)', crescent: '초승달', first: '상현', waxgib: '차오르는 달', full: '보름', wangib: '기우는 달', last: '하현', wancres: '그믐달' }, en: { new: 'new (hidden)', crescent: 'waxing crescent', first: 'first quarter', waxgib: 'waxing gibbous', full: 'full', wangib: 'waning gibbous', last: 'last quarter', wancres: 'waning crescent' } },
   devNoProg: { ko: '(지금은 방송 사이예요. 시각을 옮겨 보세요)', en: '(Between shows right now. Try moving the clock)' },
   /* ── 상단 상태 ── */

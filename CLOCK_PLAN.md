@@ -2,6 +2,7 @@
 
 > 상태: **구현됨 (2026-10-13).** 회의에서 결정 (2026-10-13). 버그 수정.
 > 코드: `time.js`(방 시계·점프 감지·`dayEvents`·`visitsBetween`), `jump.js`(점프 정리·`settleCat`·연출), `main.js`(일정을 `dayEvents`로), `manduk.js`(`endVisitNow`, 끝난 방문의 타이머 막기), `ui.js`(미리보기 도구). 확인: `tools/clock_check.js` 24개 항목 통과
+> 시간 기준(시간대·생활 시간표·"하루" 세 가지·달력)은 **`TIME_BASE_PLAN.md`**가 기준이다 (2026-10-15). `dayEvents` 실행은 `passedEvents`, 스탠드는 `lampShouldBeOn`, 날짜 넘기기는 `forEachDay`
 > 관련 문서: `TV_CHANNEL_PLAN.md`(같은 시각엔 누구나 같은 방송), `MOBILE_PLAN.md`(켜 두기), `MOON_PLAN.md`(달 위상)
 
 ## 1. 한 줄 요약

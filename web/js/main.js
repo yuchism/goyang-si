@@ -16,7 +16,7 @@ import { Snd } from './sound.js';
 import { drawActor, drawBubble, drawCaptions } from './sprites.js';
 import { H, W, cam, ctx, fit, updateCam, view } from './stage.js';
 import { bub, go, hold, ownLayer, run, tickActor } from './steps.js';
-import { advanceClock, darkness, dayEvents, dayKey, hourOf, isWeekend, mandukAsleep, mandukHome, markClock, moonName, moonPhase, now, rainNow, resetClock, season, snowing, speed, sunTimes } from './time.js';
+import { advanceClock, calDay, darkness, inWindow, lampShouldBeOn, mandukAsleep, mandukHome, markClock, moonName, moonPhase, now, passedEvents, rainNow, resetClock, routineOf, season, snowing, speed, timeInfo } from './time.js';
 import { drawJumpFade, initJump, jumpTick, newDay, settleCat } from './jump.js';
 import { frameTick } from './frame.js';
 import { playsLayers, playsLight, playsOverlay, playsTick } from './plays.js';
@@ -43,21 +43,17 @@ function statusText(d) {
 }
 /* ───────── 일정 ───────── */
 function scheduled(d) {
-  const k = dayKey(d);
+  const k = calDay(d);
   if (world.dayKey !== k)
     newDay(k);
-  const h = hourOf(d);
-  // 정해진 시각부터 0.35시간 안에 처음 확인하면 장면을 일으키고, 그보다 늦으면 "지났음"만 표시
+  // 지난 일정(time.js passedEvents): 정해진 시각부터 ROUTINE.DUE_WINDOW 안에 처음 보면(due) 장면을 일으키고, 그보다 늦으면(late) "지났음"만 표시
   // (시간이 건너뛰었을 때의 결과 적용은 jump.js timeJumped가 먼저 해 둔다)
-  for (const [name, hr] of dayEvents(d)) {
-    if (world.doneToday[name])
+  for (const ev of passedEvents(d)) {
+    if (world.doneToday[ev.name])
       continue;
-    if (h >= hr && h < hr + 0.35) {
-      world.doneToday[name] = true;
-      EVENT[name]();
-    }
-    else if (h >= hr + 0.35)
-      world.doneToday[name] = true;
+    world.doneToday[ev.name] = true;
+    if (ev.state === 'due')
+      EVENT[ev.name]();
   }
 }
 // 일정 이름(time.js dayEvents)별 장면
@@ -127,7 +123,7 @@ function frame(tNow) {
   ambT -= real;
   if (ambT <= 0) {
     ambT = 0.5;
-    const tv = home && !asleep && isWeekend(d) && hr > 10 && hr < 22 && !world.manduk;
+    const tv = home && !asleep && inWindow(routineOf(d).tvSound, d) && !world.manduk; // 주말 만득 씨 TV 소리 (time.js ROUTINE)
     Snd.setAmb(rainNow(d) && !snowing(d), tv || tvOn(), world.dark > 0.5);
     if (tv && Math.random() < 0.012)
       caption(pick(tr('capAmbient')), 3);
@@ -140,6 +136,9 @@ function frame(tNow) {
     document.getElementById('hourv').textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     const m = moonPhase(d); // 달 모양 확인용: "10/19 · 달: 상현 52%"
     document.getElementById('moonv').textContent = tr('devMoon', { md: (d.getMonth() + 1) + '/' + d.getDate(), name: tr('moonName')[moonName(m)], pct: Math.round(m.lit * 100) });
+    const ti = timeInfo(d); // 시간 기준 확인용 한 줄 (TIME_BASE_PLAN.md 9장)
+    document.getElementById('timev').textContent = tr('devTime', { season: tr('season')[ti.season] + (ti.south ? tr('devSouth') : ''), part: tr('daypart')[ti.part],
+      cal: ti.cal, bd: ti.bday, night: ti.night || '–', periods: ti.periods.join(', ') || '–' });
   }
   requestAnimationFrame(frame);
 }
@@ -239,9 +238,8 @@ Promise.all([fetch('objects.json', { cache: 'no-store' }).then(r => r.json()).th
 export function start() {
   fit();
   const d = now();
-  world.dayKey = dayKey(d);
-  const h = hourOf(d);
-  world.lampOn = h >= sunTimes(d)[1] - 0.3 && h < 23;
+  world.dayKey = calDay(d);
+  world.lampOn = lampShouldBeOn(d);
   settleCat(d);
   requestAnimationFrame(t => {
     resetClock(t);

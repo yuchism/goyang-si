@@ -7,7 +7,7 @@ import { playsReset } from './plays.js';
 import { eventsReset } from './events.js';
 import { ctx } from './stage.js';
 import { hold, run } from './steps.js';
-import { clockJump, dayEvents, dayKey, hourOf, now, sunTimes, sunbeam, visitHours, visitsBetween } from './time.js';
+import { calDay, clockJump, inWindow, lampShouldBeOn, now, passedEvents, settleNight, sunbeam, visitHours, visitsBetween } from './time.js';
 import { RM, rnd } from './util.js';
 import { cat, mouse, world } from './world.js';
 
@@ -30,8 +30,8 @@ export function newDay(k) {
 export function settleCat(d) {
   run(cat, [], ''); // TV 위·뒤, 상자 안이면 내려놓고 하던 동작을 멈춘다 (steps.js run)
   Object.assign(cat, { act: null, tr: null, react: null, dance: null, jump: null, bub: null, rock: 0, typing: false, moving: false, peeked: false, duetT: 0, hop: 0, hopF: null });
-  const h = hourOf(d), [r, s] = sunTimes(d), b = sunbeam(d);
-  if (h >= s + 1 || h < r) {
+  const b = sunbeam(d);
+  if (settleNight(d)) {
     const [x, y] = napSpot(d);
     cat.x = x;
     cat.y = y;
@@ -60,20 +60,19 @@ export function timeJumped(prev, d, fx = true) {
   // 만득 씨 방문 중이면 바로 끝낸다 (결과만)
   endVisitNow();
   // 하루 기록: 날이 바뀌었으면 비우고, 지금보다 앞선 일정은 모두 "한 일"(장면 없음)
-  const k = dayKey(d);
+  const k = calDay(d);
   if (world.dayKey !== k)
     newDay(k);
-  const h = hourOf(d), vh = visitHours(d);
+  const vh = visitHours(d);
   world.doneToday = {};
-  for (const [name, hr] of dayEvents(d))
-    if (h >= hr)
-      world.doneToday[name] = true;
-  // 스탠드: 해 지기 조금 전부터 밤 11시(불 끄기)까지
-  world.lampOn = h >= sunTimes(d)[1] - 0.3 && h < vh.lights;
+  for (const ev of passedEvents(d)) // 지난 일정은 due든 late든 "지났음" (장면 없음)
+    world.doneToday[ev.name] = true;
+  // 스탠드: 해 지기 조금 전부터 불 끄기까지 (time.js lampShouldBeOn, 처음 열 때·일정과 같은 규칙)
+  world.lampOn = lampShouldBeOn(d);
   // 밥그릇: 밥 준 뒤 잠깐만 찬 그릇
-  world.bowlFull = [vh.feed, vh.ret].some(t => t != null && h >= t && h < t + BOWL_KEEP);
+  world.bowlFull = [vh.feed, vh.ret].some(t => t != null && inWindow([t, t + BOWL_KEEP], d));
   // 기념일 간식
-  world.treat = !!(vh.anniv && h >= vh.anniv);
+  world.treat = !!(vh.anniv && inWindow([vh.anniv, 24], d));
   // 컵: 떨어지던 중이면 바닥에 떨어진 것으로 (그다음 지나간 방문이 치웠으면 탁자 위로)
   const c = world.cup;
   if (c.state === 'falling') {

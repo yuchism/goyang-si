@@ -1,4 +1,7 @@
-/* 시간: 방 시계, 계절·해 뜨고 지는 시각, 비·눈, 상자 있는 날, 기념일, 명절, 햇빛 조각, 하늘색과 어둠 */
+/* 시간: 방 시계, 지역·계절·해 뜨고 지는 시각, 시간대(자연 시간), 만득 씨 생활 시간표, "하루" 세 가지, 달력(기간·순간·명절),
+   비·눈, 상자 있는 날, 기념일, 햇빛 조각, 하늘색과 어둠, 달 모양. 기준은 TIME_BASE_PLAN.md.
+   규칙: 이 파일과 calendar.js 밖에서는 getMonth·getDate·getDay·getHours·hourOf를 직접 쓰지 않는다 (tools/check_time.mjs) */
+import { CAL } from './calendar.js';
 import { clamp, hash, lerp, lerpCol, store } from './util.js';
 /* ───────── 시간 ───────── */
 /* 시계는 둘이다 (CLOCK_PLAN.md)
@@ -53,6 +56,13 @@ export function resetSim() {
   speed = 1;
   markClock();
 }
+/* ───────── 지역 (TIME_BASE_PLAN.md 3·4장) ─────────
+   계절은 방문자 지역(남반구 시간대면 뒤집음), 달은 한국(고양시) 하늘, 명절은 한국 달력 */
+export const REGION = {
+  season: 'local',   // 'local' = 방문자 시간대의 반구, 'korea' = 한국 고정
+  moon: 'korea',     // 'korea' = 차오르는 달 오른쪽이 빛남, 'local' = 방문자 반구
+  holidays: 'korea'
+};
 const TZ = (() => {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || '';
@@ -61,7 +71,9 @@ const TZ = (() => {
     return '';
   }
 })();
+// 기기 시간대가 남반구인가. REGION을 거쳐서만 쓴다 (season, MOON_SOUTH, seasonSouth)
 const SOUTH = /^(Australia|Antarctica|Pacific\/(Auckland|Chatham|Fiji|Tongatapu|Noumea)|America\/(Argentina|Santiago|Sao_Paulo|Montevideo|Asuncion|La_Paz|Lima)|Africa\/(Johannesburg|Maputo|Harare|Windhoek|Gaborone|Lusaka)|Indian\/(Mauritius|Reunion))/.test(TZ);
+export const seasonSouth = () => REGION.season === 'local' && SOUTH;
 export const hourOf = d => d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
 export const dayKey = d => d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
 export const dayNum = d => Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000);
@@ -71,67 +83,262 @@ export function season(d) {
     return seasonOverride;
   const m = d.getMonth();
   let s = m <= 1 || m === 11 ? 'winter' : m <= 4 ? 'spring' : m <= 7 ? 'summer' : 'autumn';
-  if (SOUTH)
+  if (seasonSouth())
     s = { winter: 'summer', summer: 'winter', spring: 'autumn', autumn: 'spring' }[s];
   return s;
 }
 // 계절 이름은 i18n.js의 season
+export function sunTimes(d) {
+  const s = season(d);
+  return s === 'summer' ? [5.5, 20] : s === 'winter' ? [7.2, 17.2] : [6.3, 18.6];
+}
+/* ───────── 시간대 (자연 시간, TIME_BASE_PLAN.md 5장) ─────────
+   그날의 해 뜨는 시각 r, 지는 시각 s(sunTimes)로 나눈다. 경계 숫자는 이 표에서만 고친다.
+   [이름, 기준('r' 해 뜸 · 's' 해 짐 · 0 시계), 기준에서 몇 시간]. 시작 순서대로, 다음 칸의 시작이 이 칸의 끝 */
+export const DAYPARTS = [
+  ['late', 0, 0],          // 한밤      0 ~ r − 1
+  ['dawn', 'r', -1],       // 새벽(동틀 녘) r − 1 ~ r + 0.5
+  ['morning', 'r', 0.5],   // 아침      r + 0.5 ~ 11
+  ['day', 0, 11],          // 낮        11 ~ s − 1.5
+  ['dusk', 's', -1.5],     // 해질녘    s − 1.5 ~ s + 0.5
+  ['evening', 's', 0.5],   // 저녁      s + 0.5 ~ 22
+  ['night', 0, 22]         // 밤        22 ~ 24
+];
+// 그날 시간대마다 시작 시각 [[이름, 시작], ...]
+export function daypartStarts(d) {
+  const [r, s] = sunTimes(d);
+  return DAYPARTS.map(([n, base, k]) => [n, (base === 'r' ? r : base === 's' ? s : 0) + k]);
+}
+export function daypart(d) {
+  const h = hourOf(d), st = daypartStarts(d);
+  let cur = st[0][0];
+  for (const [n, a] of st)
+    if (h >= a)
+      cur = n;
+  return cur;
+}
+const NIGHT_PARTS = ['evening', 'night', 'late'];
+// 밤: 해 진 뒤 30분 ~ 동틀 녘 시작. 창밖 밤 이벤트의 공통 기준
+export const isNight = d => NIGHT_PARTS.includes(daypart(d));
+export const inParts = (d, ...names) => names.includes(daypart(d));
+/* ───────── 해 기준 오프셋 (값은 그림 효과마다 따로, DAYPARTS와 별개) ───────── */
 // 할로윈 호박 불: 해 질 무렵부터 다음 날 아침까지 (만득 씨가 끄지 않음)
 export function pumpkinLit(d) {
   const h = hourOf(d), [r, s] = sunTimes(d);
   return h >= s - 0.3 || h < r + 0.3;
 }
-export function sunTimes(d) {
-  const s = season(d);
-  return s === 'summer' ? [5.5, 20] : s === 'winter' ? [7.2, 17.2] : [6.3, 18.6];
+// 박쥐·커튼 유령: 해 진 뒤 18분 ~ 동틀 녘 시작(r − 1)
+export function batTime(d) {
+  const h = hourOf(d), [r, s] = sunTimes(d);
+  return h >= s + 0.3 || h < r - 1;
+}
+// 나비: 해 뜬 뒤 1시간 ~ 해 지기 1시간 전
+export function butterflyTime(d) {
+  const h = hourOf(d), [r, s] = sunTimes(d);
+  return h > r + 1 && h < s - 1;
+}
+// 창밖 낮/밤 그림 (해가 떠 있나)
+export function sunUp(d) {
+  const h = hourOf(d), [r, s] = sunTimes(d);
+  return h > r && h < s;
+}
+// 해가 하늘을 얼마나 지났나 (해 뜰 때 0 → 질 때 1). 해 그리기
+export function sunArc(d) {
+  const [r, s] = sunTimes(d);
+  return (hourOf(d) - r) / (s - r);
+}
+// 창밖 새벽·노을 빛이 비치는 때: 해 뜨기 1시간 전 ~ 뜬 뒤 1시간 반, 지기 1시간 반 전 ~ 진 뒤 1시간
+export function twilightGlow(d) {
+  const h = hourOf(d), [r, s] = sunTimes(d);
+  return (h > r - 1 && h < r + 1.5) || (h > s - 1.5 && h < s + 1);
+}
+// 강고양이 씨 자리 잡기(처음 열 때·점프)에서 밤잠 자리로 가는 때: 해 진 뒤 1시간 ~ 해 뜰 때
+export function settleNight(d) {
+  const h = hourOf(d), [r, s] = sunTimes(d);
+  return h >= s + 1 || h < r;
 }
 export const isWeekend = d => d.getDay() === 0 || d.getDay() === 6;
-// 만득 씨가 정해진 시각에 오는 방문 (시각, 시간 단위). main.js 일정과 액자 바로잡기(frame.js)가 함께 쓴다
+/* ───────── 생활 시간표 (만득 씨, TIME_BASE_PLAN.md 6장) ─────────
+   시각은 시간 단위 (7.4 = 7:24). 만득 씨 집·잠·일정·방문 결과·액자·주말 TV 소리·놀이 제한이 모두 여기서 읽는다 */
+export const ROUTINE = {
+  DUE_WINDOW: 0.35, // 일정 시각부터 이만큼 안에 처음 보면 장면을 일으키고, 늦으면 "지났음"만
+  LAMP_BEFORE: 0.3, // 스탠드: 해 지기 18분 전에 켠다
+  weekday: { wake: 7, feed: 7.4, leave: 8.5, ret: 18.6, lights: 23, sleep: 23, anniv: 19.2 },
+  weekend: { wake: 7, feed: 9, lights: 23, sleep: 23, anniv: 15, tvSound: [10, 22] },
+  // 놀이가 저절로 시작해도 되는 시각 (이웃 배려). 간격은 gate.js
+  play: { fish: [8, 21], yarn: [8, 22], wheel: [9, 20] }
+};
+export const routineOf = d => isWeekend(d) ? ROUTINE.weekend : ROUTINE.weekday;
+// 시각 h가 [시작, 끝) 안인가
+export function inWindow(win, d) {
+  const h = hourOf(d);
+  return !!win && h >= win[0] && h < win[1];
+}
+// 만득 씨가 정해진 시각에 오는 방문 (시각, 시간 단위). 지나간 방문(visitsBetween)과 액자 바로잡기(frame.js)가 함께 쓴다
 export function visitHours(d) {
-  const we = isWeekend(d), v = { feed: we ? 9 : 7.4, lights: 23 };
-  if (!we)
-    v.ret = 18.6;
+  const r = routineOf(d), v = { feed: r.feed, lights: r.lights };
+  if (r.ret != null)
+    v.ret = r.ret;
   if (isAnniversary(d))
-    v.anniv = we ? 15 : 19.2;
+    v.anniv = r.anniv;
   return v;
 }
-// 하루 일정 (이름, 시각). main.js scheduled()가 차례로 일으키고, 점프하면 jump.js가 지난 것을 "한 일"로 표시한다
+// 하루 일정 (이름, 시각). main.js scheduled()와 jump.js가 passedEvents로 본다
 export function dayEvents(d) {
-  const vh = visitHours(d), ev = [['wait', vh.feed - 0.25], ['feed', vh.feed]];
-  if (vh.ret)
-    ev.push(['leave', 8.5], ['ret', vh.ret]);
-  ev.push(['lampOn', sunTimes(d)[1] - 0.3], ['lights', vh.lights]);
+  const r = routineOf(d), vh = visitHours(d), ev = [['wait', vh.feed - 0.25], ['feed', vh.feed]];
+  if (r.leave != null)
+    ev.push(['leave', r.leave]);
+  if (vh.ret != null)
+    ev.push(['ret', vh.ret]);
+  ev.push(['lampOn', sunTimes(d)[1] - ROUTINE.LAMP_BEFORE], ['lights', vh.lights]);
   if (vh.anniv)
     ev.push(['anniv', vh.anniv]);
   return ev;
 }
+// 오늘 일정 중 지금까지 지난 것: [{ name, at, state }]. state 'due' = 장면을 일으킬 때, 'late' = 지났음 표시만
+export function passedEvents(d) {
+  const h = hourOf(d);
+  return dayEvents(d).filter(([, at]) => h >= at).map(([name, at]) => ({ name, at, state: h < at + ROUTINE.DUE_WINDOW ? 'due' : 'late' }));
+}
+// 스탠드: 해 지기 18분 전 ~ 불 끄기. 처음 열 때·점프 정리·일정이 모두 이것
+export function lampShouldBeOn(d) {
+  const h = hourOf(d);
+  return h >= sunTimes(d)[1] - ROUTINE.LAMP_BEFORE && h < routineOf(d).lights;
+}
+export function mandukHome(d) {
+  const r = routineOf(d), h = hourOf(d);
+  return r.leave == null || h < r.leave || h >= r.ret;
+}
+export const mandukAsleep = d => {
+  const r = routineOf(d), h = hourOf(d);
+  return h >= r.sleep || h < r.wake;
+};
+// 강고양이 씨가 어두운 방에 있는 때: 불 끈 뒤(lights) ~ 해 뜰 때 (생활 시간 + 자연 시간). 스탠드 꺼짐은 부르는 쪽(cat.js)이 본다
+export function nightDark(d) {
+  const h = hourOf(d);
+  return h >= routineOf(d).lights || h < sunTimes(d)[0];
+}
+// 강고양이 씨 비밀 타자 잦은 때: 만득 씨 잠든 뒤 ~ 일어나기 2시간 전
+export function secretTime(d) {
+  const r = routineOf(d), h = hourOf(d);
+  return h >= r.sleep || h < r.wake - 2;
+}
+/* ───────── "하루" 세 가지 (TIME_BASE_PLAN.md 7장) ─────────
+   키 형식은 dayKey 그대로 (0을 채우지 않음: 2026-1-5). 비·이상한 책·TV 씨앗·저장된 기록이 이 문자열을 쓴다 */
+const noonOf = (d, k = 0) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + k, 12);
+// 달력 날: 자정 ~ 자정
+export const calDay = d => dayKey(d);
+// 방송일: 새벽 5시 ~ 다음 날 새벽 5시. 그 방송일 정오의 Date (방송일 하나에 판정 하나). 달력에서 하루 빼기라 서머타임에도 맞다
+export const BROADCAST_START = 5;
+export const broadcastDay = d => noonOf(d, hourOf(d) < BROADCAST_START ? -1 : 0);
+// 하룻밤: 해질녘 시작(s − 1.5) ~ 다음 날 동틀 녘 끝(r + 0.5). 그 밤이 시작한 날의 정오 Date, 아침·낮이면 null
+function nightStart(d) {
+  const p = daypart(d);
+  return p === 'morning' || p === 'day' ? null : noonOf(d, p === 'late' || p === 'dawn' ? -1 : 0);
+}
+// 하룻밤 키 (10/31 밤의 새벽 3시 → '2026-10-31'). 아침·낮에는 null
+export const nightOf = d => {
+  const n = nightStart(d);
+  return n ? dayKey(n) : null;
+};
+// a(ms)가 든 날부터 b(ms)가 든 날까지 날마다 fn(그날 0시 Date). fn이 true를 돌려주면 멈추고 true
+export function forEachDay(a, b, fn) {
+  const day = new Date(a);
+  day.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 400 && day.getTime() <= b; i++) {
+    if (fn(new Date(day)) === true)
+      return true;
+    day.setDate(day.getDate() + 1);
+  }
+  return false;
+}
+// 그날(day) h시(시간 단위)의 ms
+export const atHour = (day, h) => new Date(day.getFullYear(), day.getMonth(), day.getDate(), Math.floor(h), Math.round((h % 1) * 60)).getTime();
 // a(ms) 뒤부터 b(ms)까지 지나간 정해진 방문 이름들 (visitHours의 이름, 지난 순서대로)
 export function visitsBetween(a, b) {
   const out = [];
   if (!(b > a))
     return out;
-  const day = new Date(a);
-  day.setHours(0, 0, 0, 0);
-  for (let i = 0; i < 400 && day.getTime() <= b; i++) {
+  forEachDay(a, b, day => {
     const vh = visitHours(day), list = [];
     for (const k in vh) {
-      const h = vh[k], t = new Date(day.getFullYear(), day.getMonth(), day.getDate(), Math.floor(h), Math.round((h % 1) * 60)).getTime();
+      const t = atHour(day, vh[k]);
       if (t > a && t <= b)
         list.push([t, k]);
     }
     list.sort((p, q) => p[0] - q[0]).forEach(p => out.push(p[1]));
-    day.setDate(day.getDate() + 1);
-  }
+  });
   return out;
 }
-export function mandukHome(d) {
-  const h = hourOf(d);
-  return isWeekend(d) || h < 8.5 || h >= 18.5;
-}
-export const mandukAsleep = d => {
-  const h = hourOf(d);
-  return h >= 23 || h < 7;
+/* ───────── 달력: 기간·순간 (calendar.js의 CAL, TIME_BASE_PLAN.md 8장) ───────── */
+const mdOf = s => {
+  const [m, d] = s.split('-').map(Number);
+  return m * 100 + d;
 };
+const dayN = (y, m, d) => Date.UTC(y, m, d) / 864e5; // 날짜 번호 (서머타임과 상관없이)
+// 그 날짜(시각은 보지 않음)가 기간 p 안인가
+function dateIn(p, day) {
+  const y = day.getFullYear(), m = day.getMonth(), dd = day.getDate(), x = (m + 1) * 100 + dd;
+  if (p.date)
+    return x === mdOf(p.date);
+  if (p.from) {
+    const a = mdOf(p.from), b = mdOf(p.to);
+    return a <= b ? x >= a && x <= b : x >= a || x <= b;
+  }
+  if (p.dates) {
+    const n = dayN(y, m, dd);
+    for (const yy of [y - 1, y, y + 1]) {
+      const s = p.dates[yy];
+      if (!s)
+        continue;
+      const [sm, sd] = s.split('-').map(Number), t = dayN(yy, sm - 1, sd);
+      if (n >= t - (p.before || 0) && n <= t + (p.after || 0))
+        return true;
+    }
+  }
+  return false;
+}
+// 방·창밖: 지금 기간 안인가 (through: 'night'이면 마지막 날 밤이 끝날 때까지)
+export function inPeriod(name, d) {
+  const p = CAL.periods[name];
+  if (!p)
+    return false;
+  if (dateIn(p, d))
+    return true;
+  if (p.through === 'night') {
+    const n = nightStart(d);
+    return !!n && dateIn(p, n);
+  }
+  return false;
+}
+// TV: 그 날짜가 기간의 from~to 안인가만 본다 (through와 시각 무시). 방송일 정오(broadcastDay)를 넘긴다
+export const onDate = (name, d) => !!CAL.periods[name] && dateIn(CAL.periods[name], d);
+// 지금 켜진 기간 이름들
+export const periodsAt = d => Object.keys(CAL.periods).filter(n => inPeriod(n, d));
+// 특별한 순간: date의 from 시각부터 (night: true면 그 밤이 끝날 때까지)
+export function momentNow(name, d) {
+  const mo = CAL.moments[name];
+  if (!mo)
+    return false;
+  const [hh, mi] = mo.from.split(':').map(Number), want = mdOf(mo.date), md = x => (x.getMonth() + 1) * 100 + x.getDate();
+  if (md(d) === want && hourOf(d) >= hh + mi / 60)
+    return true;
+  if (!mo.night)
+    return false;
+  const n = nightStart(d);
+  return !!n && md(n) === want && dayKey(n) !== dayKey(d); // 자정을 넘긴 그 밤
+}
+// 명절: 이 넷만, 이 순서로 (방·창밖 전용. TV는 onDate). 미리보기 도구의 holidayOverride가 먼저
+export const HOLIDAYS = ['halloween', 'christmas', 'seollal', 'newyear'];
+export function holiday(d) {
+  if (holidayOverride)
+    return holidayOverride;
+  return HOLIDAYS.find(n => inPeriod(n, d)) || null;
+}
+// 미리보기 도구 한 줄: "지금: 계절 · 시간대 · 달력 날 · 방송일 · 하룻밤 · 켜진 기간"
+export function timeInfo(d) {
+  return { season: season(d), south: seasonSouth(), part: daypart(d), cal: calDay(d), bday: dayKey(broadcastDay(d)), night: nightOf(d), periods: periodsAt(d) };
+}
 let rainOverride = null;
 export function rainNow(d) {
   if (rainOverride !== null)
@@ -169,26 +376,6 @@ export function isAnniversary(d) {
 }
 export const snowing = d => rainNow(d) && season(d) === 'winter';
 export const wx = () => snowing(now()) ? '❄️' : '🌧️';
-export function holiday(d) {
-  if (holidayOverride)
-    return holidayOverride;
-  const m = d.getMonth() + 1, dt = d.getDate(), y = d.getFullYear();
-  if (m === 10 && dt >= 24 || m === 11 && dt === 1)
-    return 'halloween';
-  if (m === 12 && dt >= 14 && dt <= 26)
-    return 'christmas';
-  const seol = { 2026: '2-17', 2027: '2-6', 2028: '1-26', 2029: '2-13', 2030: '2-3' }[y];
-  if (seol) {
-    const [sm, sd] = seol.split('-').map(Number);
-    const t = new Date(y, sm - 1, sd);
-    const diff = (d - t) / 86400000;
-    if (diff >= -1 && diff < 2)
-      return 'seollal';
-  }
-  if (m === 1 && dt === 1)
-    return 'newyear';
-  return null;
-}
 /* ───────── 햇빛 조각 ───────── */
 export function sunbeam(d) {
   const [r, s] = sunTimes(d), h = hourOf(d);
@@ -234,8 +421,8 @@ export function darkness(d) {
 // 기준 삭(새 달) 2000-01-06 18:14 UTC, 삭망월 29.530588853일. 오차 반나절 안팎
 // 시각(UTC)으로만 계산하니 같은 순간엔 누구에게나 같은 달. 미리보기 도구로 시계를 옮기면 같이 바뀐다
 const SYNODIC = 29.530588853, NEW_MOON0 = Date.UTC(2000, 0, 6, 18, 14);
-// 창밖은 한국(고양시) 하늘: 차오르는 달은 오른쪽이 빛난다. 남반구처럼 보이게 하려면 true
-export const MOON_SOUTH = false;
+// 창밖 달: REGION.moon이 'korea'면 한국(고양시) 하늘 = 차오르는 달은 오른쪽이 빛난다. 'local'이면 방문자 반구
+export const MOON_SOUTH = REGION.moon === 'local' ? SOUTH : false;
 export function moonPhase(d) {
   const age = (((d.getTime() - NEW_MOON0) / 86400000) % SYNODIC + SYNODIC) % SYNODIC;
   const k = age / SYNODIC;

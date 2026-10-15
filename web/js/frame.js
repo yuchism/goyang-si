@@ -8,7 +8,7 @@ import { imageReady, img } from './assets.js';
 import { frameFixers } from './manduk.js';
 import { O } from './objects.js';
 import { ctx } from './stage.js';
-import { dayKey, dayNum, now, visitHours } from './time.js';
+import { ROUTINE, atHour, calDay, dayNum, forEachDay, now, visitHours } from './time.js';
 import { RM, clamp, ease, lerp, rnd, store } from './util.js';
 
 const KEY = 'frame';
@@ -16,7 +16,6 @@ const SEED = 0; // 오늘의 사진을 정하는 고정값
 const MAX_TILT = 10, STEP_MIN = 2, STEP_MAX = 4; // 도
 const SHAKE = 0.4; // 넘길 때 흔들리는 시간(초)
 // 다녀가면 액자를 바로잡는 방문은 manduk.js 다녀간 결과 표(frameFixers)에 있다
-const FIX_WAIT = 0.35; // 시간. 방문 시각에서 이만큼 지나기 전에는 실제 방문(main.js 일정)이 처리하게 둔다
 
 // 기기에 남기는 것: { day, idx } 넘긴 사진(그날만), { tilt, at } 기울기(도)와 마지막으로 넘긴 방 시각(ms)
 let st = null;
@@ -38,7 +37,7 @@ export function todayIndex(d) {
 }
 export function frameIndex(d) {
   const s = S();
-  return s.day === dayKey(d) && Number.isInteger(s.idx) && s.idx >= 0 && s.idx < photos().length ? s.idx : todayIndex(d);
+  return s.day === calDay(d) && Number.isInteger(s.idx) && s.idx >= 0 && s.idx < photos().length ? s.idx : todayIndex(d);
 }
 export const frameTilt = () => +S().tilt || 0;
 
@@ -54,7 +53,7 @@ export function flipFrame() {
     dir = -dir;
   const tilt = clamp(t0 + dir * step, -MAX_TILT, MAX_TILT);
   anim = { from: list[cur], fromTilt: t0, t: 0, dir };
-  Object.assign(S(), { day: dayKey(d), idx: (cur + 1) % list.length, tilt, at: d.getTime() });
+  Object.assign(S(), { day: calDay(d), idx: (cur + 1) % list.length, tilt, at: d.getTime() });
   save();
 }
 
@@ -66,26 +65,16 @@ export function straightenFrame(type) { // type을 주면 바로잡는 방문일
   save();
 }
 
-// a(ms) 뒤부터 b(ms)까지, 바로잡는 방문 시각이 지나갔는지 (지나고 FIX_WAIT이 넘은 것만)
+// a(ms) 뒤부터 b(ms)까지, 바로잡는 방문 시각이 지나갔는지 (지나고 ROUTINE.DUE_WINDOW가 넘은 것만.
+// 그 전에는 실제 방문(main.js 일정)이 처리하게 둔다)
 export function missedFix(a, b) {
-  const end = b - FIX_WAIT * 3600000;
+  const end = b - ROUTINE.DUE_WINDOW * 3600000;
   if (!(end > a))
     return false;
-  const day = new Date(a);
-  day.setHours(0, 0, 0, 0);
-  for (let i = 0; i < 400 && day.getTime() <= end; i++) {
+  return forEachDay(a, end, day => {
     const vh = visitHours(day);
-    for (const k of frameFixers()) {
-      const h = vh[k];
-      if (h == null)
-        continue;
-      const t = new Date(day.getFullYear(), day.getMonth(), day.getDate(), Math.floor(h), Math.round((h % 1) * 60)).getTime();
-      if (t > a && t <= end)
-        return true;
-    }
-    day.setDate(day.getDate() + 1);
-  }
-  return false;
+    return frameFixers().some(k => vh[k] != null && atHour(day, vh[k]) > a && atHour(day, vh[k]) <= end);
+  });
 }
 
 // 매 장면 (main.js frame): 흔들림 진행, 1초마다 놓친 방문 확인

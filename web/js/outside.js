@@ -6,7 +6,7 @@ import { drawPetals } from './birthday.js';
 import { P } from './objects.js';
 import { ctx } from './stage.js';
 import { fn, hold, run, until } from './steps.js';
-import { MOON_SOUTH, darkness, dayKey, holiday, hourOf, moonPhase, rainNow, season, skyAt, sunTimes } from './time.js';
+import { MOON_SOUTH, butterflyTime, darkness, holiday, isNight, momentNow, moonPhase, nightOf, rainNow, season, skyAt, sunArc, sunUp, twilightGlow } from './time.js';
 import { tr } from './i18n.js';
 import { RM, clamp, hash, pick, rnd } from './util.js';
 import { after, caption, cat, mouse, say, world } from './world.js';
@@ -112,7 +112,7 @@ function drawMoon(d, cx, cy, R) {
   const vis = clamp((m.lit - 0.03) / 0.07, 0, 1), right = m.waxing !== MOON_SOUTH, side = right ? 1 : -1;
   ctx.save();
   // 달무리: 빛나는 비율만큼. 보름에 가장 크고 초승달엔 거의 없다
-  const hx = cx + side * R * (1 - m.lit) * 0.6, hr = R * (1.3 + 1.9 * m.lit);
+  const hx = cx + side * R * (1 - m.lit) * 0.6, hr = R * (1.3 + 1.9 * m.lit); // time-ok (달무리 반지름)
   const g = ctx.createRadialGradient(hx, cy, R * 0.8, hx, cy, hr);
   g.addColorStop(0, `rgba(${MOON_RGB},${0.2 * m.lit * vis})`);
   g.addColorStop(1, `rgba(${MOON_RGB},0)`);
@@ -140,7 +140,7 @@ function drawMoon(d, cx, cy, R) {
   ctx.restore();
 }
 export function drawOutside(d, w) {
-  const h = hourOf(d), [r, s] = sunTimes(d), day = h > r && h < s, rain = rainNow(d);
+  const day = sunUp(d), rain = rainNow(d);
   const night = clamp(darkness(d) / 0.62, 0, 1);
   // 하늘은 그림의 하늘색으로 채우고, 건물은 아래쪽에 작게 (더 많이 보이게)
   const ad = IMG.r_apt_day, an = IMG.r_apt_night, ah = 330, base = imageReady(ad) ? ad : imageReady(an) ? an : null;
@@ -170,7 +170,7 @@ export function drawOutside(d, w) {
   }
   // 새벽·노을 빛
   const [, bot] = skyAt(d);
-  const tw = (h > r - 1 && h < r + 1.5) || (h > s - 1.5 && h < s + 1) ? 0.28 : 0;
+  const tw = twilightGlow(d) ? 0.28 : 0;
   if (tw) {
     ctx.fillStyle = bot;
     ctx.globalAlpha = tw;
@@ -191,7 +191,7 @@ export function drawOutside(d, w) {
   }
   // 해 / 달 (하늘 띠 안에서만)
   if (day && !rain) {
-    const t = (h - r) / (s - r);
+    const t = sunArc(d);
     ctx.beginPath();
     ctx.arc(w.x + 50 + t * (w.w - 100), 190 - Math.sin(Math.PI * t) * 150, 22, 0, 7);
     ctx.fillStyle = 'rgba(255,243,196,.95)';
@@ -264,9 +264,8 @@ export function maybeUFO(d, dt) {
     world.ufo.t += dt;
     return;
   }
-  const h = hourOf(d);
-  if (world.manduk || world.witch || world.curtainShadow || !(h >= 20 || h < 4))
-    return; // 마녀가 지나가는 밤에는 미룸
+  if (world.manduk || world.witch || world.curtainShadow || !isNight(d))
+    return; // 밤(time.js isNight)에만. 마녀가 지나가는 밤에는 미룸
   const boost = world.lastType && world.t - world.lastType < 90 ? 40 : 1;
   if (Math.random() < dt * boost / (3 * 3600))
     startUFO();
@@ -330,12 +329,11 @@ export function maybeSanta(d, dt) {
   }
   if (holiday(d) !== 'christmas')
     return;
-  const h = hourOf(d);
-  if (!(h >= 19 || h < 4))
+  if (!isNight(d))
     return;
-  const eve = d.getMonth() === 11 && d.getDate() === 24 && h >= 21;
-  if (eve && !world.santaEve) {
-    world.santaEve = dayKey(d);
+  // 이브 밤 9시 이후에는 꼭 한 번 (calendar.js christmasEveNight. 자정을 넘어도 같은 밤)
+  if (momentNow('christmasEveNight', d) && world.santaEve !== nightOf(d)) {
+    world.santaEve = nightOf(d);
     return startSanta();
   }
   if (Math.random() < dt / (2 * 3600))
@@ -380,8 +378,8 @@ export function drawButterfly() {
 export const butterflyEvent = {
   id: 'bfly',
   tick(d, real, bf) {
-    const dt = real * bf, ss = season(d), hr = hourOf(d), [sr, sset] = sunTimes(d);
-    if (!world.bfly && !world.manduk && hr > sr + 1 && hr < sset - 1 && !rainNow(d) && (ss === 'spring' || ss === 'summer') && Math.random() < dt / (ss === 'summer' ? 420 : 700))
+    const dt = real * bf, ss = season(d);
+    if (!world.bfly && !world.manduk && butterflyTime(d) && !rainNow(d) && (ss === 'spring' || ss === 'summer') && Math.random() < dt / (ss === 'summer' ? 420 : 700))
       spawnButterfly();
     updateButterfly(real * Math.min(bf, 3));
   },
@@ -392,7 +390,7 @@ export const butterflyEvent = {
   dev: [{ btn: 'dBfly', go: () => spawnButterfly() }],
   debug: { spawnButterfly },
 };
-// UFO: 밤 8시~새벽 4시, 3시간에 한 번 꼴 (고양이가 몰래 노트북을 친 직후엔 훨씬 자주)
+// UFO: 밤(해 진 뒤 30분 ~ 동틀 녘 시작, time.js isNight), 3시간에 한 번 꼴 (고양이가 몰래 노트북을 친 직후엔 훨씬 자주)
 export const ufoEvent = {
   id: 'ufo',
   tick: (d, real) => maybeUFO(d, real),

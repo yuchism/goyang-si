@@ -6,7 +6,8 @@
    코드는 프로그램 이름을 보지 않고 성질(overlay, watch, 사건의 react·score·sfx)을 본다. TV_STABILITY_PLAN.md
    편성은 프로그램이 든 길이(runtime)·방영 조건(special·first·live·rerun·air)과 방송국 틀(schedule.json)로 짠다. TV_SCHEDULE_PLAN.md */
 import { STR, tr } from './i18n.js';
-import { dayKey, holiday, hourOf } from './time.js';
+import { HOLIDAYS, broadcastDay, dayKey, holidayOverride, hourOf, onDate } from './time.js';
+import { CAL } from './calendar.js';
 import { clamp, hash } from './util.js';
 
 /* ───────── 프로그램 표 ───────── */
@@ -293,19 +294,21 @@ export function setSchedule(raw) {
   }
   SCHED.periods = {};
   for (const [n, v] of Object.entries(raw.periods || {})) {
-    const md = x => {
-      const m = /^(\d{2})-(\d{2})$/.exec(x || '');
-      return m ? +m[1] * 100 + +m[2] : NaN;
-    };
+    if (n.startsWith('_'))
+      continue; // 설명
     let p = null;
-    if (v && isStr(v.holiday))
-      p = { holiday: v.holiday };
-    else if (v && !isNaN(md(v.from)) && !isNaN(md(v.to)))
-      p = { from: md(v.from), to: md(v.to) };
-    else if (v && Array.isArray(v.dates) && v.dates.every(x => /^\d{4}-\d{2}-\d{2}$/.test(x)))
-      p = { dates: new Set(v.dates) };
+    if (v && (isStr(v.period) || isStr(v.holiday))) { // 날짜는 달력(calendar.js)에서. "holiday"는 예전 이름
+      const name = v.period || v.holiday;
+      if (CAL.periods[name])
+        p = { period: name };
+      else
+        w(`기간 ${n}: 달력(calendar.js)에 ${name} 기간이 없음`);
+    }
+    else if (v && (v.from || v.dates))
+      w(`기간 ${n}: 날짜는 이제 달력(calendar.js)에 둔다 → { "period": 기간 이름 }`);
     if (!p || WD[n] || SCHED.parts[n]) {
-      w(`기간 ${n}: { "holiday" } · { "from": "MM-DD", "to": "MM-DD" } · { "dates": ["YYYY-MM-DD"…] } 중 하나`);
+      if (!p && !(v && (v.from || v.dates || v.period || v.holiday)))
+        w(`기간 ${n}: { "period": 달력(calendar.js) 기간 이름, "title": 번역 키(없어도 됨) }`);
       continue;
     }
     p.title = null;
@@ -350,16 +353,14 @@ export function setSchedule(raw) {
 }
 const dayOK = (c, bd) => (!c.days || c.days.includes(bd.getDay())) && (!c.periods || c.periods.some(n => periodOn(n, bd)));
 const partOK = (c, m) => !c.parts || c.parts.some(p => m >= p.a && m < p.b);
+// TV 기간은 방송일(정오 Date)의 날짜로만 판단한다 (TIME_BASE_PLAN.md 8-1). holiday()는 쓰지 않는다:
+// 그것은 방·창밖용이라 할로윈 끝(through: 'night')처럼 시각에 따라 바뀐다.
+// 미리보기 도구에서 명절을 켰으면(holidayOverride) 명절 이름의 기간은 그 값을 따른다
 export function periodOn(n, bd) {
   const p = SCHED.periods[n];
   if (!p)
     return false;
-  if (p.holiday)
-    return holiday(bd) === p.holiday;
-  if (p.dates)
-    return p.dates.has(`${bd.getFullYear()}-${String(bd.getMonth() + 1).padStart(2, '0')}-${String(bd.getDate()).padStart(2, '0')}`);
-  const md = (bd.getMonth() + 1) * 100 + bd.getDate();
-  return p.from <= p.to ? md >= p.from && md <= p.to : md >= p.from || md <= p.to;
+  return holidayOverride && HOLIDAYS.includes(p.period) ? holidayOverride === p.period : onDate(p.period, bd);
 }
 // 개편: 지금 시즌이 시작한 날 (months 달의 첫 weekday). 시즌 동안 같은 요일이면 같은 편성
 export function tvSeasonStart(bd) {
@@ -381,7 +382,9 @@ export const tvH = d => {
   const h = hourOf(d);
   return h < 5 ? h + 24 : h;
 }; // 방송일 기준 시각 (새벽 1시 = 25)
-export const tvBday = d => hourOf(d) < 5 ? new Date(d.getTime() - 86400000) : d; // 새벽은 전날 방송일
+export const tvBday = broadcastDay; // 방송일 (time.js: 새벽은 전날, 그 방송일 정오의 Date)
+// 편성 씨앗·캐시 키에 붙이는 명절 이름: 미리보기에서 켠 명절이 먼저, 아니면 그 날짜의 명절(holiday()와 같은 순서). 날짜만 본다
+const tvHoliday = bd => holidayOverride || HOLIDAYS.find(n => onDate(n, bd)) || '';
 export const fmtH = h => {
   const m = Math.round(h * 60) % 1440;
   return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
@@ -420,7 +423,7 @@ export const tvCap = (P, bd) => {
 const tvDays = {}, fixedDays = {};
 // 그날의 고정 칸(낮잠 정파·특집·시각 고정·방송국 칸). 채우기 전 단계라 가볍다 (회차 세기도 이것을 쓴다)
 function fixedOf(bd) {
-  const key = dayKey(bd) + ':' + (holiday(bd) || '');
+  const key = dayKey(bd) + ':' + tvHoliday(bd);
   if (fixedDays[key])
     return fixedDays[key];
   if (Object.keys(fixedDays).length > 3000)
@@ -666,7 +669,7 @@ function assignEpisodes(bd, segs) {
 }
 // 하루 편성: { segs, nap, conflicts, season }. 같은 방송일이면 누구에게나 같다
 export function tvDay(bd) {
-  const k = dayKey(bd) + ':' + (holiday(bd) || '');
+  const k = dayKey(bd) + ':' + tvHoliday(bd);
   if (tvDays[k])
     return tvDays[k];
   if (Object.keys(tvDays).length > 20)
