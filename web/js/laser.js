@@ -279,3 +279,32 @@ export function penStareB() {
     hold(rnd(8, 15), 'loaf', false, -1)
   ], 'penstare');
 }
+
+/* ───── 놀이 목록에 싣는 것 (plays.js) ───── */
+export const laserPlay = {
+  id: 'laser',
+  tick: (dt, real) => laserTick(real), // 놀이 시간은 실제 시간
+  light: drawLaserDot, // 어둠 위에 (빨간 점은 밤에도 보인다)
+  press(x, y, when) { // 가장 먼저 본다. 켜져 있으면 방을 눌러도 점만 움직이고, 포인터를 다시 누르면 끝
+    if (when !== 'first')
+      return false;
+    if (L) {
+      if (penAt(x, y))
+        endLaser();
+      else
+        moveDot(x, y);
+      return true;
+    }
+    if (penAt(x, y)) {
+      startLaser();
+      return true;
+    }
+    return false;
+  },
+  drag(x, y, e) { // 컴퓨터는 마우스를 따라가고, 폰은 누른 채 끄는 곳으로
+    if (L && (e.pointerType === 'mouse' || e.buttons))
+      moveDot(x, y);
+  },
+  dev: { btn: 'dLaser', go: () => toggleLaser() },
+  debug: { startLaser, endLaser, moveDot, laserState, penStareB },
+};

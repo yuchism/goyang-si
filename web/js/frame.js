@@ -5,6 +5,7 @@
    - 페이지가 꺼져 있었거나 시간이 건너뛰어 그 방문을 못 봤으면, 방 시계로 따져서 지나간 방문이 있으면 0
    저장이 안 되는 브라우저에서는 그 페이지에서만 유지된다 */
 import { imageReady, img } from './assets.js';
+import { frameFixers } from './manduk.js';
 import { O } from './objects.js';
 import { ctx } from './stage.js';
 import { dayKey, dayNum, now, visitHours } from './time.js';
@@ -14,7 +15,7 @@ const KEY = 'frame';
 const SEED = 0; // 오늘의 사진을 정하는 고정값
 const MAX_TILT = 10, STEP_MIN = 2, STEP_MAX = 4; // 도
 const SHAKE = 0.4; // 넘길 때 흔들리는 시간(초)
-const FIXERS = ['feed', 'ret', 'lights', 'anniv']; // 다녀가면 액자를 바로잡는 방문 (time.js visitHours의 이름)
+// 다녀가면 액자를 바로잡는 방문은 manduk.js 다녀간 결과 표(frameFixers)에 있다
 const FIX_WAIT = 0.35; // 시간. 방문 시각에서 이만큼 지나기 전에는 실제 방문(main.js 일정)이 처리하게 둔다
 
 // 기기에 남기는 것: { day, idx } 넘긴 사진(그날만), { tilt, at } 기울기(도)와 마지막으로 넘긴 방 시각(ms)
@@ -58,8 +59,8 @@ export function flipFrame() {
 }
 
 // 만득 씨 방문이 끝났을 때 (manduk.js). 결과로만 보이게, 고치는 장면은 없다
-export function straightenFrame(type) {
-  if (!FIXERS.includes(type) || !frameTilt())
+export function straightenFrame(type) { // type을 주면 바로잡는 방문일 때만 (점검용)
+  if ((type != null && !frameFixers().includes(type)) || !frameTilt())
     return;
   S().tilt = 0;
   save();
@@ -74,7 +75,7 @@ export function missedFix(a, b) {
   day.setHours(0, 0, 0, 0);
   for (let i = 0; i < 400 && day.getTime() <= end; i++) {
     const vh = visitHours(day);
-    for (const k of FIXERS) {
+    for (const k of frameFixers()) {
       const h = vh[k];
       if (h == null)
         continue;

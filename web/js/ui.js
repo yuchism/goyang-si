@@ -1,12 +1,11 @@
 /* 입력과 버튼: 누르기, 쪽지·노트북 창, 소리·전체 화면, 미리보기 도구 */
 import { imageReady, img } from './assets.js';
-import { startBats, startGhost, startWitch } from './halloween.js';
 import { LANG, setLang, tr } from './i18n.js';
 import { knockB, petCat, secretB } from './cat.js';
 import { startVisit, todaysNote } from './manduk.js';
 import { mouseHide, spawnMouse } from './mouse.js';
-import { OBJ, objView, present, topOf, zOf } from './objects.js';
-import { spawnButterfly, startSanta, startUFO } from './outside.js';
+import { OBJ, objView, present, zOf } from './objects.js';
+import { eventsDev } from './events.js';
 import { bookAt, closeShelf, onShelf, openShelf } from './shelf.js';
 import { Snd } from './sound.js';
 import { DEPTH, H, W, cam, cv, fit, view } from './stage.js';
@@ -17,10 +16,10 @@ import { initTvDev } from './tv-dev.js';
 import { bannerText } from './birthday.js';
 import { $, esc, store } from './util.js';
 import { flipFrame } from './frame.js';
-import { endLaser, laserOn, moveDot, penAt, startLaser, toggleLaser } from './laser.js';
-import { fishAt, fishB, tapBowl } from './fish.js';
-import { tapYarn, yarnAt, yarnIn } from './yarn.js';
-import { wheelB, wheelLift } from './wheel.js';
+import { toggleLaser } from './laser.js';
+import { tapBowl } from './fish.js';
+import { playsDev, playsDrag, playsPress } from './plays.js';
+import { actorLift } from './steps.js';
 import { STANDALONE, closeOdd, oddAt, openOdd, toggleOdd } from './install.js';
 import { caption, cat, mouse, say, world } from './world.js';
 /* ───────── 입력 ───────── */
@@ -32,10 +31,7 @@ function hitActor(a, x, y) {
   if (a.kind === 'mouse' && (a.hidden || a.peek))
     return false;
   const dp = DEPTH(a.y);
-  if (a.onTV)
-    y += topOf('tv');
-  if (a.inWheel)
-    y += wheelLift();
+  y += actorLift(a); // TV 위, 쳇바퀴 안… (steps.js SPOTS)
   const w = (a.kind === 'cat' ? 115 : 66) * dp, h = (a.kind === 'cat' ? 165 : 50) * dp;
   return x > a.x - w && x < a.x + w && y > a.y - h && y < a.y + 8;
 }
@@ -121,22 +117,9 @@ export function initUI() {
     closeShelf();
     closeTvGuide();
     closeOdd();
-    // 레이저 놀이 중에는 방을 눌러도 점만 움직인다. 포인터를 다시 누르면 끝
-    if (laserOn()) {
-      if (penAt(x, y))
-        endLaser();
-      else
-        moveDot(x, y);
+    // 놀이(plays.js)가 먼저 본다: 레이저 놀이 중이면 점만 움직이고, 실뭉치는 고양이 앞발 밑에 있을 때가 많아 고양이보다 먼저
+    if (playsPress(x, y, 'first') || playsPress(x, y, 'before'))
       return;
-    }
-    if (penAt(x, y)) {
-      startLaser();
-      return;
-    }
-    if (yarnAt(x, y)) { // 실뭉치: 톡 굴러간다 (고양이보다 먼저 — 고양이 앞발 밑에 있을 때가 많다)
-      tapYarn(x);
-      return;
-    }
     if (hitActor(mouse, x, y)) {
       say(mouse, '‼️', 1.5);
       mouseHide(true);
@@ -146,10 +129,8 @@ export function initUI() {
       petCat();
       return;
     }
-    if (fishAt(x, y)) { // 어항: 금붕어가 유리 쪽으로 와서 뻐끔 (코드 그림이라 아래 일반 판정 대신)
-      tapBowl();
+    if (playsPress(x, y, 'after')) // 어항처럼 코드로 그리는 놀이 물건 (아래 일반 판정 대신)
       return;
-    }
     if (oddAt(x, y)) {
       openOdd();
       return;
@@ -185,11 +166,8 @@ export function initUI() {
       return;
     }
   });
-  // 레이저 점: 컴퓨터는 마우스를 따라가고, 폰은 누른 채 끄는 곳으로
-  cv.addEventListener('pointermove', e => {
-    if (laserOn() && (e.pointerType === 'mouse' || e.buttons))
-      moveDot(...toStage(e));
-  });
+  // 누른 채 움직이기 (레이저 점)
+  cv.addEventListener('pointermove', e => playsDrag(...toStage(e), e));
   noteEl.addEventListener('click', () => noteEl.hidden = true);
   scrEl.addEventListener('click', () => scrEl.hidden = true);
   document.getElementById('aCat').onclick = () => petCat();
@@ -299,7 +277,6 @@ export function initUI() {
     mouse.where = 'hole';
     spawnMouse(now(), true);
   };
-  $('dBfly').onclick = () => spawnButterfly();
   $('dMan').onclick = () => {
     if (!mandukHome(now())) {
       caption(tr('devAtWork'), 3);
@@ -326,37 +303,15 @@ export function initUI() {
     setOverride('holiday', holidayOverride === 'christmas' ? null : 'christmas');
     caption(holidayOverride ? tr('devXmas') : tr('devRealDate'), 2.5);
   };
-  $('dSanta').onclick = () => startSanta();
   $('dOdd').onclick = () => caption(toggleOdd() ? '📕✨' : '📕…', 2);
   // 할로윈: 휴일 강제와 마녀·박쥐·유령 바로 부르기
   $('dHw').onclick = () => {
     setOverride('holiday', holidayOverride === 'halloween' ? null : 'halloween');
     caption(holidayOverride ? tr('devHw') : tr('devRealDate'), 2.5);
   };
-  $('dWitch').onclick = () => startWitch(Math.random() < 0.5);
-  $('dBat').onclick = () => startBats();
-  $('dGhost').onclick = () => startGhost();
-  $('dUfo').onclick = () => {
-    if (world.manduk) {
-      caption(tr('devNoUfo'), 3);
-      return;
-    }
-    startUFO();
-  };
+  eventsDev($); // 나비·UFO·산타·마녀·박쥐·유령 버튼 (events.js)
   initTvDev(jumpTo); // TV 칸: 틀어 보기, 사건 고르기(예전 "TV 사건" 버튼 포함), 7일 편성표, 특집 날짜 (tv-dev.js)
-  $('dLaser').onclick = () => toggleLaser();
-  $('dWheel').onclick = () => {
-    if (!world.manduk)
-      wheelB();
-  };
-  $('dYarn').onclick = () => {
-    if (!world.manduk)
-      yarnIn();
-  };
-  $('dFish').onclick = () => {
-    if (!world.manduk)
-      fishB();
-  };
+  playsDev($); // 놀이 버튼: 레이저·쳇바퀴·실뭉치·낚시 (plays.js)
   $('dKnock').onclick = () => {
     if (world.manduk)
       return;

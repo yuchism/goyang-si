@@ -7,16 +7,24 @@
     r/ (방 소품):       [폭, 높이]
 - 크기가 바뀐 그림은 크기만 고친다.
 - 파일이 없어진 항목은 알려만 주고 지우지 않는다 (--prune을 주면 지운다).
+- --check: 아무것도 고치지 않고 맞는지만 본다. 그림은 있는데 meta.json에 없거나(그 그림은 화면에 안 나온다),
+  meta.json에만 있고 그림이 없으면 실패(종료 코드 1). 배포(.github/workflows/pages.yml)가 올리기 전에 돌린다.
+  Pillow가 없어도 돈다 (있으면 크기도 본다).
 - r/tv/ 는 따로 r/tv/meta.json을 쓰므로 건드리지 않는다. .png 큰 시트(생일 춤, 케이크)는 코드(js/assets.js)에 따로 적혀 있다.
 
 쓰는 법:  python3 tools/build_meta.py          (고양시 폴더에서)
+          python3 tools/build_meta.py --check  (확인만)
 필요한 것: Pillow (pip3 install pillow)
 """
 import json, os, sys
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:  # --check는 Pillow 없이도 이름만 맞춰 본다
+    Image = None
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'web')
 PRUNE = '--prune' in sys.argv
+CHECK = '--check' in sys.argv
 
 
 def dump(d):
@@ -67,5 +75,34 @@ def update(folder, kind, skip=()):
           '| 파일 없음' + (' (지움)' if PRUNE else ''), missing or '-')
 
 
+def check(folder, skip=()):
+    meta_path = os.path.join(ROOT, folder, 'meta.json')
+    meta = json.load(open(meta_path, encoding='utf-8')) if os.path.exists(meta_path) else {}
+    files = scan(folder, skip)
+    bad = []
+    for key in files:
+        if key not in meta:
+            bad.append(f'{folder}/{key}.webp: meta.json에 없음 (화면에 안 나온다)')
+        elif Image is not None and list(Image.open(files[key]).size) != meta[key][:2]:
+            bad.append(f'{folder}/{key}.webp: 크기가 meta.json과 다름 {list(Image.open(files[key]).size)} != {meta[key][:2]}')
+    for key in meta:
+        if key not in files:
+            bad.append(f'{folder}/meta.json의 {key}: 그림 파일이 없음')
+    print(f'{folder}/meta.json: 그림 {len(files)}개, 항목 {len(meta)}개' + (' — 맞음' if not bad else ''))
+    for b in bad:
+        print('  ✗', b)
+    return bad
+
+
+if CHECK:
+    if Image is None:
+        print('(Pillow 없음: 크기는 보지 않고 이름만 맞춰 본다)')
+    bad = check('f') + check('r', skip=('tv',))
+    if bad:
+        print(f'\n맞지 않는 곳 {len(bad)}군데. python3 tools/build_meta.py 로 채운 뒤 다시 올리세요.')
+        sys.exit(1)
+    sys.exit(0)
+if Image is None:
+    sys.exit('Pillow가 필요하다: pip3 install pillow')
 update('f', 'frame')
 update('r', 'room', skip=('tv',))

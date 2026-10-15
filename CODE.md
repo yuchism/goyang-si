@@ -46,19 +46,19 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 
 | 파일 | 하는 일 |
 |---|---|
-| `main.js` | 시작점. 하루 일정(밥·출근·귀가·불 끄기), 매 프레임 진행 `frame()`, 그리기 순서 `render()`, 처음 시작 `start()` |
-| `world.js` | 세상 상태 `world`와 배우 `cat`(강고양이 씨)·`mouse`(쥐야쥐), 말풍선 `say`, 자막 `caption` |
+| `main.js` | 시작점. 하루 일정(밥·출근·귀가·불 끄기), 매 프레임 진행 `frame()`, 그리기 순서 `render()`, 처음 시작 `start()`. `frame()`은 진행 순서만 적는다: 각 파일의 `visitTick`·`mouseTick`·`duetTick`·`sunbeamTick`·`eventsTick`·`cupTick`·`playsTick`을 차례로 부른다(순서가 곧 확률을 뽑는 순서라 바꾸면 화면 점검 결과가 달라진다) |
+| `world.js` | 세상 상태 `world`와 배우 `cat`(강고양이 씨)·`mouse`(쥐야쥐), 말풍선 `say`, 자막 `caption`. **방 시간 타이머 `after(할 일, 초)`**: 행동을 "몇 초 뒤에"로 이을 때 setTimeout 대신 쓴다. 미리보기 배속을 따르고 탭을 떠나면 같이 멈춘다(`main.js`가 `tickTimers`). setTimeout은 화면·소리·설치 같은 바깥 일에만 |
 | `time.js` | 방 시계 `now()`(기기 시계 + 미리보기 offset)와 시간 점프 감지 `clockJump`, 하루 일정 `dayEvents`, 계절·해 뜨고 지는 시각, 비·눈, 상자 있는 날, 기념일, 명절, 햇빛 조각, 하늘색과 어둠, 달 모양 `moonPhase`(MOON_PLAN.md) |
 | `jump.js` | 시간 점프 정리 `timeJumped`: 화면이 꺼졌다 켜지거나 서머타임·미리보기로 시계가 건너뛰면 방 상태(스탠드·밥그릇·컵·만득 씨 방문·고양이 자리 `settleCat`)를 그 시각에 맞추고 짧게 어두워졌다 밝아진다. CLOCK_PLAN.md |
 | `objects.js` | `objects.json`을 읽어 위치 `P`, 사물 `O`, 상태 `objView`, 자리 `S('bowl.eat')`, 소켓, 깊이를 알려준다 |
-| `steps.js` | 행동 단계: `go`(길찾기로 걷기), `follow`, `hold`, `bub`, `fn`, `until`, 그리고 순서대로 실행 `run(배우, [단계...])`. 바닥이 아닌 자리(TV 위·TV 뒤·상자 안) 표 `SPOTS`와 `inSpot`·`spotOf` |
+| `steps.js` | 행동 단계: `go`(길찾기로 걷기), `follow`, `hold`, `bub`, `fn`, `until`, 그리고 순서대로 실행 `run(배우, [단계...])`. 바닥이 아닌 자리(TV 위·TV 뒤·상자 안·쳇바퀴) 표 `SPOTS`와 `inSpot`·`spotOf`. 자리마다 떠 있는 높이·그림자·누가 그리나를 적고 `actorLift`·`hasShadow`·`ownLayer`로 꺼내 쓴다(`sprites.js` 그리기, `main.js` 그리기 순서, `ui.js` 누르기 판정) |
 | `behave.js` | 강고양이 씨 행동 성격표 `BEHAVIOR`: 이름표(tag)마다 TV 사건·유령 그림자가 끼어들어도 되는지. `tvFree(cat)`, `ghostFree(cat)` |
 | `anim.js` | 동작 그림: 자세 전환(서기↔식빵↔배 보이기), 동작 클립 `CLIP`과 `play`, 지금 보여줄 프레임 고르기 |
-| `cat.js` | 강고양이 씨의 뇌 `catBrain`(하고 싶은 일 고르기)과 혼자 하는 행동들(`napB`, `windowB`…), 쓰다듬기 |
-| `duet.js` | 강고양이 씨와 쥐야쥐가 함께: 인사, 술래잡기, 노려보기, 상자 숨바꼭질, 같이 자기 |
-| `mouse.js` | 쥐야쥐: 숨는 곳, 나오기, 도망, 혼자 하는 행동 |
-| `manduk.js` | 김만득 씨: 방문 단계, 말풍선, 포스트잇 메모 |
-| `outside.js` | 창밖: 하늘·해·달·구름·비·눈, 새, 나비, UFO, 산타 썰매 (박쥐·마녀는 halloween.js) |
+| `cat.js` | 강고양이 씨의 뇌 `catBrain`(하고 싶은 일 고르기)과 혼자 하는 행동들(`napB`, `windowB`…), 쓰다듬기. 매 장면: 낮잠 자다 햇빛 따라가기 `sunbeamTick`, 떨어지는 컵 `cupTick` |
+| `duet.js` | 강고양이 씨와 쥐야쥐가 함께: 인사, 술래잡기, 노려보기, 상자 숨바꼭질, 같이 자기. 매 장면 `duetTick`: 같이 낮잠 → 화들짝, 자는 고양이 앞 지나가기, 서로 의식하기 |
+| `mouse.js` | 쥐야쥐: 숨는 곳, 나오기, 도망, 혼자 하는 행동. 매 장면 `mouseTick`: 25~45초마다 나올지(만득 씨가 없을 때 높게, 비 오면 더), 뇌 |
+| `manduk.js` | 김만득 씨: 방문 단계, 말풍선, 포스트잇 메모. **다녀간 결과 표 `VISIT_RESULTS`**(밥그릇·붕어빵 부스러기·컵·스탠드·간식·노트북 글·액자): 실제 방문 `act`, 방문 도중 시간 점프 `endVisitNow`, 꺼져 있던 동안 지나간 방문 `missedVisit`(jump.js)이 모두 이 표를 쓴다. "만득 씨가 오면 ○○도 해 놓는다"는 여기 한 줄 |
+| `outside.js` | 창밖: 하늘·해·달·구름·비·눈, 새, 나비, UFO, 산타 썰매 (박쥐·마녀는 halloween.js). 나비·UFO·산타는 파일 끝의 사건 물건으로 `events.js` 목록에 실린다 |
 | `draw.js` | 방 그리기: 소품, 코드로 그리는 것(창밖·문·커튼·트리·난로·선풍기), 노트북 화면, 햇빛 |
 | `sprites.js` | 배우 그리기: 고양이·쥐 프레임, 그림자, 쥐구멍 빼꼼, 말풍선 아이콘, 자막 |
 | `stage.js` | 캔버스, 화면 맞추기, 카메라, 깊이 비율 `DEPTH`, 다른 캔버스에 잠깐 그리기 `withCtx` |
@@ -70,6 +70,9 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `tv-cat.js` | TV · 강고양이 씨: 보기(`watch`)·위에서 낮잠·뒤 빼꼼·달려오기, 반응 목록 `REACT`(사건의 `react`가 고른다: 시무룩·펄쩍·하트·빼꼼·졸기·화면 툭툭·달려들기) |
 | `tv-guide.js` | TV · 편성표 창(낮잠 정파 줄 포함)과 축하 방송 신청 화면 |
 | `tv-dev.js` | 미리보기 도구의 TV 칸: 틀어 보기, 사건 고르기, 7일 편성표, 특집 날짜·낮잠 정파로 가기, 문제 있는 프로그램 수 |
+| `plays.js` | 놀이 목록 `plays()`: 레이저·어항·실뭉치·쳇바퀴. 놀이마다 자기 파일 끝에 `{ tick, layers, overlay, light, press, drag, reset, dev, debug }` 물건을 내놓고, `main.js`(매 장면·그리기)·`ui.js`(누르기·미리보기 버튼)·`jump.js`(시간 점프)·`debug.js`는 이 목록만 돈다. 새 놀이는 여기 한 줄 |
+| `events.js` | 가끔 생기는 일 목록 `events()`: 나비, UFO, 산타 썰매, 마녀, 박쥐, 커튼 유령 그림자. 놀이 목록과 같은 방식으로 `{ tick, sky, room, shadow, reset, dev, debug }`을 내놓고 `main.js`·`outside.js`(창밖)·`jump.js`·`ui.js`·`debug.js`는 이 목록만 돈다. 새 사건은 여기 한 줄 |
+| `gate.js` | 놀이가 저절로 시작해도 되는지 `gateOk`/`gateMark`: 시간대·간격 표 `GATES`(방 시각). 만득 씨가 있을 때·생일 파티 중엔 안 함. 간격은 기기에 저장 |
 | `laser.js` | 레이저 놀이: 탁자 위 포인터(`penAt`, 코드 그림 `drawLaserPen`)를 누르면 40초 동안 빨간 점이 마우스·손가락을 따라가고 강고양이 씨가 쫓는다(`chase` 단계). 지치면 3분 동안 무시. 가끔 포인터 노려보기 `penStareB`. CAT_PLAY_PLAN.md 5-1 |
 | `fish.js` | 어항 낚시: 어항 그리기(뒤판 → 금붕어·바늘·거품 → 앞판), 금붕어 헤엄과 도와주기(한숨 → 보물상자 → 붕어빵을 바늘에), 강고양이 씨 낚시 `fishB`(방 시각 4시간에 한 번, 8~21시), 붕어빵 날아가기·먹기, 어항 누르기 `tapBowl`. 밤 어항 구경 `bowlWatchB`, 붕어빵 부스러기(쥐야쥐 `mouseCrumbB`, 만득 씨 `sweepCrumbs`). 낚싯대 끝 `ROD_TIP`, 어항 안 자리 `BOWL`. CAT_PLAY_PLAN.md 5-2 |
 | `yarn.js` | 실뭉치: 왼쪽 화면 밖에서 굴러오기 `yarnIn`(방 시각 3시간에 한 번, 8~22시), 바닥 마찰로 굴러가기, 화면 밖까지 이어진 실 한 가닥, 강고양이 씨 쫓기 `yarnB`(툭툭 치기 3~6번, 가끔 껴안고 뒷발 차기), 끌려 나가기, 누르기 `tapYarn`, 쥐야쥐가 코로 밀기. CAT_PLAY_PLAN.md 5-4 |
@@ -79,7 +82,7 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `frame.js` | 벽 액자: 날짜마다 바뀌는 가족사진(`objects.json`의 `frame.photos`), 누르면 다음 사진·조금씩 삐뚤어짐, 만득 씨가 다녀가면 반듯. 넘긴 사진·기울기는 그 기기에 저장. FRAME_PHOTOS_PLAN.md |
 | `ui.js` | 캔버스 누르기, 쪽지·노트북 창, 소리·켜 두기·전체 화면 버튼(화면 꺼짐 방지), 미리보기 도구 |
 | `install.js` | 홈 화면 앱: 홈 화면 앱으로 열었는지(`STANDALONE`), 설치 신호, 책장의 **이상한 책**(그리기·빛·누르기)과 「이 방을 데려가는 법」 창, 포스트잇 힌트, 강고양이 씨 올려다보기, 세로 화면 안내, 홈 화면 앱 통계. MOBILE_PLAN.md 참고 |
-| `halloween.js` | 할로윈(10/24~11/1): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자와 강고양이 씨 반응. HALLOWEEN_PLAN.md 참고 |
+| `halloween.js` | 할로윈(10/24~11/1): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자와 강고양이 씨 반응. 마녀·박쥐·유령은 파일 끝의 사건 물건으로 `events.js` 목록에 실린다. HALLOWEEN_PLAN.md 참고 |
 | `i18n.js` | 말: 화면 글자 한국어·영어 표 `STR`, `tr('키')`, 언어 고르기·저장·전환(`setLang`). 새 글자는 여기 한 곳에. ENGLISH_PLAN.md 참고 |
 | `util.js` | 난수·범위·해시, localStorage, 손글씨 글꼴, 색 섞기, `$` |
 | `debug.js` | 점검용으로 `window.__goyang`에 행동 함수들을 내보낸다 |
@@ -98,8 +101,9 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 ## 그림을 새로 넣을 때
 
 1. `web/f/`(캐릭터) 또는 `web/r/`(소품)에 webp로 넣는다
-2. `python3 tools/build_meta.py` → meta.json에 크기가 들어간다. 캐릭터는 발 기준점이 그림 아래 가운데로 일단 들어가니, 필요하면 손으로 고친다
+2. `python3 tools/build_meta.py` → meta.json에 크기가 들어간다. 캐릭터는 발 기준점이 그림 아래 가운데로 일단 들어가니, 필요하면 손으로 고친다. **meta.json에 없는 그림은 불러오지 않아 화면에 안 나온다**
 3. 코드에서 이름으로 쓴다: 캐릭터는 `CLIP`에 프레임 이름, 소품은 `objects.json`의 `look`
+4. 확인만: `python3 tools/build_meta.py --check` (Pillow 없어도 됨). 배포(`.github/workflows/pages.yml`)도 올리기 전에 이걸 돌려서, 그림과 meta.json이 어긋나면 배포를 멈춘다 (2026-10-15 액자 사진 5~7번이 meta.json에서 빠져 안 나왔던 일 이후)
 
 TV 프로그램은 코드를 고치지 않는다: 그림을 `r/tv/`에 → `r/tv/programs.json`에 한 덩어리(길이 `runtime`과 방영 조건 `"air": [["주말", "오전"]]` 같은 것까지) → `i18n.js` 번역 → `node tools/check_tv.mjs`. 편성에는 조건에 맞춰 저절로 들어간다. 자세한 것은 TV_CHANNEL_PLAN.md 14장. 프로그램 그림은 시작을 기다리게 하지 않고 필요할 때 받는다(`assets.js` `loadLazy`).
 

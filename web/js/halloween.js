@@ -10,7 +10,7 @@ import { cv, ctx } from './stage.js';
 import { bub, fn, go, hold, run, until } from './steps.js';
 import { dayKey, holiday, hourOf, moonPhase, now, rainNow, sunTimes } from './time.js';
 import { RM, clamp, pick, rnd } from './util.js';
-import { caption, cat, say, world } from './world.js';
+import { after, caption, cat, say, world } from './world.js';
 export const isHalloween = d => holiday(d) === 'halloween';
 // 밤: 해 지고 조금 뒤 ~ 새벽 4시 (박쥐·유령), 마녀는 19시 ~ 4시
 const batNight = d => {
@@ -142,10 +142,10 @@ export function startBats() {
     return;
   const dir = Math.random() < 0.5 ? 1 : -1, n = Math.random() < 0.5 ? 2 : 3, far = Math.random() < 0.4;
   world.bats = { t: 0, dur: rnd(5, 7.5), dir, y: rnd(70, 170), far, m: Array.from({ length: n }, (_, i) => ({ back: i * rnd(26, 42), dy: rnd(-24, 24), ph: rnd(0, 1), fq: rnd(1.6, 2.4), wing: rnd(0, 4), sc: rnd(0.85, 1.1) })) };
-  setTimeout(() => {
+  after(() => {
     if (world.bats && cat.tag === 'window' && !cat.closed)
       say(cat, '👀', 2.5);
-  }, 1500);
+  }, 1.5);
 }
 export function maybeBats(d, dt) {
   if (world.bats) {
@@ -181,7 +181,7 @@ export function startWitch(shadow) {
     return;
   }
   world.witch = { t: 0, dur: rnd(22, 30), y: rnd(70, 120), m: Array.from({ length: pick([3, 4]) }, (_, i) => ({ lag: 0.012 + i * 0.01, or: rnd(18, 34), ph: rnd(0, 6), wing: rnd(0, 4), sc: rnd(0.55, 0.75) })) };
-  setTimeout(() => {
+  after(() => {
     if (!world.witch || world.manduk || cat.inBox)
       return;
     if (cat.tag === 'window' && !cat.closed)
@@ -196,7 +196,7 @@ export function startWitch(shadow) {
       ], 'witch');
     else if (!cat.closed && cat.dp === 'loaf' && !cat.act && !cat.moving)
       cat.react = { f: 'tv_ear_turn', t: 1.5 }; // 귀 쫑긋
-  }, 6000);
+  }, 6);
 }
 export function maybeWitch(d, dt) {
   if (world.witch) {
@@ -244,11 +244,6 @@ function drawWitch(w) {
     drawBat(bx + 40 + Math.cos(world.t * 1.7 + m.ph) * m.or * sp, by - 10 + Math.sin(world.t * 2.2 + m.ph * 1.3) * m.or * 0.8 * sp + zig(world.t * 2 + i * 0.3) * 4, m.sc, world.t * 11 + m.wing, 0.9);
   });
 }
-// outside.js의 창밖 그리기에서 부른다 (창 영역 안)
-export function drawHalloweenSky(w) {
-  drawBats(w);
-  drawWitch(w);
-}
 /* ───────── 커튼 그림자 (이불 유령 / 마녀 반전) ───────── */
 export function startGhost() {
   if (world.curtainShadow || world.witch)
@@ -258,8 +253,8 @@ export function startGhost() {
   const nk = nightKey(now());
   world.ghostNight = world.ghostNight && world.ghostNight.k === nk ? { k: nk, n: world.ghostNight.n + 1 } : { k: nk, n: 1 };
   if (Math.random() < 0.5)
-    setTimeout(() => world.curtainShadow && caption(tr('capGhost'), 2.5), 1200);
-  setTimeout(() => ghostReaction(id), 1600);
+    after(() => world.curtainShadow && caption(tr('capGhost'), 2.5), 1.2);
+  after(() => ghostReaction(id), 1.6);
 }
 // 강고양이 씨: 깜짝 → 확인하러 감 → 이미 없음 → 시무룩 또는 그루밍 (TV 큰 사건을 늘 놓치는 것과 같은 개그)
 function ghostReaction(id) {
@@ -381,3 +376,38 @@ export function drawCurtainShadow(dk) {
   ctx.drawImage(tmpc, 0, 0);
   ctx.restore();
 }
+
+/* ───────── 사건 목록에 싣는 것 (events.js). 할로윈 기간 밤에만 저절로 생긴다 ───────── */
+// 고양이 마녀와 박쥐 수행단 (가끔 커튼 그림자가 먼저). 10/31 밤 9시 이후엔 꼭 한 번
+export const witchEvent = {
+  id: 'witch',
+  tick: (d, real) => maybeWitch(d, real),
+  sky: drawWitch,
+  reset() {
+    world.witch = null;
+  },
+  dev: [{ btn: 'dWitch', go: () => startWitch(Math.random() < 0.5) }],
+  debug: { startWitch },
+};
+// 창밖 박쥐 두세 마리 (25분에 한 번 꼴)
+export const batsEvent = {
+  id: 'bats',
+  tick: (d, real) => maybeBats(d, real),
+  sky: drawBats,
+  reset() {
+    world.bats = null;
+  },
+  dev: [{ btn: 'dBat', go: () => startBats() }],
+  debug: { startBats },
+};
+// 커튼 유령 그림자 (달이 떠 있는 밤, 하룻밤 두 번까지). 마녀 반전 그림자도 이 자리를 쓴다
+export const ghostEvent = {
+  id: 'ghost',
+  tick: (d, real) => maybeGhost(d, real),
+  shadow: drawCurtainShadow,
+  reset() {
+    world.curtainShadow = null;
+  },
+  dev: [{ btn: 'dGhost', go: () => startGhost() }],
+  debug: { startGhost },
+};

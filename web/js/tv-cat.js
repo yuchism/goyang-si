@@ -9,7 +9,7 @@ import { bub, fn, go, hold, run } from './steps.js';
 import { TVP, tvCold, tvOn } from './tv.js';
 import { TV_REACT_NAMES } from './tv-core.js';
 import { pick, rnd } from './util.js';
-import { cat, say, world } from './world.js';
+import { after, cat, say, world } from './world.js';
 /* TV와 강고양이 씨 */
 const faceTV = a => {
   a.face = O.tv.pos.x > a.x ? 1 : -1;
@@ -214,10 +214,10 @@ const REACT = {
   // 잠시 뒤 TV 뒤로 돌아가 빼꼼 (공 쫓기, 상자). p: 확률
   peekBehind: r => {
     if (Math.random() < (r.p != null ? r.p : 1) && !world.manduk)
-      setTimeout(() => {
+      after(() => {
         if (cat.act && cat.act.c === 'tvwatch')
           tvPeekB();
-      }, 1500);
+      }, 1.5);
   },
   // 보다가 졸기 (날씨 캐스터가 해 위에서 낮잠): 화면 앞에서 식빵 자세로 눈을 감는다. p: 확률
   doze: r => {

@@ -8,9 +8,9 @@ import { Snd } from './sound.js';
 import { DEPTH, cam, ctx } from './stage.js';
 import { bub, fn, go, hold, run, until } from './steps.js';
 import { oddHintToday } from './install.js';
-import { FIRST, dayNum, isAnniversary, now, rainNow } from './time.js';
+import { FIRST, dayNum, isAnniversary, isWeekend, mandukAsleep, mandukHome, now, rainNow } from './time.js';
 import { HAND, INK, RM, ease, lerp, pick, rnd, store } from './util.js';
-import { caption, cat, mouse, say, world } from './world.js';
+import { after, caption, cat, mouse, say, world } from './world.js';
 import { tr } from './i18n.js';
 import { sweepCrumbs } from './fish.js';
 /* ───────── 김만득 씨 ───────── */
@@ -86,6 +86,21 @@ export function startVisit(type) {
   innocent();
   caption(tr('capSteps'), 2.4);
   Snd.thump(0.6);
+}
+// 매 장면 (main.js): 소음 게이지가 차면 만득 씨가 와 본다. 주말 낮에는 가끔 그냥 들여다본다
+export function visitTick(d, dt) {
+  world.noise = Math.max(0, world.noise - dt * 0.02);
+  const home = mandukHome(d), asleep = mandukAsleep(d);
+  if (home && !world.manduk && world.visitsToday < 8 && world.t - world.lastVisit > 60) {
+    if (world.noise > (asleep ? 1.25 : 0.8)) {
+      world.noise = 0;
+      startVisit(asleep ? 'night' : 'noise');
+    }
+    else if (!asleep && isWeekend(d) && Math.random() < dt / 900)
+      startVisit('check');
+  }
+  if (!home)
+    world.noise = Math.max(0, world.noise - dt * 0.05);
 }
 export function updateManduk(dt) {
   const m = world.manduk;
@@ -179,49 +194,73 @@ export function updateManduk(dt) {
   if (m.phase === 'close') {
     if (m.t > 0.9) {
       world.manduk = null;
-      straightenFrame(m.type); // 다녀가면서 삐뚤어진 액자를 바로잡아 놓았다
+      visitResults(m.type, 'end').forEach(r => r.done()); // 나간 뒤에 보이는 결과 (액자)
     }
   }
 }
-function act(m) {
-  const d = now();
-  const later = (ms, f) => setTimeout(() => {
-    if (world.manduk === m)
-      f();
-  }, ms); // 시간 점프로 방문이 먼저 끝났으면 하지 않는다 (결과는 endVisitNow가 이미 적용)
-  if (m.type === 'feed' || m.type === 'ret') {
-    m.hand = { x: P.bowl.x, y: P.bowl.y - 20, k: 0 };
-    later(700, () => {
+/* ───────── 다녀간 결과: 방문 종류별로 한 곳에 ─────────
+   세 군데가 이 표를 쓴다. "만득 씨가 오면 ○○도 해 놓는다"를 더할 때는 여기 한 줄.
+   - 실제 방문 (act): 장면에 맞춰 at초 뒤에 live(없으면 done). at이 'end'면 나간 뒤에. scene이면 장면이 직접 한다(act2)
+   - 방문 도중 시간 점프 (endVisitNow): 바로 done
+   - 꺼져 있던 동안 지나간 정해진 방문 (jump.js missedVisit): missed가 true인 것만 done.
+     false인 것은 다른 곳이 시각으로 계산한다(밥그릇·스탠드·간식: jump.js, 액자: frame.js missedFix) */
+const NOT_LIGHTS = t => t !== 'lights';
+const VISIT_RESULTS = [
+  { id: 'bowl', types: ['feed', 'ret'], at: 0.7, missed: false, live: () => {
       world.bowlFull = true;
       Snd.clink();
-      sweepCrumbs(); // 붕어빵 부스러기도 치운다 (쪽지에 남음)
-      if (world.cup.state === 'floor')
+    }, done: () => {
+      world.bowlFull = true;
+    } },
+  { id: 'crumbs', types: ['feed', 'ret'], at: 0.7, missed: true, done: () => sweepCrumbs() }, // 붕어빵 부스러기 (쪽지에 남음)
+  { id: 'cup', types: ['feed', 'ret', 'noise'], at: t => t === 'noise' ? 1.1 : 0.7, missed: true, done: () => {
+      if (world.cup.state === 'floor' || world.cup.state === 'falling')
         cupToTable();
-    });
-  }
-  if (m.type === 'noise') {
-    if (world.cup.state === 'floor') {
-      later(1100, cupToTable);
-    }
-    else {
-      m.lines = LINES().quiet[0];
-      m.say = m.lines[0];
-    }
-  }
-  if (m.type === 'lights') {
-    later(900, () => {
+    } },
+  { id: 'lamp', types: ['lights'], at: 0.9, missed: false, live: () => {
       world.lampOn = false;
       Snd.click();
-    });
-  }
-  if (m.type === 'anniv') {
-    later(800, () => {
+    }, done: () => {
+      world.lampOn = false;
+    } },
+  { id: 'treat', types: ['anniv'], at: 0.8, missed: false, done: () => {
       world.treat = true;
-    });
+    } },
+  { id: 'laptop', types: NOT_LIGHTS, when: () => !!world.laptop, scene: true, missed: false, done: () => clearLaptop() }, // 노트북에 쓴 글 (act2가 말과 함께)
+  { id: 'frame', types: ['feed', 'ret', 'lights', 'anniv'], at: 'end', missed: false, done: () => straightenFrame() }, // 삐뚤어진 액자
+];
+const has = (r, t) => typeof r.types === 'function' ? r.types(t) : r.types.includes(t);
+// type 방문의 결과들. at: 'end'면 나간 뒤 것만, 'now'면 나가기 전 것만, 없으면 전부
+function visitResults(type, at) {
+  return VISIT_RESULTS.filter(r => has(r, type) && (!r.when || r.when()) && (at == null || (at === 'end') === (r.at === 'end')));
+}
+// 액자를 바로잡는 방문 이름들 (frame.js)
+export const frameFixers = () => VISIT_RESULTS.find(r => r.id === 'frame').types;
+// 꺼져 있던 동안 지나간 정해진 방문 하나의 결과 (jump.js)
+export function missedVisit(type) {
+  visitResults(type).filter(r => r.missed).forEach(r => r.done());
+}
+function clearLaptop() {
+  world.laptop = '';
+  store.set('laptop', '');
+  world.notes.cleared = true;
+}
+function act(m) {
+  const later = (sec, f) => after(() => {
+    if (world.manduk === m)
+      f();
+  }, sec); // 시간 점프로 방문이 먼저 끝났으면 하지 않는다 (결과는 endVisitNow가 이미 적용)
+  if (m.type === 'feed' || m.type === 'ret')
+    m.hand = { x: P.bowl.x, y: P.bowl.y - 20, k: 0 };
+  if (m.type === 'noise' && world.cup.state !== 'floor') { // 치울 게 없으면 조용히 하라는 말만
+    m.lines = LINES().quiet[0];
+    m.say = m.lines[0];
   }
-  if (world.laptop && m.type !== 'lights') {
-    m.extra = true;
-  }
+  for (const r of visitResults(m.type, 'now'))
+    if (!r.scene)
+      later(typeof r.at === 'function' ? r.at(m.type) : r.at, r.live || r.done);
+  if (visitResults(m.type).some(r => r.id === 'laptop'))
+    m.extra = true; // 노트북을 치우느라 조금 더 머문다 (act2)
 }
 // 컵을 탁자 위 제자리로
 export function cupToTable() {
@@ -236,44 +275,27 @@ export function endVisitNow() {
   const m = world.manduk;
   if (!m)
     return;
-  const t = m.type;
-  if ((t === 'feed' || t === 'ret' || t === 'noise') && (world.cup.state === 'floor' || world.cup.state === 'falling'))
-    cupToTable();
-  if (t === 'feed' || t === 'ret') {
-    world.bowlFull = true;
-    sweepCrumbs();
-  }
-  if (t === 'lights')
-    world.lampOn = false;
-  if (t === 'anniv')
-    world.treat = true;
-  if (world.laptop && t !== 'lights') { // 노트북에 쓴 글을 치우고 간다 (act2의 extra와 같은 결과)
-    world.laptop = '';
-    store.set('laptop', '');
-    world.notes.cleared = true;
-  }
+  const res = visitResults(m.type); // 표의 결과를 모두 바로 (act·act2·나간 뒤와 같은 결과)
   world.manduk = null;
-  straightenFrame(t);
+  res.forEach(r => r.done());
 }
 function act2(m) {
   if (m.type === 'noise' && m.lines[1]) {
-    setTimeout(() => world.manduk === m && say(cat, '🙉', 4), 600);
+    after(() => world.manduk === m && say(cat, '🙉', 4), 0.6);
   }
   if (m.type === 'ret' || m.type === 'anniv') {
     m.hand = { x: cat.x, y: cat.y - 100 * DEPTH(cat.y), k: 0 };
     Snd.purr(3);
     if (m.type === 'anniv')
-      setTimeout(() => world.manduk === m && say(cat, '🎂❤️', 5), 500);
+      after(() => world.manduk === m && say(cat, '🎂❤️', 5), 0.5);
   }
   if (m.extra) {
-    setTimeout(() => {
+    after(() => {
       if (world.manduk === m) {
         world.manduk.say = tr('mandukKeyboard');
-        world.laptop = '';
-        store.set('laptop', '');
-        world.notes.cleared = true;
+        clearLaptop(); // 표의 laptop
       }
-    }, 2200);
+    }, 2.2);
   }
 }
 /* ───────── 포스트잇 ───────── */

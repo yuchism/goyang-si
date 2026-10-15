@@ -1,14 +1,15 @@
 /* 창밖과 하늘을 나는 것: 하늘·해·달·구름·비·눈, 새, 나비, UFO, 산타 썰매 */
 import { play } from './anim.js';
-import { drawHalloweenSky } from './halloween.js';
+import { eventsSky } from './events.js';
 import { IMG, imageReady, img } from './assets.js';
 import { drawPetals } from './birthday.js';
 import { P } from './objects.js';
 import { ctx } from './stage.js';
 import { fn, hold, run, until } from './steps.js';
 import { MOON_SOUTH, darkness, dayKey, holiday, hourOf, moonPhase, rainNow, season, skyAt, sunTimes } from './time.js';
+import { tr } from './i18n.js';
 import { RM, clamp, hash, pick, rnd } from './util.js';
-import { cat, mouse, say, world } from './world.js';
+import { after, caption, cat, mouse, say, world } from './world.js';
 /* ───────── 나비 ───────── */
 export function spawnButterfly() {
   if (world.bfly)
@@ -229,9 +230,7 @@ export function drawOutside(d, w) {
     if (b.x > w.w + 20)
       world.bird = null;
   }
-  drawUFO(w);
-  drawSanta(w);
-  drawHalloweenSky(w);
+  eventsSky(w); // UFO, 산타 썰매, 마녀, 박쥐… (events.js)
   drawPetals(w);
   if (rain && season(d) === 'winter') {
     ctx.fillStyle = 'rgba(255,255,255,.92)';
@@ -276,7 +275,7 @@ export function startUFO() {
   if (world.ufo)
     return;
   world.ufo = { t: 0, dur: rnd(16, 24), y: rnd(60, 150), blink: world.lastType && world.t - world.lastType < 90 || Math.random() < 0.4 };
-  setTimeout(() => {
+  after(() => {
     if (!world.ufo || world.manduk)
       return;
     if (!cat.closed && !cat.inBox)
@@ -293,7 +292,7 @@ export function startUFO() {
       mouse.react = { t: 2.5 };
       say(mouse, '‼️', 2.5);
     }
-  }, 4000);
+  }, 4);
 }
 // 산타 썰매: 크리스마스 무렵 밤에 아주 멀리 하늘을 지나가는 실루엣. 24일 밤에는 꼭 한 번
 function drawSanta(w) {
@@ -346,7 +345,7 @@ export function startSanta() {
   if (world.santa)
     return;
   world.santa = { t: 0, dur: rnd(22, 30), y: rnd(70, 120) };
-  setTimeout(() => {
+  after(() => {
     if (!world.santa)
       return;
     if (!cat.closed && !cat.inBox && !world.manduk)
@@ -359,7 +358,7 @@ export function startSanta() {
         hold(3, 'stand'),
         hold(10, 'loaf')
       ], 'santa');
-  }, 6000);
+  }, 6);
 }
 export function drawButterfly() {
   const b = world.bfly;
@@ -375,3 +374,43 @@ export function drawButterfly() {
     ctx.drawImage(im, -24, -16, 48, 48 * im.height / im.width);
   ctx.restore();
 }
+
+/* ───────── 사건 목록에 싣는 것 (events.js) ───────── */
+// 나비: 봄·여름 낮, 비가 안 오고 만득 씨가 없을 때 (여름엔 7분, 봄엔 12분에 한 번 꼴)
+export const butterflyEvent = {
+  id: 'bfly',
+  tick(d, real, bf) {
+    const dt = real * bf, ss = season(d), hr = hourOf(d), [sr, sset] = sunTimes(d);
+    if (!world.bfly && !world.manduk && hr > sr + 1 && hr < sset - 1 && !rainNow(d) && (ss === 'spring' || ss === 'summer') && Math.random() < dt / (ss === 'summer' ? 420 : 700))
+      spawnButterfly();
+    updateButterfly(real * Math.min(bf, 3));
+  },
+  room: drawButterfly,
+  reset() {
+    world.bfly = null;
+  },
+  dev: [{ btn: 'dBfly', go: () => spawnButterfly() }],
+  debug: { spawnButterfly },
+};
+// UFO: 밤 8시~새벽 4시, 3시간에 한 번 꼴 (고양이가 몰래 노트북을 친 직후엔 훨씬 자주)
+export const ufoEvent = {
+  id: 'ufo',
+  tick: (d, real) => maybeUFO(d, real),
+  sky: drawUFO,
+  reset() {
+    world.ufo = null;
+  },
+  dev: [{ btn: 'dUfo', go: () => world.manduk ? caption(tr('devNoUfo'), 3) : startUFO() }], // 만득 씨는 UFO를 보면 안 된다
+  debug: { startUFO },
+};
+// 산타 썰매: 크리스마스 무렵 밤, 24일 밤 9시 이후엔 꼭 한 번
+export const santaEvent = {
+  id: 'santa',
+  tick: (d, real) => maybeSanta(d, real),
+  sky: drawSanta,
+  reset() {
+    world.santa = null;
+  },
+  dev: [{ btn: 'dSanta', go: () => startSanta() }],
+  debug: { startSanta },
+};

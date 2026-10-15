@@ -1,12 +1,12 @@
 /* 강고양이 씨와 쥐야쥐가 함께: 인사, 술래잡기, 노려보기, 상자 숨바꼭질, 같이 자기 */
 import { play } from './anim.js';
 import { loafB } from './cat.js';
-import { mouseFleeAround } from './mouse.js';
+import { MOUSE_RUN, mouseFleeAround } from './mouse.js';
 import { P, S } from './objects.js';
-import { bub, faceTo, fn, follow, go, hold, run, until } from './steps.js';
+import { bub, faceTo, fn, follow, go, hold, inSpot, run, until } from './steps.js';
 import { boxToday, now } from './time.js';
 import { clamp, pick, rnd } from './util.js';
-import { cat, mouse, say, world } from './world.js';
+import { after, cat, mouse, say, world } from './world.js';
 /* ───── 둘이 함께 ───── */
 export const mouseFree = () => !mouse.hidden && !mouse.peek && mouse.state !== 'flee' && !world.manduk;
 const nearCat = (dx, dy = 4) => [clamp(cat.x + dx, 60, 1140), clamp(cat.y + dy, 600, 738)];
@@ -69,10 +69,10 @@ export function chaseS() {
     hold(rnd(14, 24), 'loaf'),
     hold(rnd(10, 20), 'loaf', true)
   ], 'chase');
-  setTimeout(() => {
+  after(() => {
     if (cat.tag === 'chase')
       cat.tag = 'rest';
-  }, 11000);
+  }, 11);
   world.noise += 0.15;
 }
 // 노려보기: 식빵 자세로 쥐야쥐를 지켜보다 가까이 오면 덮친다. 물론 놓친다
@@ -177,4 +177,55 @@ export function duetB() {
       return f();
   }
   greetS();
+}
+
+/* ───── 매 장면 (main.js): 둘이 가까이 있을 때 저절로 일어나는 일 ───── */
+export function duetTick(dt) {
+  // 같이 낮잠 → 뒤척임 → 화들짝
+  if (!mouse.hidden && mouse.state === 'nap' && mouse.closed && cat.tag === 'nap' && cat.closed && Math.abs(cat.x - mouse.x) < 190) {
+    mouse.napTogether = (mouse.napTogether || 0) + dt;
+    if (mouse.napTogether > rnd(40, 90)) {
+      mouse.napTogether = 0;
+      cat.pose = 'roll';
+      cat.rock = 1;
+      after(() => {
+        cat.rock = 0;
+        cat.pose = 'loaf';
+      }, 2.6);
+      mouse.state = 'flee';
+      say(mouse, '‼️', 2);
+      run(mouse, [
+        hold(0.5, 'walk'),
+        go(S('hole.out')[0], S('hole.out')[1], MOUSE_RUN),
+        fn(a => {
+          a.hidden = true;
+          a.state = '';
+          a.where = 'hole';
+        })
+      ], 'flee');
+    }
+  }
+  // 자는 강고양이 씨 앞을 지나가는 쥐야쥐
+  if (!mouse.hidden && cat.closed && cat.tag === 'nap' && mouse.state !== 'nap' && Math.abs(cat.x - mouse.x) < 120 && !cat.peeked) {
+    cat.peeked = true;
+    run(cat, [
+      hold(2.5, 'loaf', false),
+      bub('🐭 … 🙄', 3),
+      hold(1, 'loaf', true),
+      hold(rnd(40, 90), 'loaf', true)
+    ], 'nap');
+    after(() => cat.peeked = false, 60);
+  }
+  // 서로 의식하기
+  if (!mouse.hidden && !mouse.peek && !world.manduk) {
+    const dd = Math.hypot(cat.x - mouse.x, cat.y - mouse.y);
+    if (dd < 420 && !cat.moving && !cat.act && !cat.tr && !cat.closed && !inSpot(cat) && cat.tag !== 'window')
+      cat.face = mouse.x > cat.x ? 1 : -1;
+    if (dd < 300 && !mouse.moving && !mouse.closed && mouse.state !== 'flee')
+      mouse.face = cat.x > mouse.x ? 1 : -1;
+    if (dd < 420 && !cat.duetT)
+      cat.duetT = world.t;
+  }
+  else
+    cat.duetT = 0;
 }

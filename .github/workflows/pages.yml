@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Check image list (meta.json)
+        run: python3 tools/build_meta.py --check
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Stamp service worker version

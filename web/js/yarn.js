@@ -7,17 +7,16 @@ import { tvFree } from './behave.js';
 import { Snd } from './sound.js';
 import { DEPTH, ctx } from './stage.js';
 import { bub, fn, go, hold, routeTo, run, stepToward } from './steps.js';
-import { hourOf, now } from './time.js';
+import { now } from './time.js';
+import { gateMark, gateOk } from './gate.js';
 import { RM, clamp, rnd } from './util.js';
-import { cat, mouse, say, world } from './world.js';
+import { after, cat, mouse, say, world } from './world.js';
 
 const R = 22; // 방에서 실뭉치 반지름
 const FRICTION = 1.7; // 굴러가다 서는 빠르기
-const GAP = 3 * 3600e3; // 방 시각으로 3시간에 한 번까지
 const OUT_X = -60; // 화면 밖 (실 끝이 있는 곳)
 /* 상태: null(없음) | 'in'(굴러 들어오는 중) | 'idle' | 'held'(고양이가 껴안음) | 'pull'(끌려 나가는 중) */
 const Y = { state: null, x: 0, y: 0, vx: 0, vy: 0, rot: 0, ay: 690, t: 0, life: 0 };
-let lastYarn = -1e18;
 export const yarnState = () => Y; // 점검용
 
 /* ───── 나타나기·끌려가기 ───── */
@@ -27,13 +26,13 @@ export function yarnIn(stopX) {
     return false;
   const y = rnd(655, 722), sx = stopX != null ? stopX : rnd(260, 520);
   Object.assign(Y, { state: 'in', x: OUT_X + 10, y, vx: (sx - OUT_X) * FRICTION, vy: 0, rot: 0, ay: y + rnd(-15, 15), t: 0, life: rnd(70, 110) });
-  lastYarn = now().getTime();
+  gateMark('yarn', now());
   Snd.thump(0.15, 260);
   // 고양이: 자고 있으면 그대로, 한가하면 알아채고 놀러 온다
-  setTimeout(() => {
+  after(() => {
     if (Y.state && !world.manduk && !cat.closed && tvFree(cat) && cat.tag !== 'yarn')
       yarnB();
-  }, 1200);
+  }, 1.2);
   return true;
 }
 function pullOut() {
@@ -50,8 +49,7 @@ export function yarnReset() { // 시간 점프 (jump.js)
 export function yarnTick(dt) {
   const d = now();
   if (!Y.state) {
-    const h = hourOf(d);
-    if (h >= 8 && h < 22 && !world.manduk && !world.party && d.getTime() - lastYarn > GAP && Math.random() < dt / 1200)
+    if (gateOk('yarn', d) && Math.random() < dt / 1200) // 시간대·간격은 gate.js 표
       yarnIn();
     return;
   }
@@ -240,10 +238,10 @@ export function tapYarn(x) {
   push(x < Y.x ? 1 : -1, rnd(200, 280));
   Y.t = Math.min(Y.t, Y.life - 20); // 누르면 조금 더 머문다
   if (!cat.closed && !world.manduk && cat.tag !== 'yarn' && tvFree(cat))
-    setTimeout(() => {
+    after(() => {
       if (Y.state && cat.tag !== 'yarn' && !cat.closed)
         yarnB();
-    }, 400);
+    }, 0.4);
 }
 
 /* ───── 그리기: 앞뒤 정렬에 끼운다 (main.js render) ───── */
@@ -283,3 +281,19 @@ function drawYarn() {
   ctx.drawImage(im, -r, -r, r * 2, r * 2 * im.height / im.width);
   ctx.restore();
 }
+
+/* ───── 놀이 목록에 싣는 것 (plays.js) ───── */
+export const yarnPlay = {
+  id: 'yarn',
+  tick: dt => yarnTick(dt),
+  layers: yarnLayers,
+  press(x, y, when) { // 톡 굴러간다 (고양이보다 먼저 본다 — 고양이 앞발 밑에 있을 때가 많다)
+    if (when !== 'before' || !yarnAt(x, y))
+      return false;
+    tapYarn(x);
+    return true;
+  },
+  reset: () => yarnReset(), // 시간 점프: 굴러다니던 실뭉치는 이미 끌려 나갔다
+  dev: { btn: 'dYarn', go: () => !world.manduk && yarnIn() },
+  debug: { yarnIn, yarnB, yarnState },
+};

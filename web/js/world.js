@@ -19,3 +19,24 @@ export function say(a, t, sec = 4) {
 export function caption(t, sec) {
   world.captions.push({ t, life: sec, max: sec });
 }
+
+/* ───────── 방 시간 타이머 ─────────
+   행동 순서를 "몇 초 뒤에"로 잇는 곳은 setTimeout 대신 after(할 일, 초)를 쓴다. 방 시간(미리보기 배속 포함)으로 재고,
+   화면이 멈추면(탭을 떠나면) 같이 멈춘다. main.js frame이 매 장면 맨 앞에서 tickTimers를 부른다 */
+const timers = [];
+let clock = 0;
+export function after(f, sec) { // setTimeout과 같은 순서 (단, 초)
+  timers.push({ at: clock + sec, f });
+}
+export function tickTimers(dt) {
+  clock += dt;
+  if (!timers.length)
+    return;
+  const due = timers.filter(x => x.at <= clock);
+  if (!due.length)
+    return;
+  for (let i = timers.length - 1; i >= 0; i--)
+    if (due.includes(timers[i]))
+      timers.splice(i, 1);
+  due.sort((a, b) => a.at - b.at).forEach(x => x.f()); // 먼저 정한 것부터 (같으면 넣은 순서)
+}

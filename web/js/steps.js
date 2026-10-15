@@ -1,7 +1,7 @@
 /* 행동 단계와 길찾기: 걷기(go), 따라가기, 기다리기, 말풍선 단계, 순서대로 실행(run) */
 import { EDGE, nextHop } from './anim.js';
 import { checkTag } from './behave.js';
-import { OBJ, S, objView, present } from './objects.js';
+import { O, OBJ, S, objView, present, topOf, zOf } from './objects.js';
 import { clamp, lerp } from './util.js';
 // step helpers
 /* ───────── 길찾기: 사물의 몸(body)을 피해 간다 ───────── */
@@ -166,7 +166,7 @@ export const until = (cond, max = 60) => ({ init(a) {
    TV 위, TV 뒤, 상자 안처럼 바닥이 아닌 곳. 다른 행동이 시작되면(run) exit가 바닥의 제자리로 내려놓는다.
    새 자리(쳇바퀴 안, 어항 옆 받침대 등)는 여기에 한 덩어리 더한다. 순서대로 확인한다 */
 export const SPOTS = [
-  { id: 'tv', on: a => a.onTV, exit(a) { // TV 위에서 내려와서 시작
+  { id: 'tv', on: a => a.onTV, lift: () => topOf('tv'), shadow: false, exit(a) { // TV 위에서 내려와서 시작
       a.onTV = false;
       const s = S('tv.side');
       if (s) {
@@ -176,7 +176,7 @@ export const SPOTS = [
       a.dp = a.pose = 'stand';
       a.tr = null;
     } },
-  { id: 'tvPeek', on: a => a.tvPeek, exit(a) {
+  { id: 'tvPeek', on: a => a.tvPeek, lift: () => zOf(O.tv), shadow: false, exit(a) {
       a.tvPeek = false;
       const s = S('tv.behind');
       if (s) {
@@ -196,6 +196,23 @@ export const SPOTS = [
 // 바닥이 아닌 자리에 있나 (어느 자리인지는 spotOf)
 export const spotOf = a => SPOTS.find(s => s.on(a)) || null;
 export const inSpot = a => !!spotOf(a);
+/* 자리마다 그리기에 쓰는 값 (적지 않으면 바닥과 같다)
+   lift(a): 바닥에서 떠 있는 높이 / shadow: false면 바닥 그림자 없음 / layer: false면 그 자리 주인이 같이 그린다(main.js가 따로 안 그림) */
+// 바닥에서 떠 있는 높이 (그리기·누르기 판정). TV로 뛰어오르는 중이면 그 높이
+export function actorLift(a) {
+  if (a.jump)
+    return a.jump.lift;
+  const s = spotOf(a);
+  return s && s.lift ? s.lift(a) : 0;
+}
+export const hasShadow = a => {
+  const s = spotOf(a);
+  return !(s && s.shadow === false);
+};
+export const ownLayer = a => {
+  const s = spotOf(a);
+  return !(s && s.layer === false);
+};
 export function run(a, steps, tag = '') {
   if (a.act)
     a.act = null;

@@ -13,7 +13,7 @@ import { tvTopB, tvTopBlockedB, tvWatchB } from './tv-cat.js';
 import { pick, rnd, store } from './util.js';
 import { tr } from './i18n.js';
 import { oddLookB, oddLookWeight } from './install.js';
-import { cat, mouse, say, world } from './world.js';
+import { after, cat, mouse, say, world } from './world.js';
 import { bowlWatchB, bowlWatchOk, fishB, fishOk } from './fish.js';
 import { penStareB, penStareOk } from './laser.js';
 import { wheelB, wheelOk } from './wheel.js';
@@ -313,10 +313,10 @@ export function petCat() {
     if (cat.closed) {
       const was = cat.closed;
       cat.closed = false;
-      setTimeout(() => {
+      after(() => {
         if (cat.tag === 'nap' || cat.tag === 'innocent')
           cat.closed = true;
-      }, 1400);
+      }, 1.4);
     }
     if (annoy === 1 && cat.pose === 'roll')
       Snd.purr(2);
@@ -324,7 +324,7 @@ export function petCat() {
   else if (annoy <= 4) {
     say(cat, '💢', 2.5);
     cat.rock = 1;
-    setTimeout(() => cat.rock = 0, 1200);
+    after(() => cat.rock = 0, 1.2);
   }
   else {
     annoy = 2;
@@ -337,5 +337,35 @@ export function petCat() {
       bub('😑', 3),
       hold(20, 'loaf', true)
     ], 'sulk');
+  }
+}
+
+/* ───── 매 장면 (main.js) ───── */
+// 낮잠 자다 햇빛 조각이 옮겨 가면 따라간다
+export function sunbeamTick(d, dt) {
+  const b = sunbeam(d);
+  if (cat.tag === 'nap' && cat.closed && b && b.k > 0.4 && !inBeam(b, cat.x) && Math.abs(cat.x - b.cx) < 300 && Math.random() < dt / 20) {
+    run(cat, [
+      hold(0.8, 'loaf'),
+      bub('☀️➡️ 😑', 3.5),
+      hold(2, 'loaf'),
+      go(b.cx + rnd(-30, 30), cat.y, 40),
+      hold(1, 'loaf'),
+      hold(rnd(60, 160), 'loaf', true)
+    ], 'nap');
+  }
+}
+// 탁자에서 떨어지는 컵 (knockB)
+export function cupTick(dt) {
+  const c = world.cup;
+  if (c.state === 'falling') {
+    c.fall += dt * 1.6;
+    c.fy = c.y + c.fall * c.fall * 90;
+    c.x += dt * 40;
+    if (c.fy >= 640) {
+      c.fy = 640;
+      c.state = 'floor';
+      Snd.clink();
+    }
   }
 }

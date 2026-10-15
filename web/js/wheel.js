@@ -9,7 +9,8 @@ import { drawActor } from './sprites.js';
 import { Snd } from './sound.js';
 import { DEPTH, ctx } from './stage.js';
 import { SPOTS, bub, fn, go, hold, run, stepToward } from './steps.js';
-import { hourOf, now } from './time.js';
+import { now } from './time.js';
+import { gateMark, gateOk } from './gate.js';
 import { RM, clamp, lerp, rnd } from './util.js';
 import { caption, cat, mouse, say, world } from './world.js';
 
@@ -18,10 +19,8 @@ const G = { center: [0.5009, 0.472], rIn: [0.381, 0.367], rBand: [0.433, 0.421],
 const WIDTH = 300, HOME_X = 210, FLOOR_Y = 708; // 방에서 폭, 세워 두는 곳, 바닥 깊이
 const OUT = -WIDTH / 2 - 30, IN_X = 1200 + WIDTH / 2 + 20; // 나가는 곳(왼쪽 화면 밖), 들어오는 곳(오른쪽 화면 밖)
 const RING = WIDTH * 0.39; // 고양이 머리 높이에서 바퀴 테두리까지 (바퀴 가운데로부터)
-const GAP = 4 * 3600e3; // 방 시각으로 4시간에 한 번까지
 /* 상태: null | 'push'(밀려 들어오는 중) | 'stand'(세워 둠) | 'leave'(혼자 나가는 중) */
 const W = { state: null, x: OUT, spin: 0, leaveT: 0, rider: null };
-let lastWheel = -1e18, spotAdded = false;
 export const wheelState = () => W; // 점검용
 
 /* ───── 좌표 ───── */
@@ -37,22 +36,23 @@ function headReach() {
   return m ? (m[2] - 6) * FSC * DEPTH(FLOOR_Y) : 150;
 }
 
-/* ───── 들어가 있는 자리 (steps.js SPOTS): 다른 행동이 시작되면 바퀴 오른쪽 바닥으로 내려놓는다 ───── */
-function addSpot() {
-  if (spotAdded)
-    return;
-  spotAdded = true;
-  SPOTS.push({ id: 'wheel', on: a => a.inWheel, exit(a) {
-      a.inWheel = false;
-      a.x = W.x + WIDTH * 0.5 + 20;
-      a.y = FLOOR_Y + 4;
-      if (a.kind === 'cat') {
-        a.dp = a.pose = 'stand';
-        a.tr = null;
-        leaveSoon(1.5);
-      }
-    } });
-}
+/* ───── 들어가 있는 자리 (steps.js SPOTS): 바퀴 안이거나 폴짝 오르내리는 중.
+   바퀴 안 바닥 높이만큼 떠 있고, 그림자는 없고, 쳇바퀴가 뒤판·앞판 사이에 같이 그린다(main.js가 따로 그리지 않음).
+   다른 행동이 시작되면 바퀴 오른쪽 바닥으로 내려놓는다 ───── */
+const WHEEL_SPOT = { id: 'wheel', on: a => !!(a.inWheel || a.hop), lift: a => a.hop || wheelLift(), shadow: false, layer: false,
+  exit(a) {
+    a.inWheel = false;
+    a.hop = 0;
+    a.hopF = null;
+    a.x = W.x + WIDTH * 0.5 + 20;
+    a.y = FLOOR_Y + 4;
+    if (a.kind === 'cat') {
+      a.dp = a.pose = 'stand';
+      a.tr = null;
+      leaveSoon(1.5);
+    }
+  } };
+SPOTS.push(WHEEL_SPOT);
 function leaveSoon(sec) {
   if (W.state === 'stand' || W.state === 'push') {
     W.state = 'stand';
@@ -61,9 +61,8 @@ function leaveSoon(sec) {
 }
 
 /* ───── 강고양이 씨 ───── */
-export function wheelOk(d) {
-  const h = hourOf(d);
-  return !W.state && !world.manduk && h >= 9 && h < 20 && d.getTime() - lastWheel > GAP;
+export function wheelOk(d) { // 시간대·간격은 gate.js 표
+  return !W.state && gateOk('wheel', d);
 }
 // 화면 밖으로 걸어 나가기 (go는 방 안으로만 다니므로 따로)
 const walkOff = () => ({ init(a) {
@@ -123,7 +122,7 @@ const hop = into => {
       t += dt;
       const k = Math.min(1, t / D), base = into ? wheelLift() * k : wheelLift() * (1 - k);
       a.x = lerp(x0, x1, k);
-      a.hop = base + Math.sin(Math.PI * k) * 40;
+      a.hop = Math.max(0.001, base + Math.sin(Math.PI * k) * 40); // 0이 되면 바닥에 있는 것으로 보이므로
       a.hopF = k < 0.85 ? 'pounce_1' : 'stand';
       if (k >= 1) {
         a.hop = 0;
@@ -156,8 +155,7 @@ const spinRun = (sec, sp) => {
     } };
 };
 export function wheelB() {
-  addSpot();
-  lastWheel = now().getTime();
+  gateMark('wheel', now());
   run(cat, [
     walkOff(),
     hold(rnd(1.5, 3), 'stand'), // 화면 밖에서 잠깐 (뭔가 가지러 갔다)
@@ -219,7 +217,6 @@ function mouseRide() {
 export function wheelTick(dt) {
   if (!W.state)
     return;
-  addSpot();
   if (world.manduk && W.state === 'stand' && !cat.inWheel)
     leaveSoon(0.5);
   if (W.state === 'push' && cat.tag !== 'wheel') // 밀고 들어오다 끊겼다
@@ -249,6 +246,8 @@ export function wheelReset() { // 시간 점프 (jump.js)
     cat.inWheel = false;
   if (mouse.inWheel)
     mouse.inWheel = false;
+  cat.hop = 0;
+  cat.hopF = null;
   W.rider = null;
 }
 
@@ -279,10 +278,9 @@ function drawWheel() {
   ctx.stroke();
   ctx.restore();
   // 바퀴 안의 배우들
-  if (mouse.inWheel)
-    drawActor(mouse);
-  if (cat.inWheel || cat.hop)
-    drawActor(cat);
+  for (const a of [mouse, cat])
+    if (WHEEL_SPOT.on(a))
+      drawActor(a);
   ctx.save();
   ctx.translate(0, -bob);
   drawImg('wheel_front');
@@ -294,3 +292,13 @@ function drawImg(k) {
     return;
   ctx.drawImage(im, W.x - WIDTH / 2, FLOOR_Y - H(), WIDTH, H());
 }
+
+/* ───── 놀이 목록에 싣는 것 (plays.js) ───── */
+export const wheelPlay = {
+  id: 'wheel',
+  tick: dt => wheelTick(dt),
+  layers: wheelLayers,
+  reset: () => wheelReset(), // 시간 점프: 쳇바퀴는 이미 나갔다
+  dev: { btn: 'dWheel', go: () => !world.manduk && wheelB() },
+  debug: { wheelB, wheelState },
+};

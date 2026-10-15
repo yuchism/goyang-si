@@ -2,10 +2,9 @@
    방의 상태를 그 시각에 맞춘다. 장면은 건너뛰고 결과만 적용한다. CLOCK_PLAN.md 5~7장
    원칙: 상태는 시각에서 계산하고, 사건(main.js scheduled)은 그 상태로 넘어가는 "장면"일 뿐이다 */
 import { napSpot } from './cat.js';
-import { cupToTable, endVisitNow } from './manduk.js';
-import { fishCrumbs, sweepCrumbs } from './fish.js';
-import { yarnReset } from './yarn.js';
-import { wheelReset } from './wheel.js';
+import { endVisitNow, missedVisit } from './manduk.js';
+import { playsReset } from './plays.js';
+import { eventsReset } from './events.js';
 import { ctx } from './stage.js';
 import { hold, run } from './steps.js';
 import { clockJump, dayEvents, dayKey, hourOf, now, sunTimes, sunbeam, visitHours, visitsBetween } from './time.js';
@@ -75,23 +74,20 @@ export function timeJumped(prev, d, fx = true) {
   world.bowlFull = [vh.feed, vh.ret].some(t => t != null && h >= t && h < t + BOWL_KEEP);
   // 기념일 간식
   world.treat = !!(vh.anniv && h >= vh.anniv);
-  // 컵: 바닥에 있었고 그사이 만득 씨가 밥·퇴근으로 다녀갔으면 탁자 위로 (manduk.js act와 같은 결과)
+  // 컵: 떨어지던 중이면 바닥에 떨어진 것으로 (그다음 지나간 방문이 치웠으면 탁자 위로)
   const c = world.cup;
   if (c.state === 'falling') {
     c.state = 'floor';
     c.fy = 640;
   }
-  if (c.state === 'floor' && visitsBetween(a, b).some(v => v === 'feed' || v === 'ret'))
-    cupToTable();
-  if (fishCrumbs() && visitsBetween(a, b).some(v => v === 'feed' || v === 'ret'))
-    sweepCrumbs(); // 붕어빵 부스러기도 (manduk.js act와 같은 결과)
+  visitsBetween(a, b).forEach(missedVisit); // 그사이 지나간 정해진 방문의 결과 (manduk.js 다녀간 결과 표: 컵, 붕어빵 부스러기…)
   // 쥐야쥐: 쥐구멍으로
   Object.assign(mouse, { hidden: true, peek: false, steps: [], cur: null, state: '', where: 'hole', bub: null, react: null, moving: false, closed: false, napTogether: 0 });
   // 말풍선·자막, 창밖에 지나가던 것, 잠깐 있는 효과
   world.captions.length = 0;
-  yarnReset(); // 굴러다니던 실뭉치는 이미 끌려 나갔다
-  wheelReset(); // 쳇바퀴도
-  Object.assign(world, { ufo: null, santa: null, witch: null, bats: null, bird: null, bfly: null, curtainShadow: null, paw: null });
+  playsReset(a, b); // 놀이: 실뭉치·쳇바퀴는 이미 나갔다 (plays.js)
+  eventsReset(); // 지나가던 나비·UFO·산타·마녀·박쥐·커튼 그림자 (events.js)
+  Object.assign(world, { bird: null, paw: null });
   // 강고양이 씨: 자연스러운 자세로. 생일 파티는 애니메이션 시계로 흐르니 그대로 둔다
   if (cat.tag !== 'birthday')
     settleCat(d);

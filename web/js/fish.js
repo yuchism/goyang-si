@@ -8,7 +8,8 @@ import { O, present } from './objects.js';
 import { Snd } from './sound.js';
 import { DEPTH, ctx } from './stage.js';
 import { bub, faceTo, fn, go, hold, run } from './steps.js';
-import { hourOf, now } from './time.js';
+import { now } from './time.js';
+import { gateMark, gateOk } from './gate.js';
 import { RM, clamp, lerp, rnd } from './util.js';
 import { cat, mouse, say, world } from './world.js';
 
@@ -17,12 +18,11 @@ const ROD_TIP = { cat_fish_sit_1: [15, 12], cat_fish_sit_2: [15, 11.4], cat_fish
 // 어항 그림 안의 자리 (그림 폭·높이에 대한 비율): 물 타원 [가운데 x, y, 반지름 x, y], 보물상자 입구, 바늘 늘어뜨릴 곳, 수면 높이
 const BOWL = { water: [0.5, 0.41, 0.36, 0.18], chest: [0.68, 0.56], hook: [0.4475, 0.44], surface: 0.18 };
 const FISH_W = 25, BOONG_W = 30, CAT_Y = 650; // 방 크기: 금붕어 길이, 붕어빵 길이, 낚시할 때 고양이 발 높이
-const FISH_GAP = 4 * 3600e3; // 낚시는 방 시각으로 4시간에 한 번까지
 
 /* ───── 상태 ───── */
 const F = { x: 0, y: 0, tx: 0, ty: 0, face: -1, mode: 'swim', t: 0, wait: 0, ph: 0, ready: false,
   rod: false, line: 0, hookItem: null, help: null, helpT: 0, bite: false, bubbles: [], ripple: null };
-let boong = null, weedTip = false, lastFish = -1e18, crumbs = null; // crumbs: 붕어빵 부스러기 {x, y}
+let boong = null, weedTip = false, crumbs = null; // crumbs: 붕어빵 부스러기 {x, y}
 export const fishCrumbs = () => crumbs;
 export const fishRodOut = () => F.rod; // objects.js: 낚시하는 동안 벽의 낚싯대를 숨긴다
 export const fishState = () => ({ F, boong }); // 점검용
@@ -68,12 +68,11 @@ export function fishSpot() {
 }
 
 /* ───── 강고양이 씨: 낚시 ───── */
-export function fishOk(d) {
-  const h = hourOf(d);
-  return !!O.fishbowl && present(O.fishbowl) && !world.manduk && h >= 8 && h < 21 && d.getTime() - lastFish > FISH_GAP;
+export function fishOk(d) { // 시간대·간격은 gate.js 표
+  return !!O.fishbowl && present(O.fishbowl) && gateOk('fish', d);
 }
 export function fishB() {
-  lastFish = now().getTime();
+  gateMark('fish', now());
   const [sx, sy] = fishSpot();
   run(cat, [
     go(sx, sy, 55),
@@ -510,7 +509,7 @@ export function mouseCrumbB() {
   ], 'crumb');
   return true;
 }
-// 만득 씨가 밥·퇴근으로 다녀가면 치운다 (manduk.js, jump.js). 쥐야쥐가 안 먹었으면 오늘 쪽지가 바뀐다
+// 만득 씨가 밥·퇴근으로 다녀가면 치운다 (manduk.js 다녀간 결과 표). 쥐야쥐가 안 먹었으면 오늘 쪽지가 바뀐다
 export function sweepCrumbs() {
   if (!crumbs)
     return;
@@ -546,3 +545,19 @@ export function bowlWatchB() {
     hold(rnd(30, 80), 'loaf', true, -1)
   ], 'bowlwatch');
 }
+
+/* ───── 놀이 목록에 싣는 것 (plays.js) ───── */
+export const fishPlay = {
+  id: 'fish',
+  tick: dt => fishTick(dt), // 금붕어, 낚싯줄, 붕어빵
+  layers: fishLayers,
+  overlay: drawFishOverlay,
+  press(x, y, when) { // 어항: 금붕어가 유리 쪽으로 와서 뻐끔 (고양이·쥐야쥐 다음에 본다)
+    if (when !== 'after' || !fishAt(x, y))
+      return false;
+    tapBowl();
+    return true;
+  },
+  dev: { btn: 'dFish', go: () => !world.manduk && fishB() },
+  debug: { fishB, fishState, tapBowl, bowlWatchB, mouseCrumbB },
+};

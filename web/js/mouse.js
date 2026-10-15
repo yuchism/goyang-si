@@ -2,9 +2,9 @@
 import { napNextTo } from './duet.js';
 import { O, OBJ, S, present } from './objects.js';
 import { bub, faceTo, fn, go, hold, run } from './steps.js';
-import { inBeam, rainNow, sunbeam, wx } from './time.js';
+import { inBeam, isWeekend, mandukAsleep, mandukHome, rainNow, sunbeam, wx } from './time.js';
 import { clamp, pick, rnd } from './util.js';
-import { cat, mouse, say, world } from './world.js';
+import { after, cat, mouse, say, world } from './world.js';
 import { mouseCrumbB } from './fish.js';
 /* ───────── 쥐야쥐의 뇌 ───────── */
 function nearestHide() {
@@ -81,10 +81,10 @@ export function spawnMouse(d, force) {
   else
     mouseBrain(d);
   if (!cat.closed && !cat.act && !cat.inBox && !cat.moving)
-    setTimeout(() => {
+    after(() => {
       if (!mouse.hidden && !cat.closed && !cat.act)
         say(cat, '👀', 2.5);
-    }, 1500);
+    }, 1.5);
 }
 function nearestHideSpotFor(k) {
   return (O[k] && present(O[k]) && S(k + '.out')) || S('hole.out');
@@ -144,4 +144,38 @@ export function mouseBrain(d) {
       })]),
     hold(rnd(1, 3), 'walk')
   ], 'wander');
+}
+
+/* ───── 매 장면 (main.js): 쥐야쥐 등장 확인(25~45초마다)과 뇌 ───── */
+let mouseT = 0;
+export function resetMouseTimer() {
+  mouseT = rnd(10, 25);
+}
+export function mouseTick(d, dt) {
+  const home = mandukHome(d), asleep = mandukAsleep(d);
+  world.mouseCool = Math.max(0, world.mouseCool - dt);
+  mouseT -= dt;
+  if (mouseT <= 0) {
+    mouseT = rnd(25, 45);
+    if (mouse.hidden && !world.manduk && world.mouseCool <= 0) {
+      let p = 0.05;
+      if (!home)
+        p = 0.45;
+      else if (asleep)
+        p = 0.22;
+      else if (isWeekend(d))
+        p = 0.06;
+      else
+        p = 0.12;
+      if (rainNow(d))
+        p += 0.2;
+      if (Math.random() < p)
+        spawnMouse(d);
+    }
+  }
+  if (!mouse.hidden) {
+    mouse.outFor -= dt;
+    if (!mouse.steps.length && !mouse.cur)
+      mouseBrain(d);
+  }
 }
