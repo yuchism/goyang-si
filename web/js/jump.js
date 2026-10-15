@@ -3,6 +3,9 @@
    원칙: 상태는 시각에서 계산하고, 사건(main.js scheduled)은 그 상태로 넘어가는 "장면"일 뿐이다 */
 import { napSpot } from './cat.js';
 import { cupToTable, endVisitNow } from './manduk.js';
+import { fishCrumbs, sweepCrumbs } from './fish.js';
+import { yarnReset } from './yarn.js';
+import { wheelReset } from './wheel.js';
 import { ctx } from './stage.js';
 import { hold, run } from './steps.js';
 import { clockJump, dayEvents, dayKey, hourOf, now, sunTimes, sunbeam, visitHours, visitsBetween } from './time.js';
@@ -19,6 +22,7 @@ export function newDay(k) {
   world.doneToday = {};
   world.visitsToday = 0;
   world.notes.cleared = false;
+  world.notes.crumbs = false;
   world.treat = false;
 }
 
@@ -26,7 +30,7 @@ export function newDay(k) {
    밤이면 낮잠 자리에서 자고, 낮이면 햇빛 조각이 있으면 그 위에서 낮잠, 없으면 식빵 자세 */
 export function settleCat(d) {
   run(cat, [], ''); // TV 위·뒤, 상자 안이면 내려놓고 하던 동작을 멈춘다 (steps.js run)
-  Object.assign(cat, { act: null, tr: null, react: null, dance: null, jump: null, bub: null, rock: 0, typing: false, moving: false, peeked: false, duetT: 0 });
+  Object.assign(cat, { act: null, tr: null, react: null, dance: null, jump: null, bub: null, rock: 0, typing: false, moving: false, peeked: false, duetT: 0, hop: 0, hopF: null });
   const h = hourOf(d), [r, s] = sunTimes(d), b = sunbeam(d);
   if (h >= s + 1 || h < r) {
     const [x, y] = napSpot(d);
@@ -79,10 +83,14 @@ export function timeJumped(prev, d, fx = true) {
   }
   if (c.state === 'floor' && visitsBetween(a, b).some(v => v === 'feed' || v === 'ret'))
     cupToTable();
+  if (fishCrumbs() && visitsBetween(a, b).some(v => v === 'feed' || v === 'ret'))
+    sweepCrumbs(); // 붕어빵 부스러기도 (manduk.js act와 같은 결과)
   // 쥐야쥐: 쥐구멍으로
   Object.assign(mouse, { hidden: true, peek: false, steps: [], cur: null, state: '', where: 'hole', bub: null, react: null, moving: false, closed: false, napTogether: 0 });
   // 말풍선·자막, 창밖에 지나가던 것, 잠깐 있는 효과
   world.captions.length = 0;
+  yarnReset(); // 굴러다니던 실뭉치는 이미 끌려 나갔다
+  wheelReset(); // 쳇바퀴도
   Object.assign(world, { ufo: null, santa: null, witch: null, bats: null, bird: null, bfly: null, curtainShadow: null, paw: null });
   // 강고양이 씨: 자연스러운 자세로. 생일 파티는 애니메이션 시계로 흐르니 그대로 둔다
   if (cat.tag !== 'birthday')

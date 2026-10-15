@@ -20,6 +20,8 @@ import { drawJumpFade, initJump, jumpTick, newDay, settleCat } from './jump.js';
 import { frameTick } from './frame.js';
 import { drawLaserDot, laserTick } from './laser.js';
 import { drawFishOverlay, fishLayers, fishTick } from './fish.js';
+import { yarnLayers, yarnTick } from './yarn.js';
+import { wheelLayers, wheelTick } from './wheel.js';
 import { loadPrograms, tvOn, tvTick } from './tv.js';
 import { tvBig } from './tv-guide.js';
 import { drawTVNight, drawTvBuf, tvBuf } from './tv-screen.js';
@@ -246,6 +248,8 @@ function frame(tNow) {
   calmDown(real); // 건드림 짜증 회복
   laserTick(real); // 레이저 놀이 시간
   fishTick(dt); // 금붕어, 낚싯줄, 붕어빵
+  yarnTick(dt); // 실뭉치
+  wheelTick(dt); // 쳇바퀴
   render(d, real);
   document.getElementById('status').textContent = statusText(d);
   if (devOpen) {
@@ -277,9 +281,13 @@ function render(d, real) {
         drawCakeGlow();
       }]);
   const c = world.cup;
-  L.push([cat.inBox ? P.box.y : cat.y, () => drawActor(cat)]);
-  L.push([mouse.y, () => drawActor(mouse)]);
+  if (!cat.inWheel && !cat.hop)
+    L.push([cat.inBox ? P.box.y : cat.y, () => drawActor(cat)]);
+  if (!mouse.inWheel)
+    L.push([mouse.y, () => drawActor(mouse)]);
   L.push(...fishLayers());
+  L.push(...yarnLayers());
+  L.push(...wheelLayers()); // 바퀴 안의 고양이·쥐야쥐는 쳇바퀴가 같이 그린다
   L.sort((a, b) => a[0] - b[0]).forEach(e => e[1]());
   if (c.state === 'falling')
     drawCup(c.x, c.fy, c.fall * 4);

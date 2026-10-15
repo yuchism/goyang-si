@@ -7,10 +7,10 @@ import { drawProp } from './draw.js';
 import { O, present } from './objects.js';
 import { Snd } from './sound.js';
 import { DEPTH, ctx } from './stage.js';
-import { bub, fn, go, hold, run } from './steps.js';
+import { bub, faceTo, fn, go, hold, run } from './steps.js';
 import { hourOf, now } from './time.js';
 import { RM, clamp, lerp, rnd } from './util.js';
-import { cat, say, world } from './world.js';
+import { cat, mouse, say, world } from './world.js';
 
 // 고양이 낚시 그림의 낚싯대 끝 (프레임 픽셀, 그림 왼쪽 위 기준). 그림을 바꾸면 여기만 다시 잰다
 const ROD_TIP = { cat_fish_sit_1: [15, 12], cat_fish_sit_2: [15, 11.4], cat_fish_yank_1: [7.8, 23.5], cat_fish_yank_2: [571.2, 9.5] };
@@ -22,7 +22,8 @@ const FISH_GAP = 4 * 3600e3; // 낚시는 방 시각으로 4시간에 한 번까
 /* ───── 상태 ───── */
 const F = { x: 0, y: 0, tx: 0, ty: 0, face: -1, mode: 'swim', t: 0, wait: 0, ph: 0, ready: false,
   rod: false, line: 0, hookItem: null, help: null, helpT: 0, bite: false, bubbles: [], ripple: null };
-let boong = null, weedTip = false, lastFish = -1e18;
+let boong = null, weedTip = false, lastFish = -1e18, crumbs = null; // crumbs: 붕어빵 부스러기 {x, y}
+export const fishCrumbs = () => crumbs;
 export const fishRodOut = () => F.rod; // objects.js: 낚시하는 동안 벽의 낚싯대를 숨긴다
 export const fishState = () => ({ F, boong }); // 점검용
 
@@ -119,6 +120,7 @@ function afterCatch(a) {
     }),
     play('eat', rnd(4.5, 6)),
     fn(() => {
+      crumbs = { x: boong.x, y: boong.y, seed: Math.random() * 99 }; // 부스러기가 남는다 (쥐야쥐가 주워 가거나, 만득 씨가 치운다)
       boong = null;
     }),
     hold(0.8, 'stand'),
@@ -204,9 +206,15 @@ function fishMove(b, dt) {
   switch (F.mode) {
     case 'swim':
       if (swimTo(F.tx, F.ty, 8, dt)) {
+        const peer = cat.tag === 'bowlwatch' && !cat.closed && !cat.moving;
+        if (peer)
+          F.face = 1; // 유리 너머 고양이를 본다
         if ((F.wait -= dt) <= 0) {
-          [F.tx, F.ty] = randWater(b);
-          F.wait = rnd(0.5, 3);
+          if (peer && Math.random() < 0.7) // 고양이가 보고 있으면 유리 오른쪽으로 와서 마주 본다
+            [F.tx, F.ty] = at(b, BOWL.water[0] + BOWL.water[2] * rnd(0.6, 0.85), BOWL.water[1] + rnd(-0.06, 0.06));
+          else
+            [F.tx, F.ty] = randWater(b);
+          F.wait = peer ? rnd(3, 8) : rnd(0.5, 3);
         }
       }
       if (Math.random() < dt / 5)
@@ -432,9 +440,10 @@ function drawBoongAt(x, y, rot, w, alpha = 1) {
 }
 // 바닥의 붕어빵: 앞뒤 정렬에 끼운다 (main.js render)
 export function fishLayers() {
+  const L = crumbs ? [[crumbs.y - 1, drawCrumbs]] : [];
   if (!boong || (boong.state !== 'floor' && boong.state !== 'eat'))
-    return [];
-  return [[boong.y - 0.5, () => {
+    return L;
+  return [...L, [boong.y - 0.5, () => {
         let w = BOONG_W * DEPTH(boong.y), a = 1;
         if (boong.state === 'eat') { // 먹는 동안 조금씩 작아진다
           const k = Math.min(1, boong.t / 5);
@@ -476,4 +485,64 @@ export function drawFishOverlay() {
     ctx.restore();
     drawWeed(tip[0], tip[1] + 16);
   }
+}
+
+/* ───── 붕어빵 부스러기: 쥐야쥐가 주워 가고, 남아 있으면 만득 씨가 치우고 쪽지에 쓴다 ───── */
+// 쥐야쥐 (mouse.js mouseBrain이 부른다)
+export function mouseCrumbB() {
+  if (!crumbs)
+    return false;
+  const c = crumbs;
+  mouse.state = 'crumb';
+  run(mouse, [
+    go(c.x + 18, c.y + 2, 90),
+    faceTo({ x: c.x }),
+    bub('😋', 3),
+    hold(rnd(3, 5), 'walk'),
+    fn(() => {
+      if (crumbs === c)
+        crumbs = null;
+    }),
+    hold(rnd(2, 4), 'walk'),
+    fn(a => {
+      a.state = '';
+    })
+  ], 'crumb');
+  return true;
+}
+// 만득 씨가 밥·퇴근으로 다녀가면 치운다 (manduk.js, jump.js). 쥐야쥐가 안 먹었으면 오늘 쪽지가 바뀐다
+export function sweepCrumbs() {
+  if (!crumbs)
+    return;
+  crumbs = null;
+  world.notes.crumbs = true;
+}
+function drawCrumbs() {
+  const c = crumbs;
+  ctx.save();
+  ctx.fillStyle = '#b97a3c';
+  for (let i = 0; i < 6; i++) {
+    const a = c.seed + i * 2.1, r = 4 + (i * 7 % 9);
+    ctx.beginPath();
+    ctx.arc(c.x + Math.cos(a) * r, c.y + Math.sin(a) * r * 0.35, 1 + (i % 2) * 0.6, 0, 7);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ───── 밤 어항 구경: 어두워지면 어항 앞 식빵 자세로 금붕어를 오래 본다. 금붕어도 유리 쪽으로 와서 본다 ───── */
+export function bowlWatchOk(d) {
+  return !!O.fishbowl && present(O.fishbowl) && !world.manduk && !F.rod;
+}
+export function bowlWatchB() {
+  const b = bowlBox();
+  if (!b)
+    return;
+  run(cat, [
+    go(b.x0 + b.w + rnd(55, 75), rnd(628, 640), 50),
+    hold(0.6, 'stand', false, -1),
+    fn(a => say(a, '🐟👀', 3)),
+    play('window', rnd(40, 90)), // 창밖 보기와 같은 뒷모습으로 어항을 본다
+    hold(rnd(30, 80), 'loaf', true, -1)
+  ], 'bowlwatch');
 }

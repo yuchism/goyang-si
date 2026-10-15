@@ -8,7 +8,7 @@ import { tr } from './i18n.js';
 import { mouseHide } from './mouse.js';
 import { O } from './objects.js';
 import { ctx, cv } from './stage.js';
-import { fn, hold, routeTo, run, stepToward } from './steps.js';
+import { fn, go, hold, routeTo, run, stepToward } from './steps.js';
 import { RM, clamp, rnd } from './util.js';
 import { caption, cat, mouse, say, world } from './world.js';
 
@@ -262,3 +262,20 @@ function chase() {
   };
 }
 const pick2 = () => Math.random() < 0.7 ? '❓' : '❓👀';
+
+/* ───── 가끔: 탁자 위 포인터를 한참 노려본다 (또 놀고 싶어서). 지쳐 있을 때·놀이 중에는 안 한다 ───── */
+export function penStareOk() {
+  return !!O.laser && !L && world.t > restUntil && !world.manduk;
+}
+export function penStareB() {
+  const p = O.laser.pos;
+  run(cat, [
+    go(p.x + rnd(30, 50), rnd(646, 662), 55),
+    hold(0.4, 'stand', false, -1),
+    fn(a => say(a, '👀', 3)),
+    play('lookup', rnd(10, 18)), // 고개를 들고 포인터를 한참 올려다본다
+    hold(rnd(4, 8), 'loaf', false, -1),
+    fn(a => Math.random() < 0.5 && say(a, '😼', 2.5)),
+    hold(rnd(8, 15), 'loaf', false, -1)
+  ], 'penstare');
+}

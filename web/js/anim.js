@@ -57,6 +57,12 @@ const CLIP = {
   fishdoze: { f: ['fish_sit_2', 'fish_sit_2', 'fish_sit_2', 'fish_sit_2', 'fish_sit_1'], fps: 0.4, loop: 1, base: 'stand' },
   yank1: { f: ['fish_yank_1'], fps: 2, base: 'stand' },
   yank2: { f: ['fish_yank_2'], fps: 0.7, base: 'stand' },
+  // 실뭉치 (yarn.js). YARN_SPRITE_PLAN.md
+  bat1: { f: ['bat_1'], fps: 1, loop: 1, base: 'stand' },
+  bat2: { f: ['bat_2'], fps: 3, base: 'stand' },
+  hugkick: { f: ['hugkick_1', 'hugkick_2', 'hugkick_3', 'hugkick_2'], fps: 5, loop: 1, base: 'roll' },
+  // 쳇바퀴 (wheel.js). WHEEL_SPRITE_PLAN.md
+  push: { f: ['push_1', 'push_2', 'push_3', 'push_4'], fps: 5, loop: 1, base: 'stand' },
   groom: { f: ['groom_1', 'groom_2', 'groom_3', 'groom_4', 'groom_3', 'groom_4', 'groom_3', 'groom_4', 'groom_2', 'groom_1', 'groom_1'], fps: 6, loop: 1, base: 'sit' },
 };
 const BRIDGE = 0.3;
@@ -104,6 +110,8 @@ function clipFrame(a) {
 export function catFrame(a) {
   if (a.jump)
     return a.jump.f;
+  if (a.hopF)
+    return a.hopF; // 쳇바퀴 오르내리기 (wheel.js)
   if (a.act && a.act.t >= 0)
     return clipFrame(a);
   if (a.react && a.react.t > 0 && !a.tr && a.dp === 'loaf')

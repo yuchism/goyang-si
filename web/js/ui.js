@@ -19,6 +19,8 @@ import { $, esc, store } from './util.js';
 import { flipFrame } from './frame.js';
 import { endLaser, laserOn, moveDot, penAt, startLaser, toggleLaser } from './laser.js';
 import { fishAt, fishB, tapBowl } from './fish.js';
+import { tapYarn, yarnAt, yarnIn } from './yarn.js';
+import { wheelB, wheelLift } from './wheel.js';
 import { STANDALONE, closeOdd, oddAt, openOdd, toggleOdd } from './install.js';
 import { caption, cat, mouse, say, world } from './world.js';
 /* ───────── 입력 ───────── */
@@ -32,6 +34,8 @@ function hitActor(a, x, y) {
   const dp = DEPTH(a.y);
   if (a.onTV)
     y += topOf('tv');
+  if (a.inWheel)
+    y += wheelLift();
   const w = (a.kind === 'cat' ? 115 : 66) * dp, h = (a.kind === 'cat' ? 165 : 50) * dp;
   return x > a.x - w && x < a.x + w && y > a.y - h && y < a.y + 8;
 }
@@ -127,6 +131,10 @@ export function initUI() {
     }
     if (penAt(x, y)) {
       startLaser();
+      return;
+    }
+    if (yarnAt(x, y)) { // 실뭉치: 톡 굴러간다 (고양이보다 먼저 — 고양이 앞발 밑에 있을 때가 많다)
+      tapYarn(x);
       return;
     }
     if (hitActor(mouse, x, y)) {
@@ -337,6 +345,14 @@ export function initUI() {
   };
   initTvDev(jumpTo); // TV 칸: 틀어 보기, 사건 고르기(예전 "TV 사건" 버튼 포함), 7일 편성표, 특집 날짜 (tv-dev.js)
   $('dLaser').onclick = () => toggleLaser();
+  $('dWheel').onclick = () => {
+    if (!world.manduk)
+      wheelB();
+  };
+  $('dYarn').onclick = () => {
+    if (!world.manduk)
+      yarnIn();
+  };
   $('dFish').onclick = () => {
     if (!world.manduk)
       fishB();

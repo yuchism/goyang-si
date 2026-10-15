@@ -12,6 +12,7 @@ import { FIRST, dayNum, isAnniversary, now, rainNow } from './time.js';
 import { HAND, INK, RM, ease, lerp, pick, rnd, store } from './util.js';
 import { caption, cat, mouse, say, world } from './world.js';
 import { tr } from './i18n.js';
+import { sweepCrumbs } from './fish.js';
 /* ───────── 김만득 씨 ───────── */
 const LINES = () => tr('manduk'); // 방문 종류별 대사 묶음 (i18n.js의 manduk)
 export function startVisit(type) {
@@ -193,6 +194,7 @@ function act(m) {
     later(700, () => {
       world.bowlFull = true;
       Snd.clink();
+      sweepCrumbs(); // 붕어빵 부스러기도 치운다 (쪽지에 남음)
       if (world.cup.state === 'floor')
         cupToTable();
     });
@@ -237,8 +239,10 @@ export function endVisitNow() {
   const t = m.type;
   if ((t === 'feed' || t === 'ret' || t === 'noise') && (world.cup.state === 'floor' || world.cup.state === 'falling'))
     cupToTable();
-  if (t === 'feed' || t === 'ret')
+  if (t === 'feed' || t === 'ret') {
     world.bowlFull = true;
+    sweepCrumbs();
+  }
   if (t === 'lights')
     world.lampOn = false;
   if (t === 'anniv')
@@ -280,6 +284,8 @@ export function todaysNote(d) {
     return tr('noteAnniv');
   if (world.notes.cleared)
     return tr('noteLaptop');
+  if (world.notes.crumbs)
+    return tr('noteCrumbs');
   if (rainNow(d))
     return tr('noteRain');
   if (oddHintToday(d))

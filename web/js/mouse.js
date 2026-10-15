@@ -5,6 +5,7 @@ import { bub, faceTo, fn, go, hold, run } from './steps.js';
 import { inBeam, rainNow, sunbeam, wx } from './time.js';
 import { clamp, pick, rnd } from './util.js';
 import { cat, mouse, say, world } from './world.js';
+import { mouseCrumbB } from './fish.js';
 /* ───────── 쥐야쥐의 뇌 ───────── */
 function nearestHide() {
   const spots = OBJ.filter(o => o.kind === 'hideout' && present(o)).map(o => ({ k: o.id, p: S(o.id + '.hide') })).filter(s => s.p);
@@ -95,6 +96,8 @@ export function mouseBrain(d) {
     mouseHide(false);
     return;
   }
+  if (!world.manduk && Math.random() < 0.8 && mouseCrumbB()) // 붕어빵 부스러기가 있으면 주워 먹으러
+    return;
   const r = Math.random();
   if (rain && r < 0.4) {
     mouse.state = 'rain';

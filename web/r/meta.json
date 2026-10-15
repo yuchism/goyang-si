@@ -90,9 +90,6 @@
   "frame_family_2": [140, 173],
   "frame_family_3": [140, 173],
   "frame_family_4": [140, 173],
-  "frame_family_5": [140, 173],
-  "frame_family_6": [140, 173],
-  "frame_family_7": [140, 173],
   "fishbowl_back": [384, 391],
   "fishbowl_front": [384, 391],
   "rod": [132, 312],
@@ -101,5 +98,9 @@
   "fish_sigh_1": [71, 53],
   "fish_carry_1": [79, 47],
   "fish_hello_1": [71, 59],
-  "boong": [84, 49]
+  "boong": [84, 49],
+  "yarn": [132, 131],
+  "yarn_2": [132, 131],
+  "wheel_back": [600, 615],
+  "wheel_front": [600, 615]
 }

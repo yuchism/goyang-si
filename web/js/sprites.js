@@ -1,4 +1,5 @@
 /* 배우 그리기: 고양이·쥐 프레임, 그림자, 빼꼼, 말풍선 아이콘, 자막 */
+import { wheelLift } from './wheel.js';
 import { catFrame, mouseFrame } from './anim.js';
 import { FRAMES, FSC, IMG, MSC, imageReady, img } from './assets.js';
 import { DANCE_CELLS } from './birthday.js';
@@ -19,7 +20,7 @@ function drawFrame(name, x, y, face, sc, sy = 1) {
   ctx.restore();
 }
 // 바닥에서 떠 있는 높이: TV 위, 선반 위 TV 뒤, 점프 중
-const liftOf = a => a.jump ? a.jump.lift : a.onTV ? topOf('tv') : a.tvPeek ? zOf(O.tv) : 0;
+const liftOf = a => a.jump ? a.jump.lift : a.hop ? a.hop : a.inWheel ? wheelLift() : a.onTV ? topOf('tv') : a.tvPeek ? zOf(O.tv) : 0; // hop·inWheel: 쳇바퀴 (wheel.js)
 function drawCat(a) {
   const dp = DEPTH(a.y), sc = FSC * dp;
   if (a.dance) {
@@ -39,7 +40,7 @@ function drawCat(a) {
   const fr = 'cat_' + catFrame(a);
   a.frame = fr;
   const lift = liftOf(a);
-  if (!fr.startsWith('cat_box_') && !a.onTV && !a.tvPeek) {
+  if (!fr.startsWith('cat_box_') && !a.onTV && !a.tvPeek && !a.inWheel && !a.hop) {
     ctx.beginPath();
     ctx.ellipse(a.x, a.y + 2, 96 * dp, 13 * dp, 0, 0, 7);
     ctx.fillStyle = 'rgba(50,30,15,.22)';
@@ -79,13 +80,15 @@ function drawMouse(a) {
     drawPeek();
     return;
   }
-  ctx.beginPath();
-  ctx.ellipse(a.x, a.y + 2, 52 * dp, 7 * dp, 0, 0, 7);
-  ctx.fillStyle = 'rgba(50,30,15,.22)';
-  ctx.fill();
+  if (!a.inWheel) {
+    ctx.beginPath();
+    ctx.ellipse(a.x, a.y + 2, 52 * dp, 7 * dp, 0, 0, 7);
+    ctx.fillStyle = 'rgba(50,30,15,.22)';
+    ctx.fill();
+  }
   // 코 킁킁: 가만히 있을 때 아주 살짝 앞뒤로
   const sn = (!RM && fr === 'mouse_idle_1') ? 1 + Math.max(0, Math.sin((world.t + a.phase) * 7)) * 0.012 : 1;
-  drawFrame(fr, a.x, a.y, a.face, MSC * dp * sn, 1);
+  drawFrame(fr, a.x, a.y - (a.inWheel ? wheelLift() : 0), a.face, MSC * dp * sn, 1);
 }
 export function drawActor(a) {
   if (a.kind === 'cat')

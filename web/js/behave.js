@@ -39,6 +39,10 @@ export const BEHAVIOR = {
   paw:        [N, N], // 화면 톡
   laser:      [N, N], // 레이저 놀이 (보는 사람과)
   fish:       [N, N], // 어항 낚시
+  bowlwatch:  [Y, Y], // 밤에 어항 앞에서 금붕어 구경
+  penstare:   [Y, Y], // 탁자 위 레이저 포인터 노려보기
+  yarn:       [N, N], // 실뭉치 놀이
+  wheel:      [N, N], // 쳇바퀴
 };
 const row = tag => BEHAVIOR[tag] || BEHAVIOR[''];
 // TV 사건에 반응해도 되나
