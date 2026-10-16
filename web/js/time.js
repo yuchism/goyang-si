@@ -88,9 +88,54 @@ export function season(d) {
   return s;
 }
 // 계절 이름은 i18n.js의 season
+/* ───────── 한 해 위치·풍경 날짜 (WINDOW_PLAN_3.md 4장) ─────────
+   yearPos: 그해 1월 1일 0 → 12월 31일 (1 − 하루). 남반구면 반년(0.5)을 민다 → "풍경 날짜"는 언제나 한국 달력처럼 읽는다.
+   풍경(산 섞기·낙엽·철새·눈 모자…)과 해 시각이 이것을 쓴다. 날짜 단위라 하루 안에서는 바뀌지 않는다.
+   덮어쓰기: 미리보기 "풍경 날짜"(sceneryOverride, 0~1)가 먼저, 그다음 계절 버튼(seasonOverride → 대표 날짜) */
+const leapYear = y => y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0);
+const MD_START = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]; // 평년 각 달 1일의 날 번호
+// 'MM-DD' → 풍경 위치(평년 365일 기준 0~1)
+export const posOf = md => {
+  const [m, dd] = md.split('-').map(Number);
+  return (MD_START[m - 1] + dd - 1) / 365;
+};
+// 풍경 위치 → 'MM-DD' (미리보기 한 줄)
+export function mdOfPos(p) {
+  const n = Math.floor((((p % 1) + 1) % 1) * 365 + 1e-6);
+  let m = 11;
+  while (MD_START[m] > n)
+    m--;
+  return String(m + 1).padStart(2, '0') + '-' + String(n - MD_START[m] + 1).padStart(2, '0');
+}
+// 계절 버튼의 대표 날짜 (풍경 날짜. 가을은 단풍 절정)
+export const SEASON_DATE = { spring: '04-15', summer: '07-15', autumn: '11-01', winter: '01-15' };
+export let sceneryOverride = null; // 미리보기 "풍경 날짜" (0~1) 또는 null
+export function yearPos(d) {
+  if (sceneryOverride !== null)
+    return sceneryOverride;
+  if (seasonOverride)
+    return posOf(SEASON_DATE[seasonOverride]);
+  const y = d.getFullYear(), n = Math.round((Date.UTC(y, d.getMonth(), d.getDate()) - Date.UTC(y, 0, 1)) / 864e5);
+  const p = n / (leapYear(y) ? 366 : 365);
+  return seasonSouth() ? (p + 0.5) % 1 : p;
+}
+// 풍경 날짜 'MM-DD' (남반구는 반년 민 값)
+export const sceneryDate = d => mdOfPos(yearPos(d));
+// 위치 p가 범위 { from, to }('MM-DD', 양끝 포함, 해를 넘겨도 됨) 안인가. 안이면 0~1 진행도, 밖이면 -1
+function rangeProgress(r, p) {
+  const a = posOf(r.from), b = posOf(r.to) + 1 / 365, len = ((b - a) % 1 + 1) % 1 || 1, x = ((p - a) % 1 + 1) % 1;
+  return x < len ? x / len : -1;
+}
+// 그 풍경 날짜 범위 안인가 (calendar.js CAL.scenery의 이름). 다른 파일은 getMonth 대신 이것만 쓴다
+export const sceneryOn = (name, d) => !!CAL.scenery[name] && rangeProgress(CAL.scenery[name], yearPos(d)) >= 0;
+// 범위 안 진행도 0~1 (밖이면 -1)
+export const sceneryProgress = (name, d) => CAL.scenery[name] ? rangeProgress(CAL.scenery[name], yearPos(d)) : -1;
+/* 해 뜨고 지는 시각: 동지(7.2, 17.2) ↔ 하지(5.5, 20.0)를 코사인 곡선으로 (TIME_BASE_PLAN.md 12장 숙제, WINDOW_PLAN_3.md 4-3).
+   춘분·추분 무렵은 예전 봄·가을 값(6.3, 18.6)과 거의 같다. 하루 변화는 최대 1.5분 */
+const SUN_WINTER = [7.2, 17.2], SUN_SUMMER = [5.5, 20], WINTER_SOLSTICE = posOf('12-21');
 export function sunTimes(d) {
-  const s = season(d);
-  return s === 'summer' ? [5.5, 20] : s === 'winter' ? [7.2, 17.2] : [6.3, 18.6];
+  const k = (1 + Math.cos(2 * Math.PI * (yearPos(d) - WINTER_SOLSTICE))) / 2; // 동지 1 → 하지 0
+  return [lerp(SUN_SUMMER[0], SUN_WINTER[0], k), lerp(SUN_SUMMER[1], SUN_WINTER[1], k)];
 }
 /* ───────── 시간대 (자연 시간, TIME_BASE_PLAN.md 5장) ─────────
    그날의 해 뜨는 시각 r, 지는 시각 s(sunTimes)로 나눈다. 경계 숫자는 이 표에서만 고친다.
@@ -146,6 +191,19 @@ export function sunUp(d) {
 export function sunArc(d) {
   const [r, s] = sunTimes(d);
   return (hourOf(d) - r) / (s - r);
+}
+/* 해·달이 창밖 오른쪽에 떠 있는 정도 0~1 (WINDOW_PLAN_3.md 17장 회의: 창이 360도가 아니니 해가 하늘을 가로지르지 않는다).
+   해: 해 뜬 뒤 1시간 15분에 걸쳐 오른쪽 아래(능선 뒤)에서 올라와 하루 종일 오른쪽 위에 있다가, 해 지기 전 1시간 15분에 걸쳐 내려간다. 해가 없으면 -1
+   달: 해 진 뒤 30분부터 같은 길로 올라와 밤새 있다가, 동틀 녘(해 뜨기 1시간 전)이 시작되기 30분 전까지 내려간다. 모양만 실제 날짜(moonPhase) */
+export const LIFT_HOURS = 1.25;
+const liftOf = (h, a, b) => h <= a || h >= b ? -1 : Math.min(1, (h - a) / LIFT_HOURS, (b - h) / LIFT_HOURS);
+export function sunLift(d) {
+  const [r, s] = sunTimes(d);
+  return liftOf(hourOf(d), r, s);
+}
+export function moonLift(d) {
+  const h = hourOf(d), [r, s] = sunTimes(d), [r1] = sunTimes(noonOf(d, 1)), [, s0] = sunTimes(noonOf(d, -1));
+  return h >= s ? liftOf(h, s + 0.5, 24 + r1 - 1.5) : liftOf(h + 24, s0 + 0.5, 24 + r - 1.5);
 }
 // 창밖 새벽·노을 빛이 비치는 때: 해 뜨기 1시간 전 ~ 뜬 뒤 1시간 반, 지기 1시간 반 전 ~ 진 뒤 1시간
 export function twilightGlow(d) {
@@ -339,16 +397,154 @@ export function holiday(d) {
 export function timeInfo(d) {
   return { season: season(d), south: seasonSouth(), part: daypart(d), cal: calDay(d), bday: dayKey(broadcastDay(d)), night: nightOf(d), periods: periodsAt(d) };
 }
+/* ───────── 풍경 (WINDOW_PLAN_3.md 4-2) ─────────
+   sceneryAt(d): 그날 풍경. { md, mix: [[계절, 비율], [계절, 비율]], dir: 'up'|'down', snowCap, dust, skyTint }
+   - mix: 산 그림 두 장을 섞는 비율 (한 날짜엔 두 계절만). dir: 물드는 방향(봄·여름으로 갈 땐 아래에서 위로 'up', 가을·겨울로 갈 땐 꼭대기에서 아래로 'down')
+   - snowCap: 먼 산 눈 모자 0~1 (첫눈 날부터 사흘에 걸쳐 1, snowCapMelt 동안 녹음)
+   - dust: 미세먼지 낀 날인가 (dust 철의 약 15%, 날짜 씨앗)
+   - skyTint: 가을 하늘 0~1 (autumnSky 범위 가운데가 가장 진함)
+   날짜 단위로 계산해 캐시한다 (덮어쓰기 상태도 키에 넣음) */
+const smooth = x => x * x * (3 - 2 * x);
+function mountainMix(p) {
+  const K = CAL.scenery.mountain, n = K.length;
+  for (let i = 0; i < n; i++) {
+    const [a, sa] = K[i], [b, sb] = K[(i + 1) % n], pa = posOf(a), len = ((posOf(b) - pa) % 1 + 1) % 1, x = ((p - pa) % 1 + 1) % 1;
+    if (x < len || (len === 0 && x === 0)) {
+      if (sa === sb)
+        return { mix: [[sa, 1], [sb, 0]], dir: 'down' };
+      const k = smooth(x / len);
+      return { mix: [[sa, 1 - k], [sb, k]], dir: sb === 'spring' || sb === 'summer' ? 'up' : 'down' };
+    }
+  }
+  return { mix: [[K[0][1], 1], [K[0][1], 0]], dir: 'down' };
+}
+let sceneCache = { key: '', v: null };
+export function sceneryAt(d) {
+  const key = dayKey(d) + '|' + sceneryOverride + '|' + seasonOverride + '|' + snowCapOverride + '|' + dustOverride;
+  if (sceneCache.key === key)
+    return sceneCache.v;
+  const p = yearPos(d), { mix, dir } = mountainMix(p), sky = rangeProgress(CAL.scenery.autumnSky, p);
+  const v = { md: mdOfPos(p), mix, dir, snowCap: snowCapAt(d), dust: dustDay(d), skyTint: sky >= 0 ? Math.sin(Math.PI * sky) : 0 };
+  sceneCache = { key, v };
+  return v;
+}
+// 미세먼지 낀 날: dust 철(풍경 날짜)의 약 15%. 비 오는 날은 씻겨서 없음. 미리보기 「미세먼지」는 dustOverride
+let dustOverride = null;
+export const setDustOverride = v => {
+  dustOverride = v;
+};
+export const dustDay = d => dustOverride !== null ? dustOverride : sceneryOn('dust', d) && !rainPlan(d) && hash('dust' + dayKey(d)) < 0.15;
+/* ───────── 겨울: 첫눈·눈 모자·난간 눈·성에 (WINDOW_PLAN_3.md 8장) ─────────
+   모두 시각의 함수 (저장 없음, 누구에게나 같음). 눈 = 겨울(season, 덮어쓰기 없이)의 비 */
+const realWinter = d => {
+  const o = seasonOverride;
+  seasonOverride = null;
+  try {
+    return season(d) === 'winter';
+  }
+  finally {
+    seasonOverride = o;
+  }
+};
+// 이번 겨울의 시작 날(정오 Date): 북반구 12월 1일, 남반구 6월 1일 (season()과 같은 달 경계). 1~2월이면 전년 12월
+function winterStart(d) {
+  const m0 = seasonSouth() ? 5 : 11, y = d.getFullYear();
+  return new Date(d.getMonth() >= m0 ? y : y - 1, m0, 1, 12);
+}
+// 그 겨울의 첫눈: { day: 정오 Date, start: ms } 또는 null (겨울 석 달 안에 눈이 없으면)
+const firstSnowCache = {};
+export function firstSnow(d) {
+  const w = winterStart(d), k = dayKey(w);
+  if (firstSnowCache[k] !== undefined)
+    return firstSnowCache[k];
+  let v = null;
+  for (let i = 0; i < 92 && !v; i++) {
+    const day = noonOf(w, i);
+    if (!realWinter(day))
+      break;
+    const sp = rainSpan(day);
+    if (sp)
+      v = { day, start: sp.start };
+  }
+  return firstSnowCache[k] = v;
+}
+// 오늘이 그 겨울 첫눈 날이고 지금 눈이 오는 중인가 (강고양이 씨 반응)
+export function firstSnowNow(d) {
+  if (firstSnowOverride)
+    return snowing(d);
+  const f = firstSnow(d);
+  return !!f && dayKey(f.day) === dayKey(d) && snowing(d);
+}
+let firstSnowOverride = false, snowCapOverride = null, railSnowOverride = null, frostOverride = null;
+export function setWinterOverride(kind, v) {
+  if (kind === 'firstSnow')
+    firstSnowOverride = v;
+  else if (kind === 'snowCap')
+    snowCapOverride = v;
+  else if (kind === 'railSnow')
+    railSnowOverride = v;
+  else if (kind === 'frost')
+    frostOverride = v;
+}
+// 먼 산 눈 모자 0~1: 첫눈 시각부터 사흘에 걸쳐 1. 풍경 날짜 snowCapMelt 동안 1 → 0, 그 뒤 다음 겨울(풍경 12-01)까지 0
+export function snowCapAt(d) {
+  if (snowCapOverride !== null)
+    return snowCapOverride;
+  const p = yearPos(d), melt = rangeProgress(CAL.scenery.snowCapMelt, p);
+  if (rangeProgress({ from: CAL.scenery.snowCapMelt.to, to: '11-30' }, p) >= 0 && melt < 0)
+    return 0;
+  if (sceneryOverride !== null || seasonOverride) // 미리보기로 날짜를 옮겼으면 첫눈 계산 대신 풍경 날짜만 본다
+    return melt >= 0 ? 1 - melt : 1;
+  const f = firstSnow(d);
+  if (!f)
+    return 0;
+  const k = clamp((d.getTime() - f.start) / (3 * 86400000), 0, 1);
+  return melt >= 0 ? k * (1 - melt) : k;
+}
+// 난간에 쌓인 눈 0~1: 눈 오는 동안 3시간에 걸쳐 1까지, 그친 뒤 12시간에 걸쳐 녹음. 오늘·어제 눈을 본다 (자정을 넘어도 이어지게)
+export function railSnowAt(d) {
+  if (railSnowOverride !== null)
+    return railSnowOverride;
+  const t = d.getTime(), H = 3600000;
+  let v = 0;
+  for (const k of [-1, 0]) {
+    const day = noonOf(d, k);
+    if (!realWinter(day))
+      continue;
+    const sp = rainSpan(day);
+    if (!sp || t < sp.start)
+      continue;
+    const top = clamp((Math.min(t, sp.end) - sp.start) / (3 * H), 0, 1);
+    v = Math.max(v, t <= sp.end ? top : top * clamp(1 - (t - sp.end) / (12 * H), 0, 1));
+  }
+  return v;
+}
+// 유리 성에 0~1: 겨울 맑은 날(그날 비·눈 없음) 해 뜨기 1시간 반 전부터 짙고, 해 뜬 뒤 ~ 오전 10시에 걸쳐 사라짐
+export function frostAt(d) {
+  if (frostOverride !== null)
+    return frostOverride;
+  const rp = rainPlan(d);
+  if (!realWinter(d) || (rp && rp.st < 10)) // 아침에 눈·비가 오는 날은 없음
+    return 0;
+  const h = hourOf(d), [r] = sunTimes(d);
+  if (h < r - 1.5 || h >= 10)
+    return 0;
+  return h < r - 1 ? (h - (r - 1.5)) / 0.5 : h < r ? 1 : 1 - (h - r) / (10 - r);
+}
 let rainOverride = null;
+/* 그날(calDay) 비 계획: { st, len } (시작 시각·길이, 시간 단위) 또는 null.
+   rainNow·rainSpan(그리고 무지개·천둥·첫눈·장마)이 모두 이것만 본다 — 한쪽만 바뀌어 어긋나지 않게 (WINDOW_PLAN_3.md 4-4) */
+export function rainPlan(d) {
+  const k = dayKey(d), monsoon = sceneryOn('monsoon', d); // 장마(풍경 날짜): 비 오는 날이 잦고 길게 (WINDOW_PLAN_3.md 9장). 그 밖의 날은 예전과 같은 씨앗·같은 결과
+  if (hash('rain' + k) > (monsoon ? 0.55 : season(d) === 'summer' ? 0.28 : 0.2))
+    return null;
+  return { st: 6 + hash('rs' + k) * 10, len: monsoon ? 4 + hash('rl' + k) * 10 : 2 + hash('rl' + k) * 7 };
+}
 export function rainNow(d) {
   if (rainOverride !== null)
     return rainOverride;
-  const k = dayKey(d), r = hash('rain' + k);
-  let p = season(d) === 'summer' ? 0.28 : 0.2;
-  if (r > p)
-    return false;
-  const st = 6 + hash('rs' + k) * 10, len = 2 + hash('rl' + k) * 7, h = hourOf(d);
-  return h >= st && h < st + len;
+  const p = rainPlan(d), h = hourOf(d);
+  return !!p && h >= p.st && h < p.st + p.len;
 }
 let boxOverride = null;
 export function setOverride(kind, v) {
@@ -360,6 +556,8 @@ export function setOverride(kind, v) {
     seasonOverride = v;
   else if (kind === 'holiday')
     holidayOverride = v;
+  else if (kind === 'scenery')
+    sceneryOverride = v;
 }
 export const boxToday = d => boxOverride !== null ? boxOverride : ((dayNum(d) % 9) < 3);
 function firstVisit() {
@@ -462,11 +660,8 @@ export const clockText = ms => {
 // 그날(calDay) 비가 오면 { start, end } (ms), 안 오면 null. rainNow와 같은 씨앗·계산이고 자정에서 끊긴다(rainNow도 자정에 날짜 키가 바뀌어 끊긴다).
 // 미리보기의 비 켜기/끄기(rainOverride)와는 상관없다
 export function rainSpan(d) {
-  const k = dayKey(d);
-  if (hash('rain' + k) > (season(d) === 'summer' ? 0.28 : 0.2))
-    return null;
-  const st = 6 + hash('rs' + k) * 10, len = 2 + hash('rl' + k) * 7;
-  return { start: hourAt(d, st), end: hourAt(d, Math.min(st + len, 24)) };
+  const p = rainPlan(d);
+  return p && { start: hourAt(d, p.st), end: hourAt(d, Math.min(p.st + p.len, 24)) };
 }
 // 천둥번개: 비 오는 날 중 여름 35%, 그 밖 10%. 눈 오는 날은 없음. 미리보기 「천둥번개」는 thunderOverride
 let thunderOverride = null;
@@ -528,8 +723,8 @@ export function rainbowAt(d) {
   const x = m < 5 ? m / 5 : 1 - (m - 5) / fade;
   return x * x * (3 - 2 * x);
 }
-// 무지개를 그릴 해 반대쪽: 해가 창의 어느 쪽으로 기울었나 (sunArc 0.5보다 크면 오른쪽 → 무지개는 왼쪽)
-export const rainbowSide = d => sunArc(d) > 0.5 ? -1 : 1;
+// 무지개를 그릴 쪽: 해 반대쪽. 해는 늘 창 오른쪽에 있으므로 무지개는 늘 왼쪽 (WINDOW_PLAN_3.md 17장)
+export const rainbowSide = () => -1;
 // 비행기: 하루 2~4번 (calDay), 6시 ~ 23시 반. { id, at, dur(초), dir, y }
 export function planeSlots(d) {
   const k = dayKey(d), n = 2 + Math.floor(hash('pn' + k) * 3), out = [];
@@ -585,15 +780,15 @@ export function aptLightsAt(d, n) {
   const v = new Uint8Array(n);
   {
     const K = dayKey(day), [, s] = sunTimes(day), [r1] = sunTimes(noonOf(day, 1)), t = d.getTime();
-    const weekend = day.getDay() === 5 || day.getDay() === 6;
+    const weekend = day.getDay() === 5 || day.getDay() === 6, hot = sceneryOn('tropicalNight', day); // 열대야: 더 많이, 1시간 반쯤 늦게까지 (WINDOW_PLAN_3.md 9장)
     const tvs = [Math.floor(hash('atv1' + K) * n), hash('atv2' + K) < 0.5 ? Math.floor(hash('atv3' + K) * n) : -1];
     for (let i = 0; i < n; i++) {
       const e = 'w' + i + K;
       let on = false;
-      if (hash('wl' + e) < 0.55) { // 이 밤에 불을 켜는 집
+      if (hash('wl' + e) < (hot ? 0.68 : 0.55)) { // 이 밤에 불을 켜는 집
         const a = hourAt(day, s + 0.1 + hash('wa' + e) * 2.6);
         const owl = hash('wo' + e) < 0.16;
-        const b = owl ? hourAt(day, 24 + r1 + 0.5) : hourAt(day, 22 + hash('wb' + e) * 4.2 + (weekend ? 0.5 + hash('ww' + e) * 0.5 : 0));
+        const b = owl ? hourAt(day, 24 + r1 + 0.5) : hourAt(day, 22 + hash('wb' + e) * 4.2 + (weekend ? 0.5 + hash('ww' + e) * 0.5 : 0) + (hot ? 1 + hash('wh' + e) : 0));
         on = t >= a && t < b;
       }
       else if (hash('wd' + e) < 0.12) // 새벽에 일찍 일어난 집
@@ -603,6 +798,41 @@ export function aptLightsAt(d, n) {
   }
   litCache = { key, v };
   return v;
+}
+/* ───────── 계절 손님 일정 (WINDOW_PLAN_3.md 7·9장) ─────────
+   모두 날짜 씨앗(calDay) → 새로 고침해도 같다. 해 뜬 뒤 1시간 ~ 해 지기 1시간 전. 결과는 방 시각(ms) */
+function daySlots(d, tag, n, mk) {
+  const k = dayKey(d), [r, s] = sunTimes(d), out = [];
+  for (let i = 0; i < n; i++)
+    out.push(Object.assign({ id: tag + k + i, at: hourAt(d, lerp(r + 1, s - 1, hash(tag + 't' + k + i))) }, mk(k + i)));
+  return out.sort((a, b) => a.at - b.at);
+}
+// 낙엽 바람: 단풍철(leaves) 맑은 날 하루 3~6번. { dur(초), dir(바람 방향 1 = 오른쪽으로), n(잎 수), land(난간에 앉을 잎 수) }
+export function leafSlots(d) {
+  if (!sceneryOn('leaves', d) || rainPlan(d))
+    return [];
+  return daySlots(d, 'leaf', 3 + Math.floor(hash('ln' + dayKey(d)) * 4), k => ({ dur: 14 + hash('ld' + k) * 10, dir: hash('lx' + k) < 0.6 ? -1 : 1, n: 3 + Math.floor(hash('lc' + k) * 4), land: hash('lv' + k) < 0.55 ? 1 + (hash('lw' + k) < 0.3 ? 1 : 0) : 0 }));
+}
+// 철새 V자 무리: 가을(geeseSouth) 오른쪽 → 왼쪽, 봄(geeseNorth) 왼쪽 → 오른쪽. 하루 0~2번. { dur, dir, n(마리), y }
+export function geeseSlots(d) {
+  const south = sceneryOn('geeseSouth', d), north = sceneryOn('geeseNorth', d);
+  if (!south && !north)
+    return [];
+  const k0 = dayKey(d);
+  return daySlots(d, 'geese', Math.floor(hash('gn' + k0) * 3), k => ({ dur: 34 + hash('gd' + k) * 14, dir: south ? -1 : 1, n: 7 + Math.floor(hash('gc' + k) * 9), yk: hash('gy' + k) })); // 높이: 하늘 띠 geese 안의 비율 (seasons.js)
+}
+// 잠자리: 늦여름~초가을(dragonfly) 맑은 날 하루 2~4번 난간 근처에. { dur, n(1~2) }
+export function dragonflySlots(d) {
+  if (!sceneryOn('dragonfly', d) || rainPlan(d))
+    return [];
+  return daySlots(d, 'dfly', 2 + Math.floor(hash('dn' + dayKey(d)) * 3), k => ({ dur: 40 + hash('dd' + k) * 50, n: hash('dc' + k) < 0.35 ? 2 : 1 }));
+}
+// 벚꽃잎: blossom 기간 맑은 날의 낮 (날의 70%). 지금 날리는 세기 0~1 (해 뜬 뒤·지기 전 30분에 걸쳐 오르고 내림)
+export function blossomAt(d) {
+  if (!sceneryOn('blossom', d) || rainNow(d) || hash('blos' + dayKey(d)) >= 0.7)
+    return 0;
+  const h = hourOf(d), [r, s] = sunTimes(d);
+  return clamp(Math.min(h - (r + 1), s - 1 - h) / 0.5, 0, 1);
 }
 export function setWindowOverride(kind, v) {
   if (kind === 'thunder')

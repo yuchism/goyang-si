@@ -5,7 +5,8 @@
 //      TV는 holiday()를 쓰지 않는다(달력 onDate만)
 //   2~6은 시드니·서울 두 시간대로 프로세스를 따로 띄워 돌린다 (남반구 판단 SOUTH는 모듈을 불러올 때 정해지므로)
 //   2. calendar.js: 다른 모듈을 불러오지 않고, 설날·추석 표가 올해 + 2년까지 있다 (없으면 경고)
-//   3. 네 계절 모두 시간대 표(DAYPARTS)가 빈틈·겹침 없이 24시간을 채운다. 계절마다 시간대 시작 시각 출력
+//   3. 2026~2028년 모든 날 시간대 표(DAYPARTS)가 빈틈·겹침 없이 24시간을 채우고, 하루 차이로 해 시각이 3분 넘게 바뀌지 않는다(해 시각은 날짜별로 이어짐, WINDOW_PLAN_3.md 4-3).
+//      풍경 날짜: 남반구는 반년 밀림, 한 날짜엔 두 계절만 섞임, 비 공통 함수(rainNow = rainSpan)
 //   4. "하루" 세 가지·순간·할로윈 끝·방송일 하나에 편성 하나 같은 약속 몇 가지
 //   5. schedule.json이 참조하는 기간 이름이 모두 calendar.js에 있다
 //   6. 회귀: tools/time_baseline.json.gz(바꾸기 전 코드로 뽑은 2026~2030년 모든 날의 표본)와 지금 결과가 같다.
@@ -99,7 +100,10 @@ async function child() {
       fail(`${m}: ${JSON.stringify(a)} (기대 ${JSON.stringify(b)})`);
   };
   const T = (y, mo, d, h = 12, mi = 0) => new Date(y, mo - 1, d, h, mi);
-  const hm = h => String(Math.floor(h + 1e-9)).padStart(2, '0') + ':' + String(Math.round((h % 1) * 60)).padStart(2, '0');
+  const hm = h => {
+    const m = Math.round(h * 60);
+    return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  };
 
   // 지역: 이 기기에서 계절·밤 시작·달
   const oct = T(2026, 10, 15), st = Object.fromEntries(time.daypartStarts(oct));
@@ -125,27 +129,68 @@ async function child() {
     if (!(p.date || (p.from && p.to) || p.dates))
       fail(`calendar.js 기간 ${n}: date · from/to · dates 중 하나가 있어야 함`);
 
-  // 3. 시간대 표: 네 계절 모두 빈틈·겹침 없이
-  for (const s of ['spring', 'summer', 'autumn', 'winter']) {
-    time.setOverride('season', s);
-    const sts = time.daypartStarts(oct);
-    if (sts[0][1] !== 0)
-      fail(`${s}: 첫 시간대가 0시에 시작하지 않음`);
-    for (let i = 1; i < sts.length; i++)
-      if (!(sts[i][1] > sts[i - 1][1]))
-        fail(`${s}: ${sts[i - 1][0]}(${hm(sts[i - 1][1])}) 다음 ${sts[i][0]}(${hm(sts[i][1])})가 더 늦지 않음 (겹침)`);
-    if (!(sts[sts.length - 1][1] < 24))
-      fail(`${s}: 마지막 시간대가 24시 전에 시작하지 않음`);
-    for (let m = 0; m < 1440; m++) {
-      const d = T(2026, 10, 15, 0, m), p = time.daypart(d), at = sts.filter(x => x[1] <= m / 60 + 1e-9).pop();
-      if (!at || at[0] !== p) {
-        fail(`${s} ${hm(m / 60)}: 시간대 ${p}가 표와 다름`);
+  // 3. 시간대 표 (WINDOW_PLAN_3.md 4-3: 해 시각이 날짜별로 이어짐). 2026~2028년 모든 날
+  //    빈틈·겹침 없이 24시간, 하루 차이로 해 시각이 3분 넘게 바뀌지 않음
+  {
+    let bad = 0, maxStep = 0, prev = null;
+    for (let i = 0; i < 365 * 3 + 1; i++) {
+      const d = T(2026, 1, 1 + i), sts = time.daypartStarts(d), sun = time.sunTimes(d);
+      const ok = sts[0][1] === 0 && sts.every((x, k) => k === 0 || x[1] > sts[k - 1][1]) && sts[sts.length - 1][1] < 24;
+      if (!ok && bad++ < 3)
+        fail(`${time.dayKey(d)}: 시간대 표에 빈틈·겹침 (${sts.map(([n, a]) => n + ' ' + hm(a)).join(' · ')})`);
+      if (prev)
+        maxStep = Math.max(maxStep, Math.abs(sun[0] - prev[0]) * 60, Math.abs(sun[1] - prev[1]) * 60);
+      prev = sun;
+    }
+    if (maxStep > 3)
+      fail(`하루 차이로 해 시각이 ${maxStep.toFixed(1)}분 바뀜 (3분 넘음)`);
+    notes.push(`해 시각: 하루 변화 최대 ${maxStep.toFixed(2)}분`);
+    // 하루 안 시간대가 표대로 (대표 날짜 하루씩)
+    for (const s of ['spring', 'summer', 'autumn', 'winter']) {
+      time.setOverride('season', s);
+      const sts = time.daypartStarts(oct);
+      for (let m = 0; m < 1440; m++) {
+        const d = T(2026, 10, 15, 0, m), p = time.daypart(d), at = sts.filter(x => x[1] <= m / 60 + 1e-9).pop();
+        if (!at || at[0] !== p) {
+          fail(`${s} ${hm(m / 60)}: 시간대 ${p}가 표와 다름`);
+          break;
+        }
+      }
+      notes.push(`${s}(풍경 ${time.SEASON_DATE[s]}): ` + sts.map(([n, a], i) => `${n} ${hm(a)}~${hm(i + 1 < sts.length ? sts[i + 1][1] : 24)}`).join(' · '));
+    }
+    time.setOverride('season', null);
+  }
+  // 3-1. 풍경 날짜 (WINDOW_PLAN_3.md 4장): 남반구는 반년 밀림, 한 날짜엔 두 계절만, 범위 이름이 calendar.js에 있음
+  {
+    const md = time.sceneryDate(T(2026, 10, 13)), want = time.seasonSouth() ? '04-13' : '10-13';
+    if (Math.abs(time.posOf(md) - time.posOf(want)) > 2 / 365)
+      fail(`풍경 날짜 10/13 = ${md} (기대 ${want} 언저리${time.seasonSouth() ? ', 남반구 반년 밀림' : ''})`);
+    const seasons = new Set(['spring', 'summer', 'autumn', 'winter']);
+    for (let i = 0; i < 366; i++) {
+      const d = T(2028, 1, 1 + i), sc = time.sceneryAt(d), live = sc.mix.filter(([, k]) => k > 0);
+      if (live.length > 2 || Math.abs(sc.mix[0][1] + sc.mix[1][1] - 1) > 1e-9 || !sc.mix.every(([n]) => seasons.has(n))) {
+        fail(`${time.dayKey(d)}: 산 섞기가 이상함 ${JSON.stringify(sc.mix)}`);
         break;
       }
     }
-    notes.push(`${s}: ` + sts.map(([n, a], i) => `${n} ${hm(a)}~${hm(i + 1 < sts.length ? sts[i + 1][1] : 24)}`).join(' · '));
+    for (const n of ['autumnSky', 'leaves', 'geeseSouth', 'geeseNorth', 'snowCapMelt', 'blossom', 'dust', 'monsoon', 'dragonfly', 'tropicalNight'])
+      if (!CAL.scenery || !CAL.scenery[n] || !CAL.scenery[n].from || !CAL.scenery[n].to)
+        fail(`calendar.js scenery.${n}가 없음`);
+    const fs = time.firstSnow(T(2027, 1, 20));
+    notes.push(`풍경: 10/13 = ${md} · 첫눈(2027-1-20이 속한 겨울) ${fs ? time.dayKey(fs.day) : '없음'}`);
+    // 비 공통 함수: rainNow와 rainSpan이 같은 비를 말한다
+    for (let i = 0; i < 365; i += 3) {
+      const day = T(2026, 1, 1 + i), sp = time.rainSpan(day);
+      for (let h = 0; h < 24; h += 0.5) {
+        const t = T(2026, 1, 1 + i, Math.floor(h), (h % 1) * 60), inSpan = !!sp && t.getTime() >= sp.start && t.getTime() < sp.end;
+        if (inSpan !== time.rainNow(t)) {
+          fail(`${time.dayKey(day)} ${hm(h)}: rainNow와 rainSpan이 다름`);
+          i = 999;
+          break;
+        }
+      }
+    }
   }
-  time.setOverride('season', null);
 
   // 4. 약속 몇 가지 (봄·가을 해: 06:18 / 18:36 기준 날짜가 아니어도 되는 것들)
   const k = d => d && time.dayKey(d);
@@ -178,18 +223,20 @@ async function child() {
   eq(core.periodOn('설날', T(2027, 2, 6)), false, '미리보기 할로윈 켜기 → 설날 기간 아님');
   time.setOverride('holiday', null);
   // 하루 일정: 지난 것만, 상태와 함께
+  time.setOverride('season', 'winter'); // 해 지는 시각이 날마다 다르므로 겨울 대표 날짜(해 17:20)로 본다
   const pe = time.passedEvents(T(2026, 10, 13, 18, 50)).map(e => e.name + ':' + e.state).join(' ');
-  eq(pe, 'wait:late feed:late leave:late ret:due lampOn:late', '평일 18:50 지난 일정');
+  time.setOverride('season', null);
+  eq(pe, 'wait:late feed:late leave:late ret:due lampOn:late', '평일 18:50 지난 일정 (겨울)');
   eq(time.mandukHome(T(2026, 10, 13, 18, 33)), false, '평일 18:33 만득 씨 아직 안 옴 (귀가 18:36)');
   eq(time.mandukHome(T(2026, 10, 13, 18, 36)), true, '평일 18:36 귀가');
   eq(time.inWindow(time.routineOf(T(2026, 10, 17, 14)).tvSound, T(2026, 10, 17, 14)), true, '토요일 14시 만득 씨 TV 소리');
   eq(time.inWindow(time.routineOf(T(2026, 10, 13, 14)).tvSound, T(2026, 10, 13, 14)), false, '평일엔 TV 소리 없음');
-  for (const s of ['spring', 'summer', 'winter']) { // 5장 표: 밤 시작
+  for (const s of ['spring', 'summer', 'winter']) { // 밤 시작: 대표 날짜(계절 버튼)의 해 진 뒤 30분 (WINDOW_PLAN_3.md 4-3)
     time.setOverride('season', s);
-    const want = { summer: '20:30', spring: '19:06', winter: '17:42' }[s], ns = Object.fromEntries(time.daypartStarts(oct)).evening;
-    eq(hm(ns), want, `${s} 밤(UFO·마녀·산타) 시작`);
-    eq(time.isNight(T(2026, 10, 15, 0, Math.round(ns * 60) - 1)), false, `${s} 밤 시작 1분 전`);
-    eq(time.isNight(T(2026, 10, 15, 0, Math.round(ns * 60))), true, `${s} 밤 시작`);
+    const ns = Object.fromEntries(time.daypartStarts(oct)).evening;
+    eq(hm(ns), hm(time.sunTimes(oct)[1] + 0.5), `${s} 밤(UFO·마녀·산타) 시작 = 해 진 뒤 30분`);
+    eq(time.isNight(T(2026, 10, 15, 0, Math.ceil(ns * 60 - 1e-9) - 1)), false, `${s} 밤 시작 1분 전`);
+    eq(time.isNight(T(2026, 10, 15, 0, Math.ceil(ns * 60 - 1e-9))), true, `${s} 밤 시작`);
   }
   time.setOverride('season', null);
 

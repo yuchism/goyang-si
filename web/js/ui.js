@@ -295,6 +295,9 @@ export function initUI() {
       return;
     secretB();
   };
+  // 풍경 날짜 (WINDOW_PLAN_3.md 4-5): 풍경과 해 시각만 그 날짜로 (남반구도 한국 달력처럼 읽음). 계절 버튼보다 먼저
+  $('scenery').oninput = e => setOverride('scenery', +e.target.value / 365);
+  $('sceneryReal').onclick = () => setOverride('scenery', null);
   $('dSeason').onclick = () => {
     setOverride('season', SEASONS[(SEASONS.indexOf(seasonOverride) + 1) % SEASONS.length]);
     caption(seasonOverride ? tr('devSeason', { season: tr('season')[seasonOverride] }) : tr('devRealSeason'), 2.5);

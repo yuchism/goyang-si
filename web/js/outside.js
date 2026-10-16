@@ -1,17 +1,19 @@
 /* 창밖과 하늘을 나는 것: 하늘·해·달·구름·비·눈, 새, 나비, UFO, 산타 썰매.
-   그리는 순서는 WINDOW_PLAN.md 3장: 하늘 → 아파트(낮·밤 하늘 덮개·밤) → skyBack(무지개·번개 하늘) → 아파트 마스크 → apt(창 불빛)
-   → 노을 → 비 덮개 → 해·달 → 구름 → 멀리 나는 새 → sky(비행기·UFO·산타·마녀·박쥐) → 꽃잎 → 눈·비. 난간과 베란다 층은 draw.js */
+   그리는 순서는 WINDOW_PLAN_3.md 5장: 하늘(지평선까지, 밤 하늘·가을 하늘·미세먼지) → 해·달 → skyBack(무지개·번개 하늘)
+   → 산·건물 판(scenery.js: 먼 산 → 연무 → 가까운 산 → 연무 → 건물 마스크. 낮 판 위에 밤 판을 밤 비율로) → apt(창 불빛)
+   → 노을 → 비 덮개 → 구름 → 멀리 나는 새 → sky(비행기·UFO·산타·마녀·박쥐·철새) → 꽃잎 → 눈·비. 난간과 베란다 층은 draw.js */
 import { WIN, skyRnd, toRoom, wy } from './win.js';
 import { play } from './anim.js';
 import { canStart, eventsApt, eventsSky, eventsSkyBack } from './events.js';
-import { IMG, imageReady, img } from './assets.js';
+import { imageReady, img } from './assets.js';
+import { aptRect, sceneryPlates } from './scenery.js';
 import { drawPetals } from './birthday.js';
 import { A, P } from './objects.js';
 import { ctx } from './stage.js';
 import { fn, hold, run, until } from './steps.js';
-import { MOON_SOUTH, butterflyTime, darkness, holiday, isNight, momentNow, moonPhase, nightOf, rainNow, season, skyAt, sunArc, sunUp, twilightGlow } from './time.js';
+import { MOON_SOUTH, butterflyTime, darkness, moonLift, sceneryAt, sunLift, holiday, isNight, momentNow, moonPhase, nightOf, rainNow, season, skyAt, sunUp, twilightGlow } from './time.js';
 import { tr } from './i18n.js';
-import { RM, clamp, hash, pick, rnd } from './util.js';
+import { RM, clamp, hash, lerp, onScene, pick, rnd } from './util.js';
 import { after, caption, cat, mouse, say, world } from './world.js';
 /* ───────── 나비 ───────── */
 export function spawnButterfly() {
@@ -144,47 +146,80 @@ function drawMoon(d, cx, cy, R) {
   ctx.fill();
   ctx.restore();
 }
+// 하늘 색: 위는 예전 코드 하늘, 아래(지평선 y ≈ 466 쪽)는 예전 아파트 그림 속 하늘의 연보라 연무 (창에 보이는 범위에서 잰 색)
+// 하늘 색과 지평선은 창 안 좌표 (window.json skyGradient, landscape.bottom)
+const horizon = () => wy(WIN.landscape.bottom);
+function skyFill(w, stops, alpha) {
+  const HORIZON = horizon();
+  const g = ctx.createLinearGradient(0, w.y, 0, HORIZON);
+  stops.forEach(([y, c]) => g.addColorStop(clamp((wy(y) - w.y) / (HORIZON - w.y), 0, 1), c));
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = g;
+  ctx.fillRect(w.x - 4, w.y, w.w + 8, w.h + 4);
+  ctx.globalAlpha = 1;
+}
+// 해·달 자리 (WINDOW_PLAN_3.md 17장): 오른쪽 아래(능선·건물 뒤, 원반이 다 가려지는 곳)에서 살짝 비스듬히 오른쪽 위(예전 달 자리)로.
+// 올라오고 내려갈 땐 부드럽게(smoothstep). lift 0 = 다 가려짐, 1 = 제자리
+// 해·달 자리: 창 오른쪽 끝 기준 (window.json skySpot). 창 크기가 바뀌어도 오른쪽 위 모서리에 머문다
+export const SKY_SPOT = {};
+onScene(() => {
+  if (!WIN.rect)
+    return;
+  const s = WIN.skySpot, r = WIN.rect.x + WIN.rect.w;
+  Object.assign(SKY_SPOT, { low: [r - s.low[0], wy(s.low[1])], top: [r - s.top[0], wy(s.top[1])], sunR: s.sunR, moonR: s.moonR });
+});
+export function skySpot(k) {
+  const e = k * k * (3 - 2 * k), [x0, y0] = SKY_SPOT.low, [x1, y1] = SKY_SPOT.top;
+  return { x: lerp(x0, x1, e), y: lerp(y0, y1, e) };
+}
 export function drawOutside(d, w) {
   const day = sunUp(d), rain = rainNow(d);
   const night = clamp(darkness(d) / 0.62, 0, 1);
-  // 하늘은 그림의 하늘색으로 채우고, 건물은 아래쪽에 작게 (더 많이 보이게)
-  const ad = IMG.r_apt_day, an = IMG.r_apt_night, ah = WIN.landscape.height, base = imageReady(ad) ? ad : imageReady(an) ? an : null;
-  if (!base) {
-    ctx.fillStyle = '#263357';
-    ctx.fillRect(w.x, w.y, w.w, w.h);
-    return;
+  // 1. 하늘 (지평선까지). 밤 하늘은 밤 비율로. 가을 하늘은 위쪽을 조금 더 진한 파랑으로 (sceneryAt skyTint, 미세먼지 날은 누렇게)
+  const sc = sceneryAt(d);
+  skyFill(w, WIN.skyGradient.day, 1);
+  if (sc.skyTint > 0 && night < 1) {
+    const tintTo = wy(WIN.skyGradient.tintTo), g = ctx.createLinearGradient(0, w.y, 0, tintTo);
+    g.addColorStop(0, `rgba(72,118,222,${0.26 * sc.skyTint})`);
+    g.addColorStop(1, 'rgba(72,118,222,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(w.x - 4, w.y, w.w + 8, tintTo - w.y);
   }
-  const aw = base.width * ah / base.height, ax = w.x + w.w / 2 - aw / 2, ay = w.y + WIN.landscape.bottom - ah;
-  const sky = (c1, c2) => {
-    const g = ctx.createLinearGradient(0, w.y, 0, ay + ah * 0.3);
-    g.addColorStop(0, c1);
-    g.addColorStop(1, c2);
-    return g;
-  };
-  ctx.fillStyle = sky('#8aa3e6', '#96ade9');
-  ctx.fillRect(w.x, w.y, w.w, w.h);
-  if (imageReady(ad))
-    ctx.drawImage(ad, ax, ay, aw, ah);
+  if (sc.dust) {
+    const g = ctx.createLinearGradient(0, w.y, 0, horizon());
+    g.addColorStop(0, 'rgba(206,190,140,.32)');
+    g.addColorStop(1, 'rgba(214,196,150,.62)');
+    ctx.fillStyle = g;
+    ctx.fillRect(w.x - 4, w.y, w.w + 8, w.h + 4);
+  }
+  if (night > 0)
+    skyFill(w, WIN.skyGradient.night, night);
+  // 2. 해·달 (산 뒤로 뜨고 진다. 노을·비 덮개 아래)
+  const sl = sunLift(d), ml = moonLift(d); // 해는 낮에, 달은 해 진 뒤에. 같은 자리로 올라오고 내려간다
+  if (sl > 0 && !rain) {
+    const p = skySpot(sl);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, SKY_SPOT.sunR, 0, 7);
+    ctx.fillStyle = 'rgba(255,243,196,.95)';
+    ctx.fill();
+  }
+  if (ml > 0 && !rain) {
+    const p = skySpot(ml);
+    drawMoon(d, p.x, p.y, SKY_SPOT.moonR);
+  }
+  // 3. 무지개·번개 하늘 (events.js skyBack). 산·건물 판이 앞에 오므로 무지개 끝은 산 뒤로, 번개 땐 산·건물이 실루엣으로
+  eventsSkyBack(w);
+  // 4. 산·건물 판 (scenery.js): 낮 판 → 밤 판을 밤 비율로
+  const P = sceneryPlates(d, w), b = P.box;
+  ctx.drawImage(P.day, b.x, b.y, b.w, b.h);
   if (night > 0) {
     ctx.globalAlpha = night;
-    ctx.fillStyle = sky('#1f2750', '#313d6f');
-    ctx.fillRect(w.x, w.y, w.w, ay - w.y + ah * 0.3);
-    if (imageReady(an))
-      ctx.drawImage(an, ax, ay, aw, ah);
+    ctx.drawImage(P.night, b.x, b.y, b.w, b.h);
     ctx.globalAlpha = 1;
   }
-  // 무지개·번개 하늘(skyBack)을 그렸으면 아파트 마스크(하늘을 뺀 건물만)를 다시 덮어 건물이 앞에 오게 한다. 밤 마스크는 밤 비율로
-  if (eventsSkyBack(w)) {
-    const md = IMG.r_apt_day_mask, mn = IMG.r_apt_night_mask;
-    if (imageReady(md))
-      ctx.drawImage(md, ax, ay, aw, ah);
-    if (night > 0 && imageReady(mn)) {
-      ctx.globalAlpha = night;
-      ctx.drawImage(mn, ax, ay, aw, ah);
-      ctx.globalAlpha = 1;
-    }
-  }
-  eventsApt(w, { ax, ay, aw, ah, night, d }); // 건너편 창 불빛 (weather.js)
+  // 5. 건너편 창 불빛 (weather.js)
+  const { ax, ay, aw, ah } = aptRect(w);
+  eventsApt(w, { ax, ay, aw, ah, night, d });
   // 새벽·노을 빛
   const [, bot] = skyAt(d);
   const tw = twilightGlow(d) ? 0.28 : 0;
@@ -209,17 +244,6 @@ export function drawOutside(d, w) {
     }
     ctx.globalAlpha = 1;
   }
-  // 해 / 달 (하늘 띠 안에서만)
-  if (day && !rain) {
-    const t = sunArc(d);
-    ctx.beginPath();
-    const sn = WIN.sun;
-    ctx.arc(w.x + sn.inset + t * (w.w - 2 * sn.inset), w.y + sn.y - Math.sin(Math.PI * t) * sn.rise, sn.r, 0, 7);
-    ctx.fillStyle = 'rgba(255,243,196,.95)';
-    ctx.fill();
-  }
-  if (!day && !rain)
-    drawMoon(d, w.x + w.w * WIN.moon.x, w.y + WIN.moon.y, WIN.moon.r);
   if (rain) {
     const sn = season(d) === 'winter', c1 = sn ? 'rgba(236,238,242,.95)' : 'rgba(86,94,108,.95)', c2 = sn ? 'rgba(220,224,230,.95)' : 'rgba(100,108,122,.95)';
     for (let row = 0; row < 2; row++) {

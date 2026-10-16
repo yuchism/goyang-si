@@ -13,7 +13,6 @@ const port = process.argv[2] || 8000;
 const fails = [];
 const fail = m => fails.push(m);
 const read = p => JSON.parse(readFileSync(p, 'utf8'));
-const SKIP = ['scenery.js', 'seasons.js']; // 되돌린 3차 창밖이 남긴 파일 (아무도 부르지 않음)
 
 // 1. 장면 파일
 const meta = read(join(WEB, 'r/meta.json'));
@@ -45,7 +44,7 @@ const KINDS = [
   [/\bplayOk\('(\w+)'\)/g, n => ['laser', 'fish', 'yarn', 'wheel'].includes(n), '놀이'],
 ];
 let used = 0;
-for (const f of readdirSync(JS).filter(f => f.endsWith('.js') && !SKIP.includes(f))) {
+for (const f of readdirSync(JS).filter(f => f.endsWith('.js'))) {
   const src = readFileSync(join(JS, f), 'utf8');
   for (const [re, ok, what] of KINDS)
     for (const m of src.matchAll(re)) {
@@ -81,8 +80,8 @@ const noWin = { ...room, objects: room.objects.filter(o => !['window', 'curtain_
 const stage = readFileSync(join(WEB, 'scenes/room/stage.json'), 'utf8');
 const TEST = { 'stage.json': stage, 'objects.json': JSON.stringify(noWin) }; // window.json 없음
 // 창에 딸린 일 (생기면 안 됨)
-const WINDOW_THINGS = ['bfly', 'ufo', 'santa', 'witch', 'bats', 'plane', 'guest', 'curtainShadow', 'bird', 'rainbow'];
-const BUTTONS = ['dBfly', 'dUfo', 'dSanta', 'dWitch', 'dBat', 'dGhost', 'dBird', 'dBlackcat', 'dThunder', 'dRainbow', 'dPlane', 'dLights', 'dRain', 'dMouse', 'dBox', 'dKnock', 'dOdd', 'dLaser', 'dFish', 'dYarn', 'dWheel', 'dMan', 'dSecret', 'dHw', 'dXmas', 'dSeason'];
+const WINDOW_THINGS = ['bfly', 'ufo', 'santa', 'witch', 'bats', 'plane', 'guest', 'curtainShadow', 'bird', 'rainbow', 'leaves', 'geese', 'dfly'];
+const BUTTONS = ['dBfly', 'dUfo', 'dSanta', 'dWitch', 'dBat', 'dGhost', 'dBird', 'dBlackcat', 'dThunder', 'dRainbow', 'dPlane', 'dLights', 'dRain', 'dMouse', 'dBox', 'dKnock', 'dOdd', 'dLaser', 'dFish', 'dYarn', 'dWheel', 'dMan', 'dSecret', 'dHw', 'dXmas', 'dSeason', 'dLeaves', 'dGeese', 'dBlossom', 'dDragonfly', 'dFirstSnow', 'dRailSnow', 'dFrost', 'dDust'];
 const b = await chromium.launch();
 for (const hour of [14, 22]) {
   const ctx = await b.newContext({ viewport: { width: 1300, height: 900 }, timezoneId: 'Australia/Sydney', locale: 'ko-KR' });
@@ -116,7 +115,7 @@ for (const hour of [14, 22]) {
       }, id);
       for (let i = 0; i < 6; i++) {
         await p.evaluate(() => __step(100));
-        (await p.evaluate(keys => keys.filter(k => window.__goyang.world[k]), WINDOW_THINGS)).forEach(k => seen.add(k));
+        (await p.evaluate(keys => keys.filter(k => { const v = window.__goyang.world[k]; return Array.isArray(v) ? v.length > 0 : !!v; }), WINDOW_THINGS)).forEach(k => seen.add(k));
       }
     }
     await p.evaluate(() => __step(3000));

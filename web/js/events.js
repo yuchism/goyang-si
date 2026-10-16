@@ -20,6 +20,7 @@ import { batsEvent, ghostEvent, witchEvent } from './halloween.js';
 import { butterflyEvent, santaEvent, ufoEvent } from './outside.js';
 import { lightsEvent, planeEvent, rainbowEvent, thunderEvent } from './weather.js';
 import { birdEvent, blackcatEvent } from './veranda.js';
+import { blossomEvent, dragonflyEvent, dustEvent, firstSnowEvent, frostEvent, geeseEvent, leavesEvent, railSnowEvent } from './seasons.js';
 import { now, thunderNow } from './time.js';
 import { world } from './world.js';
 import { has } from './objects.js';
@@ -27,7 +28,8 @@ import { onScene } from './util.js';
 
 // 순서 = 매 장면 진행 순서(확률을 뽑는 순서)이자 그리는 순서. 처음 쓸 때 만든다 (파일들이 서로 불러오므로)
 let list = null;
-export const events = () => list || (list = [butterflyEvent, ufoEvent, santaEvent, witchEvent, batsEvent, ghostEvent, lightsEvent, thunderEvent, rainbowEvent, planeEvent, birdEvent, blackcatEvent]);
+// 3차 계절 손님(seasons.js): 철새는 하늘의 큰 것, 벚꽃잎·낙엽은 하늘에, 난간 눈은 새 아래, 잠자리는 손님 위, 성에는 베란다 층 맨 끝(유리)
+export const events = () => list || (list = [butterflyEvent, ufoEvent, santaEvent, witchEvent, batsEvent, ghostEvent, lightsEvent, thunderEvent, rainbowEvent, planeEvent, geeseEvent, blossomEvent, leavesEvent, railSnowEvent, birdEvent, blackcatEvent, dragonflyEvent, firstSnowEvent, dustEvent, frostEvent]);
 
 // 이 장면에서 생길 수 있는 일: needs의 장소가 모두 있는 것만 (SCENE_PLAN.md 7장). 장면을 읽으면 다시 고른다
 const ok = e => !e.needs || e.needs.every(has);
@@ -42,12 +44,12 @@ const each = (k, ...args) => {
 
 /* ───────── 창밖 교통정리 (WINDOW_PLAN.md 4장) ─────────
    cls       무엇                                   규칙
-   sky       UFO, 산타, 마녀(+커튼 마녀 그림자), 비행기  한 번에 하나. 끝나고 rest초 쉬었다가 다음. 한 시간 hour번까지. 천둥 치는 동안엔 안 나옴
+   sky       UFO, 산타, 마녀(+커튼 마녀 그림자), 비행기, 철새 무리  한 번에 하나. 끝나고 rest초 쉬었다가 다음. 한 시간 hour번까지. 천둥 치는 동안엔 안 나옴
    skySmall  박쥐 무리                               큰 것이 있으면 안 나옴 (마녀가 시작하면 비켜 사라지는 것은 halloween.js)
    curtain   커튼 유령, 커튼 마녀 그림자               커튼 자리(world.curtainShadow) 하나를 같이 쓴다
    veranda   비둘기·까치, 작은 검은 고양이             한 번에 하나(까치 짝은 한 손님). 큰 것과는 겹쳐도 됨. 천둥 치는 동안엔 안 나옴
    weather   천둥번개, 무지개                         날씨 규칙(time.js rainNow·rainSpan)대로
-   bg        나비, 건너편 창 불빛, 멀리 나는 새         항상 겹쳐도 됨
+   bg        나비, 건너편 창 불빛, 멀리 나는 새, 낙엽·벚꽃잎·잠자리·난간 눈·성에  항상 겹쳐도 됨 (낙엽·잠자리는 손님이 앉은 난간 자리를 피함, seasons.js)
    예외(opt): special — 특별한 순간(이브 밤 산타, 10/31 밤 마녀). 쉼·한 시간 상한·천둥을 무시하고 진행 중인 큰 것만 기다린다
               noRest  — UFO 노트북 개그(노트북을 친 직후). 쉼만 무시
    미리보기 버튼은 교통정리를 묻지 않고 바로 띄운다 (각 사건의 dev) */

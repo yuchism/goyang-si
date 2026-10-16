@@ -24,12 +24,18 @@ const SCEN=[
  {n:'mobile',url:'',vp:[390,780],dpr:2,steps:[{h:14},{s:300,page:1}]},
  {n:'long',url:'',vp:[1300,900],steps:[{h:6},{js:"document.getElementById('sp60').click()"},{s:9000,shot:1},{s:9000,shot:1},{s:9000,shot:1}]},
  // 창밖 풍경 (WINDOW_PLAN.md): 난간의 새 + 채터링, 검은 고양이 빼꼼(밤 눈), 밤 비행기 불빛, 무지개, 천둥 번쩍임. 창 불빛은 night·late 장면
+ // 3차 창밖 풍경 (WINDOW_PLAN_3.md 12장): 풍경 날짜를 옮겨 가며 산·계절 (10-13, 11-01, 11-25, 01-15, 03-20, 04-12, 05-05, 07-15, 09-30), 노을·동틀 녘, 밤 번개
+ {n:'scenery',url:'',vp:[1300,900],steps:[{h:14},{js:"__goyang.setOverride('scenery',0.780822)"},{s:20,shot:1},{js:"__goyang.setOverride('scenery',0.832877)"},{s:20,shot:1},{js:"__goyang.setOverride('scenery',0.898630)"},{s:20,shot:1},{js:"__goyang.setOverride('scenery',0.038356)"},{s:20,shot:1},{js:"__goyang.setOverride('scenery',0.213699)"},{s:20,shot:1},{js:"__goyang.setOverride('scenery',0.276712)"},{s:20,shot:1},{js:"__goyang.setOverride('scenery',0.339726)"},{s:20,shot:1},{js:"__goyang.setOverride('scenery',0.534247)"},{s:20,shot:1},{js:"__goyang.setOverride('scenery',0.745205)"},{s:20,shot:1}]},
+ {n:'dusk',url:'',vp:[1300,900],steps:[{h:17.85},{s:30,shot:1},{h:6.75},{s:30,shot:1},{h:7.5},{s:30,shot:1}]},
+ {n:'nightwx',url:'',vp:[1300,900],steps:[{h:21.5},{js:"document.getElementById('dThunder').click()"},{s:3,shot:1},{js:"__goyang.setOverride('scenery',0.0384)"},{s:60,shot:1}]},
+ // 3차 계절 손님 (seasons.js): 낙엽(난간 앉기), 철새, 벚꽃잎, 잠자리, 미세먼지, 난간 눈·성에(겨울 아침), 첫눈
+ {n:'seasons',url:'',vp:[1300,900],steps:[{h:14},{js:"document.getElementById('dLeaves').click()"},{s:90,shot:1},{s:150,shot:1},{js:"document.getElementById('dGeese').click()"},{s:300,shot:1},{js:"__goyang.setOverride('scenery',0.276712)"},{js:"document.getElementById('dBlossom').click()"},{s:30,shot:1},{js:"document.getElementById('dBlossom').click()"},{js:"__goyang.setOverride('scenery',0.646575)"},{js:"document.getElementById('dDragonfly').click()"},{s:200,shot:1},{js:"__goyang.setOverride('scenery',0.312329)"},{js:"document.getElementById('dDust').click()"},{s:20,shot:1},{js:"document.getElementById('dDust').click()"},{h:7.6},{js:"__goyang.setOverride('scenery',0.038356)"},{js:"document.getElementById('dRailSnow').click()"},{js:"document.getElementById('dFrost').click()"},{s:20,shot:1},{js:"document.getElementById('dRailSnow').click()"},{js:"document.getElementById('dFrost').click()"},{h:14},{js:"document.getElementById('dFirstSnow').click()"},{s:600,shot:1}]},
  {n:'window',url:'',vp:[1300,900],steps:[{h:14},{js:"(()=>{const g=__goyang;g.run(g.cat,[g.hold(60,'loaf')],'loaf');g.cat.closed=false})()"},{js:"document.getElementById('dBird').click()"},{s:150,shot:1},{h:21},{js:"document.getElementById('dBlackcat').click()"},{s:80,shot:1},{js:"document.getElementById('dPlane').click()"},{s:300,shot:1},{h:15},{js:"document.getElementById('dRainbow').click()"},{s:60,shot:1},{js:"document.getElementById('dThunder').click()"},{s:3,shot:1}]},
 ];
 (async()=>{const port=process.argv[2],out=process.argv[3],only=process.argv[4];fs.mkdirSync(out,{recursive:true});
  const b=await chromium.launch();const errs={};
  for(const sc of SCEN){if(only&&!only.split(',').includes(sc.n))continue;
-  const ctx=await b.newContext({viewport:{width:sc.vp[0],height:sc.vp[1]},deviceScaleFactor:sc.dpr||1,timezoneId:'Australia/Sydney',locale:process.env.VC_LOCALE||'ko-KR'});
+  const ctx=await b.newContext({viewport:{width:sc.vp[0],height:sc.vp[1]},deviceScaleFactor:sc.dpr||1,timezoneId:process.env.VC_TZ||'Asia/Seoul',locale:process.env.VC_LOCALE||'ko-KR'});
   const p=await ctx.newPage();errs[sc.n]=[];p.on('pageerror',e=>errs[sc.n].push('PAGEERR '+e.message));p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource/.test(m.text()))errs[sc.n].push(m.text())});
   await p.addInitScript(INIT);await p.route(/goatcounter|zgo\.at|fonts\.(googleapis|gstatic)/,r=>r.abort());
   await p.goto(`http://localhost:${port}/index.html${sc.url}`);
@@ -43,6 +49,8 @@ const SCEN=[
    if(st.h!=null)await p.evaluate(h=>{const e=document.getElementById('hour');e.step='any';e.value=h;e.dispatchEvent(new Event('input'))},st.h);
    if(st.js)await p.evaluate(st.js);
    if(st.s)await p.evaluate(n=>__step(n),st.s);
+   // 필요할 때 받는 그림(산 그림 등)이 아직 오는 중이면 기다렸다가 한 장면 더 그린 뒤 찍는다 (받는 속도에 따라 화면이 달라지지 않게)
+   if(st.shot||st.page){let w=0;for(let i=0;i<100;i++){if(await p.evaluate(()=>!(__goyang.lazyPending&&__goyang.lazyPending())))break;w=1;await new Promise(r=>setTimeout(r,100))}if(w)await p.evaluate(()=>__step(1))}
    if(st.shot)await p.locator('#cv').screenshot({path:`${out}/${sc.n}_${k++}.png`,animations:'disabled'});
    if(st.page)await p.screenshot({path:`${out}/${sc.n}_${k++}.png`,animations:'disabled'});
   }

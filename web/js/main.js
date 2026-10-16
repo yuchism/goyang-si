@@ -18,7 +18,7 @@ import { drawActor, drawBubble, drawCaptions } from './sprites.js';
 import { H, W, cam, ctx, fit, roomDark, updateCam, view } from './stage.js';
 import { windowLight } from './win.js';
 import { bub, go, hold, ownLayer, run, tickActor } from './steps.js';
-import { advanceClock, calDay, inWindow, lampShouldBeOn, mandukAsleep, mandukHome, markClock, moonName, moonPhase, now, passedEvents, rainNow, resetClock, routineOf, season, snowing, speed, timeInfo } from './time.js';
+import { advanceClock, calDay, sceneryAt, sunTimes, yearPos, inWindow, lampShouldBeOn, mandukAsleep, mandukHome, markClock, moonName, moonPhase, now, passedEvents, rainNow, resetClock, routineOf, season, snowing, speed, timeInfo } from './time.js';
 import { drawJumpFade, initJump, jumpTick, newDay, settleCat } from './jump.js';
 import { frameTick } from './frame.js';
 import { playsLayers, playsLight, playsOverlay, playsTick } from './plays.js';
@@ -32,6 +32,11 @@ import { applyDom, tr } from './i18n.js';
 import { drawOddBook, drawOddGlow, initInstall, portraitHint } from './install.js';
 import { caption, cat, mouse, say, tickTimers, world } from './world.js';
 /* ───────── 상태 표시 ───────── */
+// 시간 단위 → 'H:MM' (미리보기 한 줄)
+const clockOf = h => {
+  const m = Math.round(h * 60);
+  return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0');
+};
 function statusText(d) {
   const h = d.getHours(), mi = String(d.getMinutes()).padStart(2, '0');
   const ap = tr(h < 12 ? 'am' : 'pm'), hh = ((h + 11) % 12) + 1;
@@ -145,6 +150,12 @@ function frame(tNow) {
     const ti = timeInfo(d); // 시간 기준 확인용 한 줄 (TIME_BASE_PLAN.md 9장)
     document.getElementById('timev').textContent = tr('devTime', { season: tr('season')[ti.season] + (ti.south ? tr('devSouth') : ''), part: tr('daypart')[ti.part],
       cal: ti.cal, bd: ti.bday, night: ti.night || '–', periods: ti.periods.join(', ') || '–' });
+    const sc = sceneryAt(d), [sr, ss] = sunTimes(d), pct = k => Math.round(k * 100); // 풍경 한 줄 (WINDOW_PLAN_3.md 4-5)
+    document.getElementById('scenev').textContent = tr('devSceneLine', { md: sc.md, mix: sc.mix.filter(([, k]) => k > 0.005).map(([n, k]) => tr('season')[n] + ' ' + pct(k) + '%').join(' + ') + (sc.mix[1][1] > 0.005 && sc.mix[1][1] < 0.995 ? (sc.dir === 'up' ? '(↑)' : '(↓)') : ''),
+      cap: pct(sc.snowCap) + '%', rise: clockOf(sr), set: clockOf(ss), extra: sc.dust ? tr('devDust') : '' });
+    const sl = document.getElementById('scenery');
+    if (document.activeElement !== sl)
+      sl.value = Math.round(yearPos(d) * 365);
     document.getElementById('winv').textContent = trafficLine(tr); // 창밖 교통정리 (events.js, WINDOW_PLAN.md 11장)
   }
   requestAnimationFrame(frame);

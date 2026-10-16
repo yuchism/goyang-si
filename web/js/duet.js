@@ -109,10 +109,11 @@ export function stalkS() {
 }
 // 상자 숨바꼭질: 쥐야쥐가 상자 뒤로 숨고, 강고양이 씨가 기웃거리면 반대편으로 쏙 나온다
 export function boxHideS() {
-  if (!boxToday(now()))
+  // 상자가 처음 온 날은 닫혀 있어서 box.check 자리가 없다(objects.json box.states.closed). 자리가 하나라도 없으면 인사로
+  const hd = S('boxback.hide'), ck = S('box.check'), po = S('boxback.out');
+  if (!boxToday(now()) || !hd || !ck || !po)
     return greetS();
   mouse.state = 'duet';
-  const hd = S('boxback.hide'), ck = S('box.check'), po = S('boxback.out');
   run(mouse, [go(hd[0], hd[1], 170, ['box']), fn(a => {
       a.hidden = true;
       a.where = 'boxback';
@@ -145,7 +146,7 @@ export function boxHideS() {
     play('startle'),
     bub('‼️', 2),
     hold(1.5, 'stand'),
-    go(S('boxback.out')[0] + 40, S('boxback.out')[1] + 20, 120),
+    go(po[0] + 40, po[1] + 20, 120),
     hold(1, 'stand'),
     bub('😮‍💨', 3),
     hold(rnd(12, 20), 'loaf')

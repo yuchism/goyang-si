@@ -19,6 +19,22 @@ export const CAL = {
     halloweenNight:    { date: '10-31', from: '21:00', night: true }, // 10/31 밤 마녀 꼭 한 번
     christmasEveNight: { date: '12-24', from: '21:00', night: true }  // 이브 밤 산타 꼭 한 번
   },
+  /* 풍경 날짜 (WINDOW_PLAN_3.md 4-2): 한국 달력 기준. 남반구는 time.js yearPos가 반년 밀어 준다.
+     mountain: 산 그림 섞기 [날짜, 계절] — 같은 계절 사이는 그대로, 다른 계절 사이는 부드럽게 넘어감 (한 날짜엔 두 계절만)
+     나머지: { from, to } 범위 (양끝 포함). time.js sceneryOn(이름, d)로만 읽는다 */
+  scenery: {
+    mountain: [['12-05', 'winter'], ['03-05', 'winter'], ['04-05', 'spring'], ['04-20', 'spring'], ['05-20', 'summer'], ['09-20', 'summer'], ['10-25', 'autumn'], ['11-10', 'autumn']],
+    autumnSky:     { from: '09-20', to: '11-20' }, // 가을 하늘 (가운데가 가장 진함)
+    leaves:        { from: '10-10', to: '11-25' }, // 낙엽
+    geeseSouth:    { from: '10-01', to: '11-30' }, // 철새 남쪽으로 (오른쪽 → 왼쪽)
+    geeseNorth:    { from: '03-01', to: '04-15' }, // 철새 북쪽으로 (왼쪽 → 오른쪽)
+    snowCapMelt:   { from: '03-15', to: '03-31' }, // 먼 산 눈 모자 녹음
+    blossom:       { from: '04-01', to: '04-20' }, // 벚꽃잎
+    dust:          { from: '03-01', to: '05-31' }, // 미세먼지 철
+    monsoon:       { from: '06-20', to: '07-25' }, // 장마
+    dragonfly:     { from: '08-10', to: '09-30' }, // 잠자리
+    tropicalNight: { from: '07-15', to: '08-25' }  // 열대야
+  },
   // 창밖 작업이 쓸 자리 (이번엔 자리만, 아직 아무도 읽지 않는다)
   later: {
     meteorPeaks: ['01-03', '08-12', '10-21', '11-17', '12-13'] // 유성우 극대 무렵

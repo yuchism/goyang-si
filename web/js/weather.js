@@ -200,7 +200,7 @@ function drawRainbow(w) {
   const d = now(), a = rainbowAt(d);
   if (a <= 0)
     return false;
-  const side = rainbowSide(d), cx = w.x + w.w * (0.5 + 0.28 * side), cy = w.y + w.h + 60, R = 330, bw = 7;
+  const side = rainbowSide(d), cx = w.x + w.w * (0.5 + 0.28 * side), cy = w.y + w.h + 60, R = 430, bw = 7; // 꼭대기 y ≈ 92: 산 위로 크게 떠서 끝만 산 뒤로 (WINDOW_PLAN_3.md 6장)
   ctx.save();
   ctx.lineWidth = bw + 0.6;
   RAINBOW.forEach((c, i) => {
