@@ -4,11 +4,18 @@ import { birthdayMode } from './birthday.js';
 import { boxOpen, boxToday, holiday, now, pumpkinLit, season } from './time.js';
 import { cat, mouse, world } from './world.js';
 import { fishRodOut } from './fish.js';
+import { rnd, runSceneHooks } from './util.js';
+import { WIN } from './win.js';
 export let OBJ = [];
 export const O = {};
 export const P = {}; // P: 위치 바로가기 (objects.json에서 만들어짐)
+const AREAS = {}, PATHS = {}, PLACES = {};
+
 export function initObjects(data) {
   OBJ = data.objects;
+  Object.assign(AREAS, data.areas || {});
+  Object.assign(PATHS, data.paths || {});
+  Object.assign(PLACES, data.places || {});
   OBJ.forEach(o => {
     O[o.id] = o;
     if (o.pos)
@@ -18,6 +25,10 @@ export function initObjects(data) {
   });
   if (P.cup)
     Object.assign(world.cup, { x: P.cup.x, y: P.cup.y }); // 컵이 떨어지기 시작하는 곳 = 탁자 위 컵 자리
+  for (const [a, k] of [[cat, 'start.cat'], [mouse, 'start.mouse']])
+    if (PLACES[k])
+      Object.assign(a, { x: PLACES[k].x, y: PLACES[k].y });
+  runSceneHooks();
 }
 // 등장 조건
 const WHEN = { always: () => true, summer: () => season(now()) === 'summer', winter: () => season(now()) === 'winter',
@@ -76,3 +87,22 @@ export function socketOf(o, name) {
   return [v.pos.x - w / 2 + sk[0] * w, v.pos.y - zOf(o) - h + sk[1] * h];
 }
 export const depthOf = v => v.id === 'cup' && v.state === 'floor' ? world.cup.fy : (v.depth != null ? v.depth : v.on && O[v.on] ? O[v.on].pos.y + 0.1 : v.pos.y);
+// 범위: A('cat.roam') → { x: [왼, 오른], y: [위, 아래] }. ax·ay는 그 안에서 무작위 (x를 먼저 뽑는다)
+export const A = name => AREAS[name] || null;
+export const ax = a => rnd(a.x[0], a.x[1]);
+export const ay = a => rnd(a.y[0], a.y[1]);
+export const aPt = a => [ax(a), ay(a)];
+// 경로: PATH('duet.lap') → [[x, y], ...] (복사본)
+export const PATH = name => PATHS[name] ? PATHS[name].points.map(p => p.slice()) : null;
+// 기능별 자리: PL('wheel') → { x, y, w, ... } (쓰는 값만 있음)
+export const PL = name => PLACES[name] || null;
+// 장면에 이 장소가 있나 (SCENE_PLAN.md 7장). 사물 id, 범위·경로·자리 이름, 창에 딸린 것('window', 'railing', 'curtain')
+export function has(name) {
+  if (name === 'window')
+    return !!WIN.rect;
+  if (name === 'railing')
+    return !!(WIN.rect && WIN.railing);
+  if (name === 'curtain')
+    return !!(WIN.rect && WIN.curtain && (O.curtain_l || O.curtain_r));
+  return !!(O[name] || PLACES[name] || AREAS[name] || PATHS[name]);
+}

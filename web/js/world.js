@@ -8,10 +8,11 @@ export const world = {
   tv: { st: null, frame: 'screen_off', avg: null, flick: 0 }
 };
 /* ───────── 배우 ───────── */
+// half: 몸 반폭. 걷는 바닥 가로 끝에서 이만큼 안쪽까지만 간다 (stage.js walkX)
 function mkActor(kind, x, y) {
-  return { kind, x, y, face: -1, pose: kind === 'cat' ? 'loaf' : 'walk', closed: false, steps: [], cur: null, moving: false, bub: null, phase: Math.random() * 9, tag: '', hidden: kind === 'mouse', bobT: 0, stepT: 0, rock: 0, state: '', dp: kind === 'cat' ? 'loaf' : 'walk', tr: null, walkPh: 0 };
+  return { kind, x, y, face: -1, pose: kind === 'cat' ? 'loaf' : 'walk', closed: false, steps: [], cur: null, moving: false, bub: null, phase: Math.random() * 9, tag: '', half: 20, hidden: kind === 'mouse', bobT: 0, stepT: 0, rock: 0, state: '', dp: kind === 'cat' ? 'loaf' : 'walk', tr: null, walkPh: 0 };
 }
-export const cat = mkActor('cat', 600, 690), mouse = mkActor('mouse', 819, 588); // 처음엔 쥐구멍 안 (숨어 있음)
+export const cat = mkActor('cat', 0, 0), mouse = mkActor('mouse', 0, 0); // 처음 자리는 장면의 start.cat·start.mouse (objects.js가 넣는다). 쥐야쥐는 처음엔 쥐구멍 안 (숨어 있음)
 /* ───────── 말풍선 ───────── */
 export function say(a, t, sec = 4) {
   a.bub = { t, life: sec, max: sec };

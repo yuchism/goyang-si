@@ -22,13 +22,20 @@ import { lightsEvent, planeEvent, rainbowEvent, thunderEvent } from './weather.j
 import { birdEvent, blackcatEvent } from './veranda.js';
 import { now, thunderNow } from './time.js';
 import { world } from './world.js';
+import { has } from './objects.js';
+import { onScene } from './util.js';
 
 // 순서 = 매 장면 진행 순서(확률을 뽑는 순서)이자 그리는 순서. 처음 쓸 때 만든다 (파일들이 서로 불러오므로)
 let list = null;
 export const events = () => list || (list = [butterflyEvent, ufoEvent, santaEvent, witchEvent, batsEvent, ghostEvent, lightsEvent, thunderEvent, rainbowEvent, planeEvent, birdEvent, blackcatEvent]);
 
+// 이 장면에서 생길 수 있는 일: needs의 장소가 모두 있는 것만 (SCENE_PLAN.md 7장). 장면을 읽으면 다시 고른다
+const ok = e => !e.needs || e.needs.every(has);
+let live = null;
+onScene(() => live = null);
+const liveEvents = () => live || (live = events().filter(ok));
 const each = (k, ...args) => {
-  for (const e of events())
+  for (const e of liveEvents())
     if (e[k])
       e[k](...args);
 };
@@ -50,7 +57,7 @@ export const TRAFFIC = {
   wait: { plane: 5 * 60, bird: 5 * 60, blackcat: 10 * 60 }, // 초: 날짜로 정해진 시각에 막혀 있으면 이만큼 기다렸다가 그래도 막히면 그 회차는 건너뛴다
 };
 const T = { clock: 0, skyEnd: -1e9, starts: [], was: {} }; // clock: 방 시각(초, 이 화면을 연 뒤). starts: 하늘의 큰 것 시작 시각들
-const busy = cls => events().some(e => e.cls === cls && e.active && e.active());
+const busy = cls => liveEvents().some(e => e.cls === cls && e.active && e.active());
 export function canStart(cls, opt = {}) {
   if (cls === 'sky') {
     if (busy('sky'))
@@ -77,7 +84,7 @@ export const skyRestLeft = () => Math.max(0, TRAFFIC.rest - (T.clock - T.skyEnd)
 function traffic(dt) {
   T.clock += dt;
   let sky = false;
-  for (const e of events()) {
+  for (const e of liveEvents()) {
     if (!e.active)
       continue;
     const on = !!e.active();
@@ -100,7 +107,7 @@ export const eventsTick = (d, real, bf) => {
 };
 export const eventsSkyBack = w => {
   let any = false;
-  for (const e of events())
+  for (const e of liveEvents())
     if (e.skyBack && e.skyBack(w))
       any = true;
   return any;
@@ -109,7 +116,7 @@ export const eventsApt = (w, g) => each('apt', w, g);
 export const eventsSky = w => each('sky', w);
 export const eventsVeranda = w => { // 그린 곳 [x0, y0, x1, y1] 목록 (draw.js가 그 자리만 창틀을 다시 덮는다)
   const out = [];
-  for (const e of events())
+  for (const e of liveEvents())
     if (e.veranda) {
       const b = e.veranda(w);
       if (b)
@@ -126,18 +133,18 @@ export const eventsReset = () => {
 export function eventsDev($) {
   for (const e of events())
     for (const b of e.dev || [])
-      $(b.btn).onclick = b.go;
+      $(b.btn).onclick = () => ok(e) && b.go(); // 이 장면에 없는 일은 미리보기로도 안 띄운다
 }
 export const eventsDebug = () => Object.assign({ canStart, TRAFFIC }, ...events().map(e => e.debug || {}));
 // 미리보기 한 줄: "하늘: 비어 있음 · 베란다: 비둘기 · 다음 큰 것까지 3분 · 오늘 밤 검은 고양이: 21:40(빼꼼)"
 export function trafficLine(tr) {
-  const sky = events().filter(e => e.cls === 'sky' && e.active && e.active()).map(e => tr('wt_' + e.id));
+  const sky = liveEvents().filter(e => e.cls === 'sky' && e.active && e.active()).map(e => tr('wt_' + e.id));
   const ver = world.guest ? tr('wt_' + world.guest.kind) : '';
   const parts = [tr('wtSky', { v: sky.join(', ') || tr('wtEmpty') }), tr('wtVeranda', { v: ver || tr('wtEmpty') })];
   const left = skyRestLeft();
   if (left > 0)
     parts.push(tr('wtNext', { m: Math.ceil(left / 60) }));
-  for (const e of events())
+  for (const e of liveEvents())
     if (e.note)
       parts.push(e.note(tr));
   return parts.filter(Boolean).join(' · ');

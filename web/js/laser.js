@@ -6,8 +6,8 @@ import { play } from './anim.js';
 import { inked, rr } from './draw.js';
 import { tr } from './i18n.js';
 import { mouseHide } from './mouse.js';
-import { O } from './objects.js';
-import { ctx, cv } from './stage.js';
+import { A, O, PL, ay } from './objects.js';
+import { ctx, cv, walkX, walkY } from './stage.js';
 import { fn, go, hold, routeTo, run, stepToward } from './steps.js';
 import { RM, clamp, rnd } from './util.js';
 import { caption, cat, mouse, say, world } from './world.js';
@@ -17,10 +17,10 @@ export const LASER = {
   fade: 5, // 끝나기 전 깜빡이는 시간
   rest: 180, // 논 뒤 무시하는 시간
   engage: 40, // 고양이가 쫓는 시간. 10분 안에 또 하면 10초씩 줄어든다 (최소 12초)
-  wall: 590, // 점이 이보다 위(y)면 벽·창에 있는 것
 };
 let L = null, restUntil = -1e9, lastEnd = -1e9, streak = 0;
 export const laserOn = () => !!L;
+const wallY = () => PL('laser.wall').y; // 점이 이보다 위(y)면 벽·창에 있는 것 (장면의 laser.wall)
 export const laserState = () => L; // 점검용
 
 /* ───── 포인터 (탁자 위, objects.json의 laser) ───── */
@@ -73,7 +73,7 @@ export function startLaser() {
   else
     streak = 0;
   const p = O.laser.pos;
-  L = { t: 0, x: p.x, y: 690, still: 0, eng: Math.max(12, LASER.engage - streak * 10), played: false };
+  L = { t: 0, x: p.x, y: PL('laser.start').y, still: 0, eng: Math.max(12, LASER.engage - streak * 10), played: false };
   cv.style.cursor = 'none';
   cv.style.touchAction = 'none';
   if (world.t < restUntil) { // 지쳤다: 힐끗 보고 무시
@@ -204,7 +204,7 @@ function chase() {
           cur = null;
         return false;
       }
-      const onWall = L.y < LASER.wall, tx = clamp(L.x, 60, 1140), ty = onWall ? 604 : clamp(L.y, 600, 738);
+      const onWall = L.y < wallY(), tx = walkX(L.x, cat.half), ty = onWall ? PL('laser.wallLook').y : walkY(L.y);
       // 반 박자 늦게 따라간다
       const k = Math.min(1, dt * 5);
       gx += (tx - gx) * k;
@@ -252,7 +252,7 @@ function chase() {
       a.moving = false;
       if (onWall) { // 벽 아래에서 짚고 올려다보기
         a.face = L.x > a.x ? 1 : -1;
-        push(play('wallreach', 2.5, () => !L || L.y >= LASER.wall), once(a => Math.random() < 0.4 && say(a, '❓', 1.5)));
+        push(play('wallreach', 2.5, () => !L || L.y >= wallY()), once(a => Math.random() < 0.4 && say(a, '❓', 1.5)));
         return false;
       }
       a.pose = 'stand';
@@ -270,7 +270,7 @@ export function penStareOk() {
 export function penStareB() {
   const p = O.laser.pos;
   run(cat, [
-    go(p.x + rnd(30, 50), rnd(646, 662), 55),
+    go(p.x + rnd(30, 50), ay(A('laser.penStare')), 55),
     hold(0.4, 'stand', false, -1),
     fn(a => say(a, '👀', 3)),
     play('lookup', rnd(10, 18)), // 고개를 들고 포인터를 한참 올려다본다
@@ -282,6 +282,7 @@ export function penStareB() {
 
 /* ───── 놀이 목록에 싣는 것 (plays.js) ───── */
 export const laserPlay = {
+  needs: ['laser', 'laser.wall'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'laser',
   tick: (dt, real) => laserTick(real), // 놀이 시간은 실제 시간
   light: drawLaserDot, // 어둠 위에 (빨간 점은 밤에도 보인다)

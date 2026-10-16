@@ -1,6 +1,7 @@
 /* 창밖 날씨와 하늘 (WINDOW_PLAN.md 6·7장): 건너편 창 불빛, 천둥번개, 무지개, 비행기.
    "언제"는 모두 time.js가 날짜 씨앗으로 정한다(aptLightsAt·thunderNow·flashSince·rainbowAt·planeSlots). 여기서는 그리기와 진행만 한다.
    사건 물건 넷을 events.js 목록에 싣는다 */
+import { skyAt, skyRnd } from './win.js';
 import { play } from './anim.js';
 import { canStart, TRAFFIC } from './events.js';
 import { occluded } from './glass.js';
@@ -67,6 +68,7 @@ function drawLights(w, g) {
   ctx.restore();
 }
 export const lightsEvent = {
+  needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'lights',
   cls: 'bg',
   apt: drawLights,
@@ -169,6 +171,7 @@ function drawFlashRoom() {
   ctx.fillRect(-W, 0, W * 3, H);
 }
 export const thunderEvent = {
+  needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'thunder',
   cls: 'weather',
   tick: (d, real) => thunderTick(d, real),
@@ -221,6 +224,7 @@ function rainbowTick(d) {
   }
 }
 export const rainbowEvent = {
+  needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'rainbow',
   cls: 'weather',
   tick: d => rainbowTick(d),
@@ -239,7 +243,7 @@ const PLANE = 2.2; // 비행기 크기 (처음 코드 그림 몸 길이 약 11px
 function startPlane(night, slot = null, late = 0) {
   if (world.plane)
     return;
-  world.plane = { id: slot ? slot.id : 'dev' + world.t, t: late, dur: slot ? slot.dur : rnd(45, 65), dir: slot ? slot.dir : (Math.random() < 0.5 ? 1 : -1), y: slot ? slot.y : rnd(30, 90), night, trail: [], seen: false };
+  world.plane = { id: slot ? slot.id : 'dev' + world.t, t: late, dur: slot ? slot.dur : rnd(45, 65), dir: slot ? slot.dir : (Math.random() < 0.5 ? 1 : -1), y: slot ? skyAt('plane', slot.yk) : skyRnd('planeDev'), night, trail: [], seen: false };
 }
 const planeX = (w, p, t) => {
   const k = t / p.dur;
@@ -334,6 +338,7 @@ function drawPlaneNight() {
   ctx.restore();
 }
 export const planeEvent = {
+  needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'plane',
   cls: 'sky',
   active: () => !!world.plane && world.plane.t < world.plane.dur, // 비행기구름만 남았으면 하늘은 비었다

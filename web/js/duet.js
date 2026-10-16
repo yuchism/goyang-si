@@ -2,14 +2,15 @@
 import { play } from './anim.js';
 import { loafB } from './cat.js';
 import { MOUSE_RUN, mouseFleeAround } from './mouse.js';
-import { P, S } from './objects.js';
+import { A, P, PATH, S, aPt, ay } from './objects.js';
 import { bub, faceTo, fn, follow, go, hold, inSpot, run, until } from './steps.js';
 import { boxToday, now } from './time.js';
+import { walkX, walkY } from './stage.js';
 import { clamp, pick, rnd } from './util.js';
 import { after, cat, mouse, say, world } from './world.js';
 /* ───── 둘이 함께 ───── */
 export const mouseFree = () => !mouse.hidden && !mouse.peek && mouse.state !== 'flee' && !world.manduk;
-const nearCat = (dx, dy = 4) => [clamp(cat.x + dx, 60, 1140), clamp(cat.y + dy, 600, 738)];
+const nearCat = (dx, dy = 4) => [walkX(cat.x + dx, mouse.half), walkY(cat.y + dy)];
 // 인사: 쥐야쥐가 다가와 코를 킁킁, 강고양이 씨는 귀찮은 듯 바라보다 하품
 export function greetS() {
   const side = mouse.x < cat.x ? -1 : 1, [mx, my] = nearCat(side * 110);
@@ -38,7 +39,7 @@ export function greetS() {
 }
 // 술래잡기: 쥐야쥐가 상자와 탁자를 돌아 달아나고, 강고양이 씨가 따라가다 지쳐 드러눕는다. 쥐야쥐도 근처에 멈춰 같이 쉰다
 export function chaseS() {
-  const lap = [[300, 736], [560, 738], [880, 712], [1100, 700], [840, 668], [520, 664]];
+  const lap = PATH('duet.lap');
   const st = lap.slice(0, 3 + Math.floor(Math.random() * 3));
   mouse.state = 'duet';
   run(mouse, [
@@ -78,9 +79,9 @@ export function chaseS() {
 // 노려보기: 식빵 자세로 쥐야쥐를 지켜보다 가까이 오면 덮친다. 물론 놓친다
 export function stalkS() {
   mouse.state = 'duet';
-  const tx = clamp(cat.x + (mouse.x < cat.x ? -1 : 1) * rnd(150, 190), 80, 1120);
+  const tx = walkX(cat.x + (mouse.x < cat.x ? -1 : 1) * rnd(150, 190), mouse.half);
   run(mouse, [
-    go(clamp(mouse.x + (cat.x - mouse.x) * 0.3, 80, 1120), rnd(650, 730), 55),
+    go(walkX(mouse.x + (cat.x - mouse.x) * 0.3, mouse.half), ay(A('duet.stalk')), 55),
     hold(rnd(2, 4), 'walk'),
     go(tx, cat.y + rnd(-20, 20), 55),
     hold(0.5, 'walk')
@@ -136,7 +137,7 @@ export function boxHideS() {
       say(mouse, '😜', 2.5);
       run(mouse, [
         hold(0.5, 'walk'),
-        go(rnd(120, 240), rnd(640, 700), 120),
+        go(...aPt(A('duet.mouseRest')), 120),
         faceTo(cat),
         hold(rnd(8, 14), 'walk')
       ], 'tease');

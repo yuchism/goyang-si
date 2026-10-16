@@ -4,9 +4,9 @@
 import { play } from './anim.js';
 import { FRAMES, FSC, ROOM, imageReady, img } from './assets.js';
 import { drawProp } from './draw.js';
-import { O, present } from './objects.js';
+import { A, O, P, PL, ay, present } from './objects.js';
 import { Snd } from './sound.js';
-import { DEPTH, ctx } from './stage.js';
+import { DEPTH, ctx, walkY } from './stage.js';
 import { bub, faceTo, fn, go, hold, run } from './steps.js';
 import { now } from './time.js';
 import { gateMark, gateOk } from './gate.js';
@@ -17,7 +17,7 @@ import { cat, mouse, say, world } from './world.js';
 const ROD_TIP = { cat_fish_sit_1: [15, 12], cat_fish_sit_2: [15, 11.4], cat_fish_yank_1: [7.8, 23.5], cat_fish_yank_2: [571.2, 9.5] };
 // 어항 그림 안의 자리 (그림 폭·높이에 대한 비율): 물 타원 [가운데 x, y, 반지름 x, y], 보물상자 입구, 바늘 늘어뜨릴 곳, 수면 높이
 const BOWL = { water: [0.5, 0.41, 0.36, 0.18], chest: [0.68, 0.56], hook: [0.4475, 0.44], surface: 0.18 };
-const FISH_W = 25, BOONG_W = 30, CAT_Y = 650; // 방 크기: 금붕어 길이, 붕어빵 길이, 낚시할 때 고양이 발 높이
+const FISH_W = 25, BOONG_W = 30; // 방 크기: 금붕어 길이, 붕어빵 길이 (낚시할 때 고양이 자리는 장면의 fish.cat)
 
 /* ───── 상태 ───── */
 const F = { x: 0, y: 0, tx: 0, ty: 0, face: -1, mode: 'swim', t: 0, wait: 0, ph: 0, ready: false,
@@ -61,10 +61,11 @@ function rodTip() {
 // 낚시 자리: 낚싯대 끝이 바늘 바로 위에 오도록 고양이를 앉힌다
 export function fishSpot() {
   const b = bowlBox(), m = FRAMES.cat_fish_sit_1;
+  const fc = PL('fish.cat');
   if (!b || !m)
-    return [290, CAT_Y];
-  const sc = FSC * DEPTH(CAT_Y), [hx] = hookPos(b);
-  return [hx - (ROD_TIP.cat_fish_sit_1[0] - m[2]) * sc, CAT_Y];
+    return [fc.x, fc.y];
+  const sc = FSC * DEPTH(fc.y), [hx] = hookPos(b);
+  return [hx - (ROD_TIP.cat_fish_sit_1[0] - m[2]) * sc, fc.y];
 }
 
 /* ───── 강고양이 씨: 낚시 ───── */
@@ -134,7 +135,7 @@ function launch() {
     return;
   const [hx, hy] = hookPos(b);
   if (F.hookItem === 'boong')
-    boong = { state: 'up', t: 0, x: hx, y: hy, x0: hx, y0: hy, lx: cat.x + rnd(25, 55), ly: clamp(cat.y + rnd(2, 12), 600, 738), rot: 0 };
+    boong = { state: 'up', t: 0, x: hx, y: hy, x0: hx, y0: hy, lx: cat.x + rnd(25, 55), ly: walkY(cat.y + rnd(2, 12)), rot: 0 };
   else
     weedTip = true;
   F.hookItem = null;
@@ -321,7 +322,7 @@ export function tapBowl() {
   }
   F.ripple = { t: 0 };
   puff(2, ...mouthOf());
-  if (!cat.closed && !cat.act && Math.hypot(cat.x - b.x0 - b.w / 2, cat.y - 612) < 260 && cat.tag !== 'fish')
+  if (!cat.closed && !cat.act && Math.hypot(cat.x - b.x0 - b.w / 2, cat.y - P.fishbowl.y) < 260 && cat.tag !== 'fish')
     say(cat, '👀', 2);
 }
 
@@ -538,7 +539,7 @@ export function bowlWatchB() {
   if (!b)
     return;
   run(cat, [
-    go(b.x0 + b.w + rnd(55, 75), rnd(628, 640), 50),
+    go(b.x0 + b.w + rnd(55, 75), ay(A('fish.bowlWatch')), 50),
     hold(0.6, 'stand', false, -1),
     fn(a => say(a, '🐟👀', 3)),
     play('window', rnd(40, 90)), // 창밖 보기와 같은 뒷모습으로 어항을 본다
@@ -548,6 +549,7 @@ export function bowlWatchB() {
 
 /* ───── 놀이 목록에 싣는 것 (plays.js) ───── */
 export const fishPlay = {
+  needs: ['fishbowl', 'fish.cat'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'fish',
   tick: dt => fishTick(dt), // 금붕어, 낚싯줄, 붕어빵
   layers: fishLayers,

@@ -1,11 +1,12 @@
 /* 할로윈(10/24 ~ 10/31 밤이 끝날 때, calendar.js · time.js의 holiday): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자
    자세한 내용은 HALLOWEEN_PLAN.md, 고친 것은 HALLOWEEN_FIX_PLAN.md. 공포 영화 특집은 r/tv/programs.json(horror의 "special": [["할로윈", "22:00"]])과 r/tv/schedule.json(기간 할로윈) */
+import { WIN, skyRnd, wy } from './win.js';
 import { play } from './anim.js';
 import { ghostFree } from './behave.js';
 import { imageReady, img } from './assets.js';
 import { curtainSkew, drawProp } from './draw.js';
 import { tr } from './i18n.js';
-import { O, objView, present, zOf } from './objects.js';
+import { O, S, objView, present, zOf } from './objects.js';
 import { cv, ctx } from './stage.js';
 import { drawSkySprite } from './sprites.js';
 import { canStart } from './events.js';
@@ -101,7 +102,7 @@ export function startBats() {
   if (world.bats)
     return;
   const dir = Math.random() < 0.5 ? 1 : -1, n = Math.random() < 0.5 ? 2 : 3, far = Math.random() < 0.4;
-  world.bats = { t: 0, dur: rnd(5, 7.5), dir, y: rnd(70, 170), far, m: Array.from({ length: n }, (_, i) => ({ back: i * rnd(26, 42), dy: rnd(-24, 24), ph: rnd(0, 1), fq: rnd(1.6, 2.4), wing: rnd(0, 4), sc: rnd(0.85, 1.1) })) };
+  world.bats = { t: 0, dur: rnd(5, 7.5), dir, y: skyRnd('bats'), far, m: Array.from({ length: n }, (_, i) => ({ back: i * rnd(26, 42), dy: rnd(-24, 24), ph: rnd(0, 1), fq: rnd(1.6, 2.4), wing: rnd(0, 4), sc: rnd(0.85, 1.1) })) };
   after(() => {
     if (world.bats && cat.tag === 'window' && !cat.closed)
       say(cat, '👀', 2.5);
@@ -140,7 +141,7 @@ export function startWitch(shadow) {
     world.curtainShadow = { kind: 'witch', id: 'curtain_r', t: 0, dur: 3.4 };
     return;
   }
-  world.witch = { t: 0, dur: rnd(22, 30), y: rnd(70, 120), m: Array.from({ length: pick([3, 4]) }, (_, i) => ({ lag: 0.012 + i * 0.01, or: rnd(18, 34), ph: rnd(0, 6), wing: rnd(0, 4), sc: rnd(0.55, 0.75) })) };
+  world.witch = { t: 0, dur: rnd(22, 30), y: skyRnd('witch'), m: Array.from({ length: pick([3, 4]) }, (_, i) => ({ lag: 0.012 + i * 0.01, or: rnd(18, 34), ph: rnd(0, 6), wing: rnd(0, 4), sc: rnd(0.55, 0.75) })) };
   after(() => {
     if (!world.witch || world.manduk || cat.inBox)
       return;
@@ -197,7 +198,7 @@ function drawWitch(w) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(witchTilt());
-  drawSkySprite(WITCH, im, -sw / 2, -sh / 2, sw, sh, world.dark > 0.3 ? 0.95 : 0.8);
+  drawSkySprite(WITCH, im, -sw / 2, -sh / 2, sw, sh, world.skyDark > 0.3 ? 0.95 : 0.8);
   ctx.restore();
   // 수행단: 마녀보다 살짝 늦게, 주위를 맴돌며 흩어졌다 모인다
   u.m.forEach((m, i) => {
@@ -210,7 +211,7 @@ export function startGhost() {
   if (world.curtainShadow || world.witch)
     return;
   const id = pick(['curtain_l', 'curtain_r']);
-  world.curtainShadow = { kind: 'ghost', id, t: 0, dur: rnd(7, 9), y: rnd(190, 260) };
+  world.curtainShadow = { kind: 'ghost', id, t: 0, dur: rnd(7, 9), y: wy(rnd(...WIN.curtain.ghostY)) };
   const nk = nightOf(now());
   world.ghostNight = world.ghostNight && world.ghostNight.k === nk ? { k: nk, n: world.ghostNight.n + 1 } : { k: nk, n: 1 };
   if (Math.random() < 0.5)
@@ -222,7 +223,7 @@ function ghostReaction(id) {
   const o = O[id];
   if (!o || !world.curtainShadow || world.manduk || cat.closed || cat.inBox || cat.onTV || cat.typing || cat.dance || !ghostFree(cat))
     return;
-  const left = id === 'curtain_l', spot = left ? [150, 684] : [560, 682], cx = o.pos.x;
+  const left = id === 'curtain_l', spot = S(id + '.ghost'), cx = o.pos.x;
   run(cat, [
     fn(a => {
       a.face = cx > a.x ? 1 : -1;
@@ -302,7 +303,7 @@ export function drawCurtainShadow(dk) {
     sil = silhouette(WITCH);
     gw = 260;
     gx = cw + gw * 0.5 - k * (cw + gw);
-    gy = 170 - Math.sin(k * Math.PI) * 20;
+    gy = wy(WIN.curtain.witchY) - Math.sin(k * Math.PI) * 20;
     alpha = 0.42 * clamp(Math.min(k / 0.15, (1 - k) / 0.15), 0, 1);
   }
   if (!sil || alpha <= 0)
@@ -316,7 +317,7 @@ export function drawCurtainShadow(dk) {
   tmx.clearRect(0, 0, tmpc.width, tmpc.height);
   tmx.setTransform(m);
   tmx.translate(v.pos.x - cw / 2, 0);
-  tmx.transform(1, 0, sk, 1, -sk * 460, 0);
+  tmx.transform(1, 0, sk, 1, -sk * wy(WIN.curtain.pivotY), 0);
   tmx.globalCompositeOperation = 'source-over';
   tmx.drawImage(cim, 0, -30, cw, v.pos.y + 30); // 커튼 모양
   tmx.globalCompositeOperation = 'source-in';
@@ -341,6 +342,7 @@ export function drawCurtainShadow(dk) {
 /* ───────── 사건 목록에 싣는 것 (events.js). 할로윈 기간 밤에만 저절로 생긴다 ───────── */
 // 고양이 마녀와 박쥐 수행단 (가끔 커튼 그림자가 먼저). 10/31 밤 9시 이후엔 꼭 한 번
 export const witchEvent = {
+  needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'witch',
   cls: 'sky',
   active: () => !!world.witch || !!(world.curtainShadow && world.curtainShadow.kind === 'witch'), // 커튼 마녀 그림자가 비치는 순간부터 하늘 자리를 잡는다
@@ -354,6 +356,7 @@ export const witchEvent = {
 };
 // 창밖 박쥐 두세 마리 (25분에 한 번 꼴)
 export const batsEvent = {
+  needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'bats',
   cls: 'skySmall',
   active: () => !!world.bats,
@@ -367,6 +370,7 @@ export const batsEvent = {
 };
 // 커튼 유령 그림자 (달이 떠 있는 밤, 하룻밤 두 번까지). 마녀 반전 그림자도 이 자리를 쓴다
 export const ghostEvent = {
+  needs: ['curtain'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'ghost',
   cls: 'curtain',
   active: () => !!world.curtainShadow, // 유령과 마녀 반전 그림자가 커튼 자리 하나를 같이 쓴다

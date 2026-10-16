@@ -5,6 +5,7 @@
    - 방 안 물건(벽·바닥 층의 그림 소품): 그림 상자 안이고 그 픽셀이 불투명한가
    - 캐릭터: 강고양이 씨·쥐야쥐의 그림 상자 안인가
    매 장면 화면 크기 임시 캔버스를 합성하지 않는다(휴대폰 고해상도에서 부담). 점 몇 개만 본다 */
+import { WIN, wy } from './win.js';
 import { FRAMES, FSC, IMG, MSC, imageReady, img } from './assets.js';
 import { curtainSkew } from './draw.js';
 import { O, OBJ, P, objView, present, zOf } from './objects.js';
@@ -58,7 +59,7 @@ function curtainAt(o, x, y) {
   const v = objView(o), im = img(v.img);
   if (!imageReady(im) || y > v.pos.y)
     return false;
-  const sk = curtainSkew(v), lx = x - (v.pos.x - v.pos.w / 2) - sk * (y - 460); // draw.js 커튼 그리기와 같은 변환
+  const sk = curtainSkew(v), lx = x - (v.pos.x - v.pos.w / 2) - sk * (y - wy(WIN.curtain.pivotY)); // draw.js 커튼 그리기와 같은 변환
   return opaqueAt('c_' + v.img, im, lx / v.pos.w, (y + 30) / (v.pos.y + 30));
 }
 // 벽·바닥 층의 그림 소품 (drawProp: 가운데 아래 기준)

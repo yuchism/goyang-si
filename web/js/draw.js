@@ -1,4 +1,5 @@
 /* 방 그리기: 소품, 코드로 그리는 것(창밖·문·커튼·트리·난로·선풍기), 노트북 화면, 햇빛 */
+import { WIN, hasWindow, wy } from './win.js';
 import { drawLaserPen } from './laser.js';
 import { drawFishbowl } from './fish.js';
 import { imageReady, img } from './assets.js';
@@ -7,7 +8,7 @@ import { O, OBJ, P, objView, present, socketOf, zOf } from './objects.js';
 import { drawFrame } from './frame.js';
 import { drawOutside } from './outside.js';
 import { eventsVeranda } from './events.js';
-import { BGK, FLOOR, ctx } from './stage.js';
+import { BGK, FLOOR, W, ctx } from './stage.js';
 import { now, season, sunbeam } from './time.js';
 import { drawTV } from './tv-screen.js';
 import { HAND, INK, RM, lerp, pick } from './util.js';
@@ -144,7 +145,7 @@ const CODE = {
     const sk = curtainSkew(v);
     ctx.save();
     ctx.translate(v.pos.x - v.pos.w / 2, 0);
-    ctx.transform(1, 0, sk, 1, -sk * 460, 0);
+    ctx.transform(1, 0, sk, 1, -sk * wy(WIN.curtain.pivotY), 0);
     ctx.drawImage(im, 0, -30, v.pos.w, v.pos.y + 30);
     ctx.restore();
   },
@@ -259,6 +260,8 @@ export function drawRoom(d) {
    방 배경(난간 포함)을 그린 뒤에 베란다 손님을 그리고, 그 자리만 창틀(window_frame: 방 배경에서 난간을 뺀 창틀, tools/split_railing.py)을 다시 덮는다.
    → 손님은 난간 앞, 창틀·창 아랫단 뒤. 손님이 없으면 아무것도 그리지 않아 화면이 전과 같다 */
 function drawVeranda() {
+  if (!hasWindow())
+    return; // 창이 없는 장면
   const w = P.window;
   ctx.save();
   ctx.beginPath();
@@ -271,7 +274,7 @@ function drawVeranda() {
       ctx.beginPath();
       boxes.forEach(b => ctx.rect(Math.floor(b[0]) - 2, Math.floor(b[1]) - 2, Math.ceil(b[2] - b[0]) + 4, Math.ceil(b[3] - b[1]) + 4));
       ctx.clip();
-      ctx.drawImage(fr, 0, 0, 1200, fr.height * BGK);
+      ctx.drawImage(fr, 0, 0, W, fr.height * BGK);
     }
   }
   ctx.restore();
@@ -310,7 +313,7 @@ export function drawSunbeam(d) {
     return;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
-  const a = 0.24 * b.k, L = b.cx - 140, R = b.cx + 140, mid = b.cx, y0 = 600, y1 = 740, ym = lerp(y0, y1, 0.5), sk = b.sk;
+  const sb = WIN.sunbeam, a = 0.24 * b.k, L = b.cx - sb.half, R = b.cx + sb.half, mid = b.cx, [y0, y1] = sb.floor, ym = lerp(y0, y1, 0.5), sk = b.sk;
   const quad = (x0, x1, ya, yb, s0, s1) => {
     ctx.beginPath();
     ctx.moveTo(x0 + s0, ya);
@@ -333,8 +336,8 @@ export function drawSunbeam(d) {
   g.addColorStop(1, 'rgba(255,230,170,0)');
   ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.moveTo(P.window.x + 40, 0);
-  ctx.lineTo(P.window.x + P.window.w - 40, 0);
+  ctx.moveTo(P.window.x + 40, P.window.y);
+  ctx.lineTo(P.window.x + P.window.w - 40, P.window.y);
   ctx.lineTo(R + sk, y1);
   ctx.lineTo(L, y0);
   ctx.closePath();

@@ -13,11 +13,18 @@ import { drawSkySprite } from './sprites.js';
 import { ctx } from './stage.js';
 import { bub, fn, go, hold, run } from './steps.js';
 import { birdSlots, blackcatSlot, clockText, now, rainNow, slotDue } from './time.js';
-import { HAND, RM, clamp, lerp, pick, rnd } from './util.js';
+import { HAND, RM, clamp, lerp, onScene, pick, rnd } from './util.js';
+import { WIN, wy } from './win.js';
 import { cat, say, world } from './world.js';
 
 // 방 좌표: 난간 윗단 윗면(bg 픽셀 y ≈ 497 → 방 382), 창 아랫단 윗면(bg 602 → 방 463)
-const PERCH_Y = 382, SILL_Y = 463;
+let PERCH_Y, SILL_Y; // 장면의 window.json railing.y·sillY (창 안 높이 → 방 y)
+onScene(() => {
+  if (!WIN.rect)
+    return;
+  PERCH_Y = wy(WIN.railing.y);
+  SILL_Y = wy(WIN.sillY);
+});
 // 그림 배율(웹 px × K = 방 px)과 밤 눈 위치(웹 px, 왼쪽 위 기준). WINDOW_SPRITE_PLAN.md 3장 변환 표
 const K = { pigeon: 0.30, magpie: 0.24, blackcat: 0.29 };
 const EYES = {
@@ -30,7 +37,7 @@ const PAIR = 36; // 까치 짝 사이 (방 px)
 const done = new Set(); // 이번에 이미 온 회차 (시간 점프 때 비운다)
 const isBird = g => g && (g.kind === 'pigeon' || g.kind === 'magpie');
 const birdHere = () => isBird(world.guest) && world.guest.phase !== 'out';
-const glassX = u => lerp(P.window.x + 80, P.window.x + P.window.w - 100, u); // 커튼에 너무 가리지 않는 범위
+const glassX = u => lerp(P.window.x + WIN.railing.glass[0], P.window.x + P.window.w - WIN.railing.glass[1], u); // 커튼에 너무 가리지 않는 범위 (window.json railing.glass)
 
 /* ───────── 난간의 새 ───────── */
 export function startBird(kind, slot = null, late = 0) {
@@ -184,6 +191,7 @@ function drawBirdSay() {
   ctx.restore();
 }
 export const birdEvent = {
+  needs: ['railing'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'bird',
   cls: 'veranda',
   active: () => isBird(world.guest),
@@ -211,7 +219,7 @@ let devBird = 'magpie';
 const EYES_FIRST = 1.5, EYES_LAST = 0.5;
 const WALK_STEP = 9; // 방 px: 걷기 그림 한 장 동안 나아가는 거리 (지금 빠르기 약 16px/s면 한 장 0.55초 안팎)
 const isCat = g => g && g.kind === 'blackcat';
-const darkNow = () => (world.dark || 0) > 0.3;
+const darkNow = () => (world.skyDark || 0) > 0.3; // 바깥 어둠
 export function startBlackcat(mode, slot = null, late = 0) {
   const g = { kind: 'blackcat', id: slot ? slot.id : 'dev' + world.t, mode, t: 0, phase: 'eyes', pt: 0, night: darkNow(),
     x: glassX(slot ? slot.x : Math.random()), dir: slot ? slot.dir : pick([-1, 1]), stare: rnd(3, 5), seen: false, bodyA: 0 };
@@ -371,6 +379,7 @@ function drawEyes(dk) {
   ctx.restore();
 }
 export const blackcatEvent = {
+  needs: ['railing'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'blackcat',
   cls: 'veranda',
   active: () => isCat(world.guest),

@@ -4,7 +4,7 @@
 """
 import json, sys
 
-src = sys.argv[1] if len(sys.argv) > 1 else 'objects.json'
+src = sys.argv[1] if len(sys.argv) > 1 else 'web/scenes/room/objects.json'
 out = sys.argv[2] if len(sys.argv) > 2 else 'OBJECTS.md'
 data = json.load(open(src, encoding='utf-8'))
 objs = data['objects']
@@ -17,7 +17,7 @@ TOUCH = {'note': '오늘의 메모 보기', 'screen': '노트북 화면 보기',
 SPOTNAME = {'watch': '바라보기', 'side': '올라가고 내려오는 곳', 'behind': 'TV 뒤 빼꼼', 'rainCat': '비 구경(고양이)', 'rainMouse': '비 구경(쥐야쥐)', 'bird': '새 구경',
             'wait': '기다리기', 'greet': '마중', 'nap': '낮잠', 'push': '앞발로 밀기', 'type': '타자',
             'enter': '들어가기 전', 'inside': '안', 'check': '기웃거리기', 'hide': '숨기', 'popout': '튀어나오기',
-            'eat': '밥 먹기', 'out': '나오는 곳', 'tap': '화면 톡'}
+            'eat': '밥 먹기', 'out': '나오는 곳', 'tap': '화면 톡', 'ghost': '유령 그림자 보러 가기'}
 
 
 def look(o):
@@ -60,7 +60,7 @@ L = []
 w = L.append
 w('# 고양.시 사물 정리')
 w('')
-w('> 기준 파일: `web/objects.json` (이 문서는 `make_objects_doc.py`로 그 파일에서 만든다)')
+w('> 기준 파일: `web/scenes/room/objects.json` (이 문서는 `make_objects_doc.py`로 그 파일에서 만든다)')
 w('> 좌표: 방 기준 가로 1200, 세로 760, 바닥선 y=500. 캐릭터가 걷는 바닥은 y 592~740')
 w('')
 w('## 1. 특성')
@@ -84,6 +84,9 @@ w('| 등장 조건 | `when` | 계절, 기념일, 상자 있는 날 등. 코드�
 w('| 터치 | `touch` | 보는 사람이 눌렀을 때. 캐릭터 인터랙션과 따로 둔다. 코드의 `TOUCH` |')
 w('| 누르는 범위 | `hitPad` | 누르는 범위를 그림보다 사방으로 넓히는 양(기본 6). 범위가 겹치면 그림에 더 가까운 물건이 눌린다 |')
 w('| 사진 | `photos` | 액자 사진 목록(`web/r/` 그림 이름). 날짜마다 한 장씩 돌아간다. 코드는 `frame.js` |')
+w('| 배경 입구 | `mouth` | 쥐구멍: 배경 그림의 입구 {cx, bottom, w, h}. 빼꼼 그림을 이 모양으로 자른다 (`sprites.js` `HOLE`) |')
+w('| 이상한 책 | `oddBook` | 책장: 기대는 자리 `lean` [책 끝 x, 선반 위 y]와 이름표 영역 `tag` [x, y, 폭, 높이] (`install.js`·`shelf.js`) |')
+w('| 말풍선 높이 | `sayY` | 문: 만득 씨 말풍선이 뜨는 y (`manduk.js`) |')
 w('')
 w('## 2. 분류')
 w('')
@@ -160,7 +163,7 @@ w('1. 그림을 `web/r/`에 넣는다 (투명 PNG나 WebP)')
 w('2. `objects.json`에 한 줄 추가: `id`, `name`, `kind`, `layer`, `look`, `pos`')
 w('3. 길을 막으면 `body`, 캐릭터가 쓰면 `spots`, 모습이 바뀌면 `states`(+ 코드의 `STATE`), 가끔만 나오면 `when`')
 w('4. 새 행동은 자리 이름으로 부른다: `go(...S(\'물건.자리\'))`')
-w('5. `python3 make_objects_doc.py web/objects.json OBJECTS.md`로 이 문서를 다시 만든다')
+w('5. `python3 make_objects_doc.py web/scenes/room/objects.json OBJECTS.md`로 이 문서를 다시 만든다')
 w('')
 w('## 7. 아직 그림이 없는 것')
 w('')
@@ -168,5 +171,30 @@ codes = [o['name'] for o in objs if (o.get('look') or '').startswith('code:') an
 w('- 사물: ' + (', '.join(codes) or '없음'))
 w('- 없음 (나비, 창밖 새, 선풍기, 말풍선 아이콘, UFO 모두 그림으로 교체됨)')
 w('- 사용하지 않는 그림: `door_closed` (배경 그림의 닫힌 문을 그대로 씀)')
+# 사물에 안 붙은 범위·경로 (SCENE_PLAN.md 4단계)
+if data.get('areas') or data.get('paths'):
+    w('')
+    w('## 8. 사물에 안 붙은 범위·경로·자리')
+    w('')
+    w("코드는 범위를 `A('이름')`(그 안에서 무작위 `ax`·`ay`·`aPt`), 경로를 `PATH('이름')`, 기능별 자리를 `PL('이름')`으로 꺼낸다 (`objects.js`).")
+    w('')
+    w('| 범위 | x | y | 메모 |')
+    w('|---|---|---|---|')
+    rng = lambda v: f'{v[0]}~{v[1]}' if v else '-'
+    for k, a in data.get('areas', {}).items():
+        w(f"| `{k}` | {rng(a.get('x'))} | {rng(a.get('y'))} | {a.get('note', '')} |")
+    w('')
+    w('| 경로 | 점 | 메모 |')
+    w('|---|---|---|')
+    for k, p in data.get('paths', {}).items():
+        pts = ' → '.join(f'({x}, {y})' for x, y in p['points'])
+        w(f"| `{k}` | {pts} | {p.get('note', '')} |")
+    w('')
+    w("| 자리 (`PL('이름')`) | 값 | 메모 |")
+    w('|---|---|---|')
+    for k, p in data.get('places', {}).items():
+        val = ', '.join(f'{a} {p[a]}' for a in p if a != 'note')
+        w(f"| `{k}` | {val} | {p.get('note', '')} |")
+
 open(out, 'w', encoding='utf-8').write('\n'.join(L) + '\n')
 print('wrote', out, len(L), 'lines')

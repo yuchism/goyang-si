@@ -3,6 +3,7 @@ import { EDGE, nextHop } from './anim.js';
 import { checkTag } from './behave.js';
 import { O, OBJ, S, objView, present, topOf, zOf } from './objects.js';
 import { clamp, lerp } from './util.js';
+import { WALK } from './stage.js';
 // step helpers
 /* ───────── 길찾기: 사물의 몸(body)을 피해 간다 ───────── */
 const R = b => ({ x0: b.rect[0], x1: b.rect[1], y0: b.rect[2], y1: b.rect[3] });
@@ -27,7 +28,7 @@ function detour(rs, x0, y0, tx, ty, depth) {
   const r = rs.find(r => crosses(r, x0, y0, tx, ty));
   if (!r || depth <= 0)
     return [[tx, ty]];
-  const fy = Math.min(r.y1 + 14, 740), by = Math.max(r.y0 - 10, 592);
+  const fy = Math.min(r.y1 + 14, WALK.y1), by = Math.max(r.y0 - 10, WALK.y0);
   const wy = (Math.abs(y0 - fy) + Math.abs(ty - fy)) <= (Math.abs(y0 - by) + Math.abs(ty - by)) ? fy : by;
   const L = r.x0 - 16, Rr = r.x1 + 16, right = tx > x0, pts = [];
   if (x0 > r.x0 && x0 < r.x1)
@@ -52,7 +53,7 @@ export function routeTo(a, tx, ty, free) {
   const rs = blockers(a.kind, free === true ? ['box'] : free);
   for (const r of rs)
     if (inRect(r, tx, ty))
-      ty = (a.y < (r.y0 + r.y1) / 2 && r.y0 - 8 >= 592) ? r.y0 - 8 : Math.min(r.y1 + 10, 740);
+      ty = (a.y < (r.y0 + r.y1) / 2 && r.y0 - 8 >= WALK.y0) ? r.y0 - 8 : Math.min(r.y1 + 10, WALK.y1);
   return detour(rs, a.x, a.y, tx, ty, 4);
 }
 export function stepToward(a, tx, ty, sp, dt) {
@@ -82,8 +83,8 @@ const gate = a => {
 }; // 일어나는 동작이 끝나야 걷는다
 export const go = (x, y, sp = 70, free = false) => ({ init(a) {
     a.path = null;
-    a.gx = clamp(x, 40, 1160);
-    a.gy = clamp(y, 592, 740);
+    a.gx = clamp(x, WALK.x0, WALK.x1);
+    a.gy = clamp(y, WALK.y0, WALK.y1);
   }, tick(a, dt) {
     if (gate(a))
       return false;

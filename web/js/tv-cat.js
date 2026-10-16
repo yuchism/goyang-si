@@ -3,7 +3,7 @@
 import { play } from './anim.js';
 import { tvFree } from './behave.js';
 import { loafB } from './cat.js';
-import { O, S, present, socketOf, topOf } from './objects.js';
+import { A, O, S, aPt, present, socketOf, topOf } from './objects.js';
 import { Snd } from './sound.js';
 import { bub, fn, go, hold, run } from './steps.js';
 import { TVP, tvCold, tvOn } from './tv.js';
@@ -136,7 +136,7 @@ export function tvTopB() {
       if (tvCold())
         say(a, '😑', 3);
     }),
-    go(rnd(260, 720), rnd(665, 720), 50),
+    go(...aPt(A('cat.afterTv')), 50),
     hold(rnd(20, 60), 'loaf', true)
   ], 'tvtop');
 }

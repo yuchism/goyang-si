@@ -12,7 +12,8 @@ import { bub, fn, go, hold, run } from './steps.js';
 import { dayKey } from './time.js';
 import { closeTvGuide } from './tv-guide.js';
 import { noteEl, scrEl } from './ui.js';
-import { RM, esc, hash, rnd, store, storageOK } from './util.js';
+import { O } from './objects.js';
+import { RM, esc, hash, onScene, rnd, store, storageOK } from './util.js';
 import { ctx } from './stage.js';
 import { cat, say, world } from './world.js';
 
@@ -35,7 +36,12 @@ export const odd = { show: !STANDALONE, gone: 0, open: false, lift: 0, sway: 0, 
 const IMG_X0 = 38, IMG_W = 180, IMG_BOTTOM = 640, EMBLEM = [128, 380];
 const S = 42 / IMG_W, BW = 42, BH = (640 - 120) * S;
 const LEAN = 15 * Math.PI / 180;
-const PX = 680 + BH * Math.sin(LEAN) - 4, PY = 338.5; // 왼쪽 아래 모서리 (선반 위). 둥근 모서리만큼 안쪽으로 붙여 기댄 게 보이게
+let PX, PY; // 왼쪽 아래 모서리 (선반 위). 기대는 책 끝·선반 높이는 장면의 bookshelf.oddBook.lean. 둥근 모서리만큼 안쪽으로 붙여 기댄 게 보이게
+onScene(() => {
+  const [lx, ly] = O.bookshelf.oddBook.lean;
+  PX = lx + BH * Math.sin(LEAN) - 4;
+  PY = ly;
+});
 // 책갈피 끈: 그림 64×256에서 끈은 x 23~41, 길이 230. 책과 같은 비율이면 실처럼 가늘어서 폭은 약 1.4배로, 길이는 선반 앞으로 조금 늘어질 만큼
 const RIB_W = 64 * (6.2 / 18), RIB_H = 256 * (50 / 230);
 const angle = () => LEAN * (1 - odd.lift * 0.035); // 빠져나올수록 조금 똑바로

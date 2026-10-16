@@ -12,7 +12,10 @@ web/                      ← GitHub Pages로 배포되는 폴더 (이 안만 �
   sw.js                   ← 오프라인 캐시 (코드는 네트워크 먼저, 그림은 캐시 먼저). 배포 때 __VERSION__이 커밋 해시로 바뀐다. MOBILE_PLAN.md 4-2
   icon-*.png, apple-touch-icon.png, favicon* ← assets/icons/의 1024 원본에서 만든 아이콘
   style.css               ← 스타일
-  objects.json            ← 방의 사물 (위치·상태·자리·소켓). 사람이 고치는 곳. OBJECTS.md 참고
+  scenes/room/            ← 장면 하나 = 폴더 하나 (SCENE_PLAN.md). 지금은 방(room) 하나
+    window.json           ← 창 (SCENE_PLAN.md 4장): 자리 rect(방 좌표)와 창 안 좌표의 하늘 띠·해·달·구름·풍경·난간·커튼·나비, 햇빛 조각 길(방 좌표). 없으면 창 없는 장면
+    stage.json            ← 무대 숫자: 크기·바닥선·배경 원본 폭(bgWidth, r/meta.json bg와 같아야 함)·깊이·걷는 바닥(walk)·좁은 화면 폭·카메라 자리·방 자체 밝기(light.base: 바깥 빛이 안 들어올 때 방 어둠)
+    objects.json          ← 방의 사물 (위치·상태·자리·소켓). 사람이 고치는 곳. OBJECTS.md 참고
   f/meta.json             ← 캐릭터 프레임 크기와 발 기준점  [폭, 높이, 기준점 x, y, (크기 보정)]  5번째 값은 그 그림만 키우거나 줄일 때 (예: 새 걷기 그림 1.1)
   r/meta.json             ← 방 그림 크기  [폭, 높이]
   r/tv/meta.json          ← TV 본체(화면 구멍 위치)와 기본 화면 그림(꺼짐·화면조정·마침·해돋이)
@@ -20,7 +23,7 @@ web/                      ← GitHub Pages로 배포되는 폴더 (이 안만 �
   r/tv/schedule.json      ← 고양.방송 방송국 틀: 편성 칸·기간(이름 참조, 날짜는 js/calendar.js)·마감 뉴스·낮잠 정파·개편(3개월마다). TV_SCHEDULE_PLAN.md, TIME_BASE_PLAN.md 8-1
   js/                     ← 코드 (JS 모듈)
 tools/
-  build_meta.py           ← 새 그림을 넣으면 f/·r/ meta.json을 채운다
+  build_meta.py           ← 새 그림을 넣으면 f/·r/ meta.json을 채운다 (r/tv/·r/scenery/는 건드리지 않음. r/scenery/는 되돌린 3차 창밖의 산 그림이 남은 것)
   visual_check.js         ← 화면 점검 (같은 장면을 매번 똑같이 찍는다)
   compare.py              ← 점검 화면 두 벌을 픽셀 단위로 비교
   clock_check.js          ← 시계 점검: 화면 끄기·뒤 탭·서머타임·빨리 감기를 흉내 내서 CLOCK_PLAN.md 10장 확인
@@ -37,7 +40,7 @@ tools/
   split_railing.py        ← 방 배경에서 창틀만 떼어 r/window_frame.webp를 만든다(베란다 손님 위에 다시 덮는 창틀). 창틀 + 난간 = 방 배경인지 픽셀 단위로 확인. WINDOW_PLAN.md 3장
   make_apt_mask.py        ← 건너편 아파트 그림에서 하늘을 뺀 마스크(r/apt_day_mask·apt_night_mask.webp). 무지개·번개 하늘을 건물 뒤로
   map_windows.py          ← 건너편 아파트 밤 그림에서 창 사각형을 찾아 r/apt_windows.json (창 불빛). --show로 확인 그림
-make_objects_doc.py       ← objects.json → OBJECTS.md
+make_objects_doc.py       ← scenes/room/objects.json → OBJECTS.md
 ```
 
 **오프라인 캐시:** `sw.js`의 `__VERSION__`이 그대로면(로컬) 그림도 네트워크 먼저라 그림을 바꿔도 바로 보인다. 배포본은 그림을 캐시해 두므로, 그림을 바꾼 배포는 다음다음 열 때쯤 새 그림이 보인다(코드는 바로).
@@ -54,22 +57,24 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | 파일 | 하는 일 |
 |---|---|
 | `main.js` | 시작점. 하루 일정(밥·출근·귀가·불 끄기: `scheduled()`가 `passedEvents`의 `due`면 장면, `late`면 지났음 표시), 매 프레임 진행 `frame()`, 그리기 순서 `render()`, 처음 시작 `start()`. `frame()`은 진행 순서만 적는다: 각 파일의 `visitTick`·`mouseTick`·`duetTick`·`sunbeamTick`·`eventsTick`·`cupTick`·`playsTick`을 차례로 부른다(순서가 곧 확률을 뽑는 순서라 바꾸면 화면 점검 결과가 달라진다) |
-| `world.js` | 세상 상태 `world`와 배우 `cat`(강고양이 씨)·`mouse`(쥐야쥐), 말풍선 `say`, 자막 `caption`. **방 시간 타이머 `after(할 일, 초)`**: 행동을 "몇 초 뒤에"로 이을 때 setTimeout 대신 쓴다. 미리보기 배속을 따르고 탭을 떠나면 같이 멈춘다(`main.js`가 `tickTimers`). setTimeout은 화면·소리·설치 같은 바깥 일에만 |
-| `time.js` | **시간 기준은 모두 여기 (TIME_BASE_PLAN.md).** 창밖 일정도 여기(WINDOW_PLAN.md): `rainSpan`·`thunderNow`·`flashSince`·`rainbowAt`·`planeSlots`·`birdSlots`·`blackcatSlot`·`slotDue`·`aptLightsAt` (날짜 씨앗, 누구에게나 같음). 방 시계 `now()`(기기 시계 + 미리보기 offset)와 시간 점프 감지 `clockJump`. 지역 `REGION`(계절은 방문자 반구, 달은 한국)·계절·해 뜨고 지는 시각. **시간대(자연 시간)** 표 `DAYPARTS`와 `daypart`·`isNight`(해 진 뒤 30분 ~ 동틀 녘 시작)·`inParts`. 해 기준 오프셋 `pumpkinLit`·`batTime`·`butterflyTime`·`sunUp`·`sunArc`·`twilightGlow`·`settleNight`. **생활 시간표** `ROUTINE`(만득 씨 평일·주말, `DUE_WINDOW`, 놀이 제한 `play`, 주말 TV 소리)과 `visitHours`·`dayEvents`·`passedEvents`(지난 일정 `due`/`late`)·`inWindow`·`lampShouldBeOn`·`mandukHome`·`mandukAsleep`·`nightDark`·`secretTime`. **"하루" 세 가지** `calDay`(자정)·`broadcastDay`(새벽 5시, 그 방송일 정오의 Date)·`nightOf`(해질녘 ~ 다음 날 동틀 녘, 아침·낮엔 null), 날 넘기기 `forEachDay`·`atHour`·`visitsBetween`. **달력 함수** `inPeriod`(방·창밖, `through: 'night'` 반영)·`onDate`(TV, 날짜만)·`periodsAt`·`momentNow`·`holiday`(할로윈 → 크리스마스 → 설날 → 새해, 미리보기 `holidayOverride`가 먼저). 비·눈, 상자 있는 날, 기념일, 햇빛 조각, 하늘색과 어둠, 달 모양 `moonPhase`(MOON_PLAN.md), 미리보기 한 줄 `timeInfo`. **규칙: 이 파일과 `calendar.js` 밖에서 `getMonth`·`getDate`·`getDay`·`getHours`·`hourOf`와 시각 숫자 비교를 쓰지 않는다** (`tools/check_time.mjs`) |
+| `world.js` | 세상 상태 `world`(밝기: 방 어둠 `world.dark`, 바깥 어둠 `world.skyDark` — 하늘에 그리는 것은 skyDark)와 배우 `cat`(강고양이 씨)·`mouse`(쥐야쥐, 배우마다 몸 반폭 `half`), 말풍선 `say`, 자막 `caption`. **방 시간 타이머 `after(할 일, 초)`**: 행동을 "몇 초 뒤에"로 이을 때 setTimeout 대신 쓴다. 미리보기 배속을 따르고 탭을 떠나면 같이 멈춘다(`main.js`가 `tickTimers`). setTimeout은 화면·소리·설치 같은 바깥 일에만 |
+| `time.js` | **시간 기준은 모두 여기 (TIME_BASE_PLAN.md).** 창밖 일정도 여기(WINDOW_PLAN.md): `rainSpan`·`thunderNow`·`flashSince`·`rainbowAt`·`planeSlots`(높이는 하늘 띠 안 비율 `yk`)·`birdSlots`·`blackcatSlot`·`slotDue`·`aptLightsAt` (날짜 씨앗, 누구에게나 같음). 방 시계 `now()`(기기 시계 + 미리보기 offset)와 시간 점프 감지 `clockJump`. 지역 `REGION`(계절은 방문자 반구, 달은 한국)·계절·해 뜨고 지는 시각. **시간대(자연 시간)** 표 `DAYPARTS`와 `daypart`·`isNight`(해 진 뒤 30분 ~ 동틀 녘 시작)·`inParts`. 해 기준 오프셋 `pumpkinLit`·`batTime`·`butterflyTime`·`sunUp`·`sunArc`·`twilightGlow`·`settleNight`. **생활 시간표** `ROUTINE`(만득 씨 평일·주말, `DUE_WINDOW`, 놀이 제한 `play`, 주말 TV 소리)과 `visitHours`·`dayEvents`·`passedEvents`(지난 일정 `due`/`late`)·`inWindow`·`lampShouldBeOn`·`mandukHome`·`mandukAsleep`·`nightDark`·`secretTime`. **"하루" 세 가지** `calDay`(자정)·`broadcastDay`(새벽 5시, 그 방송일 정오의 Date)·`nightOf`(해질녘 ~ 다음 날 동틀 녘, 아침·낮엔 null), 날 넘기기 `forEachDay`·`atHour`·`visitsBetween`. **달력 함수** `inPeriod`(방·창밖, `through: 'night'` 반영)·`onDate`(TV, 날짜만)·`periodsAt`·`momentNow`·`holiday`(할로윈 → 크리스마스 → 설날 → 새해, 미리보기 `holidayOverride`가 먼저). 비·눈, 상자 있는 날, 기념일, 햇빛 조각(지나가는 길은 장면에서 `setSunbeamPath`, 창이 없으면 없음), 하늘색과 어둠, 달 모양 `moonPhase`(MOON_PLAN.md), 미리보기 한 줄 `timeInfo`. **규칙: 이 파일과 `calendar.js` 밖에서 `getMonth`·`getDate`·`getDay`·`getHours`·`hourOf`와 시각 숫자 비교를 쓰지 않는다** (`tools/check_time.mjs`) |
 | `calendar.js` | 달력 한 장 `CAL`: 기간(할로윈 10/24 ~ 10/31 밤 끝, 크리스마스 시즌, 이브·당일, 제야, 새해, 고양이의 날, 설날·추석 양력 날짜 표)과 특별한 순간(10/31 밤 마녀, 이브 밤 산타). **데이터만, import 없음.** 함수는 `time.js`. 새 기간은 여기 한 줄 (TV 특집에 쓰려면 `schedule.json` periods에 `{ "period": 이름 }`) |
 | `jump.js` | 시간 점프 정리 `timeJumped`: 화면이 꺼졌다 켜지거나 서머타임·미리보기로 시계가 건너뛰면 방 상태(스탠드 `lampShouldBeOn`·밥그릇·컵·만득 씨 방문·지난 일정 `passedEvents`·고양이 자리 `settleCat`)를 그 시각에 맞추고 짧게 어두워졌다 밝아진다. CLOCK_PLAN.md |
-| `objects.js` | `objects.json`을 읽어 위치 `P`, 사물 `O`, 상태 `objView`, 자리 `S('bowl.eat')`, 소켓, 깊이를 알려준다 |
-| `steps.js` | 행동 단계: `go`(길찾기로 걷기), `follow`, `hold`, `bub`, `fn`, `until`, 그리고 순서대로 실행 `run(배우, [단계...])`. 바닥이 아닌 자리(TV 위·TV 뒤·상자 안·쳇바퀴) 표 `SPOTS`와 `inSpot`·`spotOf`. 자리마다 떠 있는 높이·그림자·누가 그리나를 적고 `actorLift`·`hasShadow`·`ownLayer`로 꺼내 쓴다(`sprites.js` 그리기, `main.js` 그리기 순서, `ui.js` 누르기 판정) |
+| `scene.js` | 장면 불러오기 `loadScene`: 장면 이름(`SCENE.name`, 지금은 `room`)으로 `scenes/<이름>/`의 파일을 읽는다. 창 사물(`window`)의 자리 `area`는 `window.json`의 rect에서 넣는다. SCENE_PLAN.md |
+| `win.js` | 창 `WIN`(window.json 값). 창 안은 독립 좌표(창 왼쪽 위 0): 창 안 → 방 `toRoom`·`wy`, 하늘 띠 `skyRnd`·`skyAt`. 창이 주는 빛 `windowLight(d)`(바깥 어둠과 가중치). 창이 없으면 `WIN.rect`가 null. SCENE_PLAN.md 4장 |
+| `objects.js` | 장면의 `objects.json`을 받아 범위 `A('cat.roam')`(그 안 무작위 `ax`·`ay`·`aPt`)·경로 `PATH('duet.lap')`·기능별 자리 `PL('wheel')`와 위치 `P`, 사물 `O`, 상태 `objView`, 자리 `S('bowl.eat')`, 소켓, 깊이를 알려준다 |
+| `steps.js` | 행동 단계: `go`(길찾기로 걷기), `follow`, `hold`, `bub`, `fn`, `until`, 그리고 순서대로 실행 `run(배우, [단계...])`. 걷는 바닥은 `WALK`(`stage.json` walk). 바닥이 아닌 자리(TV 위·TV 뒤·상자 안·쳇바퀴) 표 `SPOTS`와 `inSpot`·`spotOf`. 자리마다 떠 있는 높이·그림자·누가 그리나를 적고 `actorLift`·`hasShadow`·`ownLayer`로 꺼내 쓴다(`sprites.js` 그리기, `main.js` 그리기 순서, `ui.js` 누르기 판정) |
 | `behave.js` | 강고양이 씨 행동 성격표 `BEHAVIOR`: 이름표(tag)마다 TV 사건·유령 그림자·창밖 손님(새·검은 고양이·천둥)이 끼어들어도 되는지. `tvFree(cat)`, `ghostFree(cat)`, `winFree(cat)` |
 | `anim.js` | 동작 그림: 자세 전환(서기↔식빵↔배 보이기), 동작 클립 `CLIP`과 `play`, 지금 보여줄 프레임 고르기 |
 | `cat.js` | 강고양이 씨의 뇌 `catBrain`(하고 싶은 일 고르기)과 혼자 하는 행동들(`napB`, `windowB`…), 쓰다듬기. 매 장면: 낮잠 자다 햇빛 따라가기 `sunbeamTick`, 떨어지는 컵 `cupTick` |
 | `duet.js` | 강고양이 씨와 쥐야쥐가 함께: 인사, 술래잡기, 노려보기, 상자 숨바꼭질, 같이 자기. 매 장면 `duetTick`: 같이 낮잠 → 화들짝, 자는 고양이 앞 지나가기, 서로 의식하기 |
 | `mouse.js` | 쥐야쥐: 숨는 곳, 나오기, 도망, 혼자 하는 행동. 매 장면 `mouseTick`: 25~45초마다 나올지(만득 씨가 없을 때 높게, 비 오면 더), 뇌 |
-| `manduk.js` | 김만득 씨: 방문 단계, 말풍선, 포스트잇 메모. **다녀간 결과 표 `VISIT_RESULTS`**(밥그릇·붕어빵 부스러기·컵·스탠드·간식·노트북 글·액자): 실제 방문 `act`, 방문 도중 시간 점프 `endVisitNow`, 꺼져 있던 동안 지나간 방문 `missedVisit`(jump.js)이 모두 이 표를 쓴다. "만득 씨가 오면 ○○도 해 놓는다"는 여기 한 줄 |
+| `manduk.js` | 김만득 씨: 방문 단계, 말풍선(만득 씨는 목소리로만 등장, 모습은 그리지 않는다), 포스트잇 메모. **다녀간 결과 표 `VISIT_RESULTS`**(밥그릇·붕어빵 부스러기·컵·스탠드·간식·노트북 글·액자): 실제 방문 `act`, 방문 도중 시간 점프 `endVisitNow`, 꺼져 있던 동안 지나간 방문 `missedVisit`(jump.js)이 모두 이 표를 쓴다. "만득 씨가 오면 ○○도 해 놓는다"는 여기 한 줄 |
 | `outside.js` | 창밖: 하늘·해·달·구름·비·눈, 새, 나비, UFO, 산타 썰매 (박쥐·마녀는 halloween.js). 나비·UFO·산타는 파일 끝의 사건 물건으로 `events.js` 목록에 실린다. 그리는 순서(WINDOW_PLAN.md 3장): 하늘 → 아파트(낮 → 밤 하늘 덮개 → 밤) → `skyBack`(무지개·번개 하늘) → 그렸으면 아파트 마스크 → `apt`(창 불빛) → 노을 → 비 덮개(번쩍이는 동안 `world.flash`만큼 걷음) → 해·달 → 구름 → 멀리 나는 새 → `sky` → 꽃잎 → 눈·비 |
 | `draw.js` | 방 그리기: 소품, 코드로 그리는 것(창밖·문·커튼·트리·난로·선풍기), 노트북 화면, 햇빛. **베란다 층** `drawVeranda`: 방 배경 다음에 베란다 손님(`events.js` veranda)을 그리고 그 자리만 창틀(`window_frame`)을 다시 덮는다 → 손님은 난간 앞·창틀 뒤. 손님이 없으면 아무것도 안 그려 화면이 전과 같다 |
-| `sprites.js` | 배우 그리기: 고양이·쥐 프레임, 그림자, 쥐구멍 빼꼼, 말풍선 아이콘, 자막 |
-| `stage.js` | 캔버스, 화면 맞추기, 카메라, 깊이 비율 `DEPTH`, 다른 캔버스에 잠깐 그리기 `withCtx` |
+| `sprites.js` | 배우 그리기: 고양이·쥐 프레임, 그림자, 쥐구멍 빼꼼(배경 입구 `HOLE`은 장면의 `hole.mouth`), 말풍선 아이콘, 자막 |
+| `stage.js` | 캔버스, 화면 맞추기, 카메라, 깊이 비율 `DEPTH`, 다른 캔버스에 잠깐 그리기 `withCtx`. 무대 숫자(`W`·`H`·`FLOOR`·`BGK`·`DEPTH`·걷는 바닥 `WALK`·카메라 자리)는 장면을 읽을 때 `applyStage`가 `stage.json`에서 넣는다. 방 어둠 `roomDark(창 빛)` = 방 자체 어둠 × (1 − 가중치) + 바깥 어둠 × 가중치. 걷는 바닥 안으로 넣기 `walkX(x, 몸 반폭)`·`walkY(y)`: 기능 코드는 바닥 범위 숫자를 직접 쓰지 않고 이것을 쓴다 |
 | `assets.js` | meta.json 세 개를 읽어 그림 목록을 만들고 그림을 불러온다 |
 | `sound.js` | Web Audio로 만든 소리 (방 잡음, 비, 방울, 문, 생일 노래, TV) |
 | `tv-core.js` | TV · 계산(화면 없이, 노드에서도 돈다): `programs.json` 검사 `setPrograms`, 방송국 틀 `setSchedule`, 하루 편성 `tvDay`·`tvSegs`·`tvNaps`(조건·고정 칸·틈 메우기·회차·정파 여러 번, 씨앗 = 시즌 + 요일), 구간 `segAt`·`segOrder`(홈쇼핑 상품, 요일마다 다른 순서), 사건 `tvEvents`, 지금 상태 `tvState`(낮잠 정파 포함), 장면 그림 `tvFrameName`, 제목 `tvTitle` |
@@ -95,7 +100,7 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `glass.js` | 유리 가림 검사 `occluded(x, y)`: 어둠 뒤에 그리는 창밖의 빛나는 점(검은 고양이 눈·비행기 불빛)이 창틀·커튼·방 안 물건·캐릭터에 가려지면 안 그린다. 유리 픽셀 표(`window_frame` 알파)는 한 번만 읽는다 |
 | `halloween.js` | 할로윈(10/24 ~ 10/31 밤이 끝날 때, `calendar.js`): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자와 강고양이 씨 반응. 마녀·박쥐·유령은 파일 끝의 사건 물건으로 `events.js` 목록에 실린다. HALLOWEEN_PLAN.md 참고 |
 | `i18n.js` | 말: 화면 글자 한국어·영어 표 `STR`, `tr('키')`, 언어 고르기·저장·전환(`setLang`). 새 글자는 여기 한 곳에. ENGLISH_PLAN.md 참고 |
-| `util.js` | 난수·범위·해시, localStorage, 손글씨 글꼴, 색 섞기, `$` |
+| `util.js` | 난수·범위·해시, localStorage, 손글씨 글꼴, 색 섞기, `$`. 장면을 읽은 뒤 할 일 `onScene(fn)`: 장면 값으로 모듈 안 숫자를 채울 때 쓴다(쳇바퀴·케이크). 모듈 맨 위에서 장면 값을 바로 쓰지 않는다(아직 안 읽었음). 가져오는 것이 없는 이 파일에 두어 모듈 순서와 상관없다 |
 | `debug.js` | 점검용으로 `window.__goyang`에 행동 함수들을 내보낸다 |
 
 ### 약속

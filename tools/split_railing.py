@@ -27,7 +27,7 @@ vis = lambda x: np.where(x[..., 3:] > 0, x, 0)  # 완전 투명 픽셀의 색은
 
 
 def main():
-    objs = json.load(open(os.path.join(ROOT, 'objects.json'), encoding='utf-8'))['objects']
+    objs = json.load(open(os.path.join(ROOT, 'scenes', 'room', 'objects.json'), encoding='utf-8'))['objects']
     win = next(o for o in objs if o.get('id') == 'window')
     im = Image.open(os.path.join(R, 'bg.webp')).convert('RGBA')
     k = im.width / 1200

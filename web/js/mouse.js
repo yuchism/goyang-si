@@ -1,8 +1,9 @@
 /* 쥐야쥐: 숨는 곳, 나오기, 도망, 혼자 하는 행동 */
 import { napNextTo } from './duet.js';
-import { O, OBJ, S, present } from './objects.js';
+import { A, O, OBJ, S, ax, ay, has, present } from './objects.js';
 import { bub, faceTo, fn, go, hold, run } from './steps.js';
 import { inBeam, isWeekend, mandukAsleep, mandukHome, rainNow, sunbeam, wx } from './time.js';
+import { walkX, walkY } from './stage.js';
 import { clamp, pick, rnd } from './util.js';
 import { after, cat, mouse, say, world } from './world.js';
 import { mouseCrumbB } from './fish.js';
@@ -45,9 +46,9 @@ export function mouseFleeAround() {
   if (mouse.hidden)
     return;
   mouse.state = 'chased';
-  const tx = clamp(mouse.x + (mouse.x < cat.x ? -1 : 1) * rnd(180, 300), 60, 1140);
+  const tx = walkX(mouse.x + (mouse.x < cat.x ? -1 : 1) * rnd(180, 300), mouse.half);
   run(mouse, [
-    go(tx, rnd(630, 730), 180),
+    go(tx, ay(A('mouse.roam')), 180),
     hold(0.6, 'walk'),
     fn(a => {
       if (Math.random() < 0.5)
@@ -60,6 +61,8 @@ export function mouseFleeAround() {
   ], 'chased');
 }
 export function spawnMouse(d, force) {
+  if (!has('hole'))
+    return; // 쥐구멍이 없는 장면엔 쥐야쥐도 없다 (SCENE_PLAN.md 7장)
   if (world.party)
     return; // 파티 중에는 쥐구멍에서 박수만
   if (!mouse.hidden || world.manduk)
@@ -99,7 +102,7 @@ export function mouseBrain(d) {
   if (!world.manduk && Math.random() < 0.8 && mouseCrumbB()) // 붕어빵 부스러기가 있으면 주워 먹으러
     return;
   const r = Math.random();
-  if (rain && r < 0.4) {
+  if (rain && r < 0.4 && has('window')) {
     mouse.state = 'rain';
     run(mouse, [
       go(S('window.rainMouse')[0] + rnd(-20, 20), S('window.rainMouse')[1], 90),
@@ -120,7 +123,7 @@ export function mouseBrain(d) {
     const side = cat.tag === 'nap' && inBeam(b, cat.x) ? (cat.x < b.cx ? 1 : -1) : pick([-1, 1]);
     mouse.state = 'nap';
     run(mouse, [
-      go(b.cx + side * rnd(70, 100), rnd(660, 700), 90),
+      go(b.cx + side * rnd(70, 100), ay(A('beam.nap')), 90),
       hold(2, 'walk'),
       bub('💤', 4),
       hold(rnd(60, 150), 'walk', true),
@@ -135,7 +138,7 @@ export function mouseBrain(d) {
     return;
   }
   const near = Math.random() < 0.55 && !cat.inBox;
-  const tx = near ? clamp(cat.x + pick([-1, 1]) * rnd(140, 260), 80, 1120) : rnd(150, 1050), ty = near ? clamp(cat.y + rnd(-30, 30), 600, 738) : rnd(630, 730);
+  const tx = near ? walkX(cat.x + pick([-1, 1]) * rnd(140, 260), mouse.half) : ax(A('mouse.roam')), ty = near ? walkY(cat.y + rnd(-30, 30)) : ay(A('mouse.roam'));
   run(mouse, [
     go(tx, ty, 85),
     hold(rnd(2, 5), 'walk'),

@@ -1,12 +1,12 @@
 /* 생일 파티(?birthday=이름): 배너, 케이크, 꽃비, 무대 조명, 노트북 축하 자막, 쥐야쥐 박수 */
 import { play } from './anim.js';
 import { FRAMES, IMG, imageReady, img } from './assets.js';
-import { O, S, objView, socketOf } from './objects.js';
+import { A, O, PL, S, objView, socketOf } from './objects.js';
 import { Snd } from './sound.js';
 import { HOLE } from './sprites.js';
 import { H, W, ctx } from './stage.js';
 import { bub, dance, fn, go, hold, run } from './steps.js';
-import { $, RM, clamp, cutChars, gcEvent, hash, pick, rnd } from './util.js';
+import { $, RM, clamp, cutChars, gcEvent, hash, onScene, pick, rnd } from './util.js';
 import { tr } from './i18n.js';
 import { cat, mouse, say, world } from './world.js';
 export const DANCE_CELLS = [[54, 553], [599, 1085], [1098, 1591], [1710, 2122]]; // 춤 시트 4장의 가로 범위(px)
@@ -54,7 +54,7 @@ export function drawPartyScreen(v) {
   ctx.restore();
 }
 // 밤의 생일 파티: 어둠 위에 무대 조명을 뿌린다 (천장에서 내려오는 색 조명 + 강고양이 씨 핀 조명 + 환한 노트북)
-const PARTY_BEAMS = [[250, '255,140,180', 0.55, 0], [640, '255,214,110', 0.4, 2.1], [1010, '130,220,210', 0.5, 4.2]];
+const PARTY_BEAMS = [['255,140,180', 0.55, 0], ['255,214,110', 0.4, 2.1], ['130,220,210', 0.5, 4.2]]; // 색·빠르기·위상. 내려오는 x는 장면의 party.beams
 export function drawPartyLights(dk) {
   const lv = partyLevel();
   if (!lv || dk < 0.05)
@@ -69,8 +69,10 @@ export function drawPartyLights(dk) {
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
   // 천장에서 바닥을 훑는 색 조명
-  for (const [sx, c, sp, ph] of PARTY_BEAMS) {
-    const fx = 600 + Math.sin(t * sp + ph) * 430, fy = 650 + Math.sin(t * sp * 1.3 + ph) * 50, hw = 70;
+  const xs = PL('party.beams').xs, fl = A('party.floorLight');
+  const fcx = (fl.x[0] + fl.x[1]) / 2, fax = (fl.x[1] - fl.x[0]) / 2, fcy = (fl.y[0] + fl.y[1]) / 2, fay = (fl.y[1] - fl.y[0]) / 2;
+  for (const [i, [c, sp, ph]] of PARTY_BEAMS.entries()) {
+    const sx = xs[i], fx = fcx + Math.sin(t * sp + ph) * fax, fy = fcy + Math.sin(t * sp * 1.3 + ph) * fay, hw = 70;
     g = ctx.createLinearGradient(sx, -20, fx, fy);
     g.addColorStop(0, `rgba(${c},${0.30 * I})`);
     g.addColorStop(1, `rgba(${c},${0.06 * I})`);
@@ -130,7 +132,8 @@ export function drawPartyLights(dk) {
   }
 }
 /* ───────── 생일: 케이크 촛불과 창밖 꽃비 ───────── */
-export const CAKE = { x: 616, y: 600, w: 142 }; // TV 오른쪽 뒤, 책 더미 왼쪽 뒤
+export const CAKE = {}; // 장면의 party.cake: x, y, w, 그리는 깊이 depth (TV 오른쪽 뒤, 책 더미 왼쪽 뒤)
+onScene(() => Object.assign(CAKE, PL('party.cake')));
 // 케이크 그림(993×1584) 안의 촛불 끝 위치
 const CAKE_FLAMES = [[255, 236], [362, 170], [495, 86], [640, 170], [750, 236]];
 const PETAL_FADE = 6, PETAL_COLORS = ['#ffb7c9', '#ff8fab', '#fff1f4', '#ffe08a', '#f7a8d8', '#ffd0dc'];
@@ -246,7 +249,7 @@ function startBirthdayParty() {
       })], 'party');
   }
   run(cat, [
-    go(500, 690, 85),
+    go(PL('party.cat').x, PL('party.cat').y, 85),
     bub('🎂❤️✨', 2),
     play('hatOn'),
     dance(sec),

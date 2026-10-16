@@ -1,11 +1,12 @@
 /* 창밖과 하늘을 나는 것: 하늘·해·달·구름·비·눈, 새, 나비, UFO, 산타 썰매.
    그리는 순서는 WINDOW_PLAN.md 3장: 하늘 → 아파트(낮·밤 하늘 덮개·밤) → skyBack(무지개·번개 하늘) → 아파트 마스크 → apt(창 불빛)
    → 노을 → 비 덮개 → 해·달 → 구름 → 멀리 나는 새 → sky(비행기·UFO·산타·마녀·박쥐) → 꽃잎 → 눈·비. 난간과 베란다 층은 draw.js */
+import { WIN, skyRnd, toRoom, wy } from './win.js';
 import { play } from './anim.js';
 import { canStart, eventsApt, eventsSky, eventsSkyBack } from './events.js';
 import { IMG, imageReady, img } from './assets.js';
 import { drawPetals } from './birthday.js';
-import { P } from './objects.js';
+import { A, P } from './objects.js';
 import { ctx } from './stage.js';
 import { fn, hold, run, until } from './steps.js';
 import { MOON_SOUTH, butterflyTime, darkness, holiday, isNight, momentNow, moonPhase, nightOf, rainNow, season, skyAt, sunArc, sunUp, twilightGlow } from './time.js';
@@ -16,7 +17,8 @@ import { after, caption, cat, mouse, say, world } from './world.js';
 export function spawnButterfly() {
   if (world.bfly)
     return;
-  world.bfly = { x: P.window.x + 180, y: 200, t: 0, life: rnd(26, 40), ph: 0, col: pick(['#f2a541', '#f6d65a', '#8ec1e6', '#f19bb0']) };
+  const [bx, by] = toRoom(...WIN.butterfly.enter);
+  world.bfly = { x: bx, y: by, t: 0, life: rnd(26, 40), ph: 0, col: pick(['#f2a541', '#f6d65a', '#8ec1e6', '#f19bb0']) };
   const watch = a => {
     if (a.hidden || a.state === 'flee')
       return;
@@ -42,7 +44,8 @@ export function updateButterfly(dt) {
   b.t += dt;
   b.ph += dt * 14;
   const leaving = b.t > b.life;
-  const tx = leaving ? P.window.x + 150 : 600 + Math.sin(b.t * 0.31) * 360, ty = leaving ? 120 : 330 + Math.sin(b.t * 0.53) * 120 + Math.cos(b.t * 1.3) * 30;
+  const [ex, ey] = toRoom(...WIN.butterfly.exit), fa = A('bfly.roam'), fmx = (fa.x[0] + fa.x[1]) / 2, fax = (fa.x[1] - fa.x[0]) / 2, fmy = (fa.y[0] + fa.y[1]) / 2, fay = (fa.y[1] - fa.y[0]) / 2;
+  const tx = leaving ? ex : fmx + Math.sin(b.t * 0.31) * fax, ty = leaving ? ey : fmy + Math.sin(b.t * 0.53) * fay + Math.cos(b.t * 1.3) * 30;
   const ox = b.x;
   b.x += (tx - b.x) * dt * 0.9;
   b.y += (ty - b.y) * dt * 0.9;
@@ -81,7 +84,7 @@ function drawRain(w) {
     const ph = (t * 1.7 + i * 0.37) % 1;
     if (ph > 0.35)
       continue;
-    const x = w.x + ((i * 0.618034) % 1) * w.w, y = i % 2 ? 383 : H - 6, r = 3 + ph * 14;
+    const x = w.x + ((i * 0.618034) % 1) * w.w, y = i % 2 ? wy(WIN.splashY) : H - 6, r = 3 + ph * 14;
     ctx.globalAlpha = 1 - ph / 0.35;
     ctx.beginPath();
     ctx.arc(x, y, r, Math.PI * 1.15, Math.PI * 1.85);
@@ -145,13 +148,13 @@ export function drawOutside(d, w) {
   const day = sunUp(d), rain = rainNow(d);
   const night = clamp(darkness(d) / 0.62, 0, 1);
   // 하늘은 그림의 하늘색으로 채우고, 건물은 아래쪽에 작게 (더 많이 보이게)
-  const ad = IMG.r_apt_day, an = IMG.r_apt_night, ah = 330, base = imageReady(ad) ? ad : imageReady(an) ? an : null;
+  const ad = IMG.r_apt_day, an = IMG.r_apt_night, ah = WIN.landscape.height, base = imageReady(ad) ? ad : imageReady(an) ? an : null;
   if (!base) {
     ctx.fillStyle = '#263357';
     ctx.fillRect(w.x, w.y, w.w, w.h);
     return;
   }
-  const aw = base.width * ah / base.height, ax = w.x + w.w / 2 - aw / 2, ay = w.y + w.h + 4 - ah;
+  const aw = base.width * ah / base.height, ax = w.x + w.w / 2 - aw / 2, ay = w.y + WIN.landscape.bottom - ah;
   const sky = (c1, c2) => {
     const g = ctx.createLinearGradient(0, w.y, 0, ay + ah * 0.3);
     g.addColorStop(0, c1);
@@ -210,17 +213,18 @@ export function drawOutside(d, w) {
   if (day && !rain) {
     const t = sunArc(d);
     ctx.beginPath();
-    ctx.arc(w.x + 50 + t * (w.w - 100), 190 - Math.sin(Math.PI * t) * 150, 22, 0, 7);
+    const sn = WIN.sun;
+    ctx.arc(w.x + sn.inset + t * (w.w - 2 * sn.inset), w.y + sn.y - Math.sin(Math.PI * t) * sn.rise, sn.r, 0, 7);
     ctx.fillStyle = 'rgba(255,243,196,.95)';
     ctx.fill();
   }
   if (!day && !rain)
-    drawMoon(d, w.x + w.w * 0.74, 70, 17);
+    drawMoon(d, w.x + w.w * WIN.moon.x, w.y + WIN.moon.y, WIN.moon.r);
   if (rain) {
     const sn = season(d) === 'winter', c1 = sn ? 'rgba(236,238,242,.95)' : 'rgba(86,94,108,.95)', c2 = sn ? 'rgba(220,224,230,.95)' : 'rgba(100,108,122,.95)';
     for (let row = 0; row < 2; row++) {
       ctx.fillStyle = row ? c2 : c1;
-      const yy = w.y + (row ? 52 : 22), dx = (world.t * (row ? 5 : 3)) % 120;
+      const yy = w.y + WIN.clouds.rain[row], dx = (world.t * (row ? 5 : 3)) % 120;
       for (let x = w.x - 120 + dx; x < w.x + w.w + 120; x += 60) {
         ctx.beginPath();
         ctx.ellipse(x, yy + Math.sin(x * 0.05 + row) * 8, 58, 26 + row * 6, 0, 0, 7);
@@ -231,7 +235,7 @@ export function drawOutside(d, w) {
   else {
     ctx.fillStyle = 'rgba(255,255,255,' + (day ? 0.8 : 0.12) + ')';
     for (let i = 0; i < 3; i++) {
-      const cx = w.x + ((world.t * 3 + i * 190 + hash('c' + i) * 200) % (w.w + 200)) - 100, cy = 36 + i * 40;
+      const cx = w.x + ((world.t * 3 + i * 190 + hash('c' + i) * 200) % (w.w + 200)) - 100, cy = w.y + WIN.clouds.y + i * WIN.clouds.gap;
       ctx.beginPath();
       ctx.ellipse(cx, cy, 44, 14, 0, 0, 7);
       ctx.ellipse(cx + 28, cy - 9, 26, 14, 0, 0, 7);
@@ -290,7 +294,7 @@ export function maybeUFO(d, dt) {
 export function startUFO() {
   if (world.ufo)
     return;
-  world.ufo = { t: 0, dur: rnd(16, 24), y: rnd(60, 150), blink: world.lastType && world.t - world.lastType < 90 || Math.random() < 0.4 };
+  world.ufo = { t: 0, dur: rnd(16, 24), y: skyRnd('ufo'), blink: world.lastType && world.t - world.lastType < 90 || Math.random() < 0.4 };
   after(() => {
     if (!world.ufo || world.manduk)
       return;
@@ -323,7 +327,7 @@ function drawSanta(w) {
   const im = img('fx/santa_' + (RM ? 1 : Math.floor(world.t * 4) % 2 + 1));
   if (!imageReady(im))
     return;
-  const sw = 170, sh = sw * im.height / im.width, x = w.x + w.w + 100 - k * (w.w + 280), y = u.y - Math.sin(k * Math.PI) * 28, night = world.dark > 0.3;
+  const sw = 170, sh = sw * im.height / im.width, x = w.x + w.w + 100 - k * (w.w + 280), y = u.y - Math.sin(k * Math.PI) * 28, night = world.skyDark > 0.3;
   ctx.save();
   ctx.globalAlpha = night ? 0.95 : 0.8;
   ctx.drawImage(im, x - sw / 2, y - sh / 2, sw, sh);
@@ -361,7 +365,7 @@ export function maybeSanta(d, dt) {
 export function startSanta() {
   if (world.santa)
     return;
-  world.santa = { t: 0, dur: rnd(22, 30), y: rnd(70, 120) };
+  world.santa = { t: 0, dur: rnd(22, 30), y: skyRnd('santa') };
   after(() => {
     if (!world.santa)
       return;
@@ -395,6 +399,7 @@ export function drawButterfly() {
 /* ───────── 사건 목록에 싣는 것 (events.js) ───────── */
 // 나비: 봄·여름 낮, 비가 안 오고 만득 씨가 없을 때 (여름엔 7분, 봄엔 12분에 한 번 꼴)
 export const butterflyEvent = {
+  needs: ['window', 'bfly.roam'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'bfly',
   cls: 'bg',
   tick(d, real, bf) {
@@ -412,6 +417,7 @@ export const butterflyEvent = {
 };
 // UFO: 밤(해 진 뒤 30분 ~ 동틀 녘 시작, time.js isNight), 3시간에 한 번 꼴 (고양이가 몰래 노트북을 친 직후엔 훨씬 자주)
 export const ufoEvent = {
+  needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'ufo',
   cls: 'sky',
   active: () => !!world.ufo,
@@ -425,6 +431,7 @@ export const ufoEvent = {
 };
 // 산타 썰매: 크리스마스 무렵 밤, 24일 밤 9시 이후엔 꼭 한 번
 export const santaEvent = {
+  needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'santa',
   cls: 'sky',
   active: () => !!world.santa,

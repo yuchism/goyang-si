@@ -377,18 +377,23 @@ export function isAnniversary(d) {
 export const snowing = d => rainNow(d) && season(d) === 'winter';
 export const wx = () => snowing(now()) ? '❄️' : '🌧️';
 /* ───────── 햇빛 조각 ───────── */
+// 햇빛이 방바닥에 닿는 길: 장면의 window.json sunbeam (win.js가 넣는다). 창이 없으면 null → 햇빛 조각 없음
+let BEAM = null;
+export const setSunbeamPath = p => BEAM = p;
 export function sunbeam(d) {
+  if (!BEAM)
+    return null;
   const [r, s] = sunTimes(d), h = hourOf(d);
   if (h < r + 0.6 || h > s - 0.4)
     return null;
   const t = (h - (r + 0.6)) / ((s - 0.4) - (r + 0.6));
-  const cx = lerp(1010, 250, t);
+  const cx = lerp(BEAM.x[0], BEAM.x[1], t);
   let k = Math.sin(Math.PI * t);
   k = Math.pow(k, 0.6);
   if (rainNow(d))
     k *= 0.12;
   const sk = lerp(-120, 120, t);
-  return { cx, k, sk, cy: 672 };
+  return { cx, k, sk, cy: BEAM.y };
 }
 export const inBeam = (b, x) => b && b.k > 0.25 && Math.abs(x - b.cx) < 110;
 export function skyAt(d) {
@@ -529,7 +534,7 @@ export const rainbowSide = d => sunArc(d) > 0.5 ? -1 : 1;
 export function planeSlots(d) {
   const k = dayKey(d), n = 2 + Math.floor(hash('pn' + k) * 3), out = [];
   for (let i = 0; i < n; i++)
-    out.push({ id: 'plane' + k + i, at: hourAt(d, 6 + hash('pt' + k + i) * 17.5), dur: 40 + hash('pd' + k + i) * 30, dir: hash('px' + k + i) < 0.5 ? 1 : -1, y: 26 + hash('py' + k + i) * 70 });
+    out.push({ id: 'plane' + k + i, at: hourAt(d, 6 + hash('pt' + k + i) * 17.5), dur: 40 + hash('pd' + k + i) * 30, dir: hash('px' + k + i) < 0.5 ? 1 : -1, yk: hash('py' + k + i) }); // 높이: 하늘 띠 plane 안의 비율 (weather.js)
   return out;
 }
 // 난간의 새: 하루 4~8번 (calDay). 아침(해 뜬 뒤 30분 ~ 11시)과 늦은 오후(해 지기 3시간 전 ~ 1시간 전)에 잦다.

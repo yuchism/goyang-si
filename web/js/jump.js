@@ -1,6 +1,7 @@
 /* 시간 점프: 화면이 꺼졌다 켜지거나, 서머타임이 바뀌거나, 미리보기 도구로 시각을 옮겨 방 시계가 건너뛰었을 때
    방의 상태를 그 시각에 맞춘다. 장면은 건너뛰고 결과만 적용한다. CLOCK_PLAN.md 5~7장
    원칙: 상태는 시각에서 계산하고, 사건(main.js scheduled)은 그 상태로 넘어가는 "장면"일 뿐이다 */
+import { PL } from './objects.js';
 import { napSpot } from './cat.js';
 import { endVisitNow, missedVisit } from './manduk.js';
 import { playsReset } from './plays.js';
@@ -40,13 +41,12 @@ export function settleCat(d) {
   }
   else if (b && b.k > 0.4) {
     cat.x = b.cx;
-    cat.y = 684;
+    cat.y = PL('settle.beam').y;
     run(cat, [hold(rnd(30, 90), 'loaf', true)], 'nap');
     cat.closed = true;
   }
   else {
-    cat.x = 560;
-    cat.y = 690;
+    ({ x: cat.x, y: cat.y } = PL('settle.loaf'));
     run(cat, [hold(rnd(15, 30), 'loaf')], 'loaf');
     cat.closed = false;
   }
@@ -77,7 +77,7 @@ export function timeJumped(prev, d, fx = true) {
   const c = world.cup;
   if (c.state === 'falling') {
     c.state = 'floor';
-    c.fy = 640;
+    c.fy = PL('cup.floor').y;
   }
   visitsBetween(a, b).forEach(missedVisit); // 그사이 지나간 정해진 방문의 결과 (manduk.js 다녀간 결과 표: 컵, 붕어빵 부스러기…)
   // 쥐야쥐: 쥐구멍으로

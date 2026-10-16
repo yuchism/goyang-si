@@ -1,0 +1,10 @@
+{
+  "size": [1200, 760],
+  "floorLine": 500,
+  "bgWidth": 1561,
+  "depth": { "y": [588, 738], "scale": [0.88, 1] },
+  "walk": { "x": [40, 1160], "y": [592, 740] },
+  "minViewW": 560,
+  "camera": { "shelf": 692, "door": 1080, "window": 300 },
+  "light": { "base": 0 }
+}

@@ -1,11 +1,13 @@
 /* 강고양이 씨: 하고 싶은 일 고르기(뇌)와 혼자 하는 행동들, 쓰다듬기 */
+import { skyRnd } from './win.js';
 import { play } from './anim.js';
 import { FRAMES, FSC } from './assets.js';
 import { screenEvent } from './draw.js';
 import { duetB, mouseFree } from './duet.js';
-import { O, S, present, socketOf } from './objects.js';
+import { A, O, PATH, PL, S, aPt, ax, ay, has, present, socketOf } from './objects.js';
+import { playOk } from './plays.js';
 import { Snd } from './sound.js';
-import { DEPTH } from './stage.js';
+import { DEPTH, W } from './stage.js';
 import { bub, fn, go, hold, run } from './steps.js';
 import { boxToday, inBeam, inParts, isNight, mandukAsleep, mandukHome, nightDark, rainNow, secretTime, sunbeam, wx } from './time.js';
 import { TVP, tvOn, tvPrime } from './tv.js';
@@ -52,27 +54,28 @@ export function catBrain(d) {
       add(evening ? 0.35 : 0.15, tvTopBlockedB); // 할로윈: 올라가려다 호박 때문에 포기
   }
   add(1 + (b && b.k > 0.4 ? 2.2 : 0), rollB);
-  add(dark ? 0 : (1 + (rain ? 2 : 0)), windowB);
-  if (world.cup.state === 'table')
+  if (has('window'))
+    add(dark ? 0 : (1 + (rain ? 2 : 0)), windowB);
+  if (has('cup') && world.cup.state === 'table')
     add(lively ? 1.1 : 0.3, knockB); // 컵 치기·우다다: 해질녘·저녁
   add(lively ? 0.5 : 0.12, zoomiesB);
-  if (boxToday(d))
+  if (has('box') && boxToday(d))
     add(2.2, boxB);
-  if (away && !world.manduk)
+  if (away && !world.manduk && has('laptop'))
     add(secretTime(d) ? 0.8 : (!mandukHome(d) ? 0.5 : 0), secretB); // 비밀 타자: 만득 씨 잠든 뒤 ~ 일어나기 2시간 전
   if (mouseFree() && mouse.state !== 'duet')
     add(9, duetB);
   if (performance.now() - world.lastTouch > 20 * 60e3)
     add(0.15, pawB);
-  if (!dark)
+  if (!dark && has('bookshelf'))
     add(oddLookWeight(d), oddLookB);
-  if (fishOk(d))
+  if (playOk('fish') && fishOk(d))
     add(1.6, fishB); // 어항 낚시 (방 시각으로 4시간에 한 번까지, 낮에만)
-  if (bowlWatchOk(d))
+  if (playOk('fish') && bowlWatchOk(d))
     add(dark ? 0.6 : night ? 1.0 : 0.15, bowlWatchB); // 밤 어항 구경
-  if (!dark && wheelOk(d))
+  if (!dark && playOk('wheel') && wheelOk(d))
     add(1.2, wheelB); // 쳇바퀴 (방 시각 4시간에 한 번, 9~20시)
-  if (!dark && penStareOk())
+  if (!dark && playOk('laser') && penStareOk())
     add(0.3, penStareB); // 레이저 포인터 노려보기 // 책장의 이상한 책 올려다보기 (하루 한두 번)
   let tot = opts.reduce((s, o) => s + o[0], 0), r = Math.random() * tot;
   for (const [w, f] of opts) {
@@ -87,7 +90,7 @@ export function napSpot(d) {
   const b = sunbeam(d);
   if (b && b.k > 0.4) {
     const side = (!mouse.hidden && mouse.state === 'nap') ? (mouse.x < b.cx ? 1 : -1) : pick([-1, 1]);
-    return [b.cx + side * rnd(20, 55), rnd(660, 700)];
+    return [b.cx + side * rnd(20, 55), ay(A('beam.nap'))];
   }
   if (present(O.cushion)) {
     const c = S('cushion.nap');
@@ -97,7 +100,7 @@ export function napSpot(d) {
     const c = S('heater.warm');
     return [c[0] + rnd(-15, 15), c[1]];
   }
-  return [rnd(250, 700), rnd(650, 710)];
+  return aPt(A('cat.nap'));
 }
 function napB(d) {
   const [x, y] = napSpot(d), b = sunbeam(d);
@@ -137,7 +140,7 @@ export function groomB() {
 }
 function wanderB() {
   run(cat, [
-    go(rnd(120, 1000), rnd(630, 730), 60),
+    go(...aPt(A('cat.roam')), 60),
     hold(rnd(3, 7), 'stand'),
     fn(a => {
       a.face *= -1;
@@ -147,9 +150,9 @@ function wanderB() {
 }
 export function rollB(d) {
   const b = sunbeam(d);
-  const x = b && b.k > 0.4 ? b.cx + rnd(-30, 30) : rnd(300, 800);
+  const x = b && b.k > 0.4 ? b.cx + rnd(-30, 30) : ax(A('cat.roll'));
   run(cat, [
-    go(x, rnd(665, 705), 55),
+    go(x, ay(A('cat.roll')), 55),
     hold(1.5, 'loaf'),
     fn(a => {
       say(a, inBeam(b, a.x) ? '☀️🙃' : '🙃', 4);
@@ -170,7 +173,7 @@ export function windowB(d) {
       if (rain)
         say(a, wx() + '😒', 5);
       else {
-        world.bird = { x: -20, y: rnd(90, 200), t: 0 };
+        world.bird = { x: -20, y: skyRnd('bird'), t: 0 };
         say(a, '🐦👀‼️', 4);
       }
     }),
@@ -203,12 +206,12 @@ export function knockB() {
       world.noise += 0.9;
       say(a, '😼', 2.5);
     }),
-    go(rnd(600, 800), rnd(660, 720), 75),
+    go(...aPt(A('cat.afterKnock')), 75),
     hold(rnd(10, 20), 'loaf')
   ], 'knock');
 }
 function zoomiesB() {
-  const pts = [[200, 700], [1000, 650], [350, 630], [900, 725], [500, 690]];
+  const pts = PATH('cat.zoomies');
   const st = [bub('⚡', 1.5)];
   pts.slice(0, 3 + Math.floor(Math.random() * 2)).forEach(p => st.push(go(p[0], p[1], 260)));
   st.push(fn(a => {
@@ -236,7 +239,7 @@ export function boxB() {
       a.x = e[0];
       a.y = e[1] + 6;
     }),
-    go(rnd(380, 760), rnd(660, 725), 55)
+    go(...aPt(A('cat.afterBox')), 55)
   ], 'box');
 }
 // 노트북 글자는 i18n.js의 laptopMess(키보드 밟기)·laptopReal(가끔 진짜 수식)
@@ -267,7 +270,7 @@ export function secretB() {
     fn(a => {
       a.typing = false;
     }),
-    go(rnd(300, 650), rnd(660, 720), 55),
+    go(...aPt(A('cat.afterType')), 55),
     hold(rnd(10, 20), 'loaf')
   ], 'secret');
   if (mouseFree()) {
@@ -330,11 +333,11 @@ export function petCat() {
   }
   else {
     annoy = 2;
-    const tx = cat.x < 600 ? rnd(800, 1000) : rnd(150, 350);
+    const sulk = A(cat.x < W / 2 ? 'cat.sulkRight' : 'cat.sulkLeft'), tx = ax(sulk);
     run(cat, [
       bub('💢💢', 2.5),
       hold(1, 'stand'),
-      go(tx, rnd(660, 720), 70),
+      go(tx, ay(sulk), 70),
       play('sulk', rnd(40, 90)),
       bub('😑', 3),
       hold(20, 'loaf', true)
@@ -364,8 +367,9 @@ export function cupTick(dt) {
     c.fall += dt * 1.6;
     c.fy = c.y + c.fall * c.fall * 90;
     c.x += dt * 40;
-    if (c.fy >= 640) {
-      c.fy = 640;
+    const floor = PL('cup.floor').y;
+    if (c.fy >= floor) {
+      c.fy = floor;
       c.state = 'floor';
       Snd.clink();
     }

@@ -5,7 +5,32 @@ import { HOLE } from './sprites.js';
 import { clamp } from './util.js';
 import { cat, mouse, world } from './world.js';
 /* ───────── 무대 ───────── */
-export const W = 1200, H = 760, FLOOR = 500; // 카메라: 고양이 눈높이. 바닥에서 90cm 정도까지만 보인다
+// 무대 숫자는 장면의 stage.json에서 온다 (SCENE_PLAN.md 2장). 아래 값은 읽기 전 기본값(= 방)
+export let W = 1200, H = 760, FLOOR = 500; // 카메라: 고양이 눈높이. 바닥에서 90cm 정도까지만 보인다
+// 걷는 바닥: 길찾기(steps.js)가 이 안으로만 간다
+export const WALK = { x0: 40, x1: 1160, y0: 592, y1: 740 };
+// 걷는 바닥 안으로: 가로는 몸 반폭(half, 배우의 a.half)만큼 더 안쪽까지만 (SCENE_PLAN.md 3장)
+export const walkX = (x, half = 0) => clamp(x, WALK.x0 + half, WALK.x1 - half);
+export const walkY = y => clamp(y, WALK.y0, WALK.y1);
+const CAM = { shelf: 692, door: 1080, window: 300 };
+// 방 자체 밝기 (SCENE_PLAN.md 6장): base = 바깥 빛이 하나도 안 들어올 때 방 어둠 (0 밝음 ~ 1)
+const ROOM_LIGHT = { base: 0 };
+// 방 어둠 = 방 자체 어둠 × (1 − 창 가중치) + 창으로 들어오는 바깥 어둠 × 가중치. 스탠드·호박은 그리는 쪽(main.js)에서
+export const roomDark = wl => ROOM_LIGHT.base * (1 - wl.weight) + wl.dark * wl.weight;
+let MIN_VIEW_W = 560; // 좁은 화면에서도 최소한 이만큼의 방 폭은 보이게
+let depthY0 = 588, depthY1 = 738, depthS0 = 0.88, depthS1 = 1;
+export function applyStage(st) {
+  [W, H] = st.size;
+  FLOOR = st.floorLine;
+  BGK = W / st.bgWidth;
+  [depthY0, depthY1] = st.depth.y;
+  [depthS0, depthS1] = st.depth.scale;
+  [WALK.x0, WALK.x1] = st.walk.x;
+  [WALK.y0, WALK.y1] = st.walk.y;
+  MIN_VIEW_W = st.minViewW;
+  Object.assign(CAM, st.camera);
+  ROOM_LIGHT.base = st.light ? st.light.base : 0;
+}
 export const cv = document.getElementById('cv');
 export let ctx = cv.getContext('2d');
 // 다른 캔버스에 잠깐 그리기 (TV 화면 앞 캐릭터를 따로 그려 어둠을 씌울 때)
@@ -22,7 +47,6 @@ export function withCtx(c, draw) {
 const wrap = document.getElementById('wrap');
 export let view = { s: 1, dpr: 1 };
 // 화면 맞추기: 넓은 화면은 방 전체를, 좁은 화면(세로 폰)은 방 높이를 채우고 일부만 보여주며 카메라가 따라간다
-const MIN_VIEW_W = 560; // 좁은 화면에서도 최소한 이만큼의 방 폭은 보이게
 export function fit() {
   const r = wrap.getBoundingClientRect();
   const full = Math.min(r.width / W, r.height / H), crop = Math.min(r.height / H, r.width / MIN_VIEW_W);
@@ -42,11 +66,11 @@ export const cam = { x: 0 };
 // 카메라가 볼 곳: 만득 씨가 오면 문, UFO·산타는 창, 둘이 함께면 둘 사이, 평소엔 강고양이 씨
 function camTarget() {
   if (shelfUI.open || shelfUI.oddOpen)
-    return 692;
+    return CAM.shelf;
   if (world.manduk && world.manduk.phase !== 'steps')
-    return 1080;
+    return CAM.door;
   if (world.ufo || world.santa)
-    return 300;
+    return CAM.window;
   if (!mouse.hidden && !mouse.peek && Math.abs(mouse.x - cat.x) < view.vw * 0.8)
     return (cat.x + mouse.x) / 2;
   if (mouse.peek)
@@ -67,8 +91,8 @@ export function updateCam(dt) {
 }
 new ResizeObserver(fit).observe(wrap);
 /* ───────── 사물 ─────────
-  모든 물건은 objects.json 한 곳에 적는다. 이 코드는 그 목록을 읽어서
+  모든 물건은 장면의 objects.json 한 곳에 적는다. 이 코드는 그 목록을 읽어서
   그리기(layer, look, depth) · 길찾기(body) · 행동 자리(spots) · 터치(touch)에 쓴다.
   상태(states)에 따라 모습·자리·분류가 바뀔 수 있다. */
-export const BGK = 1200 / 1561;
-export const DEPTH = y => 0.88 + 0.12 * clamp((y - 588) / 150, 0, 1);
+export let BGK = 1200 / 1561; // 배경 그림(원본 폭 stage.json bgWidth)을 무대 폭에 맞추는 배율
+export const DEPTH = y => depthS0 + (depthS1 - depthS0) * clamp((y - depthY0) / (depthY1 - depthY0), 0, 1);

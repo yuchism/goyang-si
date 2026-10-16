@@ -2,25 +2,32 @@
    내려와서 다른 데로 가면 쳇바퀴는 혼자 스윽 왼쪽 화면 밖으로 굴러 나간다. 누가 가져가는지는 모른다.
    낮에만. 소리가 나도 만득 씨는 오지 않는다. CAT_PLAY_PLAN.md 5-3, WHEEL_SPRITE_PLAN.md
    그리기 순서: 뒤판 → 디딤판 줄무늬(돌아감) → 바퀴 안 고양이·쥐야쥐 → 앞판 */
+import { A, PL, aPt } from './objects.js';
 import { play } from './anim.js';
 import { FRAMES, FSC, ROOM, imageReady, img } from './assets.js';
 import { tr } from './i18n.js';
 import { drawActor } from './sprites.js';
 import { Snd } from './sound.js';
-import { DEPTH, ctx } from './stage.js';
+import { DEPTH, W as STAGE_W, ctx } from './stage.js';
 import { SPOTS, bub, fn, go, hold, run, stepToward } from './steps.js';
 import { now } from './time.js';
 import { gateMark, gateOk } from './gate.js';
-import { RM, clamp, lerp, rnd } from './util.js';
+import { RM, clamp, lerp, onScene, rnd } from './util.js';
 import { caption, cat, mouse, say, world } from './world.js';
 
 // 쳇바퀴 그림 안의 자리 (그림 폭·높이에 대한 비율). 그림을 바꾸면 여기만 다시 잰다
 const G = { center: [0.5009, 0.472], rIn: [0.381, 0.367], rBand: [0.433, 0.421], track: 0.839 };
-const WIDTH = 300, HOME_X = 210, FLOOR_Y = 708; // 방에서 폭, 세워 두는 곳, 바닥 깊이
-const OUT = -WIDTH / 2 - 30, IN_X = 1200 + WIDTH / 2 + 20; // 나가는 곳(왼쪽 화면 밖), 들어오는 곳(오른쪽 화면 밖)
-const RING = WIDTH * 0.39; // 고양이 머리 높이에서 바퀴 테두리까지 (바퀴 가운데로부터)
+// 방에서 폭, 세워 두는 곳, 바닥 깊이: 장면의 wheel 자리 (SCENE_PLAN.md 4단계)
+let WIDTH, HOME_X, FLOOR_Y, OUT, IN_X, RING; // OUT: 나가는 곳(왼쪽 화면 밖), IN_X: 들어오는 곳(오른쪽 화면 밖), RING: 고양이 머리 높이에서 바퀴 테두리까지 (바퀴 가운데로부터)
 /* 상태: null | 'push'(밀려 들어오는 중) | 'stand'(세워 둠) | 'leave'(혼자 나가는 중) */
-const W = { state: null, x: OUT, spin: 0, leaveT: 0, rider: null };
+const W = { state: null, x: 0, spin: 0, leaveT: 0, rider: null };
+onScene(() => {
+  ({ w: WIDTH, x: HOME_X, y: FLOOR_Y } = PL('wheel'));
+  OUT = -WIDTH / 2 - 30;
+  IN_X = STAGE_W + WIDTH / 2 + 20;
+  RING = WIDTH * 0.39;
+  W.x = OUT;
+});
 export const wheelState = () => W; // 점검용
 
 /* ───── 좌표 ───── */
@@ -73,7 +80,7 @@ const walkOff = () => ({ init(a) {
       a.moving = false;
       return false;
     }
-    if (stepToward(a, IN_X + 160, 708, 70, dt)) {
+    if (stepToward(a, IN_X + 160, FLOOR_Y, 70, dt)) {
       a.moving = false;
       return true;
     }
@@ -174,7 +181,7 @@ export function wheelB() {
       say(a, '😼', 3);
       leaveSoon(rnd(3, 5)); // 돌아서 걸어가는 사이 혼자 나간다
     }),
-    go(rnd(480, 720), rnd(660, 720), 60),
+    go(...aPt(A('cat.afterWheel')), 60),
     hold(rnd(15, 30), 'loaf')
   ], 'wheel');
 }
@@ -295,6 +302,7 @@ function drawImg(k) {
 
 /* ───── 놀이 목록에 싣는 것 (plays.js) ───── */
 export const wheelPlay = {
+  needs: ['wheel'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'wheel',
   tick: dt => wheelTick(dt),
   layers: wheelLayers,

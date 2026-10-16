@@ -18,27 +18,35 @@ import { fishPlay } from './fish.js';
 import { laserPlay } from './laser.js';
 import { wheelPlay } from './wheel.js';
 import { yarnPlay } from './yarn.js';
+import { has } from './objects.js';
+import { onScene } from './util.js';
 
 // 순서 = 매 장면 진행 순서이자 같은 단계에서 누르기를 보는 순서.
 // 처음 쓸 때 만든다 (놀이 파일들이 서로·이 파일을 돌고 돌아 불러오므로, 불러오는 도중에는 아직 없을 수 있다)
 let list = null;
 export const plays = () => list || (list = [laserPlay, fishPlay, yarnPlay, wheelPlay]);
 
+// 이 장면에서 할 수 있는 놀이: needs의 장소가 모두 있는 것만 (SCENE_PLAN.md 7장)
+const ok = p => !p.needs || p.needs.every(has);
+let live = null;
+onScene(() => live = null);
+export const livePlays = () => live || (live = plays().filter(ok));
+export const playOk = id => livePlays().some(p => p.id === id);
 const each = (k, ...args) => {
-  for (const p of plays())
+  for (const p of livePlays())
     if (p[k])
       p[k](...args);
 };
 export const playsTick = (dt, real) => each('tick', dt, real);
-export const playsLayers = () => plays().flatMap(p => p.layers ? p.layers() : []);
+export const playsLayers = () => livePlays().flatMap(p => p.layers ? p.layers() : []);
 export const playsOverlay = () => each('overlay');
 export const playsLight = () => each('light');
 export const playsDrag = (x, y, e) => each('drag', x, y, e);
 export const playsReset = (a, b) => each('reset', a, b);
-export const playsPress = (x, y, when) => plays().some(p => p.press && p.press(x, y, when));
+export const playsPress = (x, y, when) => livePlays().some(p => p.press && p.press(x, y, when));
 export function playsDev($) {
   for (const p of plays())
     if (p.dev)
-      $(p.dev.btn).onclick = p.dev.go;
+      $(p.dev.btn).onclick = () => ok(p) && p.dev.go(); // 이 장면에 없는 놀이는 미리보기로도 안 띄운다
 }
 export const playsDebug = () => Object.assign({}, ...plays().map(p => p.debug || {}));

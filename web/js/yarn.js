@@ -5,7 +5,8 @@ import { play } from './anim.js';
 import { FRAMES, FSC, imageReady, img } from './assets.js';
 import { tvFree } from './behave.js';
 import { Snd } from './sound.js';
-import { DEPTH, ctx } from './stage.js';
+import { A, PL, ax, ay } from './objects.js';
+import { DEPTH, ctx, walkX, walkY } from './stage.js';
 import { bub, fn, go, hold, routeTo, run, stepToward } from './steps.js';
 import { now } from './time.js';
 import { gateMark, gateOk } from './gate.js';
@@ -13,6 +14,7 @@ import { RM, clamp, rnd } from './util.js';
 import { after, cat, mouse, say, world } from './world.js';
 
 const R = 22; // 방에서 실뭉치 반지름
+const BALL_HALF = 5; // 걷는 바닥 가로 끝에서 실뭉치 중심이 들어갈 수 있는 거리 (SCENE_PLAN.md 3장)
 const FRICTION = 1.7; // 굴러가다 서는 빠르기
 const OUT_X = -60; // 화면 밖 (실 끝이 있는 곳)
 /* 상태: null(없음) | 'in'(굴러 들어오는 중) | 'idle' | 'held'(고양이가 껴안음) | 'pull'(끌려 나가는 중) */
@@ -24,7 +26,7 @@ export const yarnState = () => Y; // 점검용
 export function yarnIn(stopX) {
   if (Y.state)
     return false;
-  const y = rnd(655, 722), sx = stopX != null ? stopX : rnd(260, 520);
+  const en = A('yarn.enter'), y = ay(en), sx = stopX != null ? stopX : ax(en);
   Object.assign(Y, { state: 'in', x: OUT_X + 10, y, vx: (sx - OUT_X) * FRICTION, vy: 0, rot: 0, ay: y + rnd(-15, 15), t: 0, life: rnd(70, 110) });
   gateMark('yarn', now());
   Snd.thump(0.15, 260);
@@ -58,8 +60,8 @@ export function yarnTick(dt) {
     pullOut(); // 만득 씨가 오면 스르륵 사라진다
   if (cat.tag !== 'yarn' && Y.state === 'held') { // 껴안고 있다가 끊기면 옆에 다시 놓는다
     Y.state = 'idle';
-    Y.x = clamp(cat.x - 70, 40, 1150);
-    Y.y = clamp(cat.y + 4, 600, 738);
+    Y.x = walkX(cat.x - 70, BALL_HALF);
+    Y.y = walkY(cat.y + 4);
   }
   if (Y.state === 'held')
     return;
@@ -83,13 +85,13 @@ export function yarnTick(dt) {
   Y.x += Y.vx * dt;
   Y.y += Y.vy * dt;
   if (Y.state !== 'pull' && Y.state !== 'in') { // 방 안에서는 벽에 맞고 조금 튄다
-    if (Y.x < 40 || Y.x > 1150) {
-      Y.x = clamp(Y.x, 40, 1150);
+    if (Y.x !== walkX(Y.x, BALL_HALF)) {
+      Y.x = walkX(Y.x, BALL_HALF);
       Y.vx *= -0.5;
     }
   }
-  if (Y.y < 600 || Y.y > 738) {
-    Y.y = clamp(Y.y, 600, 738);
+  if (Y.y !== walkY(Y.y)) {
+    Y.y = walkY(Y.y);
     Y.vy *= -0.5;
   }
   Y.rot += Y.vx * dt / R;
@@ -105,7 +107,7 @@ function mouseNudge(dt) {
   const side = mouse.x < Y.x ? -1 : 1;
   mouse.state = 'yarn';
   run(mouse, [
-    go(Y.x + side * (R + 14), clamp(Y.y + 2, 600, 738), 80),
+    go(Y.x + side * (R + 14), walkY(Y.y + 2), 80),
     fn(a => {
       a.face = -side;
       push(-side, rnd(60, 110));
@@ -160,7 +162,7 @@ function chase() {
         a.moving = false;
         return true;
       }
-      const side = a.x >= Y.x ? 1 : -1, ty = clamp(Y.y + 2, 600, 738), tx = clamp(Y.x + side * reach(ty), 40, 1160);
+      const side = a.x >= Y.x ? 1 : -1, ty = walkY(Y.y + 2), tx = walkX(Y.x + side * reach(ty), a.half);
       const d = Math.hypot(tx - a.x, ty - a.y), rolling = Math.abs(Y.vx) > 25;
       if (d > 12) {
         if (a.tr || a.dp !== 'stand') { // 일어나는 동작이 끝나야 걷는다
@@ -186,8 +188,8 @@ function chase() {
           say(c, '❤️', 2);
         }), play('hugkick', rnd(3, 6)), fn(c => {
           Y.state = 'idle';
-          Y.x = clamp(c.x + c.face * 75, 40, 1150);
-          Y.y = clamp(c.y + 3, 600, 738);
+          Y.x = walkX(c.x + c.face * 75, BALL_HALF);
+          Y.y = walkY(c.y + 3);
           push(c.face, rnd(70, 120));
         }));
         return false;
@@ -202,7 +204,7 @@ function chase() {
 const goEdge = () => {
   let g;
   return { init(a) {
-      g = go(80, a.y, 200);
+      g = go(PL('yarn.exit').x, a.y, 200);
       g.init(a);
     }, tick: (a, dt) => g.tick(a, dt) };
 };
@@ -284,6 +286,7 @@ function drawYarn() {
 
 /* ───── 놀이 목록에 싣는 것 (plays.js) ───── */
 export const yarnPlay = {
+  needs: ['yarn.enter', 'yarn.exit'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'yarn',
   tick: dt => yarnTick(dt),
   layers: yarnLayers,

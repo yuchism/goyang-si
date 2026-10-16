@@ -56,7 +56,7 @@ export function drawBooks(dt) {
 }
 export function drawBookTag() {
   const odd = shelfUI.hover === '__odd';
-  const b = odd ? { title: tr('oddTag'), area: [684, 215, 92, 121] } : BOOKS().find(b => b.id === shelfUI.hover);
+  const b = odd ? { title: tr('oddTag'), area: O.bookshelf.oddBook.tag } : BOOKS().find(b => b.id === shelfUI.hover);
   if (!b || shelfUI.open || shelfUI.oddOpen)
     return;
   const a = O.bookshelf.area, tx = a[0] + a[2] + 8, ty = b.area[1] + b.area[3] / 2;

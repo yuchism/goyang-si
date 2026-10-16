@@ -10,13 +10,15 @@ import { duetTick } from './duet.js';
 import { drawCup, drawObj, drawProp, drawRoom, drawSunbeam } from './draw.js';
 import { drawManduk, startVisit, updateManduk, visitTick } from './manduk.js';
 import { mouseTick, resetMouseTimer } from './mouse.js';
-import { OBJ, P, S, depthOf, initObjects, objView, present } from './objects.js';
+import { OBJ, P, S, depthOf, objView, present } from './objects.js';
+import { loadScene } from './scene.js';
 import { drawBookTag, drawBooks, initShelf } from './shelf.js';
 import { Snd } from './sound.js';
 import { drawActor, drawBubble, drawCaptions } from './sprites.js';
-import { H, W, cam, ctx, fit, updateCam, view } from './stage.js';
+import { H, W, cam, ctx, fit, roomDark, updateCam, view } from './stage.js';
+import { windowLight } from './win.js';
 import { bub, go, hold, ownLayer, run, tickActor } from './steps.js';
-import { advanceClock, calDay, darkness, inWindow, lampShouldBeOn, mandukAsleep, mandukHome, markClock, moonName, moonPhase, now, passedEvents, rainNow, resetClock, routineOf, season, snowing, speed, timeInfo } from './time.js';
+import { advanceClock, calDay, inWindow, lampShouldBeOn, mandukAsleep, mandukHome, markClock, moonName, moonPhase, now, passedEvents, rainNow, resetClock, routineOf, season, snowing, speed, timeInfo } from './time.js';
 import { drawJumpFade, initJump, jumpTick, newDay, settleCat } from './jump.js';
 import { frameTick } from './frame.js';
 import { playsLayers, playsLight, playsOverlay, playsTick } from './plays.js';
@@ -91,7 +93,10 @@ function frame(tNow) {
   jumpTick(real); // 시간 점프면 방을 그 시각에 맞춘다. 일정보다 먼저
   const d = now();
   scheduled(d);
-  world.dark = darkness(d);
+  // 밝기 (SCENE_PLAN.md 6장): 하늘에 그리는 것은 바깥 어둠, 방은 방 자체 밝기 + 창이 주는 빛
+  const wl = windowLight(d);
+  world.skyDark = wl.dark;
+  world.dark = roomDark(wl);
   const home = mandukHome(d), asleep = mandukAsleep(d);
   // 방의 반사 행동 (순서가 곧 진행 순서)
   visitTick(d, dt); // 소음 게이지와 만득 씨 방문 (manduk.js)
@@ -161,7 +166,7 @@ function render(d, real) {
   // 소품과 캐릭터를 바닥에 닿는 위치 순서로 그린다 (뒤에 있으면 가려짐)
   const L = OBJ.filter(o => o.layer === 'floor' && present(o)).map(o => [depthOf(objView(o)), () => drawObj(o, d)]);
   if (birthdayMode)
-    L.push([598, () => {
+    L.push([CAKE.depth, () => {
         drawProp('birthday_cake', CAKE.x, CAKE.y, CAKE.w);
         drawCakeGlow();
       }]);
@@ -176,7 +181,6 @@ function render(d, real) {
     drawCup(c.x, c.fy, c.fall * 4);
   playsOverlay();
   eventsRoom(); // 나비
-  drawManduk('legs');
   // 어둠과 램프
   const dk = world.dark;
   if (dk > 0) {
@@ -199,7 +203,7 @@ function render(d, real) {
   eventsShadow(dk); // 커튼 그림자
   playsLight();
   drawPartyLights(dk);
-  drawManduk('say');
+  drawManduk();
   drawBubble(cat);
   drawBubble(mouse);
   if (world.paw) {
@@ -227,8 +231,8 @@ initUI();
 initInstall();
 initJump();
 exposeDebug();
-// 사물 목록과 그림 정보를 읽은 뒤 그림을 불러오고 시작
-Promise.all([fetch('objects.json', { cache: 'no-store' }).then(r => r.json()).then(initObjects), loadMeta(), loadPrograms(), loadWindows()])
+// 장면(사물 목록)과 그림 정보를 읽은 뒤 그림을 불러오고 시작
+Promise.all([loadScene(), loadMeta(), loadPrograms(), loadWindows()])
   .catch(e => console.error('고양.시를 여는 데 필요한 파일을 읽지 못했어요', e))
   .finally(loadImages);
 export function start() {

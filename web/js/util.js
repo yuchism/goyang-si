@@ -79,3 +79,7 @@ export function gcEvent(path, title) {
 }
 // 글자 수 자르기: 이모지가 반으로 잘리지 않게 코드 포인트 단위로
 export const cutChars = (s, n) => Array.from(String(s || '')).slice(0, n).join('');
+// 장면을 읽은 뒤 할 일 (장면 값으로 모듈 안 숫자를 채울 때). 모듈이 서로 부르는 순서와 상관없게 여기(가져오는 것 없음)에 둔다
+const SCENE_HOOKS = [];
+export const onScene = fn => SCENE_HOOKS.push(fn);
+export const runSceneHooks = () => SCENE_HOOKS.forEach(fn => fn());
