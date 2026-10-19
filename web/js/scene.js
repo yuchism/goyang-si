@@ -9,8 +9,9 @@ import { applyWindow } from './win.js';
 // 장면 이름: 주소의 ?scene=이름 (없으면 방). 시험 장면은 tools/check_scene.mjs가 띄운다
 const asked = new URLSearchParams(location.search).get('scene');
 export const SCENE = { name: asked && /^[\w-]+$/.test(asked) ? asked : 'room' };
-const getJSON = (name, file) => fetch(`scenes/${name}/${file}`, { cache: 'no-store' }).then(r => r.json());
-const getOptional = (name, file) => fetch(`scenes/${name}/${file}`, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+// no-cache: 서버에 확인은 하되 바뀌지 않았으면 다시 받지 않는다 (LOAD_PLAN.md 6장)
+const getJSON = (name, file) => fetch(`scenes/${name}/${file}`, { cache: 'no-cache' }).then(r => r.json());
+const getOptional = (name, file) => fetch(`scenes/${name}/${file}`, { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).catch(() => null);
 export async function loadScene(name = SCENE.name) {
   SCENE.name = name;
   const [stage, objects, win] = await Promise.all([getJSON(name, 'stage.json'), getJSON(name, 'objects.json'), getOptional(name, 'window.json')]);

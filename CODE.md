@@ -21,12 +21,14 @@ web/                      ← GitHub Pages로 배포되는 폴더 (이 안만 �
   r/tv/meta.json          ← TV 본체(화면 구멍 위치)와 기본 화면 그림(꺼짐·화면조정·마침·해돋이)
   r/tv/programs.json      ← TV 프로그램 표: 장면·사건·자막·화면 장식·강고양이 씨 반응 + 편성(길이 runtime·방영 조건·하루 상한·회차). 사람이 고치는 곳. TV_CHANNEL_PLAN.md 14장
   r/tv/schedule.json      ← 고양.방송 방송국 틀: 편성 칸·기간(이름 참조, 날짜는 js/calendar.js)·마감 뉴스·낮잠 정파·개편(3개월마다). TV_SCHEDULE_PLAN.md, TIME_BASE_PLAN.md 8-1
+  sheet/                  ← meta.json 밖의 큰 시트 (생일 춤·케이크, webp). build_meta.py 검사 밖. LOAD_PLAN.md 5장
   js/                     ← 코드 (JS 모듈)
   package.json            ← "type": "module" 한 줄 (web/js는 ES 모듈. 노드 검사 도구가 불러올 때 경고가 나지 않게, 사이트 동작과 상관없음)
 package.json              ← 검사 도구용 playwright 버전 고정 (check_behave.mjs·visual_check.js. 배포는 pages.yml이 npm install). 사이트는 빌드 없음
 tools/
   build_meta.py           ← 새 그림을 넣으면 f/·r/ meta.json을 채운다 (r/tv/·r/scenery/는 건드리지 않음)
   visual_check.js         ← 화면 점검 (같은 장면을 매번 똑같이 찍는다. 시간대는 서울 고정, `VC_TZ`로 바꿈. 3차 장면: scenery·dusk·nightwx·seasons. 2026-10-19부터 찍기 전에 늘 한 장면 더 그린다 — 예전엔 그림 받는 속도에 따라 들어가거나 빠져서 같은 코드도 몇 장이 달랐다. 그 전에 찍은 사진과는 비교하지 않는다)
+  load_check.mjs          ← 처음 열 때 기다리는 양 재기 (web을 서버로 띄운 뒤 `node tools/load_check.mjs [포트] ['?birthday=이름']`): 느린 4G 흉내·서비스 워커 막음·캐시 없음으로 첫 장면까지 시간, 그때까지 받은 바이트·요청 수, 그림을 다 받을 때까지 시간. 로컬 서버라 절대 시간보다 전후 비교용. LOAD_PLAN.md 8장
   compare.py              ← 점검 화면 두 벌을 픽셀 단위로 비교
   clock_check.js          ← 시계 점검: 화면 끄기·뒤 탭·서머타임·빨리 감기를 흉내 내서 CLOCK_PLAN.md 10장 확인
   check_time.mjs          ← 시간 기준 검사 (배포 전 `node tools/check_time.mjs`. `pages.yml`에서도 돈다): 시간 모듈 밖에서 날짜·시각 직접 보기 금지(허용 목록·`// time-ok`), 달력 표, 날마다 시간대 표·해 시각 이어짐(3차), 풍경 날짜(남반구 반년·두 계절만·비 공통 함수), 약속, 회귀(2026~2030년). 시드니·서울 두 시간대로 프로세스를 따로 띄운다. TIME_BASE_PLAN.md 9장
@@ -61,7 +63,7 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 
 | 파일 | 하는 일 |
 |---|---|
-| `main.js` | 시작점. 하루 일정(밥·출근·귀가·불 끄기: `scheduled()`가 `passedEvents`의 `due`면 장면, `late`면 지났음 표시), 매 프레임 진행 `frame()`, 그리기 순서 `render()`, 처음 시작 `start()`. `frame()`은 진행 순서만 적는다: 각 파일의 `visitTick`·`mouseTick`·`duetTick`·`sunbeamTick`·`eventsTick`·`cupTick`·`playsTick`을 차례로 부른다(순서가 곧 확률을 뽑는 순서라 바꾸면 화면 점검 결과가 달라진다). 시작: 장면·그림 목록(meta.json)을 다 읽은 뒤(`Promise.allSettled`) 하나라도 못 읽었거나 `start()`에서 오류가 나면 `startFailed()` 안내("방을 여는 데 실패했어요 · 다시 열기"). TV 표·창밖 불빛은 없어도 연다. STABILITY_PLAN.md 6장 |
+| `main.js` | 시작점. 하루 일정(밥·출근·귀가·불 끄기: `scheduled()`가 `passedEvents`의 `due`면 장면, `late`면 지났음 표시), 매 프레임 진행 `frame()`, 그리기 순서 `render()`, 처음 시작 `start()`. `frame()`은 진행 순서만 적는다: 각 파일의 `visitTick`·`mouseTick`·`duetTick`·`sunbeamTick`·`eventsTick`·`cupTick`·`playsTick`을 차례로 부른다(순서가 곧 확률을 뽑는 순서라 바꾸면 화면 점검 결과가 달라진다). 시작: 장면·그림 목록(meta.json)을 다 읽은 뒤(`Promise.allSettled`) 하나라도 못 읽었거나 `start()`에서 오류가 나면 `startFailed()` 안내("방을 여는 데 실패했어요 · 다시 열기"). TV 표·창밖 불빛은 없어도 연다. STABILITY_PLAN.md 6장. 서비스 워커 `warm`은 그림을 다 받은 뒤(`onWarm`) 보낸다 |
 | `world.js` | 세상 상태 `world`(밝기: 방 어둠 `world.dark`, 바깥 어둠 `world.skyDark` — 하늘에 그리는 것은 skyDark)와 배우 `cat`(강고양이 씨)·`mouse`(쥐야쥐, 배우마다 몸 반폭 `half`), 말풍선 `say`, 자막 `caption`. **방 시간 타이머 `after(할 일, 초)`**: 행동을 "몇 초 뒤에"로 이을 때 setTimeout 대신 쓴다. 미리보기 배속을 따르고 탭을 떠나면 같이 멈춘다(`main.js`가 `tickTimers`). setTimeout은 화면·소리·설치 같은 바깥 일에만 |
 | `guard.js` | 오류 칸막이 (STABILITY_PLAN.md 3장): `guard(이름, 할 일, 되돌리기)`·`guardDraw(ctx, 이름, 그리기)`(render 맨 바깥 칸에서만, 항상 save/restore)·`reportError`. 같은 오류는 콘솔에 한 번만, 10초 안에 5번이면 그 칸 1분 쉼, 건수 `ERRORS`(`__goyang.errors`). 난수를 쓰지 않고 아무것도 불러오지 않는다. `main.js` 매 장면은 `try … finally`로 다음 장면을 늘 요청하고, 할 일·그리기를 칸마다 감싼다(순서·횟수 그대로). `?dev=1`로 연 페이지에서만 "오류 n건"·"일부러 오류" 줄 |
 | `recover.js` | 오류 뒤 되돌리기 (STABILITY_PLAN.md 3-1): `resetActor`(`run(a, [], '')` + 쥐야쥐 `state` 풀기, 둘이 놀던 중이면 둘 다, 붙잡고 있던 놀이도 끝냄), `resetPlay`, `resetDuet`, `abortPlay`(놀이의 `abort`, 없으면 `reset(지금, 지금)`), `abortEvent`(사건의 `abort`, 없으면 `reset`). 놀이 이름표 → 놀이 표 `PLAY_TAGS`: 새 놀이가 배우를 붙잡으면 여기 한 줄 |
@@ -82,9 +84,9 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `scenery.js` | 창밖 풍경 판(WINDOW_PLAN_3.md 5·6장, 자리는 window.json `landscape.mountains`·아파트는 `landscape`): 먼 산 → 연무 → 가까운 산 → 연무 → 건물 마스크를 임시 캔버스 두 장(낮·밤)에 합쳐 둔다. 산 두 계절 섞기(`lighter`로 A×(1−w)+B×w, 세로 그라데이션으로 가을은 꼭대기부터·봄은 아래부터), 눈 모자, 연무(`source-atop`, 미세먼지 날 누렇게), 밤엔 남색으로 어둡게, 산은 살짝 부드럽게(줄였다 키우기), 건물 뒤 은은한 그림자. 판 열쇠(풍경 날짜·화면 배율·그림 읽힘·덮어쓰기)가 바뀔 때만 다시 만든다. 산 그림 `r/scenery/`은 지금 섞는 계절 + 눈 모자만 `loadLazy` |
 | `seasons.js` | 계절 손님(WINDOW_PLAN_3.md 7~9장, 높이는 window.json `sky`의 띠·난간 `railing`): 낙엽(바람 `leafSlots`, 난간에 앉을 잎은 내려올 때부터 베란다 층), 철새 V자 무리(`geeseSlots`, 하늘의 큰 것), 벚꽃잎(`blossomAt`, 생일 꽃잎이 있으면 그것만), 잠자리(`dragonflySlots`, 난간에 앉기), 첫눈 날 강고양이 씨(`firstSnowNow`, 페이지 열 때마다 한 번까지), 난간 눈(`railSnowAt`), 유리 성에(`frostAt`, 유리 칸 모서리), 미세먼지 버튼. 난간 자리: 새·검은 고양이가 있는 곳엔 앉지 않음 |
 | `draw.js` | 방 그리기: 소품, 코드로 그리는 것(창밖·문·커튼·트리·난로·선풍기), 노트북 화면, 햇빛. **베란다 층** `drawVeranda`: 방 배경 다음에 베란다 손님(`events.js` veranda)을 그리고 그 자리만 창틀(`window_frame`)을 다시 덮는다 → 손님은 난간 앞·창틀 뒤. 손님이 없으면 아무것도 안 그려 화면이 전과 같다 |
-| `sprites.js` | 배우 그리기: 고양이·쥐 프레임, 그림자, 쥐구멍 빼꼼(배경 입구 `HOLE`은 장면의 `hole.mouth`), 말풍선 아이콘, 자막 |
+| `sprites.js` | 배우 그리기: 고양이·쥐 프레임, 그림자, 쥐구멍 빼꼼(배경 입구 `HOLE`은 장면의 `hole.mouth`), 말풍선 아이콘, 자막. 아직 못 받은 프레임이 불리면 그 배우가 마지막으로 그린 프레임(`a.drawn`)을 대신 그린다(`frameMisses()` 점검용, LOAD_PLAN.md 4-3) |
 | `stage.js` | 캔버스, 화면 맞추기, 카메라, 깊이 비율 `DEPTH`, 다른 캔버스에 잠깐 그리기 `withCtx`. 무대 숫자(`W`·`H`·`FLOOR`·`BGK`·`DEPTH`·걷는 바닥 `WALK`·카메라 자리)는 장면을 읽을 때 `applyStage`가 `stage.json`에서 넣는다. 방 어둠 `roomDark(창 빛)` = 방 자체 어둠 × (1 − 가중치) + 바깥 어둠 × 가중치. 걷는 바닥 안으로 넣기 `walkX(x, 몸 반폭)`·`walkY(y)`: 기능 코드는 바닥 범위 숫자를 직접 쓰지 않고 이것을 쓴다 |
-| `assets.js` | meta.json 세 개를 읽어 그림 목록을 만들고 그림을 불러온다 |
+| `assets.js` | meta.json 세 개를 읽어 그림 목록을 만들고 그림을 불러온다. **두 묶음**(LOAD_PLAN.md): 시작 묶음(`inStartSet`, 규칙은 이 파일 한 곳 `START_CAT`·`LATER_ROOM`·생일)만 기다렸다가 `start()`, 이어서 나중 묶음을 낮은 우선순위로 전부 받는다(오프라인용). 다 받으면 `assetsWarm()` true, `onWarm(할 일)`. 그 전에는 나중 묶음 그림을 쓰는 행동·사건·놀이를 고르지 않는다(`cat.js` catBrain, `events.js` canStart, `gate.js` gateOk, 나비, 레이저 누르기, TV 반응). `lazyPending()`은 나중 묶음도 센다(점검 도구가 다 받을 때까지 기다리게). `loadLazy`(TV 프로그램·산)는 높은 우선순위 |
 | `sound.js` | Web Audio로 만든 소리 (방 잡음, 비, 방울, 문, 생일 노래, TV) |
 | `tv-core.js` | TV · 계산(화면 없이, 노드에서도 돈다): `programs.json` 검사 `setPrograms`, 방송국 틀 `setSchedule`, 하루 편성 `tvDay`·`tvSegs`·`tvNaps`(조건·고정 칸·틈 메우기·회차·정파 여러 번, 씨앗 = 시즌 + 요일), 구간 `segAt`·`segOrder`(홈쇼핑 상품, 요일마다 다른 순서), 사건 `tvEvents`, 지금 상태 `tvState`(낮잠 정파 포함), 장면 그림 `tvFrameName`, 제목 `tvTitle` |
 | `tv.js` | TV · 방송: 프로그램 표·방송국 틀 불러오기 `loadPrograms`, 그림 미리 받기 `tvNeed`(지금·다음 칸, 매분), 매 프레임 `tvTick`, 오류 격리 `tvBreak`(그 칸 끝까지 "화면 조정 중"), 미리보기 `tvPreview`·`tvForce` |

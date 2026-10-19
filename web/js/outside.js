@@ -5,7 +5,7 @@
 import { WIN, skyRnd, toRoom, wy } from './win.js';
 import { play } from './anim.js';
 import { canStart, eventsApt, eventsSky, eventsSkyBack } from './events.js';
-import { imageReady, img } from './assets.js';
+import { assetsWarm, imageReady, img } from './assets.js';
 import { aptRect, sceneryPlates } from './scenery.js';
 import { drawPetals } from './birthday.js';
 import { A, P } from './objects.js';
@@ -428,7 +428,7 @@ export const butterflyEvent = {
   cls: 'bg',
   tick(d, real, bf) {
     const dt = real * bf, ss = season(d);
-    if (!world.bfly && !world.manduk && butterflyTime(d) && !rainNow(d) && (ss === 'spring' || ss === 'summer') && Math.random() < dt / (ss === 'summer' ? 420 : 700))
+    if (!world.bfly && !world.manduk && assetsWarm() && butterflyTime(d) && !rainNow(d) && (ss === 'spring' || ss === 'summer') && Math.random() < dt / (ss === 'summer' ? 420 : 700))
       spawnButterfly();
     updateButterfly(real * Math.min(bf, 3));
   },

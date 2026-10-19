@@ -17,7 +17,7 @@ export { TVP, fmtH, tvBday, tvDay, tvH, tvNaps, tvPrime, tvSegs, tvState } from 
 // 시작할 때 한 번. 실패하거나 문제가 있어도 방은 연다 (문제 있는 프로그램만 편성에서 빠진다)
 async function getJson(path, what) {
   try {
-    const r = await fetch(path, { cache: 'no-store' });
+    const r = await fetch(path, { cache: 'no-cache' }); // 바뀌지 않았으면 다시 받지 않는다 (LOAD_PLAN.md 6장)
     if (!r.ok)
       throw new Error(path + ' ' + r.status);
     return await r.json();

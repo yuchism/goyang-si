@@ -406,7 +406,10 @@ function fishFrame() {
   }
 }
 function drawFish() {
-  const k = fishFrame(), im = img(k), base = ROOM.fish_swim_1;
+  let k = fishFrame(), im = img(k);
+  const base = ROOM.fish_swim_1;
+  if (!imageReady(im)) // 다른 자세(뻐끔·한숨·물어 오기)는 나중 묶음: 받기 전이면 헤엄 그림으로 (LOAD_PLAN.md 3-1)
+    im = img(k = 'fish_swim_1');
   if (!imageReady(im) || !base)
     return;
   const s = FISH_W / base[0], w = im.width * s, h = im.height * s, bob = RM ? 0 : Math.sin(F.ph * 2.2) * 0.8;

@@ -2,7 +2,7 @@
 import { play } from './anim.js';
 import { drawPumpkinGlow, pumpkinNight } from './halloween.js';
 import { eventsRoom, eventsShadow, eventsTick, trafficLine } from './events.js';
-import { SRC, loadImages, loadMeta } from './assets.js';
+import { SRC, loadImages, loadMeta, onWarm } from './assets.js';
 import { CAKE, bannerText, birthdayMode, drawCakeGlow, drawPartyLights, drawPartyMouse, tickParty } from './birthday.js';
 import { calmDown, catBrain, cupTick, sunbeamTick } from './cat.js';
 import { exposeDebug } from './debug.js';
@@ -352,10 +352,14 @@ function startFailed() {
   document.body.appendChild(box);
 }
 /* ───────── 오프라인 캐시 (sw.js, MOBILE_PLAN.md 4-2) ─────────
-   실패해도 조용히 넘어간다. 이미 받은 파일(지금 보이는 방)도 담아 두라고 알려 준다 (이미 담긴 것은 건너뜀) */
+   실패해도 조용히 넘어간다. 이미 받은 파일(지금 보이는 방)도 담아 두라고 알려 준다 (이미 담긴 것은 건너뜀)
+   알리는 때: 그림을 나중 묶음까지 다 받은 뒤 (assets.js onWarm, LOAD_PLAN.md 1-1). 그 전에 알리면 그림 목록(SRC)이 아직 비어 있거나,
+   서비스 워커가 나중 묶음을 따로 받기 시작해 첫 장면에 필요한 그림과 대역폭을 다툰다. 다 받은 뒤라 대부분 브라우저 캐시에서 나온다 */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready).then(reg => {
+  const ready = navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready);
+  onWarm(() => ready.then(reg => {
     const urls = [location.href, ...performance.getEntriesByType('resource').map(e => e.name), ...Object.values(SRC).map(u => new URL(u, location.href).href)];
     reg.active && reg.active.postMessage({ type: 'warm', urls: [...new Set(urls)] });
-  }).catch(() => { });
+  }).catch(() => { }));
+  ready.catch(() => { });
 }

@@ -1,7 +1,7 @@
 /* 강고양이 씨: 하고 싶은 일 고르기(뇌)와 혼자 하는 행동들, 쓰다듬기 */
 import { skyRnd } from './win.js';
 import { play } from './anim.js';
-import { FRAMES, FSC } from './assets.js';
+import { FRAMES, FSC, assetsWarm } from './assets.js';
 import { screenEvent } from './draw.js';
 import { duetB, mouseFree } from './duet.js';
 import { A, O, PATH, PL, S, aPt, ax, ay, has, present, socketOf } from './objects.js';
@@ -36,6 +36,9 @@ export function catBrain(d) {
   const b = sunbeam(d), rain = rainNow(d), dark = world.lampOn === false && nightDark(d);
   const evening = inParts(d, 'evening', 'night'), lively = inParts(d, 'dusk', 'evening'), night = isNight(d);
   const away = !mandukHome(d) || mandukAsleep(d);
+  // 나중 묶음 그림을 다 받기 전(처음 연 뒤 몇십 초)에는 시작 묶음 그림으로 되는 행동만 고른다 (LOAD_PLAN.md 4-1):
+  // 낮잠·식빵·그루밍·돌아다니기·구르기·창밖·쥐야쥐와 놀기. 다 받은 뒤의 후보·확률·뽑는 순서는 예전과 같다
+  const warm = assetsWarm();
   const opts = [];
   const add = (w, f) => {
     if (w > 0)
@@ -45,7 +48,7 @@ export function catBrain(d) {
   add(3.5, loafB);
   add(1.4, groomB);
   add(dark ? 0.3 : 1.4, wanderB);
-  if (tvOn()) {
+  if (warm && tvOn()) {
     const st = world.tv.st, pr = st.mode === 'prog' ? st.p : null, prime = !!pr && tvPrime(st.sg);
     add(dark ? 0.5 : prime ? 4 : pr && TVP[pr].watch === 'track' ? 2 : 0.9, tvWatchB);
     if (!present(O.pumpkin))
@@ -56,26 +59,27 @@ export function catBrain(d) {
   add(1 + (b && b.k > 0.4 ? 2.2 : 0), rollB);
   if (has('window'))
     add(dark ? 0 : (1 + (rain ? 2 : 0)), windowB);
-  if (has('cup') && world.cup.state === 'table')
+  if (warm && has('cup') && world.cup.state === 'table')
     add(lively ? 1.1 : 0.3, knockB); // 컵 치기·우다다: 해질녘·저녁
-  add(lively ? 0.5 : 0.12, zoomiesB);
-  if (has('box') && boxToday(d))
+  if (warm)
+    add(lively ? 0.5 : 0.12, zoomiesB);
+  if (warm && has('box') && boxToday(d))
     add(2.2, boxB);
-  if (away && !world.manduk && has('laptop'))
+  if (warm && away && !world.manduk && has('laptop'))
     add(secretTime(d) ? 0.8 : (!mandukHome(d) ? 0.5 : 0), secretB); // 비밀 타자: 만득 씨 잠든 뒤 ~ 일어나기 2시간 전
   if (mouseFree() && mouse.state !== 'duet')
     add(9, duetB);
-  if (performance.now() - world.lastTouch > 20 * 60e3)
+  if (warm && performance.now() - world.lastTouch > 20 * 60e3)
     add(0.15, pawB);
-  if (!dark && has('bookshelf'))
+  if (warm && !dark && has('bookshelf'))
     add(oddLookWeight(d), oddLookB);
   if (playOk('fish') && fishOk(d))
     add(1.6, fishB); // 어항 낚시 (방 시각으로 4시간에 한 번까지, 낮에만)
-  if (playOk('fish') && bowlWatchOk(d))
+  if (warm && playOk('fish') && bowlWatchOk(d))
     add(dark ? 0.6 : night ? 1.0 : 0.15, bowlWatchB); // 밤 어항 구경
   if (!dark && playOk('wheel') && wheelOk(d))
     add(1.2, wheelB); // 쳇바퀴 (방 시각 4시간에 한 번, 9~20시)
-  if (!dark && playOk('laser') && penStareOk())
+  if (warm && !dark && playOk('laser') && penStareOk())
     add(0.3, penStareB); // 레이저 포인터 노려보기 // 책장의 이상한 책 올려다보기 (하루 한두 번)
   let tot = opts.reduce((s, o) => s + o[0], 0), r = Math.random() * tot;
   for (const [w, f] of opts) {

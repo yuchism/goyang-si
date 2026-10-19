@@ -2,6 +2,7 @@
    컴퓨터는 점이 마우스를 따라가고, 폰은 누르고 끄는 곳으로 간다. 고양이는 쫓다가 덮치고, 앞발 밑을 확인하면 없다.
    한참 놀면 지쳐서 한동안(3분) 점을 봐도 무시한다. CAT_PLAY_PLAN.md 5-1
    그림: anim.js CLIP의 wiggle·pounce·pawcheck·wallreach (LASER_SPRITE_PLAN.md) */
+import { assetsWarm } from './assets.js';
 import { play } from './anim.js';
 import { inked, rr } from './draw.js';
 import { tr } from './i18n.js';
@@ -297,7 +298,8 @@ export const laserPlay = {
       return true;
     }
     if (penAt(x, y)) {
-      startLaser();
+      if (assetsWarm()) // 레이저 놀이 그림(나중 묶음)을 다 받기 전에는 눌러도 시작하지 않는다 (LOAD_PLAN.md 4-1)
+        startLaser();
       return true;
     }
     return false;

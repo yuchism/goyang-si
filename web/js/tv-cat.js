@@ -1,6 +1,7 @@
 /* 강고양이 씨 TV · 반응: TV 보기, TV 위 낮잠, 뒤 빼꼼, 달려오기, 사건 반응. 편성표 창은 tv-guide.js
    프로그램(r/tv/programs.json)은 사건마다 반응 이름만 고른다("react"). 반응을 어떻게 움직일지는 여기 REACT가 안다 */
 import { play } from './anim.js';
+import { assetsWarm } from './assets.js';
 import { tvFree } from './behave.js';
 import { loafB } from './cat.js';
 import { A, O, S, aPt, present, socketOf, topOf } from './objects.js';
@@ -257,7 +258,7 @@ export function tvEventFired(e) {
   const T = world.tv;
   T.flash = world.t;
   Snd.tvEvent(e);
-  if (world.manduk || cat.inBox || cat.typing || cat.dance)
+  if (world.manduk || cat.inBox || cat.typing || cat.dance || !assetsWarm()) // TV 반응 그림(나중 묶음)을 다 받기 전에는 반응하지 않는다 (LOAD_PLAN.md 4-1)
     return;
   if (cat.act && cat.act.c === 'tvwatch') {
     const r = e.react && REACT[e.react.type] ? e.react : null;
@@ -311,7 +312,7 @@ export function tvEventFired(e) {
   }
 }
 export function tvReactPower() {
-  if (world.manduk || cat.onTV)
+  if (world.manduk || cat.onTV || !assetsWarm())
     return;
   if (cat.closed) {
     if (cat.dp === 'loaf' && !cat.tr)

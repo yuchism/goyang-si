@@ -27,6 +27,7 @@ import { has } from './objects.js';
 import { onScene } from './util.js';
 import { guard } from './guard.js';
 import { abortEvent } from './recover.js';
+import { assetsWarm } from './assets.js';
 
 // 순서 = 매 장면 진행 순서(확률을 뽑는 순서)이자 그리는 순서. 처음 쓸 때 만든다 (파일들이 서로 불러오므로)
 let list = null;
@@ -65,6 +66,8 @@ export const TRAFFIC = {
 const T = { clock: 0, skyEnd: -1e9, starts: [], was: {} }; // clock: 방 시각(초, 이 화면을 연 뒤). starts: 하늘의 큰 것 시작 시각들
 const busy = cls => liveEvents().some(e => e.cls === cls && e.active && e.active());
 export function canStart(cls, opt = {}) {
+  if (!assetsWarm()) // 처음 연 뒤 사건 그림(나중 묶음)을 다 받기 전에는 아무것도 시작하지 않는다 (LOAD_PLAN.md 4-1)
+    return false;
   if (cls === 'sky') {
     if (busy('sky'))
       return false;

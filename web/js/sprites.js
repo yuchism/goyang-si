@@ -8,10 +8,23 @@ import { DEPTH, H, W, cam, ctx, view } from './stage.js';
 import { actorLift, hasShadow } from './steps.js';
 import { HAND, INK, RM, clamp, onScene } from './util.js';
 import { cat, world } from './world.js';
-function drawFrame(name, x, y, face, sc, sy = 1) {
-  const im = IMG['f_' + name];
-  if (!imageReady(im))
-    return;
+// 나중 묶음을 다 받기 전에 아직 없는 프레임이 불리면 (LOAD_PLAN.md 4-3): 그 배우가 마지막으로 실제로 그린 프레임을 그 자리에 그린다.
+// 그것도 없으면 서 있는 그림. a.frame(지금 프레임 이름, 다른 곳이 읽는다)은 그대로 두고, 그린 것은 a.drawn에 따로 기억한다
+let frameMiss = 0;
+export const frameMisses = () => frameMiss; // 점검용: 대신 그린 횟수 (다 받기 전 허용한 행동이 나중 묶음 그림을 쓰면 늘어난다)
+function drawFrame(name, x, y, face, sc, sy = 1, a = null) {
+  let im = IMG['f_' + name];
+  if (!imageReady(im)) {
+    if (!FRAMES[name] && !im)
+      return;
+    frameMiss++;
+    name = a && a.drawn && imageReady(IMG['f_' + a.drawn]) ? a.drawn : a && a.kind === 'mouse' ? 'mouse_idle_1' : 'cat_stand';
+    im = IMG['f_' + name];
+    if (!imageReady(im))
+      return;
+  }
+  else if (a)
+    a.drawn = name;
   const [fw, fh, ax, ay, k = 1] = FRAMES[name]; // k: 이 그림만의 크기 보정 (그림마다 고양이 크기가 조금 다를 때, meta.json 5번째 값)
   ctx.save();
   ctx.translate(x, y);
@@ -33,6 +46,8 @@ function drawCat(a) {
       const [x0, x1] = DANCE_CELLS[i], k = h / im.height, dw = (x1 - x0) * k;
       ctx.drawImage(im, x0, 0, x1 - x0, im.height, a.x - dw / 2, a.y - h * 690 / 724, dw, h);
     }
+    else // 시트를 아직 못 받았으면 사라지지 않게 마지막 그림으로 (LOAD_PLAN.md 4-3)
+      drawFrame('birthday_dance', a.x, a.y, a.face, sc, 1, a);
     return;
   }
   const fr = 'cat_' + catFrame(a);
@@ -48,7 +63,7 @@ function drawCat(a) {
   if (fr.startsWith('cat_box_'))
     drawFrame(fr, P.box.x, P.box.y, -1, FSC * DEPTH(P.box.y));
   else
-    drawFrame(fr, a.x, a.y - lift, a.face, sc, br);
+    drawFrame(fr, a.x, a.y - lift, a.face, sc, br, a);
 }
 // 빼꼼: 그림 속 구멍을 배경의 쥐구멍에 맞추고, 쥐구멍 모양으로 잘라서 그린다
 export const HOLE = {}; // 배경 쥐구멍 입구: 장면의 hole.mouth (cx, bottom, w, h)
@@ -88,7 +103,7 @@ function drawMouse(a) {
   }
   // 코 킁킁: 가만히 있을 때 아주 살짝 앞뒤로
   const sn = (!RM && fr === 'mouse_idle_1') ? 1 + Math.max(0, Math.sin((world.t + a.phase) * 7)) * 0.012 : 1;
-  drawFrame(fr, a.x, a.y - actorLift(a), a.face, MSC * dp * sn, 1);
+  drawFrame(fr, a.x, a.y - actorLift(a), a.face, MSC * dp * sn, 1, a);
 }
 export function drawActor(a) {
   if (a.kind === 'cat')

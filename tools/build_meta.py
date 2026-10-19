@@ -10,7 +10,7 @@
 - --check: 아무것도 고치지 않고 맞는지만 본다. 그림은 있는데 meta.json에 없거나(그 그림은 화면에 안 나온다),
   meta.json에만 있고 그림이 없으면 실패(종료 코드 1). 배포(.github/workflows/pages.yml)가 올리기 전에 돌린다.
   Pillow가 없어도 돈다 (있으면 크기도 본다).
-- r/tv/ 는 따로 r/tv/meta.json을 쓰므로 건드리지 않는다. r/scenery/(창밖 산 그림, tools/make_mountains.py)도 크기가 정해져 있고 필요할 때만 받으므로 건드리지 않는다. .png 큰 시트(생일 춤, 케이크)는 코드(js/assets.js)에 따로 적혀 있다.
+- r/tv/ 는 따로 r/tv/meta.json을 쓰므로 건드리지 않는다. r/scenery/(창밖 산 그림, tools/make_mountains.py)도 크기가 정해져 있고 필요할 때만 받으므로 건드리지 않는다. 큰 시트(생일 춤, 케이크)는 web/sheet/에 두고 코드(js/assets.js EXTRA_SRC)에 따로 적는다 (이 검사 밖).
 
 쓰는 법:  python3 tools/build_meta.py          (고양시 폴더에서)
           python3 tools/build_meta.py --check  (확인만)

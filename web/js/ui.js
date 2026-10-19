@@ -1,5 +1,5 @@
 /* 입력과 버튼: 누르기, 쪽지·노트북 창, 소리·전체 화면, 미리보기 도구 */
-import { imageReady, img } from './assets.js';
+import { assetsWarm, imageReady, img } from './assets.js';
 import { LANG, setLang, tr } from './i18n.js';
 import { knockB, petCat, secretB } from './cat.js';
 import { startVisit, todaysNote } from './manduk.js';
@@ -45,7 +45,7 @@ const TOUCH = {
   },
   tv: () => openTvGuide(),
   frame: () => flipFrame(),
-  laser: () => toggleLaser(), // 누르기 판정은 위 penAt (코드 그림)
+  laser: () => assetsWarm() && toggleLaser(), // 누르기 판정은 위 penAt (코드 그림). 놀이 그림(나중 묶음)을 다 받기 전에는 시작하지 않는다 (LOAD_PLAN.md 4-1)
   fishbowl: () => tapBowl(), // 누르기 판정은 위 fishAt (코드 그림)
   screen: () => {
     scrEl.textContent = world.laptop ? world.laptop.split('\n').slice(-8).join('\n') : tr('blankScreen');

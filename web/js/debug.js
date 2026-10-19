@@ -11,7 +11,8 @@ import { bub, fn, go, hold, run } from './steps.js';
 import { moonPhase, now, setOverride, setSimMs } from './time.js';
 import { sceneryBuilds } from './scenery.js';
 import { settleCat, timeJumped } from './jump.js';
-import { lazyPending } from './assets.js';
+import { assetsWarm, lazyPending } from './assets.js';
+import { frameMisses } from './sprites.js';
 import { playsDebug } from './plays.js';
 import { TVP, tvForce, tvNeed, tvPreview, tvProblems, tvSegs, tvState } from './tv.js';
 import { tvPeekB, tvRush, tvTopB, tvTopBlockedB, tvWatchB } from './tv-cat.js';
@@ -22,5 +23,5 @@ import { ERRORS } from './guard.js';
 // window.__goyang 내보내기
 export function exposeDebug() {
   // 확인용 (화면에는 영향 없음)
-  window.__goyang = { tvState, tvSegs, tvForce, tvPreview, tvProblems, lazyPending, tvBuf, TVP, tvNeed, tvWatchB, tvTopB, tvTopBlockedB, tvPeekB, tvRush, openTvGuide, O, greetS, chaseS, stalkS, boxHideS, napNextTo, duetB, cat, mouse, world, run, play, hold, go, fn, bub, say, startVisit, spawnMouse, groomB, boxB, rollB, windowB, pawB, secretB, knockB, petCat, now, setOverride, moonPhase, flipFrame, frameIndex, frameTilt, straightenFrame, missedFix, setSimMs, timeJumped, settleCat, sceneryBuilds, errors: ERRORS, ...playsDebug(), ...eventsDebug() }; // 놀이 점검용: startLaser, fishB, yarnIn, wheelB, … (plays.js 각 놀이의 debug)
+  window.__goyang = { tvState, tvSegs, tvForce, tvPreview, tvProblems, lazyPending, assetsWarm, frameMisses, tvBuf, TVP, tvNeed, tvWatchB, tvTopB, tvTopBlockedB, tvPeekB, tvRush, openTvGuide, O, greetS, chaseS, stalkS, boxHideS, napNextTo, duetB, cat, mouse, world, run, play, hold, go, fn, bub, say, startVisit, spawnMouse, groomB, boxB, rollB, windowB, pawB, secretB, knockB, petCat, now, setOverride, moonPhase, flipFrame, frameIndex, frameTilt, straightenFrame, missedFix, setSimMs, timeJumped, settleCat, sceneryBuilds, errors: ERRORS, ...playsDebug(), ...eventsDebug() }; // 놀이 점검용: startLaser, fishB, yarnIn, wheelB, … (plays.js 각 놀이의 debug)
 }
