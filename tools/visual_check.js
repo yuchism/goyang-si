@@ -49,8 +49,9 @@ const SCEN=[
    if(st.h!=null)await p.evaluate(h=>{const e=document.getElementById('hour');e.step='any';e.value=h;e.dispatchEvent(new Event('input'))},st.h);
    if(st.js)await p.evaluate(st.js);
    if(st.s)await p.evaluate(n=>__step(n),st.s);
-   // 필요할 때 받는 그림(산 그림 등)이 아직 오는 중이면 기다렸다가 한 장면 더 그린 뒤 찍는다 (받는 속도에 따라 화면이 달라지지 않게)
-   if(st.shot||st.page){let w=0;for(let i=0;i<100;i++){if(await p.evaluate(()=>!(__goyang.lazyPending&&__goyang.lazyPending())))break;w=1;await new Promise(r=>setTimeout(r,100))}if(w)await p.evaluate(()=>__step(1))}
+   // 필요할 때 받는 그림(산 그림 등)이 아직 오는 중이면 기다렸다가, 한 장면 더 그린 뒤 찍는다 (받는 속도에 따라 화면이 달라지지 않게)
+   // (2026-10-19) 예전엔 기다린 때만 한 장면 더 그려서, 받는 속도에 따라 진행이 한 장면씩 달라졌다. 이제 늘 한 장면 더 그린다 (STABILITY_PLAN.md 9장)
+   if(st.shot||st.page){for(let i=0;i<100;i++){if(await p.evaluate(()=>!(__goyang.lazyPending&&__goyang.lazyPending())))break;await new Promise(r=>setTimeout(r,100))}await p.evaluate(()=>__step(1))}
    if(st.shot)await p.locator('#cv').screenshot({path:`${out}/${sc.n}_${k++}.png`,animations:'disabled'});
    if(st.page)await p.screenshot({path:`${out}/${sc.n}_${k++}.png`,animations:'disabled'});
   }

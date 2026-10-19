@@ -47,6 +47,10 @@ export const BEHAVIOR = {
   chatter:    [N, N, N], // 창가에서 난간의 새 보고 채터링 (veranda.js)
   blackcat:   [N, N, N], // 베란다의 작은 검은 고양이 보러 감 (veranda.js)
   thunder:    [N, N, N], // 천둥에 놀라 숨기 (weather.js)
+  // 2026-10-19 행동 검사(check_behave.mjs)가 찾은 빠진 이름표. 지금 동작 그대로(표에 없으면 '' 줄)로 적었다. 창밖 보기(window)처럼 할지는 따로 정한다
+  leaves:     [Y, Y, Y], // 창가에서 낙엽 구경 (seasons.js)
+  firstsnow:  [Y, Y, Y], // 창가에서 첫눈 구경 (seasons.js)
+  geese:      [Y, Y, Y], // 철새 올려다보기 (seasons.js)
 };
 const row = tag => BEHAVIOR[tag] || BEHAVIOR[''];
 // TV 사건에 반응해도 되나

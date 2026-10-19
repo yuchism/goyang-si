@@ -1,4 +1,5 @@
 /* 세상 상태와 배우(강고양이 씨, 쥐야쥐), 말풍선, 자막 */
+import { reportError } from './guard.js';
 import { store } from './util.js';
 /* ───────── 월드 상태 ───────── */
 export const world = {
@@ -39,5 +40,12 @@ export function tickTimers(dt) {
   for (let i = timers.length - 1; i >= 0; i--)
     if (due.includes(timers[i]))
       timers.splice(i, 1);
-  due.sort((a, b) => a.at - b.at).forEach(x => x.f()); // 먼저 정한 것부터 (같으면 넣은 순서)
+  due.sort((a, b) => a.at - b.at).forEach(x => { // 먼저 정한 것부터 (같으면 넣은 순서)
+    try { // 하나가 오류를 내도 같은 순간의 나머지는 부른다 (STABILITY_PLAN.md 2장 6번)
+      x.f();
+    }
+    catch (e) {
+      reportError('걸어 둔 일(after)', e);
+    }
+  });
 }

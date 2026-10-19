@@ -22,17 +22,20 @@ web/                      ← GitHub Pages로 배포되는 폴더 (이 안만 �
   r/tv/programs.json      ← TV 프로그램 표: 장면·사건·자막·화면 장식·강고양이 씨 반응 + 편성(길이 runtime·방영 조건·하루 상한·회차). 사람이 고치는 곳. TV_CHANNEL_PLAN.md 14장
   r/tv/schedule.json      ← 고양.방송 방송국 틀: 편성 칸·기간(이름 참조, 날짜는 js/calendar.js)·마감 뉴스·낮잠 정파·개편(3개월마다). TV_SCHEDULE_PLAN.md, TIME_BASE_PLAN.md 8-1
   js/                     ← 코드 (JS 모듈)
+  package.json            ← "type": "module" 한 줄 (web/js는 ES 모듈. 노드 검사 도구가 불러올 때 경고가 나지 않게, 사이트 동작과 상관없음)
+package.json              ← 검사 도구용 playwright 버전 고정 (check_behave.mjs·visual_check.js. 배포는 pages.yml이 npm install). 사이트는 빌드 없음
 tools/
   build_meta.py           ← 새 그림을 넣으면 f/·r/ meta.json을 채운다 (r/tv/·r/scenery/는 건드리지 않음)
-  visual_check.js         ← 화면 점검 (같은 장면을 매번 똑같이 찍는다. 시간대는 서울 고정, `VC_TZ`로 바꿈. 3차 장면: scenery·dusk·nightwx·seasons)
+  visual_check.js         ← 화면 점검 (같은 장면을 매번 똑같이 찍는다. 시간대는 서울 고정, `VC_TZ`로 바꿈. 3차 장면: scenery·dusk·nightwx·seasons. 2026-10-19부터 찍기 전에 늘 한 장면 더 그린다 — 예전엔 그림 받는 속도에 따라 들어가거나 빠져서 같은 코드도 몇 장이 달랐다. 그 전에 찍은 사진과는 비교하지 않는다)
   compare.py              ← 점검 화면 두 벌을 픽셀 단위로 비교
   clock_check.js          ← 시계 점검: 화면 끄기·뒤 탭·서머타임·빨리 감기를 흉내 내서 CLOCK_PLAN.md 10장 확인
-  check_time.mjs          ← 시간 기준 검사 (배포 전 `node tools/check_time.mjs`): 시간 모듈 밖에서 날짜·시각 직접 보기 금지(허용 목록·`// time-ok`), 달력 표, 날마다 시간대 표·해 시각 이어짐(3차), 풍경 날짜(남반구 반년·두 계절만·비 공통 함수), 약속, 회귀(2026~2030년). 시드니·서울 두 시간대로 프로세스를 따로 띄운다. TIME_BASE_PLAN.md 9장
+  check_time.mjs          ← 시간 기준 검사 (배포 전 `node tools/check_time.mjs`. `pages.yml`에서도 돈다): 시간 모듈 밖에서 날짜·시각 직접 보기 금지(허용 목록·`// time-ok`), 달력 표, 날마다 시간대 표·해 시각 이어짐(3차), 풍경 날짜(남반구 반년·두 계절만·비 공통 함수), 약속, 회귀(2026~2030년). 시드니·서울 두 시간대로 프로세스를 따로 띄운다. TIME_BASE_PLAN.md 9장
                             기준을 일부러 바꿨으면 `--write-baseline`
   time_sample.mjs         ← 시간 회귀 표본 뽑기 (check_time.mjs가 쓴다)
   time_baseline.json.gz   ← 시간 회귀 기준: 2026~2030년 모든 날 × 하루 128시각의 명절·계절·방송일·스탠드·만득 씨 (두 시간대). 2026-10-15 시간 기준 정리 전 코드로 뽑음
   check_scene.mjs         ← 장면 검사 (배포 전, web을 서버로 띄우고 `node tools/check_scene.mjs [포트]`): bgWidth, 코드가 부르는 자리 이름·needs가 방 장면에 다 있는지, 창 없는 시험 장면에서 오류·창에 딸린 일이 없는지. SCENE_PLAN.md 7장
-  check_tv.mjs            ← TV 검사 (배포 전 `node tools/check_tv.mjs`): 그림·번역·방송국 틀·편성 규칙 400일·가짜 프로그램 시험·사건 400일·회귀 확인. TV_STABILITY_PLAN.md 6장, TV_SCHEDULE_PLAN.md 6장
+  check_tv.mjs            ← TV 검사 (배포 전 `node tools/check_tv.mjs`. `pages.yml`에서도 돈다): 그림·번역·방송국 틀·편성 규칙 400일·가짜 프로그램 시험·사건 400일·회귀 확인. TV_STABILITY_PLAN.md 6장, TV_SCHEDULE_PLAN.md 6장
+  check_behave.mjs        ← 행동 검사 (배포 전 `node tools/check_behave.mjs --quick`, `pages.yml`에서도 돈다. 긴 묶음은 옵션 없이 손으로, 수십 분): 강고양이 씨·쥐야쥐를 빨리 감기 + 무작위 조작으로 시나리오 9개(상자 날 셋·비·할로윈·크리스마스·생일·새벽·남반구 여름) × 시드니·서울 × 한국어·영어로 돌려 오류(칸막이가 잡은 것 포함)·루프 멈춤·없는 이름표·바닥 밖·안 풀리는 쥐야쥐 상태를 찾는다. 정적 검사: 사라질 수 있는 자리(`S()`)를 확인 없이 쓰는 곳(괜찮은 곳은 파일 안 `SAFE`에 이유와 함께). 서버를 따로 띄우지 않고, 없는 그림은 meta.json 크기 대체 그림. 실패하면 시나리오·시드를 출력(`--only 이름 --seed 숫자`로 재현). STABILITY_PLAN.md 4장
                             편성을 일부러 바꿨으면 `--write-baseline`으로 회귀 기준을 다시 뽑는다
   tv_fake_programs.json   ← 편성 시험용 가짜 프로그램 (check_tv.mjs만 씀, 웹에 안 올라감)
   tv_sample.mjs           ← TV 회귀 확인 표본 뽑기 (check_tv.mjs가 쓴다)
@@ -58,8 +61,10 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 
 | 파일 | 하는 일 |
 |---|---|
-| `main.js` | 시작점. 하루 일정(밥·출근·귀가·불 끄기: `scheduled()`가 `passedEvents`의 `due`면 장면, `late`면 지났음 표시), 매 프레임 진행 `frame()`, 그리기 순서 `render()`, 처음 시작 `start()`. `frame()`은 진행 순서만 적는다: 각 파일의 `visitTick`·`mouseTick`·`duetTick`·`sunbeamTick`·`eventsTick`·`cupTick`·`playsTick`을 차례로 부른다(순서가 곧 확률을 뽑는 순서라 바꾸면 화면 점검 결과가 달라진다) |
+| `main.js` | 시작점. 하루 일정(밥·출근·귀가·불 끄기: `scheduled()`가 `passedEvents`의 `due`면 장면, `late`면 지났음 표시), 매 프레임 진행 `frame()`, 그리기 순서 `render()`, 처음 시작 `start()`. `frame()`은 진행 순서만 적는다: 각 파일의 `visitTick`·`mouseTick`·`duetTick`·`sunbeamTick`·`eventsTick`·`cupTick`·`playsTick`을 차례로 부른다(순서가 곧 확률을 뽑는 순서라 바꾸면 화면 점검 결과가 달라진다). 시작: 장면·그림 목록(meta.json)을 다 읽은 뒤(`Promise.allSettled`) 하나라도 못 읽었거나 `start()`에서 오류가 나면 `startFailed()` 안내("방을 여는 데 실패했어요 · 다시 열기"). TV 표·창밖 불빛은 없어도 연다. STABILITY_PLAN.md 6장 |
 | `world.js` | 세상 상태 `world`(밝기: 방 어둠 `world.dark`, 바깥 어둠 `world.skyDark` — 하늘에 그리는 것은 skyDark)와 배우 `cat`(강고양이 씨)·`mouse`(쥐야쥐, 배우마다 몸 반폭 `half`), 말풍선 `say`, 자막 `caption`. **방 시간 타이머 `after(할 일, 초)`**: 행동을 "몇 초 뒤에"로 이을 때 setTimeout 대신 쓴다. 미리보기 배속을 따르고 탭을 떠나면 같이 멈춘다(`main.js`가 `tickTimers`). setTimeout은 화면·소리·설치 같은 바깥 일에만 |
+| `guard.js` | 오류 칸막이 (STABILITY_PLAN.md 3장): `guard(이름, 할 일, 되돌리기)`·`guardDraw(ctx, 이름, 그리기)`(render 맨 바깥 칸에서만, 항상 save/restore)·`reportError`. 같은 오류는 콘솔에 한 번만, 10초 안에 5번이면 그 칸 1분 쉼, 건수 `ERRORS`(`__goyang.errors`). 난수를 쓰지 않고 아무것도 불러오지 않는다. `main.js` 매 장면은 `try … finally`로 다음 장면을 늘 요청하고, 할 일·그리기를 칸마다 감싼다(순서·횟수 그대로). `?dev=1`로 연 페이지에서만 "오류 n건"·"일부러 오류" 줄 |
+| `recover.js` | 오류 뒤 되돌리기 (STABILITY_PLAN.md 3-1): `resetActor`(`run(a, [], '')` + 쥐야쥐 `state` 풀기, 둘이 놀던 중이면 둘 다, 붙잡고 있던 놀이도 끝냄), `resetPlay`, `resetDuet`, `abortPlay`(놀이의 `abort`, 없으면 `reset(지금, 지금)`), `abortEvent`(사건의 `abort`, 없으면 `reset`). 놀이 이름표 → 놀이 표 `PLAY_TAGS`: 새 놀이가 배우를 붙잡으면 여기 한 줄 |
 | `time.js` | **시간 기준은 모두 여기 (TIME_BASE_PLAN.md).** 창밖 일정도 여기(WINDOW_PLAN.md): `rainPlan`(비 공통 함수, 장마)·`rainSpan`·`thunderNow`·`flashSince`·`rainbowAt`·`planeSlots`(높이는 하늘 띠 안 비율 `yk`, 철새 `geeseSlots`도)·`birdSlots`·`blackcatSlot`·`slotDue`·`aptLightsAt` (날짜 씨앗, 누구에게나 같음). 방 시계 `now()`(기기 시계 + 미리보기 offset)와 시간 점프 감지 `clockJump`. 지역 `REGION`(계절은 방문자 반구, 달은 한국)·계절. **한 해 위치·풍경 날짜**(WINDOW_PLAN_3.md 4장) `yearPos`(남반구 반년 밀림, 미리보기 `sceneryOverride`·계절 버튼 대표 날짜 `SEASON_DATE`)·`sceneryDate`·`sceneryOn`·`sceneryProgress`·`sceneryAt`(산 섞기·물드는 방향·눈 모자·미세먼지·가을 하늘). 해 뜨고 지는 시각 `sunTimes`(동지 ↔ 하지 코사인, 날마다 조금씩). 겨울 `firstSnow`·`firstSnowNow`·`snowCapAt`·`railSnowAt`·`frostAt`, 계절 손님 일정 `leafSlots`·`geeseSlots`·`dragonflySlots`·`blossomAt`, `dustDay`. **시간대(자연 시간)** 표 `DAYPARTS`와 `daypart`·`isNight`(해 진 뒤 30분 ~ 동틀 녘 시작)·`inParts`. 해 기준 오프셋 `pumpkinLit`·`batTime`·`butterflyTime`·`sunUp`·`sunArc`·`twilightGlow`·`settleNight`. **생활 시간표** `ROUTINE`(만득 씨 평일·주말, `DUE_WINDOW`, 놀이 제한 `play`, 주말 TV 소리)과 `visitHours`·`dayEvents`·`passedEvents`(지난 일정 `due`/`late`)·`inWindow`·`lampShouldBeOn`·`mandukHome`·`mandukAsleep`·`nightDark`·`secretTime`. **"하루" 세 가지** `calDay`(자정)·`broadcastDay`(새벽 5시, 그 방송일 정오의 Date)·`nightOf`(해질녘 ~ 다음 날 동틀 녘, 아침·낮엔 null), 날 넘기기 `forEachDay`·`atHour`·`visitsBetween`. **달력 함수** `inPeriod`(방·창밖, `through: 'night'` 반영)·`onDate`(TV, 날짜만)·`periodsAt`·`momentNow`·`holiday`(할로윈 → 크리스마스 → 설날 → 새해, 미리보기 `holidayOverride`가 먼저). 비·눈, 상자 있는 날, 기념일, 햇빛 조각(지나가는 길은 장면에서 `setSunbeamPath`, 창이 없으면 없음), 하늘색과 어둠, 달 모양 `moonPhase`(MOON_PLAN.md), 미리보기 한 줄 `timeInfo`. **규칙: 이 파일과 `calendar.js` 밖에서 `getMonth`·`getDate`·`getDay`·`getHours`·`hourOf`와 시각 숫자 비교를 쓰지 않는다** (`tools/check_time.mjs`) |
 | `calendar.js` | 달력 한 장 `CAL`: 풍경 날짜 표 `scenery`(산 섞기 `mountain`, 가을 하늘·낙엽·철새·눈 모자 녹음·벚꽃잎·미세먼지·장마·잠자리·열대야 범위, WINDOW_PLAN_3.md 4-2), 기간(할로윈 10/24 ~ 10/31 밤 끝, 크리스마스 시즌, 이브·당일, 제야, 새해, 고양이의 날, 설날·추석 양력 날짜 표)과 특별한 순간(10/31 밤 마녀, 이브 밤 산타). **데이터만, import 없음.** 함수는 `time.js`. 새 기간은 여기 한 줄 (TV 특집에 쓰려면 `schedule.json` periods에 `{ "period": 이름 }`) |
 | `jump.js` | 시간 점프 정리 `timeJumped`: 화면이 꺼졌다 켜지거나 서머타임·미리보기로 시계가 건너뛰면 방 상태(스탠드 `lampShouldBeOn`·밥그릇·컵·만득 씨 방문·지난 일정 `passedEvents`·고양이 자리 `settleCat`)를 그 시각에 맞추고 짧게 어두워졌다 밝아진다. CLOCK_PLAN.md |
@@ -125,6 +130,8 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 2. `python3 tools/build_meta.py` → meta.json에 크기가 들어간다. 캐릭터는 발 기준점이 그림 아래 가운데로 일단 들어가니, 필요하면 손으로 고친다. **meta.json에 없는 그림은 불러오지 않아 화면에 안 나온다**
 3. 코드에서 이름으로 쓴다: 캐릭터는 `CLIP`에 프레임 이름, 소품은 `objects.json`의 `look`
 4. 확인만: `python3 tools/build_meta.py --check` (Pillow 없어도 됨). 배포(`.github/workflows/pages.yml`)도 올리기 전에 이걸 돌려서, 그림과 meta.json이 어긋나면 배포를 멈춘다 (2026-10-15 액자 사진 5~7번이 meta.json에서 빠져 안 나왔던 일 이후)
+
+배포 전 검사: `check_time`·`check_tv`는 이제 배포(`pages.yml`) 때 자동으로 돌고, 하나라도 실패하면 배포를 멈춘다. 급한 수정은 Actions에서 손으로 실행하며 `skip_checks`를 켜면 두 검사를 건너뛴다(`build_meta.py --check`는 늘 돈다). STABILITY_PLAN.md 5장
 
 TV 프로그램은 코드를 고치지 않는다: 그림을 `r/tv/`에 → `r/tv/programs.json`에 한 덩어리(길이 `runtime`과 방영 조건 `"air": [["주말", "오전"]]` 같은 것까지) → `i18n.js` 번역 → `node tools/check_tv.mjs`. 편성에는 조건에 맞춰 저절로 들어간다. 자세한 것은 TV_CHANNEL_PLAN.md 14장. 프로그램 그림은 시작을 기다리게 하지 않고 필요할 때 받는다(`assets.js` `loadLazy`).
 

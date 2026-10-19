@@ -175,6 +175,13 @@ export function fishTick(dt) {
   if (boong)
     boongMove(dt);
 }
+// 오류 뒤 되돌리기: 낚싯대는 벽으로, 금붕어는 헤엄 (부스러기는 그대로 둔다)
+function fishAbort() {
+  Object.assign(F, { rod: false, help: null, bite: false, hookItem: null, line: 0 });
+  boong = null;
+  weedTip = false;
+  setMode('swim');
+}
 function setMode(m, wait = 0) {
   F.mode = m;
   F.t = 0;
@@ -560,6 +567,7 @@ export const fishPlay = {
     tapBowl();
     return true;
   },
+  abort: fishAbort, // 오류 뒤 되돌리기 (STABILITY_PLAN.md 3-1, recover.js)
   dev: { btn: 'dFish', go: () => !world.manduk && fishB() },
   debug: { fishB, fishState, tapBowl, bowlWatchB, mouseCrumbB },
 };

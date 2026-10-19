@@ -222,7 +222,7 @@ function zoomiesB() {
 }
 export function boxB() {
   const e = S('box.enter'), i = S('box.inside');
-  if (!e)
+  if (!e || !i) // 닫힌 상자 날엔 둘 다 없다 (objects.json box.states.closed)
     return loafB();
   run(cat, [
     go(e[0], e[1], 60),

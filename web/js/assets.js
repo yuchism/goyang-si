@@ -46,6 +46,10 @@ catch (e) { }
 // 그림을 모두 읽으면(실패한 것도 포함) 시작
 export function loadImages() {
   const names = Object.keys(SRC);
+  if (!names.length) { // 받을 그림이 하나도 없어도 끝나게 (STABILITY_PLAN.md 6장)
+    start();
+    return;
+  }
   let loaded = 0;
   names.forEach(k => {
     const im = new Image();

@@ -1,0 +1,8 @@
+{
+  "name": "goyang-si-tools",
+  "private": true,
+  "description": "검사 도구용 (사이트는 web/ 그대로, 빌드 없음). tools/check_behave.mjs·visual_check.js가 playwright를 쓴다. STABILITY_PLAN.md 5장",
+  "devDependencies": {
+    "playwright": "1.56.0"
+  }
+}

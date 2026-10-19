@@ -18,7 +18,9 @@ import { fishPlay } from './fish.js';
 import { laserPlay } from './laser.js';
 import { wheelPlay } from './wheel.js';
 import { yarnPlay } from './yarn.js';
+import { guard } from './guard.js';
 import { has } from './objects.js';
+import { resetPlay } from './recover.js';
 import { onScene } from './util.js';
 
 // 순서 = 매 장면 진행 순서이자 같은 단계에서 누르기를 보는 순서.
@@ -32,13 +34,14 @@ let live = null;
 onScene(() => live = null);
 export const livePlays = () => live || (live = plays().filter(ok));
 export const playOk = id => livePlays().some(p => p.id === id);
+// 놀이 하나의 오류가 다른 놀이를 막지 않게 (STABILITY_PLAN.md 3장). 오류 난 놀이는 끝내고 붙잡고 있던 배우를 되돌린다 (recover.js)
 const each = (k, ...args) => {
   for (const p of livePlays())
     if (p[k])
-      p[k](...args);
+      guard(`놀이 ${p.id}.${k}`, () => p[k](...args), () => resetPlay(p));
 };
 export const playsTick = (dt, real) => each('tick', dt, real);
-export const playsLayers = () => livePlays().flatMap(p => p.layers ? p.layers() : []);
+export const playsLayers = () => livePlays().flatMap(p => p.layers ? guard(`놀이 ${p.id}.layers`, () => p.layers(), () => resetPlay(p)) || [] : []);
 export const playsOverlay = () => each('overlay');
 export const playsLight = () => each('light');
 export const playsDrag = (x, y, e) => each('drag', x, y, e);

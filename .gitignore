@@ -2,3 +2,4 @@
 .openai/
 assets/
 dist/
+node_modules/

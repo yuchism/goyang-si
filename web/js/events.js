@@ -25,6 +25,8 @@ import { now, thunderNow } from './time.js';
 import { world } from './world.js';
 import { has } from './objects.js';
 import { onScene } from './util.js';
+import { guard } from './guard.js';
+import { abortEvent } from './recover.js';
 
 // 순서 = 매 장면 진행 순서(확률을 뽑는 순서)이자 그리는 순서. 처음 쓸 때 만든다 (파일들이 서로 불러오므로)
 let list = null;
@@ -36,10 +38,12 @@ const ok = e => !e.needs || e.needs.every(has);
 let live = null;
 onScene(() => live = null);
 const liveEvents = () => live || (live = events().filter(ok));
+// 사건 하나의 오류가 다른 사건을 막지 않게 (STABILITY_PLAN.md 3장). 오류 난 사건은 조용히 끝낸다 (recover.js abortEvent)
+const one = (e, k, f) => guard(`사건 ${e.id}.${k}`, f, () => abortEvent(e));
 const each = (k, ...args) => {
   for (const e of liveEvents())
     if (e[k])
-      e[k](...args);
+      one(e, k, () => e[k](...args));
 };
 
 /* ───────── 창밖 교통정리 (WINDOW_PLAN.md 4장) ─────────
@@ -104,13 +108,13 @@ function traffic(dt) {
 }
 export const eventsTick = (d, real, bf) => {
   each('tick', d, real, bf);
-  traffic(real * bf);
+  guard('창밖 교통정리', () => traffic(real * bf));
   world.winResume = false; // 처음 연 뒤·점프 직후 한 장면만 "이어서 보여 주기" (veranda.js, weather.js)
 };
 export const eventsSkyBack = w => {
   let any = false;
   for (const e of liveEvents())
-    if (e.skyBack && e.skyBack(w))
+    if (e.skyBack && one(e, 'skyBack', () => e.skyBack(w)))
       any = true;
   return any;
 };
@@ -120,7 +124,7 @@ export const eventsVeranda = w => { // 그린 곳 [x0, y0, x1, y1] 목록 (draw.
   const out = [];
   for (const e of liveEvents())
     if (e.veranda) {
-      const b = e.veranda(w);
+      const b = one(e, 'veranda', () => e.veranda(w));
       if (b)
         out.push(b);
     }

@@ -306,6 +306,7 @@ export const laserPlay = {
     if (L && (e.pointerType === 'mouse' || e.buttons))
       moveDot(x, y);
   },
+  abort: () => endLaser(), // 오류 뒤 되돌리기 (STABILITY_PLAN.md 3-1, recover.js)
   dev: { btn: 'dLaser', go: () => toggleLaser() },
   debug: { startLaser, endLaser, moveDot, laserState, penStareB },
 };
