@@ -3,7 +3,8 @@ import { play } from './anim.js';
 import { drawPumpkinGlow, pumpkinNight } from './halloween.js';
 import { eventsRoom, eventsShadow, eventsTick, trafficLine } from './events.js';
 import { SRC, loadImages, loadMeta, onWarm } from './assets.js';
-import { CAKE, bannerText, birthdayMode, drawCakeGlow, drawPartyLights, drawPartyMouse, tickParty } from './birthday.js';
+import { CAKE, bannerText, birthdayMode, danceCell, drawCakeGlow, drawDisco, drawDiscoLights, drawPartyLights, drawPartyMouse, tickParty } from './birthday.js';
+import { drawPuffs, guestLayers } from './guests.js';
 import { calmDown, catBrain, cupTick, sunbeamTick } from './cat.js';
 import { exposeDebug } from './debug.js';
 import { ERRORS, guard, guardDraw, reportError } from './guard.js';
@@ -211,6 +212,8 @@ function render(d, real) {
     L.push([cat.inBox ? P.box.y : cat.y, () => drawActor(cat), '강고양이 씨 그리기']);
   if (ownLayer(mouse))
     L.push([mouse.y, () => drawActor(mouse), '쥐야쥐 그리기']);
+  if (world.party)
+    L.push(...(cut('생일 손님 순서', () => guestLayers(danceCell(cat))) || [])); // 생일 깜짝 손님 (guests.js)
   L.push(...playsLayers()); // 쳇바퀴 안의 고양이·쥐야쥐는 쳇바퀴가 같이 그린다 (steps.js SPOTS layer)
   L.sort((a, b) => a[0] - b[0]).forEach(e => draw(e[2] || '놀이 그리기', e[1]));
   if (c.state === 'falling')
@@ -239,6 +242,11 @@ function render(d, real) {
   draw('그림자 사건', () => eventsShadow(dk)); // 커튼 그림자
   draw('놀이 불빛', () => playsLight());
   draw('파티 불빛', () => drawPartyLights(dk));
+  if (world.party) {
+    draw('디스코 빛', () => drawDiscoLights(dk));
+    draw('디스코볼', () => drawDisco(dk));
+    draw('손님 짠', () => drawPuffs());
+  }
   draw('만득 씨 그리기', () => drawManduk());
   draw('말풍선', () => {
     drawBubble(cat);

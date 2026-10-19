@@ -8,6 +8,7 @@
    그 전에는 나중 묶음 그림을 쓰는 행동·사건·놀이를 고르지 않는다(cat.js catBrain, events.js canStart, gate.js gateOk 등) */
 import { start } from './main.js';
 import { birthdayMode } from './birthday.js';
+import { GUESTS, guestSrc } from './guests.js';
 
 export const FRAMES = {};
 export const ROOM = {};
@@ -44,6 +45,8 @@ export async function loadMeta() {
   const tvFiles = [tv.body.file, ...Object.values(tv.baseScreens).flat()]; // 시작 묶음의 TV 그림은 본체와 기본 화면만
   tvFiles.forEach(file => SRC['r_tv/' + file.replace(/\.webp$/, '')] = 'r/tv/' + file);
   Object.assign(SRC, EXTRA_SRC);
+  if (birthdayMode) // 생일 깜짝 손님 춤 시트: 생일 링크로 들어왔을 때만 받는다(나중 묶음). 생일이 아닌 방문엔 안 받는다 (BIRTHDAY_GUESTS_PLAN.md 5장)
+    GUESTS.forEach(g => SRC['f_guest_' + g.id] = guestSrc(g.id));
 }
 try {
   document.fonts && document.fonts.load('700 30px Gaegu');
@@ -55,12 +58,15 @@ catch (e) { }
    - 고양이: 기본 동작과 건드렸을 때의 반응, 다 받기 전에도 고르는 행동(낮잠·식빵·그루밍·돌아다니기·구르기·창밖·쥐야쥐와 놀기)에 나오는 것
    - 쥐야쥐: 생일 박수 말고 전부
    - 방: 아래 LATER_ROOM이 아닌 것 전부 (TV 본체·기본 화면 포함)
-   - 생일 그림(춤 시트·케이크·cat_bday_*·mouse_bday_*): 생일 링크로 들어왔을 때만 시작 묶음 (파티를 누르면 바로 나와야 하므로) */
+   - 생일 그림(춤 시트·케이크·cat_bday_*·mouse_bday_*): 생일 링크로 들어왔을 때만 시작 묶음 (파티를 누르면 바로 나와야 하므로)
+   - 생일 깜짝 손님 시트(f_guest_*): 생일 링크로 들어왔을 때만 받고, 나중 묶음 */
 const START_CAT = /^(loaf|sleep|sit|roll|belly|bsleep|groom|window|startle|sulk|run|lookup)_\d$|^(stand|stretch|yawn)$|^walk_(contact|pass_after)_/;
 // 방 그림 중 나중 묶음: 하늘·이벤트(선풍기·창밖 새 빼고), 액자 사진, 아파트 창 마스크, 어항 물고기의 다른 자세·붕어빵·낚싯대, 실뭉치, 쳇바퀴
 const LATER_ROOM = /^fx\/(?!fan_|bird_)|^frame_family_|_mask$|^fish_(?!swim_)|^(boong|rod|yarn|yarn_2|wheel_back|wheel_front)$/;
 const BDAY = /^f_(cat|mouse)_bday_|^f_birthday_dance$|^r_birthday_cake$/;
 export function inStartSet(k) {
+  if (k.startsWith('f_guest_')) // 손님은 춤이 시작된 뒤에야 나오므로 나중 묶음으로 (그때까지 못 받은 손님은 그 파티에 안 나온다)
+    return false;
   if (BDAY.test(k))
     return birthdayMode;
   if (k.startsWith('f_cat_'))

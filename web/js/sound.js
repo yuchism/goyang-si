@@ -1,5 +1,12 @@
 /* 소리: 방 잡음, 빗소리, 방울, 문, 생일 노래, TV 소리 (Web Audio로 만든다) */
 import { rnd } from './util.js';
+/* ───────── 생일 노래 표 ─────────
+   노래를 바꾸면(템포, 곡) 이 표만 맞춘다. phrases: 소절이 시작하는 박(음표 박 수를 더한 위치). 손님이 이 소절에 맞춰 나온다 (birthday.js·guests.js) */
+export const BDAY_SONG = {
+  beat: 0.34, // 한 박(초). 강고양이 씨·손님 춤도 한 박에 한 칸
+  phrases: [0, 6, 12, 19],
+  notes: [[67, .75], [67, .25], [69, 1], [67, 1], [72, 1], [71, 2], [67, .75], [67, .25], [69, 1], [67, 1], [74, 1], [72, 2], [67, .75], [67, .25], [79, 1], [76, 1], [72, 1], [71, 1], [69, 2], [77, .75], [77, .25], [76, 1], [72, 1], [74, 1], [72, 2]] // [MIDI 음, 박]
+};
 /* ───────── 소리 ───────── */
 export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null, tvG: null,
   init() {
@@ -155,11 +162,11 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
     s.stop(t + sec + 0.1);
     lfo.stop(t + sec + 0.1);
   },
+  // 생일 노래: 소리가 켜져 있으면 연주하고 { sec, beat, phrases }를 돌려준다. 꺼져 있으면 null (BIRTHDAY_GUESTS_PLAN.md 4-1)
   birthdaySong() {
     if (!this.on || !this.ac)
-      return 0;
-    const ac = this.ac, start = ac.currentTime + 0.08, beat = 0.34;
-    const notes = [[67, .75], [67, .25], [69, 1], [67, 1], [72, 1], [71, 2], [67, .75], [67, .25], [69, 1], [67, 1], [74, 1], [72, 2], [67, .75], [67, .25], [79, 1], [76, 1], [72, 1], [71, 1], [69, 2], [77, .75], [77, .25], [76, 1], [72, 1], [74, 1], [72, 2]];
+      return null;
+    const ac = this.ac, start = ac.currentTime + 0.08, { beat, notes, phrases } = BDAY_SONG;
     let at = 0;
     notes.forEach(([m, d]) => {
       const t = start + at * beat, dur = d * beat, o = ac.createOscillator();
@@ -176,7 +183,19 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
       o.stop(t + dur + .02);
       at += d;
     });
-    return at * beat + .15;
+    return { sec: at * beat + .15, beat, phrases };
+  },
+  // 생일 손님이 "짠" 나타나고 사라질 때: 아주 작은 "뽁"
+  pop(v = 1) {
+    if (!this.on || !this.ac)
+      return;
+    const ac = this.ac, t = ac.currentTime, o = ac.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(rnd(520, 640), t);
+    o.frequency.exponentialRampToValueAtTime(rnd(1300, 1600), t + 0.07);
+    this.env(o, t, 0.004, 0.11, 0.06 * v);
+    o.start(t);
+    o.stop(t + 0.2);
   },
   // TV: 켜고 끄는 탁 소리, 화면조정 삐, 관중 함성 (모두 아주 작게)
   tvClick(on) {

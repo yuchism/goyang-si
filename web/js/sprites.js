@@ -1,7 +1,7 @@
 /* 배우 그리기: 고양이·쥐 프레임, 그림자, 빼꼼, 말풍선 아이콘, 자막 */
 import { catFrame, mouseFrame } from './anim.js';
 import { FRAMES, FSC, IMG, MSC, imageReady, img } from './assets.js';
-import { DANCE_CELLS } from './birthday.js';
+import { DANCE_CELLS, danceCell } from './birthday.js';
 import { inked, rr } from './draw.js';
 import { O, P } from './objects.js';
 import { DEPTH, H, W, cam, ctx, view } from './stage.js';
@@ -35,7 +35,7 @@ function drawFrame(name, x, y, face, sc, sy = 1, a = null) {
 function drawCat(a) {
   const dp = DEPTH(a.y), sc = FSC * dp;
   if (a.dance) {
-    const im = IMG.f_birthday_dance, i = Math.floor(a.dance.t / 0.34) % 4, h = 213 * dp;
+    const im = IMG.f_birthday_dance, i = danceCell(a), h = 213 * dp; // 칸 번호는 노래 시계로 (손님과 같은 칸, birthday.js)
     a.frame = 'cat_stand';
     ctx.beginPath();
     ctx.ellipse(a.x, a.y + 2, 72 * dp, 12 * dp, 0, 0, 7);

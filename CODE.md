@@ -21,7 +21,7 @@ web/                      ← GitHub Pages로 배포되는 폴더 (이 안만 �
   r/tv/meta.json          ← TV 본체(화면 구멍 위치)와 기본 화면 그림(꺼짐·화면조정·마침·해돋이)
   r/tv/programs.json      ← TV 프로그램 표: 장면·사건·자막·화면 장식·강고양이 씨 반응 + 편성(길이 runtime·방영 조건·하루 상한·회차). 사람이 고치는 곳. TV_CHANNEL_PLAN.md 14장
   r/tv/schedule.json      ← 고양.방송 방송국 틀: 편성 칸·기간(이름 참조, 날짜는 js/calendar.js)·마감 뉴스·낮잠 정파·개편(3개월마다). TV_SCHEDULE_PLAN.md, TIME_BASE_PLAN.md 8-1
-  sheet/                  ← meta.json 밖의 큰 시트 (생일 춤·케이크, webp). build_meta.py 검사 밖. LOAD_PLAN.md 5장
+  sheet/                  ← meta.json 밖의 큰 시트 (생일 춤·케이크·깜짝 손님 guest-*-dance-v1, webp). build_meta.py 검사 밖. LOAD_PLAN.md 5장. 손님 시트는 make_guests.py가 만든다
   js/                     ← 코드 (JS 모듈)
   package.json            ← "type": "module" 한 줄 (web/js는 ES 모듈. 노드 검사 도구가 불러올 때 경고가 나지 않게, 사이트 동작과 상관없음)
 package.json              ← 검사 도구용 playwright 버전 고정 (check_behave.mjs·visual_check.js. 배포는 pages.yml이 npm install). 사이트는 빌드 없음
@@ -45,6 +45,7 @@ tools/
   node_env.mjs            ← 노드에서 i18n·time·tv-core 모듈을 불러오기 위한 최소 흉내 (시간대 서울 고정)
   split_railing.py        ← 방 배경에서 창틀만 떼어 r/window_frame.webp를 만든다(베란다 손님 위에 다시 덮는 창틀). 창틀 + 난간 = 방 배경인지 픽셀 단위로 확인. WINDOW_PLAN.md 3장
   make_apt_mask.py        ← 건너편 아파트 마스크(r/apt_day_mask·apt_night_mask.webp: 하늘을 뺀 건물만, 산 앞에 덮는다). 그림 하늘이 투명하면(v2 그림부터) 그림 그대로, 하늘이 칠해진 예전 그림이면 하늘을 찾아 뺀다. 그림 형식은 APT_ART_GUIDE.md
+  make_guests.py          ← 생일 깜짝 손님 춤 시트(assets/birthday/guests/guest-<이름>-dance-v*.png, 가장 높은 판) → web/sheet/guest-<이름>-dance-v1.webp (옆 칸으로 넘친 조각은 자기 칸으로, 칸 420px × 4, 0.75배). 손님마다 발 y·키를 출력 → js/guests.js GUESTS 표. BIRTHDAY_GUESTS_PLAN.md 5장
   make_mountains.py       ← 창밖 산 그림(assets/scenery/ 먼 산 mountain-far-*-v2.png, 가까운 산 mountain-near-*-v3.png. 판은 `VER`) → r/scenery/*.webp (여름 알파로 통일, 1200×550). `--show` → assets/references/mountain-check-v1.png. WINDOW_PLAN_3.md 6장
   map_windows.py          ← 건너편 아파트 밤 그림에서 창 사각형을 찾아 r/apt_windows.json (창 불빛). --show로 확인 그림
 make_objects_doc.py       ← scenes/room/objects.json → OBJECTS.md
@@ -87,7 +88,7 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `sprites.js` | 배우 그리기: 고양이·쥐 프레임, 그림자, 쥐구멍 빼꼼(배경 입구 `HOLE`은 장면의 `hole.mouth`), 말풍선 아이콘, 자막. 아직 못 받은 프레임이 불리면 그 배우가 마지막으로 그린 프레임(`a.drawn`)을 대신 그린다(`frameMisses()` 점검용, LOAD_PLAN.md 4-3) |
 | `stage.js` | 캔버스, 화면 맞추기, 카메라, 깊이 비율 `DEPTH`, 다른 캔버스에 잠깐 그리기 `withCtx`. 무대 숫자(`W`·`H`·`FLOOR`·`BGK`·`DEPTH`·걷는 바닥 `WALK`·카메라 자리)는 장면을 읽을 때 `applyStage`가 `stage.json`에서 넣는다. 방 어둠 `roomDark(창 빛)` = 방 자체 어둠 × (1 − 가중치) + 바깥 어둠 × 가중치. 걷는 바닥 안으로 넣기 `walkX(x, 몸 반폭)`·`walkY(y)`: 기능 코드는 바닥 범위 숫자를 직접 쓰지 않고 이것을 쓴다 |
 | `assets.js` | meta.json 세 개를 읽어 그림 목록을 만들고 그림을 불러온다. **두 묶음**(LOAD_PLAN.md): 시작 묶음(`inStartSet`, 규칙은 이 파일 한 곳 `START_CAT`·`LATER_ROOM`·생일)만 기다렸다가 `start()`, 이어서 나중 묶음을 낮은 우선순위로 전부 받는다(오프라인용). 다 받으면 `assetsWarm()` true, `onWarm(할 일)`. 그 전에는 나중 묶음 그림을 쓰는 행동·사건·놀이를 고르지 않는다(`cat.js` catBrain, `events.js` canStart, `gate.js` gateOk, 나비, 레이저 누르기, TV 반응). `lazyPending()`은 나중 묶음도 센다(점검 도구가 다 받을 때까지 기다리게). `loadLazy`(TV 프로그램·산)는 높은 우선순위 |
-| `sound.js` | Web Audio로 만든 소리 (방 잡음, 비, 방울, 문, 생일 노래, TV) |
+| `sound.js` | Web Audio로 만든 소리 (방 잡음, 비, 방울, 문, 생일 노래, 손님 "뽁", TV). 생일 노래 표 `BDAY_SONG`(박 길이·소절 시작점·음표): 노래를 바꾸면 이것만 맞춘다 |
 | `tv-core.js` | TV · 계산(화면 없이, 노드에서도 돈다): `programs.json` 검사 `setPrograms`, 방송국 틀 `setSchedule`, 하루 편성 `tvDay`·`tvSegs`·`tvNaps`(조건·고정 칸·틈 메우기·회차·정파 여러 번, 씨앗 = 시즌 + 요일), 구간 `segAt`·`segOrder`(홈쇼핑 상품, 요일마다 다른 순서), 사건 `tvEvents`, 지금 상태 `tvState`(낮잠 정파 포함), 장면 그림 `tvFrameName`, 제목 `tvTitle` |
 | `tv.js` | TV · 방송: 프로그램 표·방송국 틀 불러오기 `loadPrograms`, 그림 미리 받기 `tvNeed`(지금·다음 칸, 매분), 매 프레임 `tvTick`, 오류 격리 `tvBreak`(그 칸 끝까지 "화면 조정 중"), 미리보기 `tvPreview`·`tvForce` |
 | `tv-screen.js` | TV · 화면: 320×240 버퍼, 화면 장식(`overlay`: 뉴스 띠·대사·점수판·홈쇼핑 띠), "수신 중"·"화면 조정 중", 브라운관 효과, 방 안에 그리기, 밤 불빛 |
@@ -101,7 +102,8 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `fish.js` | 어항 낚시: 어항 그리기(뒤판 → 금붕어·바늘·거품 → 앞판), 금붕어 헤엄과 도와주기(한숨 → 보물상자 → 붕어빵을 바늘에), 강고양이 씨 낚시 `fishB`(방 시각 4시간에 한 번, 8~21시), 붕어빵 날아가기·먹기, 어항 누르기 `tapBowl`. 밤 어항 구경 `bowlWatchB`, 붕어빵 부스러기(쥐야쥐 `mouseCrumbB`, 만득 씨 `sweepCrumbs`). 낚싯대 끝 `ROD_TIP`, 어항 안 자리 `BOWL`. CAT_PLAY_PLAN.md 5-2 |
 | `yarn.js` | 실뭉치: 왼쪽 화면 밖에서 굴러오기 `yarnIn`(방 시각 3시간에 한 번, 8~22시), 바닥 마찰로 굴러가기, 화면 밖까지 이어진 실 한 가닥, 강고양이 씨 쫓기 `yarnB`(툭툭 치기 3~6번, 가끔 껴안고 뒷발 차기), 끌려 나가기, 누르기 `tapYarn`, 쥐야쥐가 코로 밀기. CAT_PLAY_PLAN.md 5-4 |
 | `wheel.js` | 쳇바퀴: 강고양이 씨 `wheelB`(방 시각 4시간에 한 번, 9~20시, 만득 씨 없을 때) — 오른쪽 화면 밖으로 나갔다가 바퀴를 머리로 밀며 들어옴(`cat_push_1~4`), 어항 앞(x 210)에 세우고 폴짝 → 걷기 → 달리기 10~20초("…드르륵드르륵…") → 내려와 다른 데로 가면 바퀴가 혼자 왼쪽 화면 밖으로. 그리기는 뒤판 → 돌아가는 디딤판 줄무늬 → 고양이·쥐야쥐 → 앞판. `SPOTS`의 `wheel` 자리, 쥐야쥐가 올라타 같이 실려 나가는 변주 `mouseRide`, 만득 씨가 오면 즉시 정리. CAT_PLAY_PLAN.md 5-3 |
-| `birthday.js` | 생일 파티(`?birthday=이름`): 배너, 케이크, 꽃비, 무대 조명, 노트북 자막, 쥐야쥐 박수 |
+| `birthday.js` | 생일 파티(`?birthday=이름`): 배너, 케이크, 꽃비, 무대 조명, 노트북 자막, 쥐야쥐 박수(노래 끝나고 `MOUSE_ENCORE`초 더), 디스코볼(`drawDisco`·`drawDiscoLights`, 장면 `party.disco`). **노래는 강고양이 씨가 춤을 시작할 때 튼다**: 노래 시계 `world.party.song`(`start`·`sec`·`beat`·`phrases`), 춤 칸 번호 `danceCell()`(고양이·손님 같은 칸). 좁은 화면 카메라 단계 `world.party.cam`(`party` → `mouse`, `stage.js`). BIRTHDAY_GUESTS_PLAN.md |
+| `guests.js` | 생일 깜짝 손님: 손님 표 `GUESTS`(크기 비율·발 y·키), 나오는 때 `GUEST_CUES`(소절+박, 소리 꺼짐은 `GUEST_CUES_RATIO`), 인원·확률 설정. 춤 시작 때 4~5명 뽑아 장면 `party.guests` 자리에(작은 손님 자리·뒷줄 규칙), 노래 소절에 "짠" 나타나고 노래 끝·만득 씨·파티 끝에 "짠" 사라짐. 그리기 `guestLayers`(바닥 순서)·`drawPuffs`(연기·별가루). 그림이 아직 없는 손님은 안 뽑는다 |
 | `shelf.js` | 책장 메뉴 (`objects.json`의 `bookshelf.books`) |
 | `frame.js` | 벽 액자: 날짜마다 바뀌는 가족사진(`objects.json`의 `frame.photos`), 누르면 다음 사진·조금씩 삐뚤어짐, 만득 씨가 다녀가면 반듯. 넘긴 사진·기울기는 그 기기에 저장. FRAME_PHOTOS_PLAN.md |
 | `ui.js` | 캔버스 누르기, 쪽지·노트북 창, 소리·켜 두기·전체 화면 버튼(화면 꺼짐 방지), 미리보기 도구 |

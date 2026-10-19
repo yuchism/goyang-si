@@ -12,7 +12,7 @@ export const WALK = { x0: 40, x1: 1160, y0: 592, y1: 740 };
 // 걷는 바닥 안으로: 가로는 몸 반폭(half, 배우의 a.half)만큼 더 안쪽까지만 (SCENE_PLAN.md 3장)
 export const walkX = (x, half = 0) => clamp(x, WALK.x0 + half, WALK.x1 - half);
 export const walkY = y => clamp(y, WALK.y0, WALK.y1);
-const CAM = { shelf: 692, door: 1080, window: 300 };
+const CAM = { shelf: 692, door: 1080, window: 300, party: 430, partyMouse: 700 }; // party: 생일 파티(손님 무리·강고양이 씨·케이크), partyMouse: 노래 끝나고 쥐야쥐 박수 (BIRTHDAY_GUESTS_PLAN.md 7-1)
 // 방 자체 밝기 (SCENE_PLAN.md 6장): base = 바깥 빛이 하나도 안 들어올 때 방 어둠 (0 밝음 ~ 1)
 const ROOM_LIGHT = { base: 0 };
 // 방 어둠 = 방 자체 어둠 × (1 − 창 가중치) + 창으로 들어오는 바깥 어둠 × 가중치. 스탠드·호박은 그리는 쪽(main.js)에서
@@ -71,6 +71,9 @@ function camTarget() {
     return CAM.door;
   if (world.ufo || world.santa)
     return CAM.window;
+  const pc = world.party && world.party.cam; // 생일 파티: 손님 무리 → 노래 끝나면 쥐야쥐 (birthday.js)
+  if (pc)
+    return pc === 'mouse' ? CAM.partyMouse : CAM.party;
   if (!mouse.hidden && !mouse.peek && Math.abs(mouse.x - cat.x) < view.vw * 0.8)
     return (cat.x + mouse.x) / 2;
   if (mouse.peek)

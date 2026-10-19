@@ -131,9 +131,11 @@ export const hold = (sec, pose, closed = false, face) => ({ init(a) {
     a.left -= dt;
     return a.left <= 0;
   } });
+// sec: 초, 또는 시작할 때 길이를 정하는 함수 (생일: 노래를 튼 다음 그 노래 길이만큼, birthday.js)
 export const dance = sec => ({ init(a) {
-    a.left = sec;
-    a.dance = { t: 0, dur: sec };
+    const s = typeof sec === 'function' ? sec() : sec;
+    a.left = s;
+    a.dance = { t: 0, dur: s };
     a.pose = 'stand';
     a.closed = false;
     a.moving = false;
