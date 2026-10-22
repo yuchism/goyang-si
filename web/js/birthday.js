@@ -239,9 +239,7 @@ function startBirthdayParty() {
   Snd.init();
   if (Snd.ac) {
     Snd.on = true;
-    Snd.ac.resume();
-    $('bSound').setAttribute('aria-pressed', 'true');
-    $('bSound').textContent = tr('soundOff');
+    Snd.ac.resume(); // 파티는 소리를 켠다 (설정 책에서 껐어도). 설정 책은 지금 소리 상태를 보여 준다 (ui.js soundShown)
   }
   // song: 노래 시계 (노래를 튼 때 startSong이 채움). cam: 좁은 화면 카메라 'party' → 'mouse' → null (stage.js camTarget, 7-1)
   const p = world.party = { t: 0, limit: PARTY_WAIT + NO_SOUND_SEC + 20, end: null, song: null, songEnd: null, cam: 'party' };

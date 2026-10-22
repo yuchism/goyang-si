@@ -32,7 +32,7 @@ import { drawTVNight, drawTvBuf, tvBuf } from './tv-screen.js';
 import { devOpen, initUI } from './ui.js';
 import { pick, rnd } from './util.js';
 import { applyDom, tr } from './i18n.js';
-import { drawOddBook, drawOddGlow, initInstall, portraitHint } from './install.js';
+import { drawOddBook, drawOddGlow, initInstall } from './install.js';
 import { after, caption, cat, mouse, say, tickTimers, world } from './world.js';
 /* ───────── 상태 표시 ───────── */
 // 시간 단위 → 'H:MM' (미리보기 한 줄)
@@ -339,7 +339,6 @@ export function start() {
     resetClock(t);
     markClock();
     frame(t); // 매 장면은 칸막이 안 (guard.js)
-    cut('세로 화면 안내', () => portraitHint());
   });
 }
 // 방을 열지 못했을 때: 짧은 안내와 "다시 열기" (STABILITY_PLAN.md 6장). 한 번만 띄운다

@@ -4,16 +4,17 @@ import { tObj, tr } from './i18n.js';
 import { rr } from './draw.js';
 import { O } from './objects.js';
 import { ctx, cv } from './stage.js';
-import { noteEl, scrEl, toStage } from './ui.js';
+import { closeBook, isPageBook, noteEl, openBook, scrEl, toStage } from './ui.js';
 import { HAND, RM, esc } from './util.js';
 import { cat, say, world } from './world.js';
 import { oddAt, oddVisible, openOdd } from './install.js';
 /* ───────── 책장 메뉴 ─────────
   objects.json의 bookshelf.books 한 권이 메뉴 하나.
   큰 화면: 책에 올리면 살짝 빠지고 이름표, 누르면 그 책이 펼쳐진 목록.
-  폰: 책이 손가락보다 작으니 책장 아무 데나 누르면 큰 책등 목록. 아래 「책장」 버튼은 늘 있다. */
+  폰: 책이 손가락보다 작으니 책장 아무 데나 누르면 큰 책등 목록. 위쪽 줄의 📖 버튼은 늘 있다(책장이 화면 밖이어도).
+  설명책(about)·고양이책(cat)·설정책(settings)은 목록 아래가 아니라 오래된 책 페이지 창으로 열린다 (ui.js openBook, BOOKSHELF_PLAN.md 3장) */
 const shelfEl = document.getElementById('shelf');
-export const shelfUI = { hover: null, pull: null, open: false, lift: {}, oddOpen: false };
+export const shelfUI = { hover: null, pull: null, open: false, lift: {}, oddOpen: false, book: null };
 const BOOKS = () => (O.bookshelf && O.bookshelf.books) || [];
 export function bookAt(x, y) {
   for (const b of BOOKS()) {
@@ -57,7 +58,7 @@ export function drawBooks(dt) {
 export function drawBookTag() {
   const odd = shelfUI.hover === '__odd';
   const b = odd ? { title: tr('oddTag'), area: O.bookshelf.oddBook.tag } : BOOKS().find(b => b.id === shelfUI.hover);
-  if (!b || shelfUI.open || shelfUI.oddOpen)
+  if (!b || shelfUI.open || shelfUI.oddOpen || shelfUI.book)
     return;
   const a = O.bookshelf.area, tx = a[0] + a[2] + 8, ty = b.area[1] + b.area[3] / 2;
   ctx.save();
@@ -79,13 +80,20 @@ function renderShelf(sel) {
   const bs = BOOKS(), cur = bs.find(b => b.id === sel);
   const ext = h => /^https?:/i.test(h) && !/^https?:\/\/(www\.)?goyang\.si(\/|$)/i.test(h);
   shelfEl.innerHTML = `<button class="x" type="button" aria-label="${esc(tr('shelfClose'))}">×</button><p class="lbl">${esc(tr('shelfDlg'))}</p>` +
-    '<div class="spines">' + bs.map(b => `<button class="spine" type="button" data-id="${esc(b.id)}" aria-pressed="${b.id === sel}" style="--c:${esc(b.color || '#a0785a')};--h:${Math.round(96 + b.area[3] * 0.3)}px">${esc(tObj(b, 'title'))}</button>`).join('') +
+    '<div class="spines">' + bs.map(b => `<button class="spine" type="button" data-id="${esc(b.id)}" aria-pressed="${b.id === sel}" style="--c:${esc(b.color || '#a0785a')};--h:${Math.round(96 + b.area[3] * 0.3)}px"${b.spine ? ` aria-label="${esc(tObj(b, 'title'))}"` : ''}>${esc(tObj(b, 'spine') || tObj(b, 'title'))}</button>`).join('') +
     (oddVisible() ? `<button class="spine odd" type="button" data-id="__odd" aria-label="${esc(tr('oddTag'))}"><span aria-hidden="true">🐾</span></button>` : '') + '</div>' +
     '<div class="bookd" aria-live="polite">' + (cur ? `<h2>${esc(tObj(cur, 'title'))}</h2><p>${esc(tObj(cur, 'desc') || '')}</p>` +
     (cur.href ? `<a class="open" href="${esc(cur.href)}"${ext(cur.href) ? ' target="_blank" rel="noopener"' : ''}>${esc(tr('shelfOpen'))}</a>` : `<span class="empty">${esc(tr('shelfEmpty'))}</span>`)
     : `<p>${esc(tr('shelfPick'))}</p>`) + '</div>';
 }
 export function openShelf(id) {
+  const b = id && BOOKS().find(b => b.id === id);
+  if (isPageBook(b)) { // 설명책·고양이책·설정책은 책 창으로
+    closeShelf();
+    openBook(b.id);
+    return;
+  }
+  closeBook();
   shelfUI.open = true;
   shelfUI.pull = id || null;
   noteEl.hidden = true;
@@ -116,6 +124,10 @@ export function initShelf() {
       openOdd(); // 이상한 책은 책장 목록이 아니라 제 페이지로
       return;
     }
+    if (sp && isPageBook(BOOKS().find(b => b.id === sp.dataset.id))) {
+      openShelf(sp.dataset.id);
+      return;
+    }
     if (sp) {
       shelfUI.pull = sp.dataset.id;
       renderShelf(shelfUI.pull);
@@ -143,5 +155,5 @@ export function initShelf() {
       renderShelf(shelfUI.pull);
   });
   document.getElementById('aShelf').onclick = () => openShelf(null);
-  document.getElementById('bShelf').onclick = () => shelfUI.open ? closeShelf() : openShelf(null);
+  document.getElementById('bShelf').onclick = () => shelfUI.open ? closeShelf() : openShelf(null); // 책 창이 펼쳐져 있어도 책장 목록으로
 }

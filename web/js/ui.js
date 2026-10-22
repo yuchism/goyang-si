@@ -1,12 +1,12 @@
-/* 입력과 버튼: 누르기, 쪽지·노트북 창, 소리·전체 화면, 미리보기 도구 */
+/* 입력과 버튼: 누르기, 쪽지·노트북 창, 책 창(설명책·고양이책·설정책: 소리·켜 두기·전체 화면), 미리보기 도구 */
 import { assetsWarm, imageReady, img } from './assets.js';
-import { LANG, setLang, tr } from './i18n.js';
+import { LANG, setLang, tObj, tr } from './i18n.js';
 import { knockB, petCat, secretB } from './cat.js';
 import { startVisit, todaysNote } from './manduk.js';
 import { mouseHide, spawnMouse } from './mouse.js';
-import { OBJ, objView, present, zOf } from './objects.js';
+import { O, OBJ, objView, present, zOf } from './objects.js';
 import { eventsDev } from './events.js';
-import { bookAt, closeShelf, onShelf, openShelf } from './shelf.js';
+import { bookAt, closeShelf, onShelf, openShelf, shelfUI } from './shelf.js';
 import { Snd } from './sound.js';
 import { DEPTH, H, W, cam, cv, fit, view } from './stage.js';
 import { boxToday, holidayOverride, mandukAsleep, mandukHome, now, rainNow, resetSim, seasonOverride, setOverride, setSimMs, setSpeed } from './time.js';
@@ -21,6 +21,7 @@ import { tapBowl } from './fish.js';
 import { playsDev, playsDrag, playsPress } from './plays.js';
 import { actorLift } from './steps.js';
 import { STANDALONE, closeOdd, oddAt, openOdd, toggleOdd } from './install.js';
+import { pawsHTML } from './catbook.js';
 import { caption, cat, mouse, say, world } from './world.js';
 /* ───────── 입력 ───────── */
 export function toStage(e) {
@@ -55,9 +56,119 @@ const TOUCH = {
 };
 export let devOpen = false, wake = null;
 /* 화면 꺼짐 방지 (MOBILE_PLAN.md 5장)
-   켜는 경우: 「켜 두기」를 켰을 때(기기·충전 상태와 상관없이), 소리를 켰을 때, 전체 화면일 때 */
+   켜는 경우: 「켜 두기」를 켰을 때(기기·충전 상태와 상관없이), 전체 화면일 때.
+   소리는 이제 기본으로 켜져 있어서(14장) 소리만으로는 켜 두지 않는다. 안 그러면 모든 방문자의 화면이 안 꺼진다 */
 let keepAwake = store.get('awake', false);
-const wantAwake = () => keepAwake || Snd.on || !!document.fullscreenElement;
+const wantAwake = () => keepAwake || !!document.fullscreenElement;
+/* 소리 (MOBILE_PLAN.md 14장): 기본 켜짐. 브라우저는 누르기 전엔 소리를 막으므로 첫 터치 때 조용히 연다.
+   설정 책에서 끄면 기억한다 (기록이 안 되는 브라우저에서는 그 페이지에서만) */
+let soundWant = store.get('sound', true);
+// 설정 책에 보이는 소리 상태: 소리를 한 번이라도 열었으면 실제 상태(생일 파티가 켰을 수도), 아니면 고른 값
+const soundShown = () => Snd.ac ? Snd.on : soundWant;
+function setSound(on) {
+  soundWant = on;
+  store.set('sound', on);
+  if (on !== Snd.on)
+    Snd.toggle();
+  if (Snd.on)
+    Snd.bell();
+}
+function soundUnlock() {
+  const UNLOCK = ['pointerdown', 'touchend', 'click', 'keydown'];
+  const go = () => {
+    if (!soundWant) // 껐으면 열지 않는다. 다시 켜는 건 설정 책에서 (그것도 누르기라 바로 열린다)
+      return;
+    if (!Snd.on)
+      Snd.toggle();
+    else if (Snd.ac && Snd.ac.state !== 'running')
+      Snd.ac.resume();
+    if (Snd.ac && Snd.ac.state === 'running')
+      UNLOCK.forEach(t => document.removeEventListener(t, go, true));
+  };
+  UNLOCK.forEach(t => document.addEventListener(t, go, true));
+}
+const canAwake = () => !!navigator.wakeLock;
+const canFull = () => !STANDALONE && !!document.documentElement.requestFullscreen; // 홈 화면 앱(이미 주소창 없음)·아이폰 사파리(전체 화면 없음)는 숨김
+/* 책 창: 설명책·고양이책·설정책은 이상한 책(「이 방을 데려가는 법」)과 같은 오래된 책 페이지 창으로 열린다
+   (BOOKSHELF_PLAN.md 3장, MOBILE_PLAN.md 14장). 어떤 책인지는 objects.json 책의 about / cat / settings */
+const bookEl = document.getElementById('bookp');
+function settingsHTML() {
+  const row = (k, label, on, tip) => `<button class="set" type="button" data-set="${k}" aria-pressed="${on}"><span class="sl">${esc(label)}</span><span class="sv">${esc(tr(on ? 'setOn' : 'setOff'))}</span></button>` +
+    (tip ? `<small class="stip">${esc(tip)}</small>` : '');
+  return '<div class="sets">' + row('sound', tr('setSound'), soundShown()) +
+    (canAwake() ? row('awake', tr('bAwake'), keepAwake, tr('bAwakeTip')) : '') +
+    (canFull() ? row('full', tr('bFull'), !!document.fullscreenElement) : '') + '</div>';
+}
+const bookById = id => ((O.bookshelf && O.bookshelf.books) || []).find(b => b.id === id);
+export const isPageBook = b => !!b && !!(b.about || b.cat || b.settings);
+function bookBody(b) {
+  if (b.settings)
+    return `<p class="intro">${esc(tObj(b, 'desc') || '')}</p>` + settingsHTML();
+  if (b.about) // 설명책: 문단마다 줄바꿈 그대로 (i18n.js aboutBook)
+    return '<div class="about">' + tr('aboutBook').map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('') + '</div>';
+  return pawsHTML(b.id); // 고양이책: 발자국만
+}
+function renderBook() {
+  const b = bookById(shelfUI.book);
+  if (!b)
+    return;
+  bookEl.className = 'oddp bookp' + (b.cat ? ' cat' : b.about ? ' about' : ' settings');
+  bookEl.setAttribute('aria-label', tObj(b, 'title') || '');
+  bookEl.innerHTML = `<button class="x" type="button" aria-label="${esc(tr('bookClose'))}">×</button>` +
+    `<h2>${esc(tObj(b, 'title') || '')}</h2>` + bookBody(b) +
+    `<button class="back" type="button">${esc(tr('setBack'))}</button>`;
+}
+export function openBook(id) {
+  const b = bookById(id);
+  if (!isPageBook(b))
+    return;
+  noteEl.hidden = true;
+  scrEl.hidden = true;
+  closeTvGuide();
+  closeOdd();
+  shelfUI.book = b.id;
+  shelfUI.pull = b.id; // 방 책장의 그 책이 살짝 빠져나온다
+  renderBook();
+  bookEl.hidden = false;
+  bookEl.scrollTop = 0;
+  const f = bookEl.querySelector('.set');
+  (f || bookEl).focus({ preventScroll: true });
+}
+export function closeBook() {
+  if (!shelfUI.book)
+    return;
+  shelfUI.book = null;
+  shelfUI.pull = null;
+  bookEl.hidden = true;
+}
+// 설정이 바뀌거나 언어가 바뀌면 펼친 쪽을 다시 채운다 (누른 줄에 초점 유지)
+function refreshBook() {
+  if (!shelfUI.book)
+    return;
+  const k = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.set;
+  renderBook();
+  const f = k && bookEl.querySelector(`.set[data-set="${k}"]`);
+  f && f.focus({ preventScroll: true });
+}
+async function settingsClick(k) {
+  if (k === 'sound')
+    setSound(!soundShown());
+  else if (k === 'awake') {
+    keepAwake = !keepAwake;
+    store.set('awake', keepAwake);
+    wakeLock();
+  }
+  else if (k === 'full') {
+    try {
+      if (document.fullscreenElement)
+        await document.exitFullscreen();
+      else
+        await document.documentElement.requestFullscreen();
+    }
+    catch (e) { }
+  }
+  refreshBook();
+}
 let asking = false;
 async function wakeLock() {
   if (!navigator.wakeLock || document.visibilityState !== 'visible')
@@ -87,20 +198,14 @@ async function wakeLock() {
   catch (e) { }
   asking = false;
 }
-function awakeLabel() {
-  const b = $('bAwake');
-  b.setAttribute('aria-pressed', keepAwake);
-  b.title = tr('bAwakeTip');
-}
 const SEASONS = [null, 'spring', 'summer', 'autumn', 'winter'];
 // 입력과 버튼 연결
 export function initUI() {
   // 언어: KO / EN 버튼. 바꾸면 열려 있는 창도 다시 채운다
   $('bLang').onclick = () => setLang(LANG === 'ko' ? 'en' : 'ko');
   window.addEventListener('langchange', () => {
-    $('bSound').textContent = tr(Snd.on ? 'soundOff' : 'soundOn');
-    if (navigator.wakeLock)
-      awakeLabel();
+    $('bShelf').title = tr('bShelf');
+    refreshBook();
     if (!noteEl.hidden)
       TOUCH.note();
     if (!scrEl.hidden)
@@ -115,6 +220,7 @@ export function initUI() {
     noteEl.hidden = true;
     scrEl.hidden = true;
     closeShelf();
+    closeBook();
     closeTvGuide();
     closeOdd();
     // 놀이(plays.js)가 먼저 본다: 레이저 놀이 중이면 점만 움직이고, 실뭉치는 고양이 앞발 밑에 있을 때가 많아 고양이보다 먼저
@@ -185,43 +291,30 @@ export function initUI() {
     if (document.visibilityState === 'visible')
       wakeLock(); // 다른 앱에 다녀오면 풀려 있으니 다시 요청 (켜 둘 이유가 있을 때만)
   });
-  // 켜 두기 버튼: 화면 꺼짐 방지를 못 하는 브라우저에서는 숨긴다
-  if (!navigator.wakeLock)
-    $('bAwake').hidden = true;
-  else {
-    awakeLabel();
-    $('bAwake').onclick = () => {
-      keepAwake = !keepAwake;
-      store.set('awake', keepAwake);
-      awakeLabel();
-      wakeLock();
-    };
-    if (keepAwake)
-      wakeLock();
-  }
-  document.addEventListener('fullscreenchange', () => wakeLock());
-  // 전체 화면 버튼: 홈 화면 앱(이미 주소창 없음)이거나 전체 화면을 못 하는 브라우저(아이폰 사파리)면 숨김
-  if (STANDALONE || !document.documentElement.requestFullscreen)
-    $('bFull').hidden = true;
-  $('bSound').onclick = () => {
-    const on = Snd.toggle();
-    $('bSound').setAttribute('aria-pressed', on);
-    $('bSound').textContent = tr(on ? 'soundOff' : 'soundOn');
+  // 켜 두기·전체 화면·소리 버튼은 설정 책 안으로 옮겼다 (MOBILE_PLAN.md 14장, settingsHTML)
+  if (canAwake() && keepAwake)
     wakeLock();
-    if (on)
-      Snd.bell();
-  };
-  $('bFull').onclick = async () => {
-    try {
-      if (document.fullscreenElement)
-        await document.exitFullscreen();
-      else {
-        await document.documentElement.requestFullscreen();
-        wakeLock();
-      }
+  document.addEventListener('fullscreenchange', () => {
+    wakeLock();
+    refreshBook();
+  });
+  bookEl.addEventListener('click', e => {
+    const st = e.target.closest('.set');
+    if (st)
+      settingsClick(st.dataset.set);
+    else if (e.target.closest('.x'))
+      closeBook();
+    else if (e.target.closest('.back')) {
+      closeBook();
+      openShelf(null);
     }
-    catch (e) { }
-  };
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && shelfUI.book)
+      closeBook();
+  });
+  soundUnlock();
+  $('bShelf').title = tr('bShelf');
   $('bDev').onclick = () => {
     devOpen = !devOpen;
     $('dev').hidden = !devOpen;

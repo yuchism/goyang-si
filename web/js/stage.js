@@ -65,7 +65,7 @@ export function fit() {
 export const cam = { x: 0 };
 // 카메라가 볼 곳: 만득 씨가 오면 문, UFO·산타는 창, 둘이 함께면 둘 사이, 평소엔 강고양이 씨
 function camTarget() {
-  if (shelfUI.open || shelfUI.oddOpen)
+  if (shelfUI.open || shelfUI.oddOpen || shelfUI.book) // 책장 목록·이상한 책·책 창(설명책·고양이책·설정책)이 펼쳐져 있으면 책장을 본다
     return CAM.shelf;
   if (world.manduk && world.manduk.phase !== 'steps')
     return CAM.door;

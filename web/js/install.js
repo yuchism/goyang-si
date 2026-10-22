@@ -25,7 +25,6 @@ export const IOS = /iPad|iPhone|iPod/.test(UA) || (navigator.platform === 'MacIn
 const ANDROID = /Android/i.test(UA);
 // 카카오톡·인스타그램·페이스북·라인·네이버 등 앱 안 브라우저 (홈 화면 추가가 안 된다)
 const IN_APP = /KAKAOTALK|Instagram|FBAN|FBAV|FB_IAB|FBIOS|Line\/|NAVER\(inapp|DaumApps|Twitter|Snapchat|everytimeApp|BAND\/|; wv\)/i.test(UA);
-const PHONE = mm('(pointer: coarse)') && Math.min(screen.width || 0, screen.height || 0) < 600;
 
 let deferred = null; // 안드로이드 크롬 등이 주는 설치 신호
 export const odd = { show: !STANDALONE, gone: 0, open: false, lift: 0, sway: 0, swayV: 0, nextSwish: rnd(6, 14), spark: -1, nextSpark: rnd(4, 9), motes: [] };
@@ -271,38 +270,6 @@ export function oddLookB() {
     hold(rnd(1.5, 3), 'stand'),
     hold(rnd(8, 18), 'loaf')
   ], 'oddlook');
-}
-
-/* ───────── 세로 화면 안내: 폰을 세로로 처음 열었을 때 딱 한 번 ───────── */
-// main.js의 start()에서 방 크기가 정해진 뒤에 부른다
-export function portraitHint() {
-  if (!PHONE || !mm('(orientation: portrait)') || !storageOK() || store.get('portraitHint', false))
-    return;
-  store.set('portraitHint', true); // 보여 준 순간 기록. 돌렸든 닫았든 지나갔든 다시는 안 띄운다
-  const el = document.getElementById('turnHint'), cv = document.getElementById('cv');
-  if (!el)
-    return;
-  el.textContent = tr('portraitHint');
-  const place = () => {
-    const wrapH = el.parentElement.clientHeight, bottom = cv.offsetTop + cv.offsetHeight;
-    el.style.top = Math.min(bottom + 10, wrapH - 44) + 'px';
-  };
-  place();
-  el.hidden = false;
-  requestAnimationFrame(() => el.classList.add('on'));
-  let done = false;
-  const hide = () => {
-    if (done)
-      return;
-    done = true;
-    el.classList.remove('on');
-    setTimeout(() => el.hidden = true, RM ? 0 : 400);
-    window.removeEventListener('resize', onResize);
-  };
-  const onResize = () => mm('(orientation: landscape)') ? hide() : place();
-  el.addEventListener('click', hide, { once: true });
-  window.addEventListener('resize', onResize);
-  setTimeout(hide, 5000);
 }
 
 /* ───────── 통계: 홈 화면 앱으로 연 횟수 ───────── */

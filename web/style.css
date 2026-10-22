@@ -19,13 +19,10 @@ header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
 .status{font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums;min-width:0}
 .stagewrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
 canvas{display:block;border-radius:6px;box-shadow:0 0 0 1px var(--line),0 20px 60px rgba(0,0,0,.45);touch-action:manipulation;cursor:default;max-width:100%}
-footer{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.btns{display:flex;gap:6px;flex-wrap:wrap}
 button{font:inherit;font-size:.82rem;color:var(--paper);background:var(--frame);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
 button:hover{border-color:var(--muted)}
 button:focus-visible{outline:2px solid var(--bell);outline-offset:2px}
 button[aria-pressed="true"]{background:var(--bell);color:#2a1f0e;border-color:var(--bell)}
-.hint{font-size:.75rem;color:var(--muted)}
 .dev{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;background:var(--frame);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.8rem}
 .dev[hidden]{display:none}
 .dev .grp{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
@@ -60,16 +57,22 @@ button[aria-pressed="true"]{background:var(--bell);color:#2a1f0e;border-color:va
 .a11y{position:absolute;left:8px;top:8px;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;z-index:6}
 .a11y:focus-within{width:auto;height:auto;margin:0;overflow:visible;clip:auto;clip-path:none;white-space:normal;display:flex;gap:6px}
 .a11y button{background:#17130f}
-@media (max-width:560px){.mark{font-size:1.5rem}.hint{display:none}.status{font-size:.74rem}}
-@media (max-height:520px){header{display:none}.hint{display:none}.app{padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));gap:6px}footer{flex-wrap:nowrap;justify-content:flex-end}}
-@media (max-height:520px),(max-width:560px){.dev{position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 48px);max-height:42vh;overflow:auto;z-index:5;background:rgba(30,26,22,.88);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);gap:8px 12px;padding:8px 10px}.dev input[type=range]{width:120px}}
+@media (max-width:560px){.mark{font-size:1.5rem}.status{font-size:.74rem}}
+/* 낮은 화면(폰 가로): 위쪽 줄을 숨기지 않고 방 위에 반투명하게 겹친다. 방 높이를 깎지 않게 (MOBILE_PLAN.md 14장) */
+@media (max-height:520px){.app{position:relative;padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));gap:6px}header{position:absolute;z-index:4;top:calc(8px + env(safe-area-inset-top,0px));left:calc(24px + env(safe-area-inset-left,0px));right:calc(24px + env(safe-area-inset-right,0px));flex-wrap:nowrap;align-items:center;gap:8px;pointer-events:none}header>*{pointer-events:auto;border-radius:999px;background:rgba(23,19,15,.6);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}.mark{padding:4px 12px}.hright{padding:3px 4px 3px 12px}.mark{font-size:1.15rem}.hright{gap:8px;min-width:0}.status{font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+@media (max-height:520px),(max-width:560px){.dev{position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);max-height:42vh;overflow:auto;z-index:5;background:rgba(30,26,22,.88);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);gap:8px 12px;padding:8px 10px}.dev input[type=range]{width:120px}}
 .stagewrap canvas{border-radius:6px}
 /* 책장 메뉴: 책등을 크게 늘어놓은 선반. 폰에서도 손가락으로 고를 수 있게 */
 .shelfp{position:absolute;left:50%;bottom:5%;transform:translateX(-50%);z-index:5;width:min(460px,calc(100% - 24px));box-sizing:border-box;background:#5e402b;border:3px solid #2b1d16;border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.5);padding:12px 14px 14px;color:var(--paper)}
 .shelfp[hidden]{display:none}
+/* 낮은 화면(폰 가로)에서도 목록이 방 밖으로 잘리지 않게: 위아래 여백 안에서 스크롤 */
+.shelfp{max-height:calc(100% - 12px);overflow-y:auto}
+@media (max-height:520px){.shelfp{bottom:6px}.shelfp .spines{padding-top:8px}.shelfp .spine{--h:84px !important}.bookd{padding-top:8px;min-height:0}.bookd h2{font-size:1.3rem}}
+/* 가운데 정렬은 첫·끝 책의 auto 여백으로: justify-content:center는 책이 넘치면 왼쪽 책이 잘려 스크롤로도 못 간다 */
+.spines>:first-child{margin-left:auto}.spines>:last-child{margin-right:auto}
 .shelfp .x{position:absolute;right:6px;top:4px;background:none;border:0;border-radius:6px;font-size:1.4rem;line-height:1;padding:6px 10px;color:var(--paper)}
 .shelfp .lbl{font-family:var(--font-hand);font-weight:700;font-size:1.25rem;margin:0 0 4px}
-.spines{display:flex;gap:6px;align-items:flex-end;justify-content:center;padding:14px 4px 0;background:#936441;border:3px solid #2b1d16;border-bottom-width:10px;border-radius:4px;overflow-x:auto}
+.spines{display:flex;gap:6px;align-items:flex-end;justify-content:flex-start;padding:14px 4px 0;background:#936441;border:3px solid #2b1d16;border-bottom-width:10px;border-radius:4px;overflow-x:auto}
 .spine{writing-mode:vertical-rl;text-orientation:upright;flex:0 0 auto;width:46px;height:var(--h,132px);padding:10px 0;font-family:var(--font-hand);font-weight:700;font-size:1.1rem;line-height:1;color:#1f150e;background:var(--c);border:3px solid #2b1d16;border-bottom:0;border-radius:4px 4px 0 0;transition:transform .15s}
 .spine:hover{transform:translateY(-5px);border-color:#2b1d16}
 .spine[aria-pressed="true"]{transform:translateY(-12px);background:var(--c);color:#1f150e;border-color:#2b1d16}
@@ -79,6 +82,25 @@ button[aria-pressed="true"]{background:var(--bell);color:#2a1f0e;border-color:va
 .bookd .open{display:inline-block;font-size:.9rem;text-decoration:none;color:#2a1f0e;background:var(--bell);border-radius:999px;padding:7px 16px}
 .bookd .open:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
 .bookd .empty{font-size:.85rem;color:var(--muted)}
+/* 책 창(설명책·고양이책·설정책): 이상한 책 페이지(.oddp)와 같은 오래된 책 페이지 창 (BOOKSHELF_PLAN.md, MOBILE_PLAN.md 14장) */
+.bookp{word-break:keep-all}
+.bookp .back{display:block;margin:12px auto 2px;font-size:.8rem;padding:6px 14px;background:transparent;color:#5a3f27;border-color:rgba(90,63,39,.45)}
+.bookp .back:hover{border-color:#5a3f27}
+.bookp .about p{margin:0 0 12px;font-size:.92rem;line-height:1.65}
+.bookp .about p:last-child{margin-bottom:4px;font-style:italic;color:#5a4330}
+/* 고양이책: 글자 없이 발자국만 (catbook.js) */
+.paws{position:relative;width:100%;aspect-ratio:16/10;overflow:hidden;margin:2px 0 4px}
+.paws i{position:absolute;width:9%;max-width:44px;aspect-ratio:1;color:#3a2a1c;opacity:.42}
+.paws svg{display:block;width:100%;height:100%;fill:currentColor}
+.sets{display:flex;flex-direction:column;gap:2px}
+.sets .set{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:9px 2px 7px;background:none;color:#2b1d16;border:0;border-bottom:1px dashed rgba(90,63,39,.45);border-radius:0;text-align:left;font-family:var(--font-hand);font-weight:700;font-size:1.25rem;line-height:1.1}
+.sets .set .sl{white-space:nowrap;min-width:0}
+.sets .set .sv{flex:0 0 auto;font-family:var(--font-body);font-weight:400;font-size:.75rem;padding:3px 10px;border-radius:999px;background:rgba(90,63,39,.14);color:#6a5038;border:1px solid rgba(90,63,39,.35)}
+.sets .set[aria-pressed="true"]{background:none;color:#2b1d16}
+.sets .set[aria-pressed="true"] .sv{background:#2b1d16;color:var(--bell);border-color:#2b1d16}
+.sets .set:focus-visible{outline:2px solid #243553;outline-offset:1px}
+.sets .stip{display:block;margin:4px 0 2px;font-size:.72rem;line-height:1.4;color:#7a5e44}
+@media (max-height:520px){.oddp.bookp{bottom:6px;max-height:calc(100% - 12px);padding:12px 18px 8px}.oddp.bookp h2{font-size:1.35rem}.bookp.cat .paws{aspect-ratio:16/7}.sets .set{padding:5px 2px 4px;font-size:1.1rem}}
 @media (prefers-reduced-motion:reduce){.spine{transition:none}}
 /* TV 편성표: 나무 브라운관 액자 안에 지금 화면, 아래에 오늘 편성표 */
 .tvg{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);z-index:5;width:min(440px,calc(100% - 24px));max-height:92%;overflow:auto;box-sizing:border-box;background:var(--frame);border:3px solid #120e0b;border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.5);padding:12px 14px 12px;color:var(--paper)}
@@ -123,6 +145,8 @@ html[lang="en"]{--font-hand:"Patrick Hand","Gaegu",cursive}
 html[lang="en"] .spine{text-orientation:mixed;font-size:1rem}
 .hright{display:flex;align-items:center;gap:10px;min-width:0}
 .lang{font-size:.72rem;padding:3px 9px;flex:0 0 auto;color:var(--muted)}
+.hbtn{flex:0 0 auto;font-size:.72rem;padding:3px 9px;line-height:1.2}
+#bShelf{font-size:.95rem;padding:1px 8px}
 .lang b{color:var(--bell);font-weight:700}
 
 /* 홈 화면 앱 (MOBILE_PLAN.md 4장): 이상한 책 페이지 — 오래된 책의 누런 종이 한 장 */
@@ -146,8 +170,4 @@ html[lang="en"] .spine{text-orientation:mixed;font-size:1rem}
 /* 책장 목록 맨 끝의 이상한 책 */
 .spine.odd{--c:#243553;--h:118px;width:52px;margin-left:8px;color:#e2bf6a;background:linear-gradient(90deg,#1c2a44,#2b3f63 45%,#1c2a44);border-color:#2b1d16;box-shadow:inset 0 10px 0 -6px #c99a45,inset 0 -10px 0 -6px #c99a45;transform:rotate(-6deg);transform-origin:bottom left;font-size:1.2rem}
 .spine.odd:hover{transform:rotate(-3deg) translateY(-5px)}
-/* 세로 화면 안내: 방 아래에 작고 조용하게, 한 번만 */
-.turnhint{position:absolute;left:50%;transform:translateX(-50%);z-index:4;padding:6px 14px;border-radius:999px;background:rgba(42,35,29,.88);border:1px solid var(--line);color:var(--paper);font-size:.8rem;white-space:nowrap;opacity:0;transition:opacity .4s;cursor:pointer}
-.turnhint.on{opacity:1}
-.turnhint[hidden]{display:none}
-@media (prefers-reduced-motion:reduce){.turnhint{transition:none}.spine.odd,.spine.odd:hover{transform:none}}
+@media (prefers-reduced-motion:reduce){.spine.odd,.spine.odd:hover{transform:none}}

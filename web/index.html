@@ -36,7 +36,9 @@
     <div class="mark" data-i18n-html="mark">고양<b>.</b>시</div>
     <div class="hright">
       <div class="status" id="status">…</div>
+      <button id="bShelf" class="hbtn" type="button" aria-haspopup="dialog" aria-label="책장" data-i18n-aria="bShelf" title="책장"><span aria-hidden="true">📖</span></button>
       <button id="bLang" class="lang" type="button" aria-label="언어: 한국어. 눌러서 영어로"><b>KO</b> / EN</button>
+      <button id="bDev" class="hbtn" type="button" aria-pressed="false" data-i18n="bDev" hidden>미리보기 도구</button>
     </div>
   </header>
   <div class="stagewrap" id="wrap">
@@ -55,8 +57,8 @@
     <div class="note" id="note" role="dialog" aria-label="오늘의 포스트잇" data-i18n-aria="noteDlg" tabindex="-1" hidden></div>
     <div class="screen" id="screen" role="dialog" aria-label="노트북 화면" data-i18n-aria="screenDlg" tabindex="-1" hidden></div>
     <div class="shelfp" id="shelf" role="dialog" aria-label="책장" data-i18n-aria="shelfDlg" tabindex="-1" hidden></div>
+    <div class="oddp bookp" id="bookp" role="dialog" aria-label="책" tabindex="-1" hidden></div>
     <div class="oddp" id="oddp" role="dialog" aria-label="처음 보는 책" data-i18n-aria="oddDlg" tabindex="-1" hidden></div>
-    <div class="turnhint" id="turnHint" role="status" hidden></div>
     <div class="tvg" id="tvg" role="dialog" aria-label="고양.방송" data-i18n-aria="tvDlg" tabindex="-1" hidden></div>
   </div>
   <div class="dev" id="dev" hidden>
@@ -82,16 +84,6 @@
     </div>
     <div class="tvweek" id="tvWeek" hidden></div>
   </div>
-  <footer>
-    <div class="hint" data-i18n="hint">강고양이 씨를 톡 건드려 보세요. 너무 자주는 말고요. 문의 노란 쪽지, 노트북, TV, 책장의 책도 눌러볼 수 있어요.</div>
-    <div class="btns">
-      <button id="bShelf" aria-haspopup="dialog" data-i18n="bShelf">책장</button>
-      <button id="bSound" aria-pressed="false" data-i18n="soundOn">소리 켜기</button>
-      <button id="bAwake" aria-pressed="false" data-i18n="bAwake">켜 두기</button>
-      <button id="bFull" data-i18n="bFull">전체 화면</button>
-      <button id="bDev" aria-pressed="false" data-i18n="bDev" hidden>미리보기 도구</button>
-    </div>
-  </footer>
 </div>
 
 <script type="module" src="js/main.js"></script>

@@ -48,6 +48,7 @@
 | 강고양이 씨 | Kitty Kang | 2026-10-12 확정. 뜻이 바로 전해지는 이름으로 |
 | 김만득 씨 | Mandeuk | 사람 이름이라 로마자 그대로 |
 | 쥐야쥐 | Mousey | 2026-10-12 확정 |
+| 금붕생이 군 | Goldfish, a.k.a. Poseidon | 2026-10-22 확정. 어항의 금붕어. 설명책(`BOOKSHELF_PLAN.md` 4장)에 처음 나온다 |
 | 고양.방송 | GBS (Goyang Broadcasting System) | KBS·SBS 같은 느낌을 영어권에도 그대로 |
 | 고양 뉴스 | Goyang News | |
 | 드라마 「창가에서」 | *By the Window* | |
