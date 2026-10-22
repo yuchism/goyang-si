@@ -1,5 +1,5 @@
 # 계절 구경 행동의 끼어들기 정하기
-- status: implemented
+- status: implemented   (검수: reviews/season-watch-tags.md — 코드 적합, 화면 점검 남음)
 - mode: needs-review
 - brief: (그림 없음)
 - assets: (없음)
@@ -14,10 +14,12 @@
 ## 요구사항
 - [x] `web/js/behave.js` `BEHAVIOR`의 세 줄을 `[N, Y, Y]`로
 - [x] 세 줄 위 주석("지금 동작 그대로 … 따로 정한다")을 결정 내용으로 바꾼다
-- [ ] `node tools/check_behave.mjs --quick` 통과
-- [ ] 화면 점검: 다른 장면이 나오면 계절 구경 중 TV 반응이 빠진 것뿐인지 눈으로 확인
+- [x] `node tools/check_behave.mjs --quick` 통과 (Codex, 2026-10-23)
+- [ ] 회귀: `visual_check.js` 전후 같음 (기존 장면에는 계절 구경 + TV 큰 장면 겹침이 없으므로 같아야 한다)
+- [ ] 겹침 장면 (사람): `?dev=1` → 「낙엽」 → 창가에 앉으면 콘솔에서 TV 큰 장면 → 고양이가 돌아보지 않는다
 - [x] STABILITY_PLAN.md 9장 해당 줄에 "→ tasks/season-watch-tags.md" 표시
 
 ## 메모
 - 보이는 동작 변화: 계절 구경 중 TV 큰 장면이 나와도 고개를 돌리거나 달려가지 않는다. 다른 것은 같다.
-- 2026-10-23 구현 (Claude): 위 [x] 세 항목. 검사 실행·커밋은 아직 — 노트북 또는 Codex가 돌리고 결과를 여기에 적은 뒤 status를 reviewed로.
+- 2026-10-23 구현 (Claude), 커밋 `9a02165`. 검수 (Codex) `a855314`: 코드 결함 없음, check_behave --quick 통과.
+- 회귀·겹침 두 항목이 끝나면 status를 reviewed로.
