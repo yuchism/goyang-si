@@ -2,6 +2,7 @@
    강고양이 씨와 같은 춤을 같은 박자로 추다가, 노래가 끝나면 "짠" 사라진다. 왜 왔는지는 아무도 모른다.
    그림: web/sheet/guest-<이름>-dance-v1.webp (tools/make_guests.py가 만든다. 칸 폭 CELL_W, 네 칸 ①②③④ = 강고양이 씨 춤과 같은 동작) */
 import { IMG, imageReady } from './assets.js';
+import { birthdayName } from './birthday.js';
 import { PL } from './objects.js';
 import { Snd } from './sound.js';
 import { DEPTH, ctx } from './stage.js';
@@ -44,13 +45,30 @@ export const GUEST_CUES = [
 export const GUEST_CUES_RATIO = [0, 0.2, 0.4, 0.55, 0.7]; // 소리가 꺼져 노래 박자가 없을 때: 춤 길이 비율
 export const COUNT = [4, 5]; // 인원 (둘 중 하나, 반반)
 export const RARE_CHANCE = 0.1; // 희귀 손님(외계인)이 한 자리를 차지할 확률
-export const OWNER_CHANCE = 0.04; // 주인장 손님 넷 중 하나가 한 자리를 차지할 확률 (한 명당 1%, 외계인보다 드물게)
+export const OWNER_CHANCE = 0.1; // 주인장을 닮은 손님 넷 중 하나가 한 자리를 차지할 확률 (외계인과 같은 정도, 2026-10-22 4% → 10%)
+// 이름 소환: 생일자 이름(띄어쓰기 뺌)이 맞으면 첫 파티(페이지를 연 뒤 처음 누른 배너)에 이 주인장 손님들이 꼭 나온다. 배너를 다시 누르면 평소대로 (BIRTHDAY_GUESTS_PLAN.md 19장).
+// 이름을 코드에 그대로 적지 않으려고 이름의 해시(nameKey)로 적는다. 새로 넣으려면 개발자 도구에서 __nameKey('이름')
+export const SUMMON = {
+  659352347: ['mandeuk', 'family-01', 'family-02'], // 주인장 3번 빼고
+  1639570168: ['mandeuk', 'family-02', 'family-03'], // 주인장 1번 빼고
+};
+export function nameKey(name) {
+  const s = String(name || '').replace(/\s+/g, '');
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+if (typeof window !== 'undefined')
+  window.__nameKey = nameKey;
 export const WRONG_WAY_CHANCE = 0.3; // 한 명이 혼자 반대 방향으로 출 확률
 const BIG = 1.1, SMALL = 0.8; // 큰 손님(뒷줄 안 섬), 작은 손님(강고양이 씨 옆 자리에 섬)
 const POP_SEC = 0.15, PUFF_SEC = 0.55;
 
 /* ───────── 뽑기 ───────── */
-let lastKey = '';
+let lastKey = '', summonDone = false; // summonDone: 이름 소환은 페이지를 연 뒤 첫 파티에서 한 번만
 const ready = g => imageReady(IMG['f_guest_' + g.id]);
 function shuffle(a) {
   for (let i = a.length - 1; i > 0; i--) {
@@ -65,15 +83,18 @@ function pickGuests() {
   const common = GUESTS.filter(g => !g.rare && !g.owner && ready(g)), rare = GUESTS.filter(g => g.rare && ready(g)), owners = GUESTS.filter(g => g.owner && ready(g));
   if (!spots.length || !common.length)
     return [];
+  const summon = summonDone ? [] : (SUMMON[nameKey(birthdayName)] || []).map(id => owners.find(g => g.id === id)).filter(Boolean); // 그림이 있는 것만. 두 번째 파티부터는 평소대로
+  if (summon.length)
+    summonDone = true;
   let chosen = [], special = [];
   for (let tries = 0; tries < 6; tries++) {
     const n = Math.min(Math.random() < 0.5 ? COUNT[0] : COUNT[1], spots.length);
-    special = []; // 특별 손님은 각각 한 자리씩 차지한다 (둘 다 나올 수도 있다)
-    if (owners.length && Math.random() < OWNER_CHANCE)
+    special = summon.slice(); // 특별 손님은 각각 한 자리씩 차지한다 (둘 다 나올 수도 있다). 이름 소환이면 소환된 주인장들이 먼저
+    if (!summon.length && owners.length && Math.random() < OWNER_CHANCE)
       special.push(owners[Math.floor(Math.random() * owners.length)]);
     if (rare.length && Math.random() < RARE_CHANCE)
       special.push(rare[Math.floor(Math.random() * rare.length)]);
-    chosen = [...special, ...shuffle(common.slice()).slice(0, n - special.length)];
+    chosen = [...special, ...shuffle(common.slice()).slice(0, Math.max(1, n - special.length))];
     const key = chosen.map(g => g.id).sort().join();
     if (key !== lastKey || tries === 5) {
       lastKey = key;
@@ -84,7 +105,7 @@ function pickGuests() {
   const free = spots.slice(), out = [];
   // 특별 손님(주인장·외계인)이 먼저 자리를 잡는다 (큰 손님이 많아 앞줄이 모자라도 빠지지 않게)
   for (const g of chosen.slice().sort((a, b) => (special.includes(b) - special.includes(a)) || b.size - a.size)) {
-    const ok = free.filter(s => (!s.small || g.size <= SMALL) && (!s.back || g.size < BIG));
+    const ok = free.filter(s => (!s.small || g.size <= SMALL) && (!s.back || g.size < BIG || summon.includes(g))); // 소환된 주인장은 뒷줄에도 선다 (앞줄 큰 자리가 둘뿐이라)
     // 작은 손님은 작은 손님 자리를 먼저 (거기 설 수 있는 애가 적으므로)
     const pool = g.size <= SMALL && ok.some(s => s.small) ? ok.filter(s => s.small) : ok;
     if (!pool.length)
