@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""생일 깜짝 손님 춤 시트(assets/birthday/guests/guest-<이름>-dance-v*.png, GUEST_SPRITE_PLAN.md)를 웹용으로 바꾼다.
+"""생일 깜짝 손님 춤 시트(assets/birthday/guests/guest-<이름>-dance-v*.png, GUEST_SPRITE_PLAN.md)와
+주인장 손님 시트(assets/birthday/family-guests/<이름>-dance-sheet-v*.png, -raw는 빼고)를 웹용으로 바꾼다.
 BIRTHDAY_GUESTS_PLAN.md 5장.
 
 1. 칸 정리: 원본은 2048×768에 512 폭 네 칸. 꼬리·부리 끝이 옆 칸으로 조금 넘친 그림(비버 ②, 펠리칸 ③)이 있어서
@@ -9,7 +10,8 @@ BIRTHDAY_GUESTS_PLAN.md 5장.
 3. 줄이기: SCALE배 (방에서 가장 큰 손님도 약 230 방 px. 고해상도 화면 2배까지 충분), 알파 포함 webp.
 4. 출력: 손님마다 발바닥 y(foot)·그림 키(h, ② 칸)를 새 시트 px로 출력 → js/guests.js GUESTS 표에 옮긴다.
 
-쓰는 법:  python3 tools/make_guests.py   (고양시 폴더에서) → web/sheet/guest-<이름>-dance-v1.webp
+쓰는 법:  python3 tools/make_guests.py [이름 ...]   (고양시 폴더에서) → web/sheet/guest-<이름>-dance-v1.webp
+          이름을 주면 그 손님만 다시 만든다 (예: mandeuk family-01). 안 주면 전부
 """
 import glob, os, re
 import numpy as np
@@ -17,17 +19,21 @@ from PIL import Image
 from scipy import ndimage as nd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SRC = os.path.join(HERE, '..', 'assets', 'birthday', 'guests')
+SRCS = [  # (폴더, 파일 이름 규칙: 이름·판)
+    (os.path.join(HERE, '..', 'assets', 'birthday', 'guests'), r'guest-([\w-]+?)-dance-v(\d+)\.png$'),
+    (os.path.join(HERE, '..', 'assets', 'birthday', 'family-guests'), r'([\w-]+?)-dance-sheet-v(\d+)\.png$'),  # 주인장 손님 (-raw는 규칙에 안 맞아 빠짐)
+]
 DST = os.path.join(HERE, '..', 'web', 'sheet')
 CELL, PAD, SCALE = 512, 24, 0.75  # 새 칸 폭 = (512 + 2×24) × 0.75 = 420
 
 
 def latest():
     best = {}
-    for p in glob.glob(os.path.join(SRC, 'guest-*-dance-v*.png')):
-        m = re.match(r'guest-(\w+)-dance-v(\d+)\.png$', os.path.basename(p))
-        if m and int(m.group(2)) > best.get(m.group(1), (0, ''))[0]:
-            best[m.group(1)] = (int(m.group(2)), p)
+    for src, pat in SRCS:
+        for p in glob.glob(os.path.join(src, '*.png')):
+            m = re.match(pat, os.path.basename(p))
+            if m and int(m.group(2)) > best.get(m.group(1), (0, ''))[0]:
+                best[m.group(1)] = (int(m.group(2)), p)
     return {k: v[1] for k, v in sorted(best.items())}
 
 
@@ -78,8 +84,12 @@ def convert(name, path):
 
 
 if __name__ == '__main__':
+    import sys
+    only = set(sys.argv[1:])
     total = 0
     for name, path in latest().items():
+        if only and name not in only:
+            continue
         dst, size, c, foot, h, moved, b = convert(name, path)
         total += b
         print(f"  {{ id: '{name}', foot: {foot}, h: {h} }},  // {os.path.basename(path)} → {size[0]}×{size[1]} 칸 {c}, {b // 1024}KB" + (f', 넘친 조각 {moved}개 옮김' if moved else ''))

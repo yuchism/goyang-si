@@ -251,7 +251,7 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
       return;
     const t = this.ac.currentTime;
     this.rainG.gain.setTargetAtTime(rain ? 0.16 : 0, t, 1.5);
-    this.tvG.gain.setTargetAtTime(tv ? 0.012 * (0.6 + 0.4 * Math.sin(t * 1.7) * Math.sin(t * 0.6)) : 0, t, 0.3);
-    this.roomG.gain.setTargetAtTime(dark ? 0.05 : 0.08, t, 2);
+    this.tvG.gain.setTargetAtTime(tv ? 0.004 * (0.6 + 0.4 * Math.sin(t * 1.7) * Math.sin(t * 0.6)) : 0, t, 0.3); // TV 잡음 (2026-10-22: 바람 소리처럼 커서 1/3로)
+    this.roomG.gain.setTargetAtTime(0, t, 2); // 방 잡음: 끔 (2026-10-22: 바람 소리처럼 들려서. 예전 값 dark ? 0.05 : 0.08)
   }
 };

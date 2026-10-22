@@ -93,6 +93,13 @@ export const STR = {
   dDust: { ko: '미세먼지', en: 'Dust' },
   dPlane: { ko: '비행기', en: 'Plane' },
   dLights: { ko: '창 불빛 시각', en: 'Window lights time' },
+  dFw: { ko: '불꽃(토요일)', en: 'Fireworks (Sat)' },
+  dFwFest: { ko: '불꽃축제', en: 'Fireworks festival' },
+  dFwXmas: { ko: '불꽃(이브)', en: 'Fireworks (Eve)' },
+  dFwNy: { ko: '불꽃(새해)', en: 'Fireworks (New Year)' },
+  dFwBday: { ko: '불꽃(생일)', en: 'Fireworks (birthday)' },
+  dFwCat: { ko: '고양이 얼굴 한 발', en: 'Cat-face shell' },
+  fwDevName: { ko: '강고양이', en: 'Kitty Kang' },
   dTv: { ko: 'TV 사건', en: 'TV event' },
   devTv: { ko: 'TV', en: 'TV' },
   dTvPickProg: { ko: '틀어 볼 프로그램', en: 'Show to preview' },
@@ -148,6 +155,7 @@ export const STR = {
   wt_magpie: { ko: '까치', en: 'magpie' },
   wt_blackcat: { ko: '검은 고양이', en: 'black cat' },
   wt_geese: { ko: '철새', en: 'geese' },
+  wt_fireworks: { ko: '불꽃놀이', en: 'fireworks' },
   devMoon: { ko: '{md} · 달: {name} {pct}%', en: '{md} · Moon: {name} {pct}%' },
   devScenery: { ko: '풍경 날짜', en: 'Scenery date' },
   devSceneryReal: { ko: '실제 날짜', en: 'Real date' },
@@ -184,6 +192,10 @@ export const STR = {
   capMagpie: { ko: '…깍깍…', en: '…chak chak…' },
   capChatter: { ko: '…깍깍깍…', en: '…ek-ek-ek…' },
   capFirstSnow: { ko: '…첫눈…', en: '…first snow…' },
+  /* ── 불꽃놀이 (FIREWORKS_PLAN.md) ── */
+  capFireworks: { ko: '…펑… 펑펑…', en: '…boom… pop-pop…' },
+  capNewYear: { ko: '(만득 씨) 고양아~ 새해 복 많이 받아라~', en: '(Mandeuk) Happy New Year, kitty~' },
+  fwBday: { ko: ['생일', '축하해'], en: ['Happy', 'Birthday'] },
   /* ── 김만득 씨 ── */
   manduk: {
     ko: { feed: [['밥 먹자~', '천천히 먹어'], ['고양아 밥~', '많이 먹어라']], noise: [['아 왜~ 또 뭐 깼어?', '강고양이!!']], quiet: [['...뭐야, 조용하네']],

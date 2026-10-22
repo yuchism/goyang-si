@@ -35,6 +35,15 @@ export const CAL = {
     dragonfly:     { from: '08-10', to: '09-30' }, // 잠자리
     tropicalNight: { from: '07-15', to: '08-25' }  // 열대야
   },
+  /* 불꽃놀이 (FIREWORKS_PLAN.md): 먼 하늘 공연. from = 시작 시각, parts = 시작부터 [켜지는 분, 꺼지는 분] 구간들.
+     읽는 곳은 time.js fireworksShow 하나. 생일 파티 끝 불꽃은 날짜가 아니라 파티가 부른다(fireworks.js).
+     fest.dates: 서울세계불꽃축제 날(해마다 발표되면 여기 한 줄). 표에 없는 해는 10월 첫 토요일로 친다 */
+  fireworks: {
+    weekly:  { weekday: 6, from: '21:00', parts: [[0, 9]] },               // 매주 토요일 밤 9분
+    fest:    { dates: { 2026: '09-05' }, from: '20:00', parts: [[0, 15], [20, 35], [40, 70]] }, // 불꽃축제 날: 세 팀, 마지막이 피날레 (그날은 토요일 공연 대신)
+    xmasEve: { date: '12-24', from: '22:00', parts: [[0, 5]] },            // 이브: 산타가 지나간 뒤 짧게
+    newyear: { date: '12-31', from: '23:55', parts: [[0, 16]], midnight: 5 } // 자정 앞뒤. midnight = 시작부터 자정까지 분 (연도 숫자 불꽃)
+  },
   // 창밖 작업이 쓸 자리 (이번엔 자리만, 아직 아무도 읽지 않는다)
   later: {
     meteorPeaks: ['01-03', '08-12', '10-21', '11-17', '12-13'] // 유성우 극대 무렵

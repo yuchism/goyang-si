@@ -22,7 +22,13 @@ export const GUESTS = [
   { id: 'platypus', size: 0.60, foot: 499, h: 414 },
   { id: 'rabbit', size: 0.80, foot: 553, h: 520 },
   { id: 'sheep', size: 0.85, foot: 536, h: 491 },
+  { id: 'wolf-sheep-disguise', size: 0.90, foot: 543, h: 490 }, // 양 탈을 쓴 늑대
   { id: 'alien', size: 0.90, foot: 523, h: 451, rare: true },
+  // 주인장 손님 (assets/birthday/family-guests/): 외계인보다 더 드물게 (OWNER_CHANCE)
+  { id: 'mandeuk', size: 1.10, foot: 544, h: 536, owner: true },
+  { id: 'family-01', size: 1.10, foot: 546, h: 542, owner: true },
+  { id: 'family-02', size: 1.10, foot: 546, h: 539, owner: true },
+  { id: 'family-03', size: 1.10, foot: 546, h: 519, owner: true },
 ];
 export const CELL_W = 420; // 시트 한 칸 폭 (px)
 export const guestSrc = id => 'sheet/guest-' + id + '-dance-v1.webp';
@@ -38,6 +44,7 @@ export const GUEST_CUES = [
 export const GUEST_CUES_RATIO = [0, 0.2, 0.4, 0.55, 0.7]; // 소리가 꺼져 노래 박자가 없을 때: 춤 길이 비율
 export const COUNT = [4, 5]; // 인원 (둘 중 하나, 반반)
 export const RARE_CHANCE = 0.1; // 희귀 손님(외계인)이 한 자리를 차지할 확률
+export const OWNER_CHANCE = 0.04; // 주인장 손님 넷 중 하나가 한 자리를 차지할 확률 (한 명당 1%, 외계인보다 드물게)
 export const WRONG_WAY_CHANCE = 0.3; // 한 명이 혼자 반대 방향으로 출 확률
 const BIG = 1.1, SMALL = 0.8; // 큰 손님(뒷줄 안 섬), 작은 손님(강고양이 씨 옆 자리에 섬)
 const POP_SEC = 0.15, PUFF_SEC = 0.55;
@@ -55,14 +62,18 @@ function shuffle(a) {
 // 손님을 뽑고 자리를 정한다. 그림이 아직 없는 손님은 뽑지 않는다(그린 애부터 나온다)
 function pickGuests() {
   const spots = (PL('party.guests') || {}).spots || [];
-  const common = GUESTS.filter(g => !g.rare && ready(g)), rare = GUESTS.filter(g => g.rare && ready(g));
+  const common = GUESTS.filter(g => !g.rare && !g.owner && ready(g)), rare = GUESTS.filter(g => g.rare && ready(g)), owners = GUESTS.filter(g => g.owner && ready(g));
   if (!spots.length || !common.length)
     return [];
-  let chosen = [];
+  let chosen = [], special = [];
   for (let tries = 0; tries < 6; tries++) {
     const n = Math.min(Math.random() < 0.5 ? COUNT[0] : COUNT[1], spots.length);
-    const withRare = rare.length && Math.random() < RARE_CHANCE;
-    chosen = [...(withRare ? [rare[Math.floor(Math.random() * rare.length)]] : []), ...shuffle(common.slice()).slice(0, withRare ? n - 1 : n)];
+    special = []; // 특별 손님은 각각 한 자리씩 차지한다 (둘 다 나올 수도 있다)
+    if (owners.length && Math.random() < OWNER_CHANCE)
+      special.push(owners[Math.floor(Math.random() * owners.length)]);
+    if (rare.length && Math.random() < RARE_CHANCE)
+      special.push(rare[Math.floor(Math.random() * rare.length)]);
+    chosen = [...special, ...shuffle(common.slice()).slice(0, n - special.length)];
     const key = chosen.map(g => g.id).sort().join();
     if (key !== lastKey || tries === 5) {
       lastKey = key;
@@ -71,7 +82,8 @@ function pickGuests() {
   }
   // 자리: 큰 손님부터. 작은 손님 자리(small)는 size ≤ SMALL만, 뒷줄(back)엔 큰 손님(≥ BIG)이 안 선다. 맞는 자리가 없으면 그 손님은 빠진다
   const free = spots.slice(), out = [];
-  for (const g of chosen.slice().sort((a, b) => b.size - a.size)) {
+  // 특별 손님(주인장·외계인)이 먼저 자리를 잡는다 (큰 손님이 많아 앞줄이 모자라도 빠지지 않게)
+  for (const g of chosen.slice().sort((a, b) => (special.includes(b) - special.includes(a)) || b.size - a.size)) {
     const ok = free.filter(s => (!s.small || g.size <= SMALL) && (!s.back || g.size < BIG));
     // 작은 손님은 작은 손님 자리를 먼저 (거기 설 수 있는 애가 적으므로)
     const pool = g.size <= SMALL && ok.some(s => s.small) ? ok.filter(s => s.small) : ok;

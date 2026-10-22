@@ -1,5 +1,5 @@
 /* 가끔 생기는 일 목록과 창밖 교통정리.
-   목록: 나비, UFO, 산타 썰매, 할로윈(마녀·박쥐·커튼 유령 그림자), 창밖 풍경(건너편 창 불빛·천둥번개·무지개·비행기, 난간의 새·작은 검은 고양이).
+   목록: 나비, UFO, 산타 썰매, 할로윈(마녀·박쥐·커튼 유령 그림자), 창밖 풍경(건너편 창 불빛·천둥번개·무지개·비행기, 난간의 새·작은 검은 고양이), 불꽃놀이.
    놀이 목록(plays.js)과 같은 방식: 사건 하나는 자기 파일(outside.js, halloween.js, weather.js, veranda.js)에 아래 모양의 물건 하나를 내놓고,
    여기 목록에 한 줄 더하면 끝이다. main.js(매 장면·그리기), outside.js·draw.js(창밖), jump.js(시간 점프), ui.js(미리보기 버튼), debug.js는 이 목록을 돌기만 한다.
 
@@ -20,6 +20,7 @@ import { batsEvent, ghostEvent, witchEvent } from './halloween.js';
 import { butterflyEvent, santaEvent, ufoEvent } from './outside.js';
 import { lightsEvent, planeEvent, rainbowEvent, thunderEvent } from './weather.js';
 import { birdEvent, blackcatEvent } from './veranda.js';
+import { fireworksEvent } from './fireworks.js';
 import { blossomEvent, dragonflyEvent, dustEvent, firstSnowEvent, frostEvent, geeseEvent, leavesEvent, railSnowEvent } from './seasons.js';
 import { now, thunderNow } from './time.js';
 import { world } from './world.js';
@@ -32,7 +33,8 @@ import { assetsWarm } from './assets.js';
 // 순서 = 매 장면 진행 순서(확률을 뽑는 순서)이자 그리는 순서. 처음 쓸 때 만든다 (파일들이 서로 불러오므로)
 let list = null;
 // 3차 계절 손님(seasons.js): 철새는 하늘의 큰 것, 벚꽃잎·낙엽은 하늘에, 난간 눈은 새 아래, 잠자리는 손님 위, 성에는 베란다 층 맨 끝(유리)
-export const events = () => list || (list = [butterflyEvent, ufoEvent, santaEvent, witchEvent, batsEvent, ghostEvent, lightsEvent, thunderEvent, rainbowEvent, planeEvent, geeseEvent, blossomEvent, leavesEvent, railSnowEvent, birdEvent, blackcatEvent, dragonflyEvent, firstSnowEvent, dustEvent, frostEvent]);
+// 불꽃놀이(fireworks.js)는 맨 끝: 앞 사건들의 확률 뽑는 순서를 바꾸지 않게. 하늘의 큰 것이라 공연 중엔 다른 큰 것이 시작하지 않는다
+export const events = () => list || (list = [butterflyEvent, ufoEvent, santaEvent, witchEvent, batsEvent, ghostEvent, lightsEvent, thunderEvent, rainbowEvent, planeEvent, geeseEvent, blossomEvent, leavesEvent, railSnowEvent, birdEvent, blackcatEvent, dragonflyEvent, firstSnowEvent, dustEvent, frostEvent, fireworksEvent]);
 
 // 이 장면에서 생길 수 있는 일: needs의 장소가 모두 있는 것만 (SCENE_PLAN.md 7장). 장면을 읽으면 다시 고른다
 const ok = e => !e.needs || e.needs.every(has);
@@ -49,7 +51,7 @@ const each = (k, ...args) => {
 
 /* ───────── 창밖 교통정리 (WINDOW_PLAN.md 4장) ─────────
    cls       무엇                                   규칙
-   sky       UFO, 산타, 마녀(+커튼 마녀 그림자), 비행기, 철새 무리  한 번에 하나. 끝나고 rest초 쉬었다가 다음. 한 시간 hour번까지. 천둥 치는 동안엔 안 나옴
+   sky       UFO, 산타, 마녀(+커튼 마녀 그림자), 비행기, 철새 무리, 불꽃놀이 공연  한 번에 하나. 끝나고 rest초 쉬었다가 다음. 한 시간 hour번까지. 천둥 치는 동안엔 안 나옴
    skySmall  박쥐 무리                               큰 것이 있으면 안 나옴 (마녀가 시작하면 비켜 사라지는 것은 halloween.js)
    curtain   커튼 유령, 커튼 마녀 그림자               커튼 자리(world.curtainShadow) 하나를 같이 쓴다
    veranda   비둘기·까치, 작은 검은 고양이             한 번에 하나(까치 짝은 한 손님). 큰 것과는 겹쳐도 됨. 천둥 치는 동안엔 안 나옴

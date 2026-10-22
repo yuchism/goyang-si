@@ -845,3 +845,69 @@ export function nextAtHour(d, h) {
   const t = hourAt(d, h);
   return t > d.getTime() ? t : hourAt(noonOf(d, 1), h);
 }
+/* ───────── 불꽃놀이 (FIREWORKS_PLAN.md) ─────────
+   공연 시각은 달력(calendar.js CAL.fireworks)에서만. 지금 하늘에 걸린 공연 { id, kind, start, end, parts(ms 구간), year? } 또는 null.
+   무지개처럼 시각의 함수라 새로 고침·시간 점프에도 정리가 필요 없다. 시작할 때나 지금 비가 오면 쉰다(비 덮개 뒤라 안 보이기도 함).
+   불꽃축제 날은 그날 토요일 공연 대신. 생일 파티 끝 불꽃은 날짜가 아니라 파티가 부르므로 fireworks.js가 따로 든다 */
+let fwOverride = null; // 미리보기: { kind, start(ms) } — 그 공연을 그 시각에 시작한 것처럼
+export const setFireworksOverride = v => fwOverride = v;
+const hmOf = s => {
+  const [a, b] = s.split(':').map(Number);
+  return a + b / 60;
+};
+// 그해 불꽃축제 날(정오 Date): 표에 있으면 그날, 없으면 10월 첫 토요일
+export function festDay(y) {
+  const s = CAL.fireworks.fest.dates[y];
+  if (s) {
+    const [m, dd] = s.split('-').map(Number);
+    return new Date(y, m - 1, dd, 12);
+  }
+  const d = new Date(y, 9, 1, 12);
+  while (d.getDay() !== 6)
+    d.setDate(d.getDate() + 1);
+  return d;
+}
+const fwPlan = (kind, start, year) => {
+  const p = CAL.fireworks[kind], parts = p.parts.map(([a, b]) => [a * 60000, b * 60000]);
+  return { kind, start, end: start + parts[parts.length - 1][1], parts, year, midnight: p.midnight != null ? p.midnight * 60000 : null };
+};
+// 그날(정오 Date) 시작하는 공연들
+function fwPlansOn(day) {
+  const F = CAL.fireworks, md = (day.getMonth() + 1) * 100 + day.getDate(), y = day.getFullYear(), out = [];
+  const at = kind => atHour(day, hmOf(F[kind].from));
+  if (dayKey(festDay(y)) === dayKey(day))
+    out.push(fwPlan('fest', at('fest')));
+  else if (day.getDay() === F.weekly.weekday)
+    out.push(fwPlan('weekly', at('weekly')));
+  if (md === mdOf(F.xmasEve.date))
+    out.push(fwPlan('xmasEve', at('xmasEve')));
+  if (md === mdOf(F.newyear.date))
+    out.push(fwPlan('newyear', at('newyear'), y + 1));
+  return out;
+}
+export function fireworksShow(d) {
+  const t = d.getTime();
+  if (fwOverride) {
+    const s = fwPlan(fwOverride.kind, fwOverride.start, fwOverride.kind === 'newyear' ? d.getFullYear() + (d.getMonth() === 0 ? 0 : 1) : undefined);
+    if (t >= s.start && t < s.end)
+      return { id: 'dev' + s.kind + s.start, ...s };
+    if (t >= s.end)
+      fwOverride = null;
+  }
+  for (const k of [0, -1]) { // 자정을 넘는 공연(새해)은 어제 시작한 것
+    const day = noonOf(d, k);
+    for (const s of fwPlansOn(day))
+      if (t >= s.start && t < s.end && !rainNow(new Date(s.start)) && !rainNow(d))
+        return { id: s.kind + dayKey(day), ...s };
+  }
+  return null;
+}
+// 미리보기 한 줄: 다음 토요일 공연 시각 (ms)
+export function nextWeeklyFireworks(d) {
+  for (let k = 0; k < 8; k++) {
+    const day = noonOf(d, k), s = fwPlansOn(day).find(x => x.kind === 'weekly' || x.kind === 'fest');
+    if (s && s.end > d.getTime())
+      return s.start;
+  }
+  return null;
+}

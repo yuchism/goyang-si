@@ -5,6 +5,7 @@ import { FRAMES, IMG, imageReady, img } from './assets.js';
 import { A, O, PL, S, objView, socketOf } from './objects.js';
 import { BDAY_SONG, Snd } from './sound.js';
 import { guestsCue, guestsLeave, guestsStart, guestsTick } from './guests.js';
+import { fireworksBirthday } from './fireworks.js';
 import { HOLE } from './sprites.js';
 import { H, W, ctx } from './stage.js';
 import { bub, dance, fn, go, hold, run } from './steps.js';
@@ -281,6 +282,7 @@ function startSong() {
   p.song = info ? { start: p.t, sec: info.sec, beat: info.beat, phrases: info.phrases } : { start: p.t, sec: NO_SOUND_SEC, beat: BDAY_SONG.beat, phrases: null };
   p.limit = p.t + p.song.sec + 20;
   guestsCue(p);
+  fireworksBirthday(birthdayName, p.song); // 노래에 맞춰 창밖에 이름 불꽃 (소절마다, FIREWORKS_PLAN.md 5장)
 }
 // 춤 칸 번호(0~3): 노래 시계로 센다. 강고양이 씨와 손님이 같은 함수를 써서 늘 같은 칸 (BIRTHDAY_GUESTS_PLAN.md 4-4)
 export function danceCell(a) {
