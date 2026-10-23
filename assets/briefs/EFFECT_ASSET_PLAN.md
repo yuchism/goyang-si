@@ -1,5 +1,7 @@
 # 고양.시 효과·아이콘 자산 v1
 
+> 상태: **적용됨 (첫 공개 전).** 효과는 `web/r/fx/`, 아이콘은 `web/r/icon/`, 계절 소품(난로·트리·간식·방석)은 `web/r/`.
+
 ## 제작 완료
 
 - `assets/effects/butterfly-flap-4f-v1.png`: 나비 날갯짓 4프레임

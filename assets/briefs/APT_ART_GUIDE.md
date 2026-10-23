@@ -1,7 +1,7 @@
 # APT_ART_GUIDE — 건너편 아파트 그림 다시 그리기 가이드
 
 > 상태: v1.1 (2026-10-16). **v2 그림 받아 적용함(10장).** 웹용 그림·마스크·창 위치표는 코드 쪽에서 도구로 만든다.
-> 관련: [WINDOW_PLAN_3.md](WINDOW_PLAN_3.md) 18장(창밖 그림 회의), [SCENE_PLAN.md](SCENE_PLAN.md) 4장(창 좌표), [APT_BACKDROP_PLAN.md](APT_BACKDROP_PLAN.md)(보류된 뒷판안)
+> 관련: [WINDOW_PLAN_3.md](../../docs/plans/WINDOW_PLAN_3.md) 18장(창밖 그림 회의), [SCENE_PLAN.md](../../docs/plans/SCENE_PLAN.md) 4장(창 좌표), [APT_BACKDROP_PLAN.md](../../APT_BACKDROP_PLAN.md)(보류된 뒷판안)
 
 ## 1. 왜
 

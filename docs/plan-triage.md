@@ -92,14 +92,14 @@
 - 짧은 TV 프로(광고·막간) 늘리기 — TV_SCHEDULE 7장 6번
 - 생일 날짜 맞추기, 불꽃 손그림 실루엣 — BIRTHDAY_LINK 3장, FIREWORKS 2장
 
-### 3-4. 문서 정리 (작은 일)
-- `CAT_PLAY_PLAN.md` 상태 줄 "나머지는 그림 준비 전"이 낡음 — 낚시·쳇바퀴·실뭉치 모두 적용 완료(FISH·WHEEL·YARN)
-- 3번째 줄에 `> 상태:`가 없는 문서: CAT_SPRITE, EFFECT_ASSET, MOUSE_SPRITE, ROOM_ASSET (AGENTS.md 2장 규칙)
-- `TV_CHANNEL_PLAN.md` 10장 4번(1차 장르 5개 확정)이 열린 채로 남음 — 구현 완료라 닫기만
-- 끝난 플랜을 어디에 보관할지(예: `docs/plans/`) — 링크가 많아 옮기면 상대 경로를 같이 고쳐야 한다
+### 3-4. 문서 정리 (작은 일) — **끝 (2026-10-24)**
+- ✓ `CAT_PLAY_PLAN.md` 상태 줄 "나머지는 그림 준비 전"이 낡음 — 낚시·쳇바퀴·실뭉치 모두 적용 완료(FISH·WHEEL·YARN)
+- ✓ 3번째 줄에 `> 상태:`가 없는 문서: CAT_SPRITE, EFFECT_ASSET, MOUSE_SPRITE, ROOM_ASSET (AGENTS.md 2장 규칙)
+- ✓ `TV_CHANNEL_PLAN.md` 10장 4번(1차 장르 5개 확정)이 열린 채로 남음 — 구현 완료라 닫기만
+- ✓ 끝난 플랜 22개 → `docs/plans/`, 그림 지시서 13개 → `assets/briefs/` (`git mv`, 마크다운 링크 3곳 고침). 루트엔 열린 문서만
 
 ## 4. 다음에 정할 것
 1. ADR 번호·파일 이름 규칙 (예: `docs/adr/0001-시간은-세-종류.md`) — CAT_INC_IDEAS 11장과 같은 질문
 2. 2장에서 실제로 옮길 것 (전부 / ○ 없는 것부터 / 몇 개만 시범)
 3. 3-2에서 티켓으로 만들 것, 3-4 문서 정리를 한 번에 할지
-4. 끝난 플랜·그림 지시서를 옮길지, 그대로 두고 상태 줄만 맞출지
+4. ~~끝난 플랜·그림 지시서를 옮길지~~ → 옮김 (3-4)
