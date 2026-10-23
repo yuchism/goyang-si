@@ -1,5 +1,5 @@
 # 계절 구경 행동의 끼어들기 정하기
-- status: implemented   (검수: reviews/season-watch-tags.md — 코드 적합, 화면 점검 남음)
+- status: reviewed   (검수: reviews/season-watch-tags.md — 코드 적합 / 회귀·겹침 장면 확인 완료)
 - mode: needs-review
 - brief: (그림 없음)
 - assets: (없음)
@@ -16,11 +16,11 @@
 - [x] 세 줄 위 주석("지금 동작 그대로 … 따로 정한다")을 결정 내용으로 바꾼다
 - [x] `node tools/check_behave.mjs --quick` 통과 (Codex, 2026-10-23)
 - [x] 회귀: `visual_check.js` 전후 같음 (Claude, 2026-10-24 — 62장 중 61장 동일. ui 3장의 94×3px 띠는 같은 코드끼리도 달라지는 흔들림이라 이번 변경과 무관)
-- [ ] 겹침 장면 (사람): `?dev=1` → 「낙엽」 → 창가에 앉으면 콘솔에서 TV 큰 장면 → 고양이가 돌아보지 않는다
+- [x] 겹침 장면 (사람, 확인함): `?dev=1` → 「낙엽」 → 창가에 앉으면 콘솔에서 TV 큰 장면 → 고양이가 돌아보지 않는다
 - [x] STABILITY_PLAN.md 9장 해당 줄에 "→ tasks/season-watch-tags.md" 표시
 
 ## 메모
 - 보이는 동작 변화: 계절 구경 중 TV 큰 장면이 나와도 고개를 돌리거나 달려가지 않는다. 다른 것은 같다.
 - 2026-10-23 구현 (Claude), 커밋 `9a02165`. 검수 (Codex) `a855314`: 코드 결함 없음, check_behave --quick 통과.
-- 회귀·겹침 두 항목이 끝나면 status를 reviewed로.
+- 회귀(Claude)·겹침 장면(사람) 확인 끝 → reviewed. 배포는 사람.
 - 회귀 점검 중 발견: visual_check `ui` 장면 (654,618)–(748,621)이 실행마다 달라진다. → tasks/visual-check-ui-flake.md
