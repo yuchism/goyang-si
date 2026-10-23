@@ -9,6 +9,14 @@
   (`OBJECTS.md`는 `make_objects_doc.py`로 만든다 — 직접 고치지 않는다).
 - 로컬 실행: `cd web && python3 -m http.server` (파일을 더블클릭하면 안 뜬다).
 
+## 1-1. 작업 환경
+- 저장소는 `~/Workspace/goyang-si`. `~/Documents`·`~/Desktop`·`~/Downloads`(macOS 보호 폴더)에 두면 Claude 셸에 폴더가 붙지 않는다.
+- Claude 셸(데스크톱 앱 VM)
+  - 인터넷이 막혀 Playwright Chromium이 없다. 브라우저 검사(`check_scene`·`check_behave`·`visual_check`)는
+    Mac 터미널·Codex에서 돌리거나, Claude가 클라우드 쪽으로 옮겨 돌린다.
+  - git 커밋에는 폴더 삭제 권한이 필요하다(git이 자기 잠금·임시 파일을 지움). 권한을 받아도 git 파일 말고는 지우지 않는다.
+  - 커밋 작성자는 저장소 git 설정(`git config user.name/email`)을 따른다. 설정이 없으면 직전 커밋의 작성자를 `git -c`로 쓰고 그렇게 했다고 알린다.
+
 ## 2. 문서 위치
 - 결정 → `docs/adr/NNNN-제목.md` / 할 일 → `tasks/작업명.md`
 - 그림 지시서 → `assets/briefs/작업명.md` / 검수 → `reviews/작업명.md`
@@ -20,6 +28,8 @@
 - 작업 시작 시 `tasks/`의 status를 읽고, 끝나면 status를 갱신한다.
 - 단계가 끝날 때마다 커밋한다. 검수는 커밋 단위(git diff)로 한다.
 - 구현하며 계획과 달라진 점은 그 티켓(또는 플랜)의 "구현 메모"에 남긴다.
+- status는 티켓 파일이 기준이다. 커밋 제목에 상태를 적을 때는 파일의 status와 같게 한다.
+- "(사람)" 항목은 결과(통과/실패, 실패면 무엇이 보였나)까지 받아 적는다. "봤다"만으로는 체크하지 않는다.
 - 티켓의 확인 항목은 "무엇을 띄워서 무엇을 보는지"까지 적는다. 사람이 눈으로 봐야 하는 항목은 "(사람)"으로 표시한다.
 
 ## 4. 사람이 하는 일 (AI가 혼자 하지 않음)
@@ -55,6 +65,8 @@
 ## 8. 검사
 - 배포 전: `node tools/check_time.mjs` · `node tools/check_tv.mjs` · `node tools/check_scene.mjs [포트]` · `node tools/check_behave.mjs --quick` · `python3 tools/build_meta.py --check`
 - 보이는 동작을 바꾸지 않는 작업: 화면 점검(`visual_check.js` 전후 → `compare.py`)이 같아야 한다. 일부러 바꿨으면 달라진 장면만 눈으로 확인하고 그 사실을 적는다.
+- 화면 점검에서 "다름"이 나오면 먼저 같은 코드로 두 번 찍어 흔들림인지 가린다.
+  알려진 흔들림: `ui` 장면 (654,618)–(748,621) → tasks/visual-check-ui-flake.md
 - 회귀 기준(`--write-baseline`)은 동작을 일부러 바꿨고 승인받았을 때만 다시 뽑는다.
 
 ## 9. 리팩터 후보 보고 (매 작업 종료 시)
