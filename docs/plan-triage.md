@@ -72,14 +72,14 @@
 | 크리스마스·제야에도 `through: 'night'`? | TIME_BASE 12장 | 작음 |
 | 소리 회의 (고양이·동네·날씨) | WINDOW 2·10장, WINDOW_PLAN_3 2장 | 여러 문서가 미뤄 둔 큰 안건 |
 
-### 3-2. 바로 티켓으로 만들 수 있는 것
+### 3-2. 바로 티켓으로 만들 수 있는 것 — **티켓 만듦 (2026-10-24)**
 | 후보 | 출처 | 메모 |
 |---|---|---|
-| 창빛 색을 방에 물들이기 · 커튼 가중치 | SCENE 6장 | 보이는 동작이 바뀜. 구조는 이미 있음 |
-| JS 묶기 / `modulepreload` | LOAD 7장 | `pages.yml`이 바뀌는 일이라 사람 승인 |
-| Google Fonts가 첫 그리기를 막는 것 | LOAD 7장 | |
-| 그림 안 기준점(`TV_HEAD`·`ROD_TIP`·`G`·`SHELF_BOARD` …)을 `meta.json`으로 | SCENE 8장 | 리팩터 후보, 승인 후 |
-| 기본 사물(스탠드·문·TV)이 없는 장면 지원 | SCENE 7장 "아직" | 새 장면을 실제로 만들 때 |
+| 창빛 색을 방에 물들이기 · 커튼 가중치 → `tasks/window-light-tint.md` | SCENE 6장 | 보이는 동작이 바뀜. 구조는 이미 있음 |
+| JS 묶기 / `modulepreload` → `tasks/js-bundle-modulepreload.md` | LOAD 7장 | `pages.yml`이 바뀌는 일이라 사람 승인 |
+| Google Fonts가 첫 그리기를 막는 것 → `tasks/fonts-render-block.md` | LOAD 7장 | |
+| 그림 안 기준점(`TV_HEAD`·`ROD_TIP`·`G`·`SHELF_BOARD` …)을 `meta.json`으로 → `tasks/sprite-anchors-to-meta.md` | SCENE 8장 | 리팩터 후보, 승인 후 |
+| 기본 사물(스탠드·문·TV)이 없는 장면 지원 → `tasks/scene-without-basic-props.md` | SCENE 7장 "아직" | 새 장면을 실제로 만들 때 |
 | visual_check `ui` 흔들림 | (이미 티켓) `tasks/visual-check-ui-flake.md` | STABILITY 9장에 비슷한 흔들림을 "한 장면 더 그리기"로 고친 기록이 있다. 원인 찾을 때 참고 |
 
 ### 3-3. 아이디어 백로그 (언젠가)
