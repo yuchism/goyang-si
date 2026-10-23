@@ -21,7 +21,8 @@
 - 결정 → `docs/adr/NNNN-제목.md` / 할 일 → `tasks/작업명.md`
 - 그림 지시서 → `assets/briefs/작업명.md` / 검수 → `reviews/작업명.md`
 - 끝난 플랜(읽기 전용 기록) → `docs/plans/` / 끝난 그림 지시서 → `assets/briefs/` / 분류 목록 → `docs/plan-triage.md`
-- 루트에는 아직 열린 문서만 둔다(지금: `CABINET_PLAN`·`CARRY_PLAN`·`APT_BACKDROP_PLAN`·`CAT_INC_IDEAS`). 끝나면 위 자리로 옮긴다.
+- 아직 정하지 않은 생각 → `docs/ideas/` (작은 것은 README 한 줄, 큰 구상은 파일 하나). 정해지면 ADR·티켓으로 옮기고 상태만 바꾼다
+- 루트에는 아직 열린 문서만 둔다(지금: `CABINET_PLAN`·`CARRY_PLAN`·`APT_BACKDROP_PLAN`). 로컬 전용 구상 문서는 커밋하지 않는다(`.git/info/exclude`). 끝나면 위 자리로 옮긴다.
 - 플랜·지시서의 상태는 3번째 줄(`> 상태:`)을 본다. 코드 주석은 문서를 파일 이름으로만 부르므로(`TIME_BASE_PLAN.md 9장`) 옮겨도 이름은 바꾸지 않는다.
 
 ## 3. 작업 흐름

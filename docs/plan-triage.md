@@ -11,7 +11,7 @@
 | **그림 지시서 (끝남)** | APT_ART_GUIDE, CAT_SPRITE, EFFECT_ASSET, FISH_SPRITE, GUEST_SPRITE, LASER_SPRITE, MOUNTAIN_SPRITE, MOUSE_SPRITE, ROOM_ASSET, TV_PROGRAM_ASSET, WHEEL_SPRITE, WINDOW_SPRITE, YARN_SPRITE | 새 자리 `assets/briefs/`로 옮길 후보. 공통 그림 원칙만 ADR로 |
 | **미결 · 보류** | CABINET, CARRY ("정리된 방" 논의 중), APT_BACKDROP (보류) | 회의 안건 (3-1) |
 | **방향만 정함** | CAT_PLAY | 상태 줄이 낡음 (3-4). 결정은 ADR로 |
-| **구상 중** | CAT_INC_IDEAS | 지시서가 아님. 그대로 둔다. 11장 "ADR로 처음 옮길 결정 목록"을 이 문서가 채운다 |
+| **구상 중** | (로컬 전용 구상 문서) | 지시서가 아님. 저장소에 올리지 않는다 → `docs/ideas/` 큰 구상 표 |
 
 ## 2. ADR 후보
 
@@ -82,7 +82,7 @@
 | 기본 사물(스탠드·문·TV)이 없는 장면 지원 → `tasks/scene-without-basic-props.md` | SCENE 7장 "아직" | 새 장면을 실제로 만들 때 |
 | visual_check `ui` 흔들림 | (이미 티켓) `tasks/visual-check-ui-flake.md` | STABILITY 9장에 비슷한 흔들림을 "한 장면 더 그리기"로 고친 기록이 있다. 원인 찾을 때 참고 |
 
-### 3-3. 아이디어 백로그 (언젠가)
+### 3-3. 아이디어 백로그 (언젠가) — **`docs/ideas/README.md`로 옮김 (2026-10-24)**
 - 창밖 2차: 유리 앞 강고양이 씨 자리(유리 톡·코 대기·검은 고양이와 마주 앉기), 특별 손님(앵무새·독수리), 까치 이야기, 유성우, 안개·바람 — WINDOW 10장, WINDOW_PLAN_3 14장
 - 창밖 4차: 만득 씨 베란다 살림(화분·빨래 건조대), 11월 하순 비를 눈으로, 산 계절 중간 그림 — WINDOW_PLAN_3 14장
 - 달: 달빛 조각, 추석·대보름 큰 달, 그믐 밤 별 — MOON 8장
@@ -99,7 +99,7 @@
 - ✓ 끝난 플랜 22개 → `docs/plans/`, 그림 지시서 13개 → `assets/briefs/` (`git mv`, 마크다운 링크 3곳 고침). 루트엔 열린 문서만
 
 ## 4. 다음에 정할 것
-1. ADR 번호·파일 이름 규칙 (예: `docs/adr/0001-시간은-세-종류.md`) — CAT_INC_IDEAS 11장과 같은 질문
+1. ADR 번호·파일 이름 규칙 (예: `docs/adr/0001-시간은-세-종류.md`)
 2. 2장에서 실제로 옮길 것 (전부 / ○ 없는 것부터 / 몇 개만 시범)
 3. 3-2에서 티켓으로 만들 것, 3-4 문서 정리를 한 번에 할지
 4. ~~끝난 플랜·그림 지시서를 옮길지~~ → 옮김 (3-4)
