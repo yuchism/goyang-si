@@ -1,5 +1,6 @@
 .DS_Store
 .openai/
-assets/
+assets/*
+!assets/briefs/
 dist/
 node_modules/
