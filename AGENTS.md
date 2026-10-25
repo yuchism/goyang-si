@@ -10,7 +10,7 @@
 - 로컬 실행: `cd web && python3 -m http.server` (파일을 더블클릭하면 안 뜬다).
 
 ## 1-1. 작업 환경
-- 저장소는 `~/Workspace/goyang-si`. `~/Documents`·`~/Desktop`·`~/Downloads`(macOS 보호 폴더)에 두면 Claude 셸에 폴더가 붙지 않는다.
+- 저장소는 `~/Workspace/goyang/goyang-si`. Claude에는 상위 폴더 `~/Workspace/goyang`을 연결한다(다른 저장소와 함께). `~/Documents`·`~/Desktop`·`~/Downloads`(macOS 보호 폴더)에 두면 Claude 셸에 폴더가 붙지 않는다.
 - Claude 셸(데스크톱 앱 VM)
   - 인터넷이 막혀 Playwright Chromium이 없다. 브라우저 검사(`check_scene`·`check_behave`·`visual_check`)는
     Mac 터미널·Codex에서 돌리거나, Claude가 클라우드 쪽으로 옮겨 돌린다.
