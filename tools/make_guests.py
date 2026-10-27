@@ -25,6 +25,9 @@ SRCS = [  # (폴더, 파일 이름 규칙: 이름·판)
 ]
 DST = os.path.join(HERE, '..', 'web', 'sheet')
 CELL, PAD, SCALE = 512, 24, 0.75  # 새 칸 폭 = (512 + 2×24) × 0.75 = 420
+# 칸마다 발 높이가 다른 그림: 칸마다 몸통(가장 큰 덩어리)의 발바닥을 가장 낮은 칸에 맞춰 위아래로 민다 (HOURLY_CHIME_PLAN.md 7장).
+# 다른 손님은 네 칸 발 높이가 이미 같아서 건드리지 않는다
+ALIGN_FEET = {'pumpkinhead'}
 
 
 def latest():
@@ -47,9 +50,29 @@ def bleed(a):
     return a
 
 
+def align_feet(a):
+    feet = []
+    for i in range(4):
+        sub = a[:, i * CELL:(i + 1) * CELL, 3] > 40
+        lab, n = nd.label(sub)
+        big = np.argmax(nd.sum(sub, lab, range(1, n + 1))) + 1
+        feet.append(int(np.nonzero(lab == big)[0].max()))
+    target = max(feet)
+    out = np.zeros_like(a)
+    for i, f in enumerate(feet):
+        d = target - f
+        src = a[:, i * CELL:(i + 1) * CELL]
+        out[d:, i * CELL:(i + 1) * CELL] = src[:a.shape[0] - d]
+        assert not src[a.shape[0] - d:, :, 3].any(), f'칸 {i + 1} 아래가 잘림'
+    print(f'    발 맞춤: {feet} → {target}')
+    return out
+
+
 def convert(name, path):
     a = np.array(Image.open(path).convert('RGBA'))
     a[a[..., 3] <= 3] = 0  # 칸 경계의 거의 투명한 티끌(생성 도구 흔적)은 지운다
+    if name in ALIGN_FEET:
+        a = align_feet(a)
     H, W = a.shape[:2]
     lab, n = nd.label(a[..., 3] > 0, structure=np.ones((3, 3)))
     cw = CELL + 2 * PAD

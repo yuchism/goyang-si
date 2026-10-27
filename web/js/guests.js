@@ -6,6 +6,7 @@ import { birthdayName } from './birthday.js';
 import { PL } from './objects.js';
 import { Snd } from './sound.js';
 import { DEPTH, ctx } from './stage.js';
+import { holiday, now } from './time.js';
 import { RM, clamp } from './util.js';
 import { world } from './world.js';
 
@@ -25,6 +26,9 @@ export const GUESTS = [
   { id: 'sheep', size: 0.85, foot: 536, h: 491 },
   { id: 'wolf-sheep-disguise', size: 0.90, foot: 543, h: 490 }, // 양 탈을 쓴 늑대
   { id: 'alien', size: 0.90, foot: 523, h: 451, rare: true },
+  // 할로윈 손님 (HOURLY_CHIME_PLAN.md 6-1): 할로윈 기간 파티에만. 고깔모자 없음(분장하고 온 손님)
+  { id: 'witch', size: 0.95, foot: 547, h: 377, halloween: true },
+  { id: 'pumpkinhead', size: 1.00, foot: 545, h: 374, halloween: true },
   // 주인장 손님 (assets/birthday/family-guests/): 외계인보다 더 드물게 (OWNER_CHANCE)
   { id: 'mandeuk', size: 1.10, foot: 544, h: 536, owner: true },
   { id: 'family-01', size: 1.10, foot: 546, h: 542, owner: true },
@@ -45,6 +49,11 @@ export const GUEST_CUES = [
 export const GUEST_CUES_RATIO = [0, 0.2, 0.4, 0.55, 0.7]; // 소리가 꺼져 노래 박자가 없을 때: 춤 길이 비율
 export const COUNT = [4, 5]; // 인원 (둘 중 하나, 반반)
 export const RARE_CHANCE = 0.1; // 희귀 손님(외계인)이 한 자리를 차지할 확률
+export const HALLOWEEN_CHANCE = 0.5; // 할로윈 기간 파티에 할로윈 손님이 오는 확률
+export const HALLOWEEN_BOTH = 0.1; // 그때 둘 다 오는 확률
+export const halloweenNow = () => holiday(now()) === 'halloween';
+// 이 손님 그림을 받을까 (assets.js): 할로윈 손님은 할로윈 기간에만
+export const guestLoads = g => !g.halloween || halloweenNow();
 export const OWNER_CHANCE = 0.1; // 주인장을 닮은 손님 넷 중 하나가 한 자리를 차지할 확률 (외계인과 같은 정도, 2026-10-22 4% → 10%)
 // 이름 소환: 생일자 이름(띄어쓰기 뺌)이 맞으면 첫 파티(페이지를 연 뒤 처음 누른 배너)에 이 주인장 손님들이 꼭 나온다. 배너를 다시 누르면 평소대로 (BIRTHDAY_GUESTS_PLAN.md 19장).
 // 이름을 코드에 그대로 적지 않으려고 이름의 해시(nameKey)로 적는다. 새로 넣으려면 개발자 도구에서 __nameKey('이름')
@@ -80,7 +89,8 @@ function shuffle(a) {
 // 손님을 뽑고 자리를 정한다. 그림이 아직 없는 손님은 뽑지 않는다(그린 애부터 나온다)
 function pickGuests() {
   const spots = (PL('party.guests') || {}).spots || [];
-  const common = GUESTS.filter(g => !g.rare && !g.owner && ready(g)), rare = GUESTS.filter(g => g.rare && ready(g)), owners = GUESTS.filter(g => g.owner && ready(g));
+  const hw = halloweenNow() ? GUESTS.filter(g => g.halloween && ready(g)) : [];
+  const common = GUESTS.filter(g => !g.rare && !g.owner && !g.halloween && ready(g)), rare = GUESTS.filter(g => g.rare && ready(g)), owners = GUESTS.filter(g => g.owner && ready(g));
   if (!spots.length || !common.length)
     return [];
   const summon = summonDone ? [] : (SUMMON[nameKey(birthdayName)] || []).map(id => owners.find(g => g.id === id)).filter(Boolean); // 그림이 있는 것만. 두 번째 파티부터는 평소대로
@@ -94,6 +104,8 @@ function pickGuests() {
       special.push(owners[Math.floor(Math.random() * owners.length)]);
     if (rare.length && Math.random() < RARE_CHANCE)
       special.push(rare[Math.floor(Math.random() * rare.length)]);
+    if (hw.length && Math.random() < HALLOWEEN_CHANCE)
+      special.push(...shuffle(hw.slice()).slice(0, Math.random() < HALLOWEEN_BOTH ? 2 : 1));
     chosen = [...special, ...shuffle(common.slice()).slice(0, Math.max(1, n - special.length))];
     const key = chosen.map(g => g.id).sort().join();
     if (key !== lastKey || tries === 5) {
@@ -103,7 +115,7 @@ function pickGuests() {
   }
   // 자리: 큰 손님부터. 작은 손님 자리(small)는 size ≤ SMALL만, 뒷줄(back)엔 큰 손님(≥ BIG)이 안 선다. 맞는 자리가 없으면 그 손님은 빠진다
   const free = spots.slice(), out = [];
-  // 특별 손님(주인장·외계인)이 먼저 자리를 잡는다 (큰 손님이 많아 앞줄이 모자라도 빠지지 않게)
+  // 특별 손님(주인장·외계인·할로윈)이 먼저 자리를 잡는다 (큰 손님이 많아 앞줄이 모자라도 빠지지 않게)
   for (const g of chosen.slice().sort((a, b) => (special.includes(b) - special.includes(a)) || b.size - a.size)) {
     const ok = free.filter(s => (!s.small || g.size <= SMALL) && (!s.back || g.size < BIG || summon.includes(g))); // 소환된 주인장은 뒷줄에도 선다 (앞줄 큰 자리가 둘뿐이라)
     // 작은 손님은 작은 손님 자리를 먼저 (거기 설 수 있는 애가 적으므로)
