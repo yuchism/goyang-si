@@ -226,11 +226,16 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
     return { sec: at * beat + .15, beat, phrases };
   },
   // 녹음 차임 준비: 소리가 켜져 있으면 파일을 받아 Web Audio로 풀어 둔다. 첫 종까지 못 풀면 그 종은 만든 소리. 매 장면 불러도 된다 (chime.js)
-  chimeBufs: {}, chimeRaw: {}, chimeBusy: {},
+  chimeBufs: {}, chimeRaw: {}, chimeBusy: {}, chimeDone: false,
   prepChime() {
-    if (!this.on) // 소리를 켠 사람만 받는다
+    if (!this.on || this.chimeDone) // 소리를 켠 사람만 받는다. 다 받았으면(또는 못 받기로 끝났으면) 바로 빠진다
       return;
-    for (const [k, url] of Object.entries(CHIME.files || {})) {
+    const files = Object.entries(CHIME.files || {});
+    if (files.every(([k]) => this.chimeBufs[k] || this.chimeRaw[k] === false)) {
+      this.chimeDone = true;
+      return;
+    }
+    for (const [k, url] of files) {
       if (this.chimeBufs[k] || this.chimeBusy[k] || this.chimeRaw[k] === false)
         continue;
       this.chimeBusy[k] = true;
