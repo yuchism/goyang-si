@@ -207,6 +207,12 @@ async function child() {
   eq(time.momentNow('halloweenNight', T(2026, 10, 31, 21, 0)), true, '10/31 21:00 마녀 순간');
   eq(time.momentNow('halloweenNight', T(2026, 11, 1, 2, 0)), true, '11/1 02:00 마녀 순간 (자정을 넘은 그 밤)');
   eq(time.momentNow('halloweenNight', T(2026, 11, 1, 11, 0)), false, '11/1 11:00 마녀 순간');
+  eq(time.momentNow('halloweenNight', T(2026, 10, 26, 21, 0)), true, '10/26 21:00 마녀 순간 (할로윈 기간 매일 밤)');
+  eq(time.momentNow('halloweenNight', T(2026, 10, 24, 20, 59)), false, '10/24 20:59 마녀 순간 아님');
+  eq(time.momentNow('halloweenNight', T(2026, 10, 25, 1, 0)), true, '10/25 01:00 마녀 순간 (10/24 밤)');
+  eq(time.momentNow('halloweenNight', T(2026, 10, 24, 1, 0)), false, '10/24 01:00 (10/23 밤, 기간 전)');
+  eq(time.momentNow('halloweenNight', T(2026, 11, 1, 21, 0)), false, '11/1 21:00 (기간 끝)');
+  eq(time.momentNow('christmasEveNight', T(2026, 12, 24, 21, 0)), true, '12/24 21:00 산타 순간 (그대로)');
   eq(time.momentNow('christmasEveNight', T(2026, 12, 25, 1, 0)), true, '12/25 01:00 산타 순간');
   eq(time.holiday(T(2026, 10, 24, 0, 30)), 'halloween', '할로윈 시작 10/24 00:30');
   eq(time.holiday(T(2026, 11, 1, 3)), 'halloween', '11/1 03:00 할로윈 (그 밤이 끝나기 전)');

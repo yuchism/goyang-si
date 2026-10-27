@@ -373,18 +373,20 @@ export function inPeriod(name, d) {
 export const onDate = (name, d) => !!CAL.periods[name] && dateIn(CAL.periods[name], d);
 // 지금 켜진 기간 이름들
 export const periodsAt = d => Object.keys(CAL.periods).filter(n => inPeriod(n, d));
-// 특별한 순간: date의 from 시각부터 (night: true면 그 밤이 끝날 때까지)
+// 특별한 순간: date(또는 period 기간의 매일)의 from 시각부터 (night: true면 그 밤이 끝날 때까지)
 export function momentNow(name, d) {
   const mo = CAL.moments[name];
   if (!mo)
     return false;
-  const [hh, mi] = mo.from.split(':').map(Number), want = mdOf(mo.date), md = x => (x.getMonth() + 1) * 100 + x.getDate();
-  if (md(d) === want && hourOf(d) >= hh + mi / 60)
+  const [hh, mi] = mo.from.split(':').map(Number), p = mo.period ? CAL.periods[mo.period] : { date: mo.date };
+  if (!p)
+    return false;
+  if (dateIn(p, d) && hourOf(d) >= hh + mi / 60)
     return true;
   if (!mo.night)
     return false;
   const n = nightStart(d);
-  return !!n && md(n) === want && dayKey(n) !== dayKey(d); // 자정을 넘긴 그 밤
+  return !!n && dateIn(p, n) && dayKey(n) !== dayKey(d); // 자정을 넘긴 그 밤
 }
 // 명절: 이 넷만, 이 순서로 (방·창밖 전용. TV는 onDate). 미리보기 도구의 holidayOverride가 먼저
 export const HOLIDAYS = ['halloween', 'christmas', 'seollal', 'newyear'];

@@ -16,7 +16,7 @@ export const CAL = {
     chuseok: { dates: { 2026: '09-25', 2027: '09-15', 2028: '10-03', 2029: '09-22', 2030: '09-12' }, before: 1, after: 1 }
   },
   moments: {
-    halloweenNight:    { date: '10-31', from: '21:00', night: true }, // 10/31 밤 마녀 꼭 한 번
+    halloweenNight:    { period: 'halloween', from: '21:00', night: true }, // 할로윈 기간 매일 밤 9시부터 마녀 꼭 한 번 (tasks/halloween-nightly.md)
     christmasEveNight: { date: '12-24', from: '21:00', night: true }  // 이브 밤 산타 꼭 한 번
   },
   /* 풍경 날짜 (WINDOW_PLAN_3.md 4-2): 한국 달력 기준. 남반구는 time.js yearPos가 반년 밀어 준다.

@@ -117,8 +117,11 @@ export function maybeBats(d, dt) {
   }
   if (!isHalloween(d) || !batTime(d) || rainNow(d) || !canStart('skySmall'))
     return; // 하늘에 큰 것(마녀·UFO·산타·비행기)이 있으면 안 나온다 (events.js 교통정리)
-  if (Math.random() < dt / 1500) // 25분에 한 번 꼴
+  const first = world.batEve !== nightOf(d); // 그 밤 첫 무리는 곧 (2분에 한 번 꼴), 그 뒤는 25분에 한 번 꼴 (tasks/halloween-nightly.md)
+  if (Math.random() < dt / (first ? 120 : 1500)) {
+    world.batEve = nightOf(d);
     startBats();
+  }
 }
 function drawBats(w) {
   const b = world.bats;
@@ -170,7 +173,7 @@ export function maybeWitch(d, dt) {
     return; // 커튼 자리(유령 그림자)가 비어 있어야 한다 (마녀 반전 그림자가 같은 자리를 쓴다)
   if (!isNight(d))
     return;
-  // 10/31 밤 9시 이후에는 꼭 한 번 (calendar.js halloweenNight. 자정을 넘어도 같은 밤). 특별한 순간: 쉼·천둥을 무시하고 지나가는 큰 것만 기다린다
+  // 할로윈 기간 매일 밤 9시 이후에는 꼭 한 번 (calendar.js halloweenNight. 자정을 넘어도 같은 밤, tasks/halloween-nightly.md). 특별한 순간: 쉼·천둥을 무시하고 지나가는 큰 것만 기다린다
   if (momentNow('halloweenNight', d) && world.witchEve !== nightOf(d)) {
     if (!canStart('sky', { special: true }))
       return;
@@ -340,7 +343,7 @@ export function drawCurtainShadow(dk) {
 }
 
 /* ───────── 사건 목록에 싣는 것 (events.js). 할로윈 기간 밤에만 저절로 생긴다 ───────── */
-// 고양이 마녀와 박쥐 수행단 (가끔 커튼 그림자가 먼저). 10/31 밤 9시 이후엔 꼭 한 번
+// 고양이 마녀와 박쥐 수행단 (가끔 커튼 그림자가 먼저). 할로윈 기간 매일 밤 9시 이후엔 꼭 한 번
 export const witchEvent = {
   needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'witch',
@@ -354,7 +357,7 @@ export const witchEvent = {
   dev: [{ btn: 'dWitch', go: () => startWitch(Math.random() < 0.5) }],
   debug: { startWitch },
 };
-// 창밖 박쥐 두세 마리 (25분에 한 번 꼴)
+// 창밖 박쥐 두세 마리 (그 밤 첫 무리는 곧, 그 뒤 25분에 한 번 꼴)
 export const batsEvent = {
   needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'bats',
