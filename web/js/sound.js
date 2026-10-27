@@ -22,8 +22,8 @@ export const CHIME = {
   gap: 1.2, // 차임 끝 ~ 첫 타종(초)
   strike: 2.4, // 타종 간격(초)
   tail: 2.2, // 마지막 타종 뒤 여운(초)
-  vol: 0.32, // 낮 소리 크기
-  volQuiet: 0.1, // 불 꺼진 시간 (HOURLY_CHIME_PLAN.md 3장: 밤엔 작게)
+  vol: 0.192, // 낮 소리 크기 (0.32에서 0.6배로 줄임, HOURLY_CHIME_PLAN.md 14장)
+  volQuiet: 0.06, // 불 꺼진 시간 (HOURLY_CHIME_PLAN.md 3장: 밤엔 작게). 낮과 같은 비율로 0.1에서 줄임
   far: 1900, // 멀리서 들리게: 이 Hz 위를 깎는다
   guestAt: 1.2, // 손님이 나오는 때: 차임 시작 몇 초 뒤
   guestOut: 0.4, // 차임 마지막 음 끝 ~ 손님 퇴장(초). gap보다 작게 (손님은 차임에서만, HOURLY_CHIME_PLAN.md 14장)
