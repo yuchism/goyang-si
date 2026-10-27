@@ -3,19 +3,18 @@
 import { WIN, skyRnd, wy } from './win.js';
 import { play } from './anim.js';
 import { ghostFree } from './behave.js';
-import { assetsWarm, imageReady, img } from './assets.js';
+import { imageReady, img } from './assets.js';
 import { curtainSkew, drawProp } from './draw.js';
 import { glowMask } from './glow.js';
 import { tr } from './i18n.js';
-import { O, PL, S, objView, present, zOf } from './objects.js';
+import { O, S, objView, present, zOf } from './objects.js';
 import { cv, ctx } from './stage.js';
 import { drawSkySprite } from './sprites.js';
 import { canStart } from './events.js';
 import { bub, fn, go, hold, run, until } from './steps.js';
-import { batTime, holiday, isNight, momentNow, moonPhase, nightOf, now, rainNow } from './time.js';
-import { INK, RM, clamp, pick, rnd } from './util.js';
+import { batTime, isHalloween, isNight, momentNow, moonPhase, nightOf, now, rainNow } from './time.js';
+import { RM, clamp, pick, rnd } from './util.js';
 import { after, caption, cat, say, world } from './world.js';
-export const isHalloween = d => holiday(d) === 'halloween';
 // 박쥐·유령은 time.js batTime(해 진 뒤 18분 ~ 동틀 녘 시작), 마녀는 isNight(해 진 뒤 30분 ~ 동틀 녘 시작). 유령 횟수·10/31 마녀는 하룻밤(time.js nightOf)으로 센다
 const flick = () => RM ? 1 : 1 + 0.06 * Math.sin(world.t * 2.3) + 0.04 * Math.sin(world.t * 5.9 + 1.3); // 촛불처럼 ±10%
 /* ───────── 호박 불빛 ───────── */
@@ -68,8 +67,8 @@ export function pumpkinNight() {
 /* 밤하늘 실루엣 대비(달빛 테두리)는 sprites.js drawSkySprite (검은 고양이도 같이 쓴다, WINDOW_PLAN.md 5-2) */
 /* ───────── 박쥐 ───────── */
 // 지그재그: 위아래로 짧게 꺾이는 삼각파
-const zig = u => 2 * Math.abs(2 * (u - Math.floor(u + 0.5))) - 1;
-function drawBat(x, y, sc, ph, alpha) {
+export const zig = u => 2 * Math.abs(2 * (u - Math.floor(u + 0.5))) - 1;
+export function drawBat(x, y, sc, ph, alpha) {
   const name = 'fx/bat_' + [1, 2, 3, 2][Math.floor(ph) % 4], im = img(name);
   if (!imageReady(im))
     return;
@@ -321,12 +320,14 @@ export function drawCurtainShadow(dk) {
 }
 
 /* ───────── 사건 목록에 싣는 것 (events.js). 할로윈 기간 밤에만 저절로 생긴다 ───────── */
+// 마녀가 나가 있나: 하늘을 날거나 커튼에 마녀 그림자가 비치는 동안 (하늘 자리 · 산 너머 마녀의 집 창 불, halloween-extra.js)
+export const witchOut = () => !!world.witch || !!(world.curtainShadow && world.curtainShadow.kind === 'witch');
 // 고양이 마녀와 박쥐 수행단 (가끔 커튼 그림자가 먼저). 할로윈 기간 매일 밤 9시 이후엔 꼭 한 번
 export const witchEvent = {
   needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'witch',
   cls: 'sky',
-  active: () => !!world.witch || !!(world.curtainShadow && world.curtainShadow.kind === 'witch'), // 커튼 마녀 그림자가 비치는 순간부터 하늘 자리를 잡는다
+  active: () => witchOut(), // 커튼 마녀 그림자가 비치는 순간부터 하늘 자리를 잡는다
   tick: (d, real) => maybeWitch(d, real),
   sky: drawWitch,
   reset() {
@@ -363,202 +364,4 @@ export const ghostEvent = {
   dev: [{ btn: 'dGhost', go: () => startGhost() }],
   debug: { startGhost },
 };
-
-/* ───────── 산 너머 마녀의 집 (tasks/halloween-witch-tower.md) ─────────
-   할로윈 기간에만, 먼 산 너머로 가늘고 구불구불한 바위 봉우리가 솟아 있고 그 꼭대기에 작은 마녀의 집이 얹혀 있다.
-   낮엔 먼 산처럼 뿌옇게, 밤엔 시커멓게. 집의 창 하나에 촛불(해 질 무렵부터). 마녀가 창밖을 날아가는 동안엔 창 불이 꺼진다(집을 비움).
-   밤엔 작은 박쥐 두 마리가 집 둘레를 맴돈다. 정체는 설명하지 않는다.
-   산 판보다 먼저 그려(skyBack) 봉우리 밑동이 능선에 가려진다. 자리·크기는 window.json witchTower (창 안 좌표) */
-const TOWER = { ink: '27,20,44', day: '146,146,176', rim: 'rgba(206,196,255,.16)', light: '255,200,105', bats: 2 }; // ink: 밤 실루엣, day: 낮(먼 산 연무색)
-let towerLit = 1; // 창 불빛 (마녀가 나가면 서서히 꺼지고 돌아오면 켜진다). 진행은 towerTick, 그리기는 읽기만
-const TOWER_FADE = 0.8; // 창 불이 다 꺼지거나 켜지는 데 걸리는 초
-function towerTick(d, real) {
-  const away = !!world.witch || !!(world.curtainShadow && world.curtainShadow.kind === 'witch');
-  towerLit = clamp(towerLit + (away ? -1 : 1) * real / TOWER_FADE, 0, 1);
-}
-function drawWitchTower(w) {
-  const T = WIN.witchTower;
-  if (!T || holiday(now()) !== 'halloween')
-    return false;
-  const a = clamp(((world.skyDark || 0) - 0.2) / 0.5, 0, 1); // 밤 정도: 낮엔 먼 산처럼 뿌옇게(0), 어두워질수록 시커멓게(1)
-  const x0 = w.x + T.x, base = wy(T.base), h = T.h, bw = T.w / 2, sway = T.sway * h;
-  // 봉우리: t 0(밑동) ~ 1(꼭대기). 밑동은 넓게 퍼져 산에 묻히고, 위로 갈수록 가늘어지며 S자로 구불거린다. 꼭대기는 살짝 넓은 턱
-  const cx = t => x0 + sway * Math.sin(t * Math.PI * 1.15) * t, cy = t => base - t * h;
-  const half = t => bw * (0.13 + 0.87 * Math.pow(1 - t, 2.6)) + (t > 0.9 ? bw * 0.22 * (t - 0.9) / 0.1 : 0);
-  const rough = (t, k) => Math.sin(t * 23 + k) * 0.6 + Math.sin(t * 57 + k * 2) * 0.35; // 바위 결 (px)
-  const ink = TOWER.day.split(',').map((v, i) => Math.round(+v + (TOWER.ink.split(',')[i] - v) * a)).join(',');
-  ctx.save();
-  ctx.fillStyle = `rgb(${ink})`;
-  ctx.strokeStyle = a > 0.5 ? TOWER.rim : `rgba(${ink},0)`; // 밤엔 달빛 테두리 아주 옅게
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  const N = 40;
-  for (let i = 0; i <= N; i++) {
-    const t = i / N;
-    ctx[i ? 'lineTo' : 'moveTo'](cx(t) - half(t) + rough(t, 1), cy(t));
-  }
-  for (let i = N; i >= 0; i--) {
-    const t = i / N;
-    ctx.lineTo(cx(t) + half(t) + rough(t, 4), cy(t));
-  }
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  // 꼭대기의 작은 마녀 집: 비뚤게 기운 상자 + 높고 끝이 꺾인 뾰족 지붕 + 굴뚝
-  const hx = cx(1), hy = cy(1) + 1, hw = T.house / 2, hh = T.house * 0.7, tilt = -0.08;
-  ctx.save();
-  ctx.translate(hx, hy);
-  ctx.rotate(tilt);
-  ctx.fillStyle = `rgb(${ink})`;
-  ctx.beginPath(); // 벽
-  ctx.moveTo(-hw, 0);
-  ctx.lineTo(-hw * 0.9, -hh);
-  ctx.lineTo(hw * 0.95, -hh * 1.05);
-  ctx.lineTo(hw, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillRect(hw * 0.35, -hh * 1.9, hw * 0.28, hh * 0.9); // 굴뚝
-  ctx.beginPath(); // 지붕: 처마가 조금 나오고, 끝이 옆으로 휘어 꺾인다
-  ctx.moveTo(-hw * 1.35, -hh * 0.92);
-  ctx.quadraticCurveTo(-hw * 0.2, -hh * 1.6, -hw * 0.05, -hh * 2.6);
-  ctx.quadraticCurveTo(hw * 0.2, -hh * 3.2, hw * 1.1, -hh * 3.05); // 꺾인 끝
-  ctx.quadraticCurveTo(hw * 0.35, -hh * 2.7, hw * 0.45, -hh * 1.9);
-  ctx.quadraticCurveTo(hw * 0.7, -hh * 1.25, hw * 1.35, -hh * 1.0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  // 창 하나: 촛불처럼 일렁인다. 할로윈 자정 손님이 와 있으면 조금 더 밝게 (chime.js world.chimeGlow)
-  const lit = towerLit * clamp((a - 0.5) / 0.3, 0, 1); // 창 불은 해 질 무렵부터
-  if (lit > 0.01) {
-    const wx = -hw * 0.15, wyy = -hh * 0.5, ww = Math.max(1.4, hw * 0.24), wh = ww * 1.6;
-    const f = (RM ? 1 : 0.85 + 0.1 * Math.sin(world.t * 3.1) + 0.05 * Math.sin(world.t * 7.7)) * lit * (world.chimeGlow ? 1.4 : 1);
-    const g = ctx.createRadialGradient(wx, wyy, 0, wx, wyy, T.house * 1.6);
-    g.addColorStop(0, `rgba(${TOWER.light},${0.3 * f})`);
-    g.addColorStop(1, `rgba(${TOWER.light},0)`);
-    ctx.fillStyle = g;
-    ctx.fillRect(wx - T.house * 1.6, wyy - T.house * 1.6, T.house * 3.2, T.house * 3.2);
-    ctx.fillStyle = `rgba(${TOWER.light},${Math.min(1, f)})`;
-    ctx.fillRect(wx - ww, wyy - wh / 2, ww * 2, wh);
-  }
-  ctx.restore();
-  ctx.restore();
-  // 집 둘레를 맴도는 작은 박쥐들 (밤에만. 뒤로 갈 땐 작고 옅게)
-  for (let i = 0; a > 0.5 && i < TOWER.bats; i++) {
-    const u = world.t * (RM ? 0 : 0.45) + i * (Math.PI * 2 / TOWER.bats), bx = hx + Math.cos(u) * T.house * 2.2, by = hy - hh * 2 + Math.sin(u) * T.house * 0.6 + zig(world.t * 1.7 + i) * 2;
-    drawBat(bx, by, 0.18 + 0.05 * Math.sin(u), world.t * 10 + i * 1.3, a * (0.55 + 0.35 * Math.sin(u)));
-  }
-  return true;
-}
-export const towerEvent = {
-  needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
-  id: 'witchTower',
-  tick: (d, real) => towerTick(d, real),
-  skyBack: drawWitchTower,
-};
-
-/* ───────── 천장 거미와 구석 거미줄 (tasks/halloween-room-extras.md 1장) ─────────
-   할로윈 기간 밤에 가끔 벽 위 천장에서 작은 거미가 실을 타고 내려와 대롱대롱하다 올라간다. 구석엔 거미줄(기간 내내).
-   자리는 objects.json halloween.spider (x, 천장 top, 가장 낮은 곳 low) · halloween.web (구석 x·y, 크기 r, 방향 dir: 1이면 오른쪽 아래로 펼침) */
-const SPIDER = { every: 900, down: 5, hang: [7, 14], up: 3.5 }; // 평균 몇 초에 한 번, 내려오기·대롱대롱·올라가기(초)
-export function startSpider() {
-  const sp = PL('halloween.spider');
-  if (world.spider || !sp)
-    return;
-  world.spider = { t: 0, hang: rnd(SPIDER.hang[0], SPIDER.hang[1]), low: rnd(0.75, 1), seen: false };
-}
-function spiderTick(d, real, bf) {
-  const s = world.spider;
-  if (!s) { // 확률은 미리보기 배속을 따른다(다른 사건처럼), 움직임은 3배까지만 (나비와 같음)
-    if (isHalloween(d) && isNight(d) && !world.manduk && assetsWarm() && Math.random() < real * bf / SPIDER.every)
-      startSpider();
-    return;
-  }
-  if (world.manduk && s.t < SPIDER.down + s.hang) // 만득 씨가 오면 바로 올라간다
-    s.t = SPIDER.down + s.hang;
-  s.t += real * Math.min(bf, 3);
-  if (!s.seen && s.t > SPIDER.down && !cat.closed && !cat.bub && !world.manduk) {
-    s.seen = true;
-    say(cat, '👀', 3);
-  }
-  if (s.t > SPIDER.down + s.hang + SPIDER.up)
-    world.spider = null;
-}
-function drawSpiderWeb() {
-  const wb = PL('halloween.web');
-  if (!wb || !isHalloween(now()))
-    return;
-  const { x, y, r } = wb, dir = wb.dir || 1;
-  ctx.save();
-  ctx.strokeStyle = 'rgba(245,240,230,.55)';
-  ctx.lineWidth = 1;
-  const A = [0, 0.28, 0.55, 0.8, 1].map(k => k * Math.PI / 2); // 구석에서 부채꼴로
-  const pt = (k, rr) => [x + dir * Math.cos(A[k]) * rr, y + Math.sin(A[k]) * rr];
-  A.forEach((_, k) => {
-    const [ex, ey] = pt(k, r);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(ex, ey);
-    ctx.stroke();
-  });
-  for (const f of [0.3, 0.55, 0.8]) { // 처진 가로줄
-    ctx.beginPath();
-    for (let k = 0; k < A.length; k++) {
-      const [px, py] = pt(k, r * f);
-      if (!k)
-        ctx.moveTo(px, py);
-      else {
-        const [qx, qy] = pt(k - 1, r * f), mx = (px + qx) / 2 - dir * r * 0.04, my = (py + qy) / 2 - r * 0.04;
-        ctx.quadraticCurveTo(mx + (x - mx) * 0.12, my + (y - my) * 0.12, px, py);
-      }
-    }
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-function drawSpider() {
-  drawSpiderWeb();
-  const s = world.spider, sp = PL('halloween.spider');
-  if (!s || !sp)
-    return;
-  const { down, up } = SPIDER, t = s.t;
-  const k = t < down ? t / down : t < down + s.hang ? 1 : 1 - (t - down - s.hang) / up; // 내려온 정도
-  const ease2 = u => u * u * (3 - 2 * u), y = sp.top + (sp.low - sp.top) * s.low * ease2(clamp(k, 0, 1));
-  const sw = RM ? 0 : Math.sin(world.t * 1.6) * 3 * (t > down ? 1 : k), x = sp.x + sw, bob = RM ? 0 : Math.sin(world.t * 4.3) * 0.6;
-  ctx.save();
-  ctx.strokeStyle = 'rgba(240,236,228,.6)'; // 실
-  ctx.lineWidth = 0.8;
-  ctx.beginPath();
-  ctx.moveTo(sp.x, sp.top);
-  ctx.lineTo(x, y - 4);
-  ctx.stroke();
-  ctx.strokeStyle = INK; // 다리 여덟
-  ctx.lineWidth = 1.2;
-  for (let i = 0; i < 4; i++)
-    for (const sd of [-1, 1]) {
-      const a0 = -0.9 + i * 0.55 + (RM ? 0 : Math.sin(world.t * 6 + i) * 0.06);
-      ctx.beginPath();
-      ctx.moveTo(x, y + bob);
-      ctx.quadraticCurveTo(x + sd * 6 * Math.cos(a0), y + bob - 4 + 7 * Math.sin(a0) - 3, x + sd * 9 * Math.cos(a0 * 0.8), y + bob + 7 * Math.sin(a0) + 2);
-      ctx.stroke();
-    }
-  ctx.fillStyle = INK;
-  ctx.beginPath();
-  ctx.ellipse(x, y + 3 + bob, 4.6, 5.4, 0, 0, 7); // 배
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(x, y - 3 + bob, 2.8, 0, 7); // 머리
-  ctx.fill();
-  ctx.restore();
-}
-export const spiderEvent = {
-  needs: ['halloween.spider'], // 장면에 이 자리가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
-  id: 'spider',
-  tick: (d, real, bf) => spiderTick(d, real, bf),
-  room: drawSpider,
-  reset() {
-    world.spider = null;
-  },
-  debug: { startSpider },
-};
-
+/* 산 너머 마녀의 집 · 천장 거미 · 구석 거미줄은 halloween-extra.js */

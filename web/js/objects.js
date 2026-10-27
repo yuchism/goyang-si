@@ -1,7 +1,7 @@
 /* 사물: objects.json을 읽어 위치·상태·자리·소켓·깊이를 알려준다 */
 import { imageReady, img } from './assets.js';
 import { birthdayMode } from './birthday.js';
-import { boxOpen, boxToday, holiday, now, pumpkinLit, season } from './time.js';
+import { boxOpen, boxToday, holiday, isHalloween, now, pumpkinLit, season } from './time.js';
 import { cat, mouse, world } from './world.js';
 import { fishRodOut } from './fish.js';
 import { rnd, runSceneHooks } from './util.js';
@@ -32,7 +32,7 @@ export function initObjects(data) {
 }
 // 등장 조건
 const WHEN = { always: () => true, summer: () => season(now()) === 'summer', winter: () => season(now()) === 'winter',
-  halloween: () => holiday(now()) === 'halloween', christmas: () => holiday(now()) === 'christmas', boxDay: () => boxToday(now()), treat: () => world.treat,
+  halloween: () => isHalloween(now()), christmas: () => holiday(now()) === 'christmas', boxDay: () => boxToday(now()), treat: () => world.treat,
   doorClosed: () => STATE.door() !== 'open' };
 export const present = o => o.id === 'tree' && birthdayMode ? false : (WHEN[o.when || 'always'] || WHEN.always)();
 // 지금 상태

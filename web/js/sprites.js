@@ -8,7 +8,7 @@ import { DEPTH, H, W, cam, ctx, view } from './stage.js';
 import { actorLift, hasShadow } from './steps.js';
 import { HAND, INK, RM, clamp, onScene } from './util.js';
 import { cat, world } from './world.js';
-import { holiday, now } from './time.js';
+import { isHalloween, now } from './time.js';
 // 나중 묶음을 다 받기 전에 아직 없는 프레임이 불리면 (LOAD_PLAN.md 4-3): 그 배우가 마지막으로 실제로 그린 프레임을 그 자리에 그린다.
 // 그것도 없으면 서 있는 그림. a.frame(지금 프레임 이름, 다른 곳이 읽는다)은 그대로 두고, 그린 것은 a.drawn에 따로 기억한다
 let frameMiss = 0;
@@ -105,7 +105,7 @@ function drawMouse(a) {
   // 코 킁킁: 가만히 있을 때 아주 살짝 앞뒤로
   const sn = (!RM && fr === 'mouse_idle_1') ? 1 + Math.max(0, Math.sin((world.t + a.phase) * 7)) * 0.012 : 1;
   drawFrame(fr, a.x, a.y - actorLift(a), a.face, MSC * dp * sn, 1, a);
-  if (holiday(now()) === 'halloween')
+  if (isHalloween(now()))
     drawGhostSheet(a.drawn || fr, a.x, a.y - actorLift(a), a.face, MSC * dp * sn);
 }
 /* 할로윈 유령 분장 (tasks/halloween-room-extras.md 2장): 쥐야쥐 그림 위에 하얀 천을 덮어 그린다.

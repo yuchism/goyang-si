@@ -11,7 +11,7 @@ import { mouseHide } from './mouse.js';
 import { O, P, S, present } from './objects.js';
 import { H, W, ctx } from './stage.js';
 import { bub, fn, go, hold, run } from './steps.js';
-import { aptLightsAt, boxToday, flashSince, holiday, isNight, nextAtHour, now, planeSlots, rainNow, rainbowAt, rainbowSide, setOverride, setSimMs, setWindowOverride, slotDue, thunderNow } from './time.js';
+import { aptLightsAt, boxToday, flashSince, isHalloween, isNight, nextAtHour, now, planeSlots, rainNow, rainbowAt, rainbowSide, setOverride, setSimMs, setWindowOverride, slotDue, thunderNow } from './time.js';
 import { winFree } from './behave.js';
 import { RM, clamp, hash, rnd } from './util.js';
 import { after, caption, cat, mouse, say, world } from './world.js';
@@ -42,7 +42,7 @@ function drawLights(w, g) {
     return; // 아침·낮
   const sx = g.aw / WIN.size[0], sy = g.ah / WIN.size[1];
   const [lr, lg, lb] = WIN.lit, [dr, dg, db] = WIN.dark;
-  const hw = holiday(g.d) === 'halloween'; // 할로윈 밤: 불 켜진 창 3분의 1쯤이 호박빛으로 일렁인다 (tasks/halloween-room-extras.md 3장)
+  const hw = isHalloween(g.d); // 할로윈 밤: 불 켜진 창 3분의 1쯤이 호박빛으로 일렁인다 (tasks/halloween-room-extras.md 3장)
   ctx.save();
   ctx.globalAlpha = g.night;
   WIN.windows.forEach(([x, y, ww, hh, was], i) => {

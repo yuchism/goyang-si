@@ -395,6 +395,8 @@ export function holiday(d) {
     return holidayOverride;
   return HOLIDAYS.find(n => inPeriod(n, d)) || null;
 }
+// 할로윈 기간인가 (방·창밖·손님 모두 이것으로. 미리보기 명절 덮어쓰기도 따른다)
+export const isHalloween = d => holiday(d) === 'halloween';
 // 미리보기 도구 한 줄: "지금: 계절 · 시간대 · 달력 날 · 방송일 · 하룻밤 · 켜진 기간"
 export function timeInfo(d) {
   return { season: season(d), south: seasonSouth(), part: daypart(d), cal: calDay(d), bday: dayKey(broadcastDay(d)), night: nightOf(d), periods: periodsAt(d) };

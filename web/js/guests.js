@@ -6,7 +6,7 @@ import { birthdayName } from './birthday.js';
 import { PL } from './objects.js';
 import { Snd } from './sound.js';
 import { DEPTH, ctx } from './stage.js';
-import { holiday, now } from './time.js';
+import { isHalloween, now } from './time.js';
 import { RM, clamp } from './util.js';
 import { world } from './world.js';
 
@@ -56,9 +56,8 @@ export const COUNT = [4, 5]; // 인원 (둘 중 하나, 반반)
 export const RARE_CHANCE = 0.1; // 희귀 손님(외계인)이 한 자리를 차지할 확률
 export const HALLOWEEN_CHANCE = 0.5; // 할로윈 기간 파티에 할로윈 손님이 오는 확률
 export const HALLOWEEN_BOTH = 0.1; // 그때 둘 다 오는 확률
-export const halloweenNow = () => holiday(now()) === 'halloween';
 // 이 손님 그림을 받을까 (assets.js): 할로윈 손님은 할로윈 기간에만
-export const guestLoads = g => !g.halloween || halloweenNow();
+export const guestLoads = g => !g.halloween || isHalloween(now());
 export const OWNER_CHANCE = 0.1; // 주인장을 닮은 손님 넷 중 하나가 한 자리를 차지할 확률 (외계인과 같은 정도, 2026-10-22 4% → 10%)
 // 이름 소환: 생일자 이름(띄어쓰기 뺌)이 맞으면 첫 파티(페이지를 연 뒤 처음 누른 배너)에 이 주인장 손님들이 꼭 나온다. 배너를 다시 누르면 평소대로 (BIRTHDAY_GUESTS_PLAN.md 19장).
 // 이름을 코드에 그대로 적지 않으려고 이름의 해시(nameKey)로 적는다. 새로 넣으려면 개발자 도구에서 __nameKey('이름')
@@ -95,7 +94,7 @@ function shuffle(a) {
 // 손님을 뽑고 자리를 정한다. 그림이 아직 없는 손님은 뽑지 않는다(그린 애부터 나온다)
 function pickGuests() {
   const spots = (PL('party.guests') || {}).spots || [];
-  const hw = halloweenNow() ? guestsOf('halloween').filter(ready) : [];
+  const hw = isHalloween(now()) ? guestsOf('halloween').filter(ready) : [];
   const common = guestsOf('common').filter(ready), rare = guestsOf('rare').filter(ready), owners = guestsOf('owner').filter(ready);
   if (!spots.length || !common.length)
     return [];

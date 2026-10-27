@@ -20,11 +20,11 @@
 - [x] 14. 안 쓰는 `run.force`, 낡은 주석("고양이 탑")
 
 ## ③ 할로윈 (동작 그대로)
-- [ ] 5. `drawWitchTower` 90줄 → 봉우리·집·창 불빛·박쥐로 나누고 모양 비율은 표 하나
-- [ ] 6. "마녀가 나가 있나"가 두 곳 → `witchOut()`
-- [ ] 8. 거미줄을 거미 사건에서 떼어 따로
-- [ ] 9. "지금 할로윈인가"가 여러 모양 → `time.js` 함수 하나
-- [ ] 10. `halloween.js` 580줄 → 마녀의 집·거미를 새 파일로
+- [x] 5. `drawWitchTower` 90줄 → 봉우리·집·창 불빛·박쥐로 나누고 모양 비율은 표 하나
+- [x] 6. "마녀가 나가 있나"가 두 곳 → `witchOut()`
+- [x] 8. 거미줄을 거미 사건에서 떼어 따로
+- [x] 9. "지금 할로윈인가"가 여러 모양 → `time.js` 함수 하나
+- [x] 10. `halloween.js` 580줄 → 마녀의 집·거미를 새 파일로
 
 ## ④ 자잘한 것
 - [ ] 15. `Snd.prepChime()`이 다 받은 뒤에도 매 장면 목록을 돎 → 다 받았으면 바로 빠짐
@@ -38,4 +38,5 @@
 ## 메모
 - ①: 탑 창 불은 `towerTick`(0.8초에 다 꺼지고 켜짐). 거미 확률은 `real*bf`, 움직임은 `real*min(bf,3)`(나비와 같음). `Snd.chime`이 `{ t0, stop() }`을 돌려주고, 정각 종 진행 시계는 오디오가 돌고 있으면 `ac.currentTime - t0`(소리를 끄면 화면 시계로). 점프하면 손님 뿅 + 종소리 끊음. `run.force`는 여기서 뺐다(14번 일부). 확인: 브라우저로 종 중 3시간 점프 → 손님 사라지고 종 끝남, 진행 시계가 오디오 시계와 같음. check_time·check_scene·check_behave --quick 통과
 - ②: `guests.js` `kindOf`·`guestsOf(...)`(common·rare·owner·halloween)로 파티·정각 풀을 한 곳에서. `SMALL`을 내보내 정각 자리도 같이. 빛 마스크는 새 파일 `glow.js` `glowMask(im)`(그림별 캐시) — 호박·할로윈 자정 손님이 같이. `GUESTS` 표 `glow: true`(마녀·호박머리). 낡은 주석("고양이 탑") 고침. 확인: 정각 손님 300시각 뽑기 결과가 전과 같음(해시 같음), 할로윈 자정 호박머리 눈 빛남. 화면 점검: ui(알려진 흔들림), long_1·long_2 다름 — long은 같은 코드로 두 번 찍어도 long_2가 달라지는 흔들리는 장면(60배속 무작위 행동)이라 판단. check_time·check_scene·check_behave --quick 통과
+- ③: 새 파일 `halloween-extra.js`(마녀의 집 `towerEvent` · 구석 거미줄 `webEvent` · 천장 거미 `spiderEvent`) — `halloween.js`는 580 → 367줄. 마녀의 집은 `spireOf`·`drawSpire`·`drawHouse`·`drawHouseLight`·`drawTowerBats`로 나누고 모양 비율은 `TOWER` 표(spire·house). `halloween.js` `witchOut()`(하늘 자리·집 창 불이 같이), `drawBat`·`zig` 내보냄. `time.js` `isHalloween(d)` 하나로(halloween.js·guests.js·sprites.js·weather.js·objects.js). CODE.md에 chime.js·glow.js·halloween-extra.js 줄. 확인: 할로윈 밤·낮 장면(마녀의 집·거미·유령 쥐야쥐)을 고정 시계로 찍어 전후 같음(0개 다름), 전체 화면 점검은 long_2(흔들림)만 다름. check_time·check_scene·check_behave --quick 통과
 
