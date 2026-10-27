@@ -58,15 +58,15 @@ function spotFor(g) {
   const far = spots.filter(s => dist(s) >= away).sort((a, b) => dist(a) - dist(b));
   return far[0] || spots.slice().sort((a, b) => dist(b) - dist(a))[0];
 }
-// 종을 울린다. force: 미리보기(지금 정각 종) — 분 확인 없이
-export function startChime(d, force) {
+// 종을 울린다. force: 미리보기(지금 정각 종) — 분 확인 없이. pick: 점검용 { guest: 'pumpkinhead', hw: true } — 손님·할로윈 자정 연출을 정해서
+export function startChime(d, force, pick = {}) {
   if (C.run || world.party) // 울리는 중이거나 생일 파티 중이면 건너뜀
     return false;
-  const quiet = nightDark(d), hw = halloweenMidnight(d), plan = chimePlan(strikesOf(d));
+  const quiet = nightDark(d), hw = pick.hw != null ? !!pick.hw : halloweenMidnight(d), plan = chimePlan(strikesOf(d));
   if (!Snd.chime(plan, quiet))
     caption(tr('capChime'), Math.min(plan.sec, 8)); // 소리가 꺼져 있으면 자막
   const run = { t: 0, sec: plan.sec, puffs: [], q: null, hw, force };
-  const g = !RM && !world.manduk && guestHour(d) ? chimeGuestFor(hourStart(d), hw) : null;
+  const g = pick.guest ? GUESTS.find(x => x.id === pick.guest) || null : !RM && !world.manduk && (hw || guestHour(d)) ? chimeGuestFor(hourStart(d), hw) : null;
   if (g && !imageReady(IMG['f_guest_' + g.id]))
     loadLazy('f_guest_' + g.id, guestSrc(g.id)); // 아직이면 받아 두고, 나올 때까지 오면 나온다
   const s = g && spotFor(g);
@@ -177,7 +177,7 @@ export function drawChimeGlow(dk) {
 
 /* ───────── 점검용 (debug.js) ───────── */
 export const chimeDebug = () => ({
-  chimeNow: () => startChime(now(), true), // 지금 시각으로 바로 종 (분 확인 없이)
+  chimeNow: (pick = {}) => startChime(now(), true, pick), // 지금 시각으로 바로 종 (분 확인 없이). 예: chimeNow({ guest: 'pumpkinhead', hw: true })
   chimeState: () => C.run && { t: C.run.t, sec: C.run.sec, hw: C.run.hw, guest: C.run.q && C.run.q.g.id, shown: !!(C.run.q && C.run.q.shown), gone: !!(C.run.q && C.run.q.gone) },
   chimeGuestFor,
 });
