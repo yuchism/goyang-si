@@ -5,6 +5,7 @@ import { play } from './anim.js';
 import { ghostFree } from './behave.js';
 import { assetsWarm, imageReady, img } from './assets.js';
 import { curtainSkew, drawProp } from './draw.js';
+import { glowMask } from './glow.js';
 import { tr } from './i18n.js';
 import { O, PL, S, objView, present, zOf } from './objects.js';
 import { cv, ctx } from './stage.js';
@@ -19,30 +20,7 @@ export const isHalloween = d => holiday(d) === 'halloween';
 const flick = () => RM ? 1 : 1 + 0.06 * Math.sin(world.t * 2.3) + 0.04 * Math.sin(world.t * 5.9 + 1.3); // 촛불처럼 ±10%
 /* ───────── 호박 불빛 ───────── */
 // 불 켜진 그림은 따로 쓰지 않는다(HALLOWEEN_FIX_PLAN.md 2-1). 원본 그림에서 뚫린 눈(귀 모양)·입의 연주황 픽셀만
-// 골라 노란 불빛 마스크를 한 번 만들어 두고, 어둠 위에 덧그려서 안에서 촛불이 비치는 것처럼 한다
-let glowMask = null;
-function pumpkinMask(im) {
-  if (glowMask !== null)
-    return glowMask;
-  try {
-    const c = document.createElement('canvas');
-    c.width = im.naturalWidth;
-    c.height = im.naturalHeight;
-    const x = c.getContext('2d');
-    x.drawImage(im, 0, 0);
-    const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
-    for (let i = 0; i < p.length; i += 4) {
-      const on = p[i] > 220 && p[i + 1] > 150 && p[i + 2] < 150 && p[i + 3] > 200;
-      p[i] = 255; p[i + 1] = 228; p[i + 2] = 105; p[i + 3] = on ? 255 : 0;
-    }
-    x.putImageData(d, 0, 0);
-    glowMask = c;
-  }
-  catch (e) {
-    glowMask = false; // file:// 등으로 픽셀을 못 읽으면 마스크 없이(몸통 빛만)
-  }
-  return glowMask;
-}
+// 골라 노란 불빛 마스크를 한 번 만들어 두고(glow.js), 어둠 위에 덧그려서 안에서 촛불이 비치는 것처럼 한다
 // 어둠을 덮은 뒤에 부른다: 불 켜진 호박을 다시 밝게 그리고, 눈·입에 노란 불빛, 둘레 벽·TV 윗면에 옅은 주황빛
 export function drawPumpkinGlow(dk) {
   const o = O.pumpkin;
@@ -63,7 +41,7 @@ export function drawPumpkinGlow(dk) {
   ctx.globalAlpha = clamp(dk * 0.45 * f, 0, 0.35);
   drawProp(v.look, v.pos.x, by, w);
   // 눈·입: 촛불 노란빛 (그림 위치는 drawProp과 같게: 가운데 아래 기준)
-  const mk = pumpkinMask(im);
+  const mk = glowMask(im);
   if (mk) {
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = clamp(dk * 1.6 * f, 0, 0.9);

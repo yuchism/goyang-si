@@ -13,11 +13,11 @@
 - [x] 12. 탭이 가려지면 춤(화면 시계)과 소리(오디오 시계)가 어긋남 → 소리가 울리는 종은 오디오 시계로 진행
 
 ## ② 손님 (동작 그대로)
-- [ ] 1. 손님 풀이 파티(`pickGuests`)·정각(`chime.js pool`)에 따로 → `guests.js`에 "어디에 나오나" 한 곳
-- [ ] 2. 작은 손님 기준 0.8이 두 곳(`SMALL`, `spotFor`) → 하나
-- [ ] 3. 노란 픽셀 빛 마스크가 두 벌(`halloween.js pumpkinMask`, `chime.js maskOf`) → 하나
-- [ ] 13. 눈이 빛나는 손님 목록(`chime.js GLOW`) → `GUESTS` 표 `glow: true`
-- [ ] 14. 안 쓰는 `run.force`, 낡은 주석("고양이 탑")
+- [x] 1. 손님 풀이 파티(`pickGuests`)·정각(`chime.js pool`)에 따로 → `guests.js`에 "어디에 나오나" 한 곳
+- [x] 2. 작은 손님 기준 0.8이 두 곳(`SMALL`, `spotFor`) → 하나
+- [x] 3. 노란 픽셀 빛 마스크가 두 벌(`halloween.js pumpkinMask`, `chime.js maskOf`) → 하나
+- [x] 13. 눈이 빛나는 손님 목록(`chime.js GLOW`) → `GUESTS` 표 `glow: true`
+- [x] 14. 안 쓰는 `run.force`, 낡은 주석("고양이 탑")
 
 ## ③ 할로윈 (동작 그대로)
 - [ ] 5. `drawWitchTower` 90줄 → 봉우리·집·창 불빛·박쥐로 나누고 모양 비율은 표 하나
@@ -37,4 +37,5 @@
 
 ## 메모
 - ①: 탑 창 불은 `towerTick`(0.8초에 다 꺼지고 켜짐). 거미 확률은 `real*bf`, 움직임은 `real*min(bf,3)`(나비와 같음). `Snd.chime`이 `{ t0, stop() }`을 돌려주고, 정각 종 진행 시계는 오디오가 돌고 있으면 `ac.currentTime - t0`(소리를 끄면 화면 시계로). 점프하면 손님 뿅 + 종소리 끊음. `run.force`는 여기서 뺐다(14번 일부). 확인: 브라우저로 종 중 3시간 점프 → 손님 사라지고 종 끝남, 진행 시계가 오디오 시계와 같음. check_time·check_scene·check_behave --quick 통과
+- ②: `guests.js` `kindOf`·`guestsOf(...)`(common·rare·owner·halloween)로 파티·정각 풀을 한 곳에서. `SMALL`을 내보내 정각 자리도 같이. 빛 마스크는 새 파일 `glow.js` `glowMask(im)`(그림별 캐시) — 호박·할로윈 자정 손님이 같이. `GUESTS` 표 `glow: true`(마녀·호박머리). 낡은 주석("고양이 탑") 고침. 확인: 정각 손님 300시각 뽑기 결과가 전과 같음(해시 같음), 할로윈 자정 호박머리 눈 빛남. 화면 점검: ui(알려진 흔들림), long_1·long_2 다름 — long은 같은 코드로 두 번 찍어도 long_2가 달라지는 흔들리는 장면(60배속 무작위 행동)이라 판단. check_time·check_scene·check_behave --quick 통과
 

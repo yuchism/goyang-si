@@ -27,14 +27,19 @@ export const GUESTS = [
   { id: 'wolf-sheep-disguise', size: 0.90, foot: 543, h: 490 }, // 양 탈을 쓴 늑대
   { id: 'alien', size: 0.90, foot: 523, h: 451, rare: true },
   // 할로윈 손님 (HOURLY_CHIME_PLAN.md 6-1): 할로윈 기간 파티에만. 고깔모자 없음(분장하고 온 손님)
-  { id: 'witch', size: 0.95, foot: 547, h: 377, halloween: true },
-  { id: 'pumpkinhead', size: 1.00, foot: 545, h: 374, halloween: true },
+  // glow: 할로윈 자정 어둠 속에서 눈·입(밝은 노랑 픽셀)이 빛난다 (chime.js, glow.js)
+  { id: 'witch', size: 0.95, foot: 547, h: 377, halloween: true, glow: true },
+  { id: 'pumpkinhead', size: 1.00, foot: 545, h: 374, halloween: true, glow: true },
   // 주인장 손님 (assets/birthday/family-guests/): 외계인보다 더 드물게 (OWNER_CHANCE)
   { id: 'mandeuk', size: 1.10, foot: 544, h: 536, owner: true },
   { id: 'family-01', size: 1.10, foot: 546, h: 542, owner: true },
   { id: 'family-02', size: 1.10, foot: 546, h: 539, owner: true },
   { id: 'family-03', size: 1.10, foot: 546, h: 519, owner: true },
 ];
+// 손님 종류: 어디에 나오나는 이 둘로만 정한다 (파티 pickGuests, 정각 chime.js). 순서는 GUESTS 표 순서 그대로
+//   common: 파티·정각 / rare(외계인): 파티 드물게·할로윈 자정 / owner(주인장 닮은): 파티 아주 드물게 / halloween: 할로윈 파티·할로윈 자정
+export const kindOf = g => g.owner ? 'owner' : g.rare ? 'rare' : g.halloween ? 'halloween' : 'common';
+export const guestsOf = (...kinds) => GUESTS.filter(g => kinds.includes(kindOf(g)));
 export const CELL_W = 420; // 시트 한 칸 폭 (px)
 export const guestSrc = id => 'sheet/guest-' + id + '-dance-v1.webp';
 const CAT_DANCE_H = 200; // 강고양이 씨 춤 그림의 키(발~모자, 깊이 1일 때 방 px). sprites.js drawCat: 213 × 681/724
@@ -73,7 +78,8 @@ export function nameKey(name) {
 if (typeof window !== 'undefined')
   window.__nameKey = nameKey;
 export const WRONG_WAY_CHANCE = 0.3; // 한 명이 혼자 반대 방향으로 출 확률
-const BIG = 1.1, SMALL = 0.8; // 큰 손님(뒷줄 안 섬), 작은 손님(강고양이 씨 옆 자리에 섬)
+const BIG = 1.1; // 큰 손님(뒷줄 안 섬)
+export const SMALL = 0.8; // 작은 손님(강고양이 씨 옆 자리 등 small 자리에 섬. 파티·정각 같이)
 const POP_SEC = 0.15, PUFF_SEC = 0.55;
 
 /* ───────── 뽑기 ───────── */
@@ -89,8 +95,8 @@ function shuffle(a) {
 // 손님을 뽑고 자리를 정한다. 그림이 아직 없는 손님은 뽑지 않는다(그린 애부터 나온다)
 function pickGuests() {
   const spots = (PL('party.guests') || {}).spots || [];
-  const hw = halloweenNow() ? GUESTS.filter(g => g.halloween && ready(g)) : [];
-  const common = GUESTS.filter(g => !g.rare && !g.owner && !g.halloween && ready(g)), rare = GUESTS.filter(g => g.rare && ready(g)), owners = GUESTS.filter(g => g.owner && ready(g));
+  const hw = halloweenNow() ? guestsOf('halloween').filter(ready) : [];
+  const common = guestsOf('common').filter(ready), rare = guestsOf('rare').filter(ready), owners = guestsOf('owner').filter(ready);
   if (!spots.length || !common.length)
     return [];
   const summon = summonDone ? [] : (SUMMON[nameKey(birthdayName)] || []).map(id => owners.find(g => g.id === id)).filter(Boolean); // 그림이 있는 것만. 두 번째 파티부터는 평소대로

@@ -5,7 +5,8 @@
    - 누가 오나는 시각으로 정한다(날짜 씨앗): 새로 고침해도, 누가 봐도 그 시각엔 같은 손님. 바로 전 시각 손님은 피한다
    - 손님 그림은 다음 정각 손님 것만 미리 받는다(loadLazy) */
 import { IMG, imageReady, loadLazy } from './assets.js';
-import { GUESTS, drawGuest, drawGuestSheet, drawPuffs, guestSrc, puff } from './guests.js';
+import { GUESTS, SMALL, drawGuest, drawGuestSheet, drawPuffs, guestSrc, guestsOf, puff } from './guests.js';
+import { glowMask } from './glow.js';
 import { tr } from './i18n.js';
 import { PL } from './objects.js';
 import { CHIME, Snd, chimePlan } from './sound.js';
@@ -15,11 +16,10 @@ import { RM, clamp, hash } from './util.js';
 import { caption, cat, world } from './world.js';
 
 const FLIP_CHANCE = 0.15; // 정각 손님이 반대 방향으로 출 확률
-const GLOW = { witch: true, pumpkinhead: true }; // 할로윈 자정 어둠 속에서 눈·입이 빛나는 손님 (밝은 노랑 픽셀, halloween.js 호박과 같은 기준)
 const C = { key: null, jumps: 0, run: null, fetched: null };
 
 /* ───────── 누가 오나 (날짜 씨앗) ───────── */
-const pool = hw => GUESTS.filter(g => hw ? g.halloween || g.rare : !g.rare && !g.owner && !g.halloween);
+const pool = hw => hw ? guestsOf('rare', 'halloween') : guestsOf('common'); // 할로윈 자정: 외계인·마녀·호박머리 (GUESTS 표 순서)
 // 그 시각(ms, 0분)의 손님. 그림이 준비됐는지와 무관하게 정해진다
 export function chimeGuestFor(ms, hw) {
   const list = pool(hw);
@@ -51,7 +51,7 @@ function prefetch(d) {
 // 자리: 장면의 chime.guest 후보 중 강고양이 씨와 away 이상 떨어진 곳에서 가장 가까운 곳(좁은 화면에서도 같이 보이게).
 // 모두 가까우면 가장 먼 곳. 후보가 없으면 손님 없이 종만
 function spotFor(g) {
-  const pl = PL('chime.guest') || {}, spots = (pl.spots || []).filter(s => !s.small || g.size <= 0.8), away = pl.away || 190;
+  const pl = PL('chime.guest') || {}, spots = (pl.spots || []).filter(s => !s.small || g.size <= SMALL), away = pl.away || 190;
   if (!spots.length)
     return null;
   const dist = s => Math.hypot(s.x - cat.x, (s.y - cat.y) * 2);
@@ -103,7 +103,7 @@ export function chimeTick(d, real) {
       startChime(d);
   }
   prefetch(d);
-  world.chimeGlow = !!(C.run && C.run.hw && showing()); // 할로윈 자정 손님이 와 있는 동안 (산 너머 고양이 탑 창이 조금 더 밝게, halloween.js)
+  world.chimeGlow = !!(C.run && C.run.hw && showing()); // 할로윈 자정 손님이 와 있는 동안 (산 너머 마녀의 집 창이 조금 더 밝게, halloween.js)
   Snd.prepChime(); // 녹음 차임 받아 두기 (sound.js)
   const run = C.run;
   if (!run)
@@ -137,30 +137,6 @@ export function drawChimePuffs() {
   if (C.run)
     drawPuffs(C.run);
 }
-// 빛 마스크: 밝은 노랑 픽셀만 노란 촛불빛으로 (halloween.js pumpkinMask와 같은 기준)
-const masks = {};
-function maskOf(id, im) {
-  if (masks[id] !== undefined)
-    return masks[id];
-  try {
-    const c = document.createElement('canvas');
-    c.width = im.naturalWidth;
-    c.height = im.naturalHeight;
-    const x = c.getContext('2d');
-    x.drawImage(im, 0, 0);
-    const dd = x.getImageData(0, 0, c.width, c.height), p = dd.data;
-    for (let i = 0; i < p.length; i += 4) {
-      const on = p[i] > 220 && p[i + 1] > 150 && p[i + 2] < 150 && p[i + 3] > 200;
-      p[i] = 255; p[i + 1] = 228; p[i + 2] = 105; p[i + 3] = on ? 255 : 0;
-    }
-    x.putImageData(dd, 0, 0);
-    masks[id] = c;
-  }
-  catch (e) {
-    masks[id] = false; // 픽셀을 못 읽으면 빛 없이
-  }
-  return masks[id];
-}
 // 어둠을 덮은 뒤에 부른다: 할로윈 자정 손님을 어둠 속에 어렴풋이, 눈·입은 촛불빛으로 깜빡이게
 export function drawChimeGlow(dk) {
   const q = showing(), run = C.run;
@@ -173,7 +149,7 @@ export function drawChimeGlow(dk) {
   ctx.save();
   ctx.globalAlpha = clamp(dk * 0.4, 0, 0.35); // 몸: 어렴풋이
   drawGuestSheet(q, run, cell, im);
-  const mk = GLOW[q.g.id] && maskOf(q.g.id, im);
+  const mk = q.g.glow && glowMask(im); // 눈·입이 빛나는 손님 (GUESTS 표 glow)
   if (mk) {
     ctx.globalAlpha = clamp(dk * 1.6 * f, 0, 0.9);
     drawGuestSheet(q, run, cell, mk);
