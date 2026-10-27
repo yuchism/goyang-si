@@ -251,7 +251,7 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
         done();
     }
   },
-  // 정각 종: 소리가 켜져 있으면 plan(chimePlan)대로 울리고 true. 멀리서 들리게 고음을 깎는다
+  // 정각 종: 소리가 켜져 있으면 plan(chimePlan)대로 울리고 { t0: 시작한 오디오 시각, stop() }. 꺼져 있으면 false. 멀리서 들리게 고음을 깎는다
   chime(plan, quiet) {
     if (!this.on || !this.ac)
       return false;
@@ -298,7 +298,11 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
     else
       plan.notes.forEach(([t, m, ring]) => bell(t0 + t, m, ring, 0.8));
     plan.strikes.forEach(t => B.strike ? playRec(B.strike, t0 + t) : bell(t0 + t, c.hourNote, 4.5, 1.2)); // 타종: 녹음 한 번을 시각만큼
-    return true;
+    return { t0, stop() { // 시간 점프: 남은 종소리를 끊는다
+      out.disconnect();
+      if (rec)
+        rec.disconnect();
+    } };
   },
   // 생일 손님이 "짠" 나타나고 사라질 때: 아주 작은 "뽁"
   pop(v = 1) {

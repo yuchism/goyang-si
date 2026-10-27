@@ -63,9 +63,10 @@ export function startChime(d, force, pick = {}) {
   if (C.run || world.party) // 울리는 중이거나 생일 파티 중이면 건너뜀
     return false;
   const quiet = nightDark(d), hw = pick.hw != null ? !!pick.hw : halloweenMidnight(d), plan = chimePlan(strikesOf(d));
-  if (!Snd.chime(plan, quiet))
+  const audio = Snd.chime(plan, quiet); // 소리가 울리면 진행 시계는 오디오 시계(탭이 가려졌다 돌아와도 춤과 소리가 맞게)
+  if (!audio)
     caption(tr('capChime'), Math.min(plan.sec, 8)); // 소리가 꺼져 있으면 자막
-  const run = { t: 0, sec: plan.sec, leave: plan.leave, puffs: [], q: null, hw, force };
+  const run = { t: 0, sec: plan.sec, leave: plan.leave, puffs: [], q: null, hw, audio };
   const g = pick.guest ? GUESTS.find(x => x.id === pick.guest) || null : !RM && !world.manduk && (hw || guestHour(d)) ? chimeGuestFor(hourStart(d), hw) : null;
   if (g && !imageReady(IMG['f_guest_' + g.id]))
     loadLazy('f_guest_' + g.id, guestSrc(g.id)); // 아직이면 받아 두고, 나올 때까지 오면 나온다
@@ -86,6 +87,13 @@ function leave(run) {
 export function chimeTick(d, real) {
   const k = hourStart(d);
   if (C.key == null || world.jumps !== C.jumps) { // 처음 열었을 때·시간 점프: 지나친 정각은 울리지 않는다
+    if (C.run && C.key != null) { // 울리는 중에 점프: 손님은 뿅, 종소리는 끊고 끝낸다
+      leave(C.run);
+      if (C.run.audio)
+        C.run.audio.stop();
+      C.run.sec = Math.min(C.run.sec, C.run.t);
+      C.run.audio = null;
+    }
     C.key = k;
     C.jumps = world.jumps;
   }
@@ -100,7 +108,7 @@ export function chimeTick(d, real) {
   const run = C.run;
   if (!run)
     return;
-  run.t += real;
+  run.t = run.audio && Snd.ac && Snd.ac.state === 'running' ? Math.max(run.t, Snd.ac.currentTime - run.audio.t0) : run.t + real; // 소리를 끄면(오디오 멈춤) 화면 시계로
   const q = run.q;
   if (q && !q.gone) {
     if (world.manduk || world.party) // 만득 씨가 오면(또는 파티가 시작되면) 즉시 뿅

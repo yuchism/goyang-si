@@ -392,14 +392,17 @@ export const ghostEvent = {
    밤엔 작은 박쥐 두 마리가 집 둘레를 맴돈다. 정체는 설명하지 않는다.
    산 판보다 먼저 그려(skyBack) 봉우리 밑동이 능선에 가려진다. 자리·크기는 window.json witchTower (창 안 좌표) */
 const TOWER = { ink: '27,20,44', day: '146,146,176', rim: 'rgba(206,196,255,.16)', light: '255,200,105', bats: 2 }; // ink: 밤 실루엣, day: 낮(먼 산 연무색)
-let towerLit = 1; // 창 불빛 (마녀가 나가면 서서히 꺼지고 돌아오면 켜진다)
+let towerLit = 1; // 창 불빛 (마녀가 나가면 서서히 꺼지고 돌아오면 켜진다). 진행은 towerTick, 그리기는 읽기만
+const TOWER_FADE = 0.8; // 창 불이 다 꺼지거나 켜지는 데 걸리는 초
+function towerTick(d, real) {
+  const away = !!world.witch || !!(world.curtainShadow && world.curtainShadow.kind === 'witch');
+  towerLit = clamp(towerLit + (away ? -1 : 1) * real / TOWER_FADE, 0, 1);
+}
 function drawWitchTower(w) {
   const T = WIN.witchTower;
   if (!T || holiday(now()) !== 'halloween')
     return false;
   const a = clamp(((world.skyDark || 0) - 0.2) / 0.5, 0, 1); // 밤 정도: 낮엔 먼 산처럼 뿌옇게(0), 어두워질수록 시커멓게(1)
-  const away = !!world.witch || !!(world.curtainShadow && world.curtainShadow.kind === 'witch');
-  towerLit = clamp(towerLit + (away ? -0.02 : 0.02), 0, 1);
   const x0 = w.x + T.x, base = wy(T.base), h = T.h, bw = T.w / 2, sway = T.sway * h;
   // 봉우리: t 0(밑동) ~ 1(꼭대기). 밑동은 넓게 퍼져 산에 묻히고, 위로 갈수록 가늘어지며 S자로 구불거린다. 꼭대기는 살짝 넓은 턱
   const cx = t => x0 + sway * Math.sin(t * Math.PI * 1.15) * t, cy = t => base - t * h;
@@ -472,6 +475,7 @@ function drawWitchTower(w) {
 export const towerEvent = {
   needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'witchTower',
+  tick: (d, real) => towerTick(d, real),
   skyBack: drawWitchTower,
 };
 
@@ -485,16 +489,16 @@ export function startSpider() {
     return;
   world.spider = { t: 0, hang: rnd(SPIDER.hang[0], SPIDER.hang[1]), low: rnd(0.75, 1), seen: false };
 }
-function spiderTick(d, real) {
+function spiderTick(d, real, bf) {
   const s = world.spider;
-  if (!s) {
-    if (isHalloween(d) && isNight(d) && !world.manduk && assetsWarm() && Math.random() < real / SPIDER.every)
+  if (!s) { // 확률은 미리보기 배속을 따른다(다른 사건처럼), 움직임은 3배까지만 (나비와 같음)
+    if (isHalloween(d) && isNight(d) && !world.manduk && assetsWarm() && Math.random() < real * bf / SPIDER.every)
       startSpider();
     return;
   }
   if (world.manduk && s.t < SPIDER.down + s.hang) // 만득 씨가 오면 바로 올라간다
     s.t = SPIDER.down + s.hang;
-  s.t += real;
+  s.t += real * Math.min(bf, 3);
   if (!s.seen && s.t > SPIDER.down && !cat.closed && !cat.bub && !world.manduk) {
     s.seen = true;
     say(cat, '👀', 3);
@@ -572,7 +576,7 @@ function drawSpider() {
 export const spiderEvent = {
   needs: ['halloween.spider'], // 장면에 이 자리가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
   id: 'spider',
-  tick: (d, real) => spiderTick(d, real),
+  tick: (d, real, bf) => spiderTick(d, real, bf),
   room: drawSpider,
   reset() {
     world.spider = null;
