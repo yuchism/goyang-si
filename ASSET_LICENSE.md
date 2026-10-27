@@ -29,8 +29,8 @@ mixed for the hourly chime in this site:
 
 | File | Original | Author |
 |---|---|---|
-| `chime-westminster-v1.mp3` | "Westminster Quarters (full hour)" (Pixabay #603764) | jonathanslattermusic |
-| `chime-strike-v1.mp3` | "Big Bell Ring" (Pixabay #356829) | stu9 |
+| `chime-westminster-v1.mp3` | ["Westminster Quarters Full hour"](https://pixabay.com/sound-effects/film-special-effects-westminster-quarters-full-hour-603764/) | JonathanSlatterMusic |
+| `chime-strike-v1.mp3` | ["BIG BLRNG"](https://pixabay.com/sound-effects/film-special-effects-big-blrng-356829/) | Stu9 |
 
 They are included only as part of this website. To use these sounds
 elsewhere, download them from Pixabay under its own license.
