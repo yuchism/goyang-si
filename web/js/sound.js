@@ -13,7 +13,7 @@ export const BDAY_SONG = {
 export const CHIME = {
   files: { quarters: 'sound/chime-westminster-v1.mp3', strike: 'sound/chime-strike-v1.mp3' }, // 녹음: 차임(20초, 음 16개 + 여운), 타종 한 번(2.5초). 출처는 ASSET_LICENSE.md
   fileVol: 1.6, // 녹음 크기 (vol·volQuiet에 곱한다)
-  fileFar: 3200, // 녹음: 이 Hz 위를 깎는다 (녹음이 이미 멀리서 들리므로 덜 깎음)
+  fileFar: 1800, // 녹음: 이 Hz 위를 깎는다 (멀리서 들려오는 종처럼, HOURLY_CHIME_PLAN.md 14장)
   lead: 0.16, // 녹음에서 첫 음까지(초). 만든 소리도 같은 시각에
   melody: [[68, 1], [66, 1], [64, 1], [59, 2], [64, 1], [68, 1], [66, 1], [59, 2], [64, 1], [66, 1], [68, 1], [64, 2], [68, 1], [64, 1], [66, 1], [59, 2]], // [MIDI 음, 박]
   phrase: 0, // 마디(5박) 사이 쉼(박)
@@ -22,8 +22,8 @@ export const CHIME = {
   gap: 1.2, // 차임 끝 ~ 첫 타종(초)
   strike: 2.4, // 타종 간격(초)
   tail: 2.2, // 마지막 타종 뒤 여운(초)
-  vol: 0.096, // 낮 소리 크기 (0.32에서 0.3배로 줄임, HOURLY_CHIME_PLAN.md 14장)
-  volQuiet: 0.03, // 불 꺼진 시간 (HOURLY_CHIME_PLAN.md 3장: 밤엔 작게). 낮과 같은 비율로 0.1에서 줄임
+  vol: 0.06, // 낮 소리 크기 (멀리서 들리게 줄임, HOURLY_CHIME_PLAN.md 14장)
+  volQuiet: 0.02, // 불 꺼진 시간 (HOURLY_CHIME_PLAN.md 3장: 밤엔 작게). 낮과 같은 비율로 줄임
   far: 1900, // 멀리서 들리게: 이 Hz 위를 깎는다
   guestAt: 1.2, // 손님이 나오는 때: 차임 시작 몇 초 뒤
   guestOut: 0.4, // 차임 마지막 음 끝 ~ 손님 퇴장(초). gap보다 작게 (손님은 차임에서만, HOURLY_CHIME_PLAN.md 14장)
