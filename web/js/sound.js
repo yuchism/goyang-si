@@ -7,6 +7,40 @@ export const BDAY_SONG = {
   phrases: [0, 6, 12, 19],
   notes: [[67, .75], [67, .25], [69, 1], [67, 1], [72, 1], [71, 2], [67, .75], [67, .25], [69, 1], [67, 1], [74, 1], [72, 2], [67, .75], [67, .25], [79, 1], [76, 1], [72, 1], [71, 1], [69, 2], [77, .75], [77, .25], [76, 1], [72, 1], [74, 1], [72, 2]] // [MIDI 음, 박]
 };
+/* ───────── 정각 종 표 (HOURLY_CHIME_PLAN.md 4-2) ─────────
+   숫자만 고치면 된다. 앞 차임(웨스트민스터 차임, 넷째 마디까지) 뒤에 시각만큼 타종. 손님 시간표는 chimePlan이 돌려주는 시각을 따른다 */
+export const CHIME = {
+  melody: [[68, 1], [66, 1], [64, 1], [59, 2], [64, 1], [68, 1], [66, 1], [59, 2], [64, 1], [66, 1], [68, 1], [64, 2], [68, 1], [64, 1], [66, 1], [59, 2]], // [MIDI 음, 박]
+  phrase: 1, // 마디(5박) 사이 쉼(박)
+  beat: 0.6, // 차임 한 박(초)
+  hourNote: 52, // 타종 음 (E3)
+  gap: 1.2, // 차임 끝 ~ 첫 타종(초)
+  strike: 2.4, // 타종 간격(초)
+  tail: 2.2, // 마지막 타종 뒤 여운(초). 손님은 이때 사라진다
+  vol: 0.32, // 낮 소리 크기
+  volQuiet: 0.1, // 불 꺼진 시간 (HOURLY_CHIME_PLAN.md 3장: 밤엔 작게)
+  far: 1900, // 멀리서 들리게: 이 Hz 위를 깎는다
+  guestAt: 1.2, // 손님이 나오는 때: 차임 시작 몇 초 뒤
+  danceBeat: 0.6, // 정각 손님 춤 한 칸(초). 파티(0.34)보다 느리게 살랑살랑
+};
+// 종 시간표 (소리가 꺼져 있어도 같은 길이): { notes: [[초, MIDI, 울림초]], strikes: [초], sec }
+export function chimePlan(n) {
+  const c = CHIME, notes = [];
+  let at = 0, inPhrase = 0;
+  for (const [m, d] of c.melody) {
+    notes.push([at * c.beat, m, d * c.beat + 1.6]);
+    at += d;
+    inPhrase += d;
+    if (inPhrase >= 5) {
+      at += c.phrase;
+      inPhrase = 0;
+    }
+  }
+  const t0 = (at - c.phrase) * c.beat + c.gap, strikes = [];
+  for (let i = 0; i < n; i++)
+    strikes.push(t0 + i * c.strike);
+  return { notes, strikes, sec: strikes[strikes.length - 1] + c.tail };
+}
 /* ───────── 소리 ───────── */
 export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null, tvG: null,
   init() {
@@ -184,6 +218,35 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
       at += d;
     });
     return { sec: at * beat + .15, beat, phrases };
+  },
+  // 정각 종: 소리가 켜져 있으면 plan(chimePlan)대로 울리고 true. 멀리서 들리게 고음을 깎는다
+  chime(plan, quiet) {
+    if (!this.on || !this.ac)
+      return false;
+    const ac = this.ac, t0 = ac.currentTime + 0.05, c = CHIME, out = ac.createGain(), lp = ac.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = c.far;
+    out.gain.value = quiet ? c.volQuiet : c.vol;
+    lp.connect(out);
+    out.connect(this.master);
+    const bell = (t, m, ring, v) => { // 종 배음 몇 개 + 긴 여운
+      const f = 440 * Math.pow(2, (m - 69) / 12);
+      [[0.5, 0.35], [1, 1], [1.19, 0.45], [1.5, 0.3], [2, 0.4], [2.74, 0.18], [3.76, 0.1]].forEach(([r, a], i) => {
+        const o = ac.createOscillator(), g = ac.createGain(), dur = ring * (i ? 1 / (1 + i * 0.35) : 1.4);
+        o.type = 'sine';
+        o.frequency.value = f * r;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.09 * a * v, t + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g);
+        g.connect(lp);
+        o.start(t);
+        o.stop(t + dur + 0.05);
+      });
+    };
+    plan.notes.forEach(([t, m, ring]) => bell(t0 + t, m, ring, 0.8));
+    plan.strikes.forEach(t => bell(t0 + t, c.hourNote, 4.5, 1.2));
+    return true;
   },
   // 생일 손님이 "짠" 나타나고 사라질 때: 아주 작은 "뽁"
   pop(v = 1) {

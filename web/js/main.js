@@ -5,6 +5,7 @@ import { eventsRoom, eventsShadow, eventsTick, trafficLine } from './events.js';
 import { SRC, loadImages, loadMeta, onWarm } from './assets.js';
 import { CAKE, bannerText, birthdayMode, danceCell, drawCakeGlow, drawDisco, drawDiscoLights, drawPartyLights, drawPartyMouse, tickParty } from './birthday.js';
 import { drawPuffs, guestLayers } from './guests.js';
+import { chimeLayers, chimeTick, drawChimeGlow, drawChimePuffs } from './chime.js';
 import { calmDown, catBrain, cupTick, sunbeamTick } from './cat.js';
 import { exposeDebug } from './debug.js';
 import { ERRORS, guard, guardDraw, reportError } from './guard.js';
@@ -127,6 +128,7 @@ function step(tNow) {
   cut('쥐야쥐', () => mouseTick(d, dt), () => resetActor(mouse)); // 쥐야쥐 등장과 뇌 (mouse.js)
   cut('둘이 함께', () => duetTick(dt), resetDuet); // 같이 낮잠 → 화들짝, 자는 고양이 앞 지나가기, 서로 의식하기 (duet.js)
   cut('햇빛 따라가기', () => sunbeamTick(d, dt), () => resetActor(cat)); // 낮잠 자다 햇빛 따라가기 (cat.js)
+  cut('정각 종', () => chimeTick(d, real)); // 정각 종·정각 손님 (chime.js, HOURLY_CHIME_PLAN.md)
   eventsTick(d, real, bf); // 가끔 생기는 일: 나비, UFO, 산타, 마녀, 박쥐, 커튼 유령 (events.js, 사건마다 칸막이)
   tvTick(d); // TV는 tv.js가 따로 격리 (tvBreak)
   cut('액자', () => frameTick(d, real));
@@ -214,6 +216,7 @@ function render(d, real) {
     L.push([mouse.y, () => drawActor(mouse), '쥐야쥐 그리기']);
   if (world.party)
     L.push(...(cut('생일 손님 순서', () => guestLayers(danceCell(cat))) || [])); // 생일 깜짝 손님 (guests.js)
+  L.push(...(cut('정각 손님 순서', () => chimeLayers()) || [])); // 정각 손님 (chime.js)
   L.push(...playsLayers()); // 쳇바퀴 안의 고양이·쥐야쥐는 쳇바퀴가 같이 그린다 (steps.js SPOTS layer)
   L.sort((a, b) => a[0] - b[0]).forEach(e => draw(e[2] || '놀이 그리기', e[1]));
   if (c.state === 'falling')
@@ -238,6 +241,7 @@ function render(d, real) {
     });
   draw('TV 밤 불빛', () => drawTVNight(dk)); // 안에서도 tvBreak로 격리
   draw('호박 불빛', () => drawPumpkinGlow(dk));
+  draw('정각 손님 불빛', () => drawChimeGlow(dk)); // 할로윈 자정 손님 (chime.js)
   draw('이상한 책 불빛', () => drawOddGlow(dk));
   draw('그림자 사건', () => eventsShadow(dk)); // 커튼 그림자
   draw('놀이 불빛', () => playsLight());
@@ -247,6 +251,7 @@ function render(d, real) {
     draw('디스코볼', () => drawDisco(dk));
     draw('손님 짠', () => drawPuffs());
   }
+  draw('정각 손님 짠', () => drawChimePuffs());
   draw('만득 씨 그리기', () => drawManduk());
   draw('말풍선', () => {
     drawBubble(cat);

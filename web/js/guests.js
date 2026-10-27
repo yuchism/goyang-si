@@ -154,7 +154,8 @@ export function guestsCue(p) {
       q.at = ratio[Math.min(i, ratio.length - 1)] * s.sec;
   });
 }
-function puff(q, p) {
+// "짠" 연기 하나를 p.puffs에 (p: 파티 또는 정각 종 — p.t가 시계)
+export function puff(q, p) {
   const k = scaleOf(q);
   p.puffs.push({ x: q.x, y: q.y - q.g.h * 0.45 * k, r: q.g.h * 0.4 * k, t0: p.t, seed: Math.random() * 9 });
   Snd.pop(0.8);
@@ -201,26 +202,31 @@ export function guestLayers(cell) {
     return [];
   return p.guests.filter(q => q.shown && !q.gone).map(q => [q.y, () => drawGuest(q, p, cell), '손님 ' + q.g.id]);
 }
-function drawGuest(q, p, cell) {
+// 손님 한 명 (파티·정각 종이 같이 쓴다). p.t: 그 무대의 시계
+export function drawGuest(q, p, cell) {
   const im = IMG['f_guest_' + q.g.id];
   if (!imageReady(im))
     return;
-  const since = p.t - q.t0, pop = !RM && since < POP_SEC ? 1 + 0.18 * Math.sin(since / POP_SEC * Math.PI) : 1;
-  const k = scaleOf(q) * pop, dp = DEPTH(q.y), i = cell % 4;
+  const dp = DEPTH(q.y);
   ctx.beginPath();
   ctx.ellipse(q.x, q.y + 2, 58 * dp * Math.sqrt(q.g.size), 10 * dp, 0, 0, 7);
   ctx.fillStyle = 'rgba(50,30,15,.2)';
   ctx.fill();
+  drawGuestSheet(q, p, cell, im);
+}
+// 손님 시트(또는 같은 크기의 빛 마스크 캔버스)를 손님 자리·크기·방향·"짠" 튕김에 맞춰 그린다
+export function drawGuestSheet(q, p, cell, im) {
+  const since = p.t - q.t0, pop = !RM && since < POP_SEC ? 1 + 0.18 * Math.sin(since / POP_SEC * Math.PI) : 1;
+  const k = scaleOf(q) * pop, i = cell % 4, h = im.height || im.naturalHeight;
   ctx.save();
   ctx.translate(q.x, q.y);
   if (q.flip)
     ctx.scale(-1, 1);
-  ctx.drawImage(im, i * CELL_W, 0, CELL_W, im.height, -CELL_W * k / 2, -q.g.foot * k, CELL_W * k, im.height * k);
+  ctx.drawImage(im, i * CELL_W, 0, CELL_W, h, -CELL_W * k / 2, -q.g.foot * k, CELL_W * k, h * k);
   ctx.restore();
 }
 // "짠" 연기와 별가루 (손님이 나타나고 사라질 때). 어둠 위에 그린다 (main.js)
-export function drawPuffs() {
-  const p = world.party;
+export function drawPuffs(p = world.party) {
   if (!p || !p.puffs || !p.puffs.length)
     return;
   p.puffs = p.puffs.filter(f => p.t - f.t0 < PUFF_SEC);

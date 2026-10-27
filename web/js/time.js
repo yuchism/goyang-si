@@ -911,3 +911,16 @@ export function nextWeeklyFireworks(d) {
   }
   return null;
 }
+
+/* ───────── 정각 종 (HOURLY_CHIME_PLAN.md 8장) ─────────
+   벽시계 시간: 방 시각 그대로 매시 0분. 자연(해)·생활(만득 씨 일정)과 무관 */
+// 지금이 든 시각의 0분 (ms). 이 값이 바뀌면 정각을 지난 것
+export function hourStart(d) {
+  const h = new Date(d.getTime());
+  h.setMinutes(0, 0, 0);
+  return h.getTime();
+}
+// 몇 번 치나: 12시간제 (0시·12시 = 12번, 13시 = 1번)
+export const strikesOf = d => (d.getHours() % 12) || 12;
+// 할로윈 자정 손님: 0시 대이고, 바로 전 시각(전날 23시)이 할로윈 기간 → 10/24 밤 ~ 10/31 밤의 자정 (10/24 0시는 아님, 11/1 0시는 맞음)
+export const halloweenMidnight = d => d.getHours() === 0 && inPeriod('halloween', new Date(d.getTime() - 3600e3));

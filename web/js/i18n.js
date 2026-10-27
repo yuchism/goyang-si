@@ -185,6 +185,7 @@ export const STR = {
   capAmbient: { ko: ['…TV 소리…', '…설거지 소리…', '…통화 중: 네네~ 엄마…', '…청소기 소리…'], en: ['…TV noises…', '…dishes clinking…', '…on the phone: yes, yes, Mum…', '…vacuum cleaner…'] },
   capSteps: { ko: '뚜벅 뚜벅…', en: 'step… step…' },
   capWheel: { ko: '…드르륵드르륵…', en: '…whirr whirr whirr…' },
+  capChime: { ko: '…멀리서 종소리, 뎅— 뎅—…', en: '…a far-off bell: dong… dong…' }, // 정각 종 (소리가 꺼져 있을 때, chime.js)
   capLaserManduk: { ko: '(만득 씨) 어, 그거 내 거야~', en: "(Mandeuk) Hey, that's mine~" },
   capSlipper: { ko: '어? 슬리퍼 한 짝 어디 갔지…', en: "Huh? Where'd my other slipper go…" },
   capTvOn: { ko: '…탁.', en: '…click.' },

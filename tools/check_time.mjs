@@ -210,6 +210,16 @@ async function child() {
   eq(time.momentNow('christmasEveNight', T(2026, 12, 25, 1, 0)), true, '12/25 01:00 산타 순간');
   eq(time.holiday(T(2026, 10, 24, 0, 30)), 'halloween', '할로윈 시작 10/24 00:30');
   eq(time.holiday(T(2026, 11, 1, 3)), 'halloween', '11/1 03:00 할로윈 (그 밤이 끝나기 전)');
+  // 정각 종 (HOURLY_CHIME_PLAN.md 8장): 12시간제 타종, 할로윈 자정 손님
+  eq(time.strikesOf(T(2026, 10, 27, 0, 0)), 12, '자정 = 12번');
+  eq(time.strikesOf(T(2026, 10, 27, 12, 0)), 12, '정오 = 12번');
+  eq(time.strikesOf(T(2026, 10, 27, 13, 0)), 1, '13시 = 1번');
+  eq(time.hourStart(T(2026, 10, 27, 13, 42)), T(2026, 10, 27, 13, 0).getTime(), '13:42의 정각 = 13:00');
+  eq(time.halloweenMidnight(T(2026, 10, 24, 0, 0)), false, '10/24 0시 (전날 밤은 기간 밖)');
+  eq(time.halloweenMidnight(T(2026, 10, 25, 0, 0)), true, '10/25 0시 할로윈 자정');
+  eq(time.halloweenMidnight(T(2026, 11, 1, 0, 0)), true, '11/1 0시 (10/31 밤의 자정)');
+  eq(time.halloweenMidnight(T(2026, 11, 2, 0, 0)), false, '11/2 0시');
+  eq(time.halloweenMidnight(T(2026, 10, 28, 1, 0)), false, '10/28 1시 (자정 아님)');
   eq(time.holiday(T(2026, 11, 1, 12)), null, '11/1 12:00 할로윈 끝');
   eq(time.holiday(T(2026, 10, 23, 23)), null, '10/23 23:00 할로윈 전');
   eq(time.holiday(T(2027, 2, 5)), 'seollal', '설날 전날 2027-2-5');
