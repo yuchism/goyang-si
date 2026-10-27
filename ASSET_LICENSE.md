@@ -19,3 +19,18 @@ derivative works from them without prior written permission from the copyright
 holder.
 
 The MIT License in `LICENSE` applies only to the source code and documentation.
+
+## Third-party sounds
+
+The sound files in `web/sound/` are not covered by the MIT License or by the
+artwork terms above. They are third-party audio used under the
+[Pixabay Content License](https://pixabay.com/service/terms/), trimmed and
+mixed for the hourly chime in this site:
+
+| File | Original | Author |
+|---|---|---|
+| `chime-westminster-v1.mp3` | "Westminster Quarters (full hour)" (Pixabay #603764) | jonathanslattermusic |
+| `chime-strike-v1.mp3` | "Big Bell Ring" (Pixabay #356829) | stu9 |
+
+They are included only as part of this website. To use these sounds
+elsewhere, download them from Pixabay under its own license.
