@@ -922,5 +922,5 @@ export function hourStart(d) {
 }
 // 몇 번 치나: 12시간제 (0시·12시 = 12번, 13시 = 1번)
 export const strikesOf = d => (d.getHours() % 12) || 12;
-// 할로윈 자정 손님: 0시 대이고, 바로 전 시각(전날 23시)이 할로윈 기간 → 10/24 밤 ~ 10/31 밤의 자정 (10/24 0시는 아님, 11/1 0시는 맞음)
-export const halloweenMidnight = d => d.getHours() === 0 && inPeriod('halloween', new Date(d.getTime() - 3600e3));
+// 할로윈 자정 손님: 할로윈 기간의 자정(0시 대) 모두 → 10/24 0시 ~ 11/1 0시(10/31 밤의 자정), 아홉 번
+export const halloweenMidnight = d => d.getHours() === 0 && inPeriod('halloween', d);

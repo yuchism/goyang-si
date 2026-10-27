@@ -215,7 +215,8 @@ async function child() {
   eq(time.strikesOf(T(2026, 10, 27, 12, 0)), 12, '정오 = 12번');
   eq(time.strikesOf(T(2026, 10, 27, 13, 0)), 1, '13시 = 1번');
   eq(time.hourStart(T(2026, 10, 27, 13, 42)), T(2026, 10, 27, 13, 0).getTime(), '13:42의 정각 = 13:00');
-  eq(time.halloweenMidnight(T(2026, 10, 24, 0, 0)), false, '10/24 0시 (전날 밤은 기간 밖)');
+  eq(time.halloweenMidnight(T(2026, 10, 24, 0, 0)), true, '10/24 0시 (할로윈 기간 첫 자정)');
+  eq(time.halloweenMidnight(T(2026, 10, 23, 0, 0)), false, '10/23 0시 (기간 전)');
   eq(time.halloweenMidnight(T(2026, 10, 25, 0, 0)), true, '10/25 0시 할로윈 자정');
   eq(time.halloweenMidnight(T(2026, 11, 1, 0, 0)), true, '11/1 0시 (10/31 밤의 자정)');
   eq(time.halloweenMidnight(T(2026, 11, 2, 0, 0)), false, '11/2 0시');
