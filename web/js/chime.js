@@ -95,6 +95,7 @@ export function chimeTick(d, real) {
       startChime(d);
   }
   prefetch(d);
+  world.chimeGlow = !!(C.run && C.run.hw && showing()); // 할로윈 자정 손님이 와 있는 동안 (산 너머 고양이 탑 창이 조금 더 밝게, halloween.js)
   Snd.prepChime(); // 녹음 차임 받아 두기 (sound.js)
   const run = C.run;
   if (!run)

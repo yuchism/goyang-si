@@ -385,3 +385,92 @@ export const ghostEvent = {
   dev: [{ btn: 'dGhost', go: () => startGhost() }],
   debug: { startGhost },
 };
+
+/* ───────── 산 너머 마녀의 집 (tasks/halloween-witch-tower.md) ─────────
+   할로윈 기간에만, 먼 산 너머로 가늘고 구불구불한 바위 봉우리가 솟아 있고 그 꼭대기에 작은 마녀의 집이 얹혀 있다.
+   낮엔 먼 산처럼 뿌옇게, 밤엔 시커멓게. 집의 창 하나에 촛불(해 질 무렵부터). 마녀가 창밖을 날아가는 동안엔 창 불이 꺼진다(집을 비움).
+   밤엔 작은 박쥐 두 마리가 집 둘레를 맴돈다. 정체는 설명하지 않는다.
+   산 판보다 먼저 그려(skyBack) 봉우리 밑동이 능선에 가려진다. 자리·크기는 window.json witchTower (창 안 좌표) */
+const TOWER = { ink: '27,20,44', day: '146,146,176', rim: 'rgba(206,196,255,.16)', light: '255,200,105', bats: 2 }; // ink: 밤 실루엣, day: 낮(먼 산 연무색)
+let towerLit = 1; // 창 불빛 (마녀가 나가면 서서히 꺼지고 돌아오면 켜진다)
+function drawWitchTower(w) {
+  const T = WIN.witchTower;
+  if (!T || holiday(now()) !== 'halloween')
+    return false;
+  const a = clamp(((world.skyDark || 0) - 0.2) / 0.5, 0, 1); // 밤 정도: 낮엔 먼 산처럼 뿌옇게(0), 어두워질수록 시커멓게(1)
+  const away = !!world.witch || !!(world.curtainShadow && world.curtainShadow.kind === 'witch');
+  towerLit = clamp(towerLit + (away ? -0.02 : 0.02), 0, 1);
+  const x0 = w.x + T.x, base = wy(T.base), h = T.h, bw = T.w / 2, sway = T.sway * h;
+  // 봉우리: t 0(밑동) ~ 1(꼭대기). 밑동은 넓게 퍼져 산에 묻히고, 위로 갈수록 가늘어지며 S자로 구불거린다. 꼭대기는 살짝 넓은 턱
+  const cx = t => x0 + sway * Math.sin(t * Math.PI * 1.15) * t, cy = t => base - t * h;
+  const half = t => bw * (0.13 + 0.87 * Math.pow(1 - t, 2.6)) + (t > 0.9 ? bw * 0.22 * (t - 0.9) / 0.1 : 0);
+  const rough = (t, k) => Math.sin(t * 23 + k) * 0.6 + Math.sin(t * 57 + k * 2) * 0.35; // 바위 결 (px)
+  const ink = TOWER.day.split(',').map((v, i) => Math.round(+v + (TOWER.ink.split(',')[i] - v) * a)).join(',');
+  ctx.save();
+  ctx.fillStyle = `rgb(${ink})`;
+  ctx.strokeStyle = a > 0.5 ? TOWER.rim : `rgba(${ink},0)`; // 밤엔 달빛 테두리 아주 옅게
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  const N = 40;
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    ctx[i ? 'lineTo' : 'moveTo'](cx(t) - half(t) + rough(t, 1), cy(t));
+  }
+  for (let i = N; i >= 0; i--) {
+    const t = i / N;
+    ctx.lineTo(cx(t) + half(t) + rough(t, 4), cy(t));
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // 꼭대기의 작은 마녀 집: 비뚤게 기운 상자 + 높고 끝이 꺾인 뾰족 지붕 + 굴뚝
+  const hx = cx(1), hy = cy(1) + 1, hw = T.house / 2, hh = T.house * 0.7, tilt = -0.08;
+  ctx.save();
+  ctx.translate(hx, hy);
+  ctx.rotate(tilt);
+  ctx.fillStyle = `rgb(${ink})`;
+  ctx.beginPath(); // 벽
+  ctx.moveTo(-hw, 0);
+  ctx.lineTo(-hw * 0.9, -hh);
+  ctx.lineTo(hw * 0.95, -hh * 1.05);
+  ctx.lineTo(hw, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillRect(hw * 0.35, -hh * 1.9, hw * 0.28, hh * 0.9); // 굴뚝
+  ctx.beginPath(); // 지붕: 처마가 조금 나오고, 끝이 옆으로 휘어 꺾인다
+  ctx.moveTo(-hw * 1.35, -hh * 0.92);
+  ctx.quadraticCurveTo(-hw * 0.2, -hh * 1.6, -hw * 0.05, -hh * 2.6);
+  ctx.quadraticCurveTo(hw * 0.2, -hh * 3.2, hw * 1.1, -hh * 3.05); // 꺾인 끝
+  ctx.quadraticCurveTo(hw * 0.35, -hh * 2.7, hw * 0.45, -hh * 1.9);
+  ctx.quadraticCurveTo(hw * 0.7, -hh * 1.25, hw * 1.35, -hh * 1.0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // 창 하나: 촛불처럼 일렁인다. 할로윈 자정 손님이 와 있으면 조금 더 밝게 (chime.js world.chimeGlow)
+  const lit = towerLit * clamp((a - 0.5) / 0.3, 0, 1); // 창 불은 해 질 무렵부터
+  if (lit > 0.01) {
+    const wx = -hw * 0.15, wyy = -hh * 0.5, ww = Math.max(1.4, hw * 0.24), wh = ww * 1.6;
+    const f = (RM ? 1 : 0.85 + 0.1 * Math.sin(world.t * 3.1) + 0.05 * Math.sin(world.t * 7.7)) * lit * (world.chimeGlow ? 1.4 : 1);
+    const g = ctx.createRadialGradient(wx, wyy, 0, wx, wyy, T.house * 1.6);
+    g.addColorStop(0, `rgba(${TOWER.light},${0.3 * f})`);
+    g.addColorStop(1, `rgba(${TOWER.light},0)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(wx - T.house * 1.6, wyy - T.house * 1.6, T.house * 3.2, T.house * 3.2);
+    ctx.fillStyle = `rgba(${TOWER.light},${Math.min(1, f)})`;
+    ctx.fillRect(wx - ww, wyy - wh / 2, ww * 2, wh);
+  }
+  ctx.restore();
+  ctx.restore();
+  // 집 둘레를 맴도는 작은 박쥐들 (밤에만. 뒤로 갈 땐 작고 옅게)
+  for (let i = 0; a > 0.5 && i < TOWER.bats; i++) {
+    const u = world.t * (RM ? 0 : 0.45) + i * (Math.PI * 2 / TOWER.bats), bx = hx + Math.cos(u) * T.house * 2.2, by = hy - hh * 2 + Math.sin(u) * T.house * 0.6 + zig(world.t * 1.7 + i) * 2;
+    drawBat(bx, by, 0.18 + 0.05 * Math.sin(u), world.t * 10 + i * 1.3, a * (0.55 + 0.35 * Math.sin(u)));
+  }
+  return true;
+}
+export const towerEvent = {
+  needs: ['window'], // 장면에 이 장소가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
+  id: 'witchTower',
+  skyBack: drawWitchTower,
+};
