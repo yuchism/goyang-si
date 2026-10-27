@@ -11,7 +11,7 @@ import { mouseHide } from './mouse.js';
 import { O, P, S, present } from './objects.js';
 import { H, W, ctx } from './stage.js';
 import { bub, fn, go, hold, run } from './steps.js';
-import { aptLightsAt, boxToday, flashSince, isNight, nextAtHour, now, planeSlots, rainNow, rainbowAt, rainbowSide, setOverride, setSimMs, setWindowOverride, slotDue, thunderNow } from './time.js';
+import { aptLightsAt, boxToday, flashSince, holiday, isNight, nextAtHour, now, planeSlots, rainNow, rainbowAt, rainbowSide, setOverride, setSimMs, setWindowOverride, slotDue, thunderNow } from './time.js';
 import { winFree } from './behave.js';
 import { RM, clamp, hash, rnd } from './util.js';
 import { after, caption, cat, mouse, say, world } from './world.js';
@@ -42,6 +42,7 @@ function drawLights(w, g) {
     return; // 아침·낮
   const sx = g.aw / WIN.size[0], sy = g.ah / WIN.size[1];
   const [lr, lg, lb] = WIN.lit, [dr, dg, db] = WIN.dark;
+  const hw = holiday(g.d) === 'halloween'; // 할로윈 밤: 불 켜진 창 3분의 1쯤이 호박빛으로 일렁인다 (tasks/halloween-room-extras.md 3장)
   ctx.save();
   ctx.globalAlpha = g.night;
   WIN.windows.forEach(([x, y, ww, hh, was], i) => {
@@ -55,7 +56,11 @@ function drawLights(w, g) {
       return;
     }
     let c = `rgb(${lr},${lg},${lb})`;
-    if (s === 2) { // TV처럼 푸르스름하게 깜빡임
+    if (hw && s === 1 && hash('pumpkinwin' + i) < 0.3) {
+      const k = RM ? 0.9 : 0.78 + 0.22 * Math.sin(world.t * (2.4 + hash('pwf' + i) * 2) + i) * Math.sin(world.t * 0.9 + i * 1.7);
+      c = `rgb(${Math.round(255 * k)},${Math.round(112 * k)},${Math.round(28 * k)})`;
+    }
+    else if (s === 2) { // TV처럼 푸르스름하게 깜빡임
       const k = RM ? 0.8 : 0.65 + 0.35 * hash('tvw' + i + Math.floor(world.t * 2.2));
       c = `rgb(${Math.round(120 * k)},${Math.round(160 * k)},${Math.round(225 * k)})`;
     }

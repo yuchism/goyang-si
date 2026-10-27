@@ -904,6 +904,8 @@
                         { "x": 480, "y": 748 },
                         { "x": 1030, "y": 712 }
                       ], "note": "정각 손님 발 자리 후보. 강고양이 씨와 겹치지 않는(away 이상 떨어진) 곳 중 가장 가까운 곳 — 좁은 화면에서도 같이 보이게 (HOURLY_CHIME_PLAN.md 5-3)", "away": 190 },
+    "halloween.spider": { "x": 1110, "top": 0, "low": 210, "note": "할로윈 밤 천장에서 내려오는 거미: 실 x, 천장 top, 가장 낮이 내려오는 곳 low (tasks/halloween-room-extras.md 1장)" },
+    "halloween.web":    { "x": 868, "y": 0, "r": 70, "dir": 1, "note": "할로윈 구석 거미줄: 구석 x·y, 크기 r, dir 1이면 오른쪽 아래로 펼침" },
     "party.disco":  { "x": 470, "y": 205, "r": 30, "note": "디스코볼: 매달리는 자리(가운데)와 반지름. 배너 뒤(천장 위)에서 내려와 여기 걸린다 (BIRTHDAY_GUESTS_PLAN.md 10장)" }
   }
 }

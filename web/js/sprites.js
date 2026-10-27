@@ -8,6 +8,7 @@ import { DEPTH, H, W, cam, ctx, view } from './stage.js';
 import { actorLift, hasShadow } from './steps.js';
 import { HAND, INK, RM, clamp, onScene } from './util.js';
 import { cat, world } from './world.js';
+import { holiday, now } from './time.js';
 // 나중 묶음을 다 받기 전에 아직 없는 프레임이 불리면 (LOAD_PLAN.md 4-3): 그 배우가 마지막으로 실제로 그린 프레임을 그 자리에 그린다.
 // 그것도 없으면 서 있는 그림. a.frame(지금 프레임 이름, 다른 곳이 읽는다)은 그대로 두고, 그린 것은 a.drawn에 따로 기억한다
 let frameMiss = 0;
@@ -104,6 +105,51 @@ function drawMouse(a) {
   // 코 킁킁: 가만히 있을 때 아주 살짝 앞뒤로
   const sn = (!RM && fr === 'mouse_idle_1') ? 1 + Math.max(0, Math.sin((world.t + a.phase) * 7)) * 0.012 : 1;
   drawFrame(fr, a.x, a.y - actorLift(a), a.face, MSC * dp * sn, 1, a);
+  if (holiday(now()) === 'halloween')
+    drawGhostSheet(a.drawn || fr, a.x, a.y - actorLift(a), a.face, MSC * dp * sn);
+}
+/* 할로윈 유령 분장 (tasks/halloween-room-extras.md 2장): 쥐야쥐 그림 위에 하얀 천을 덮어 그린다.
+   그림 좌표(drawFrame과 같은 변환)로: 머리 쪽(그림 왼쪽 30%)이 둥근 천, 아래 단은 물결, 눈구멍 둘. 꼬리 끝(그림 오른쪽)은 천 밖으로 */
+function drawGhostSheet(name, x, y, face, sc) {
+  const f = FRAMES[name];
+  if (!f)
+    return;
+  const [fw, fh, ax, ay, k = 1] = f, L = fw * 0.04 - ax, R = fw * 0.72 - ax, B = fh - ay, T = -ay - fh * 0.12, hx = fw * 0.3 - ax, sleep = name.startsWith('mouse_sleep');
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(-face * sc * k, sc * k);
+  ctx.beginPath();
+  ctx.moveTo(L, B);
+  ctx.lineTo(L, T + (B - T) * 0.45);
+  ctx.quadraticCurveTo(L, T, hx, T); // 머리 쪽 둥근 꼭대기
+  ctx.quadraticCurveTo(R, T, R, T + (B - T) * 0.55);
+  ctx.lineTo(R, B);
+  const n = 5, wob = RM ? 0 : Math.sin(world.t * 5) * 3; // 아래 단 물결 (걸을 때 살랑)
+  for (let i = n; i > 0; i--) {
+    const x0 = L + (R - L) * i / n, x1 = L + (R - L) * (i - 1) / n;
+    ctx.quadraticCurveTo((x0 + x1) / 2 + wob, B - fh * 0.16, x1, B);
+  }
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(250,247,240,.97)';
+  ctx.fill();
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 2.4 / (sc * k);
+  ctx.stroke();
+  ctx.fillStyle = INK; // 눈구멍 (자는 중엔 감은 눈)
+  const ey = T + (B - T) * 0.32, er = Math.max(5, fh * 0.07);
+  for (const ex of [hx - er * 1.6, hx + er * 1.4])
+    if (sleep) {
+      ctx.beginPath();
+      ctx.moveTo(ex - er, ey);
+      ctx.quadraticCurveTo(ex, ey + er * 0.8, ex + er, ey);
+      ctx.stroke();
+    }
+    else {
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, er * 0.75, er, 0, 0, 7);
+      ctx.fill();
+    }
+  ctx.restore();
 }
 export function drawActor(a) {
   if (a.kind === 'cat')

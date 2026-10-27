@@ -16,7 +16,7 @@
      reset()            시간 점프: 지나가던 것은 이미 지나갔다
      dev: [{ btn, go }] 미리보기 버튼 (index.html의 id)
      debug: { … }       window.__goyang에 더할 것 } */
-import { batsEvent, ghostEvent, towerEvent, witchEvent } from './halloween.js';
+import { batsEvent, ghostEvent, spiderEvent, towerEvent, witchEvent } from './halloween.js';
 import { butterflyEvent, santaEvent, ufoEvent } from './outside.js';
 import { lightsEvent, planeEvent, rainbowEvent, thunderEvent } from './weather.js';
 import { birdEvent, blackcatEvent } from './veranda.js';
@@ -34,7 +34,7 @@ import { assetsWarm } from './assets.js';
 let list = null;
 // 3차 계절 손님(seasons.js): 철새는 하늘의 큰 것, 벚꽃잎·낙엽은 하늘에, 난간 눈은 새 아래, 잠자리는 손님 위, 성에는 베란다 층 맨 끝(유리)
 // 불꽃놀이(fireworks.js)는 맨 끝: 앞 사건들의 확률 뽑는 순서를 바꾸지 않게. 하늘의 큰 것이라 공연 중엔 다른 큰 것이 시작하지 않는다
-export const events = () => list || (list = [butterflyEvent, ufoEvent, santaEvent, witchEvent, batsEvent, ghostEvent, lightsEvent, thunderEvent, rainbowEvent, planeEvent, geeseEvent, blossomEvent, leavesEvent, railSnowEvent, birdEvent, blackcatEvent, dragonflyEvent, firstSnowEvent, dustEvent, frostEvent, fireworksEvent, towerEvent]);
+export const events = () => list || (list = [butterflyEvent, ufoEvent, santaEvent, witchEvent, batsEvent, ghostEvent, lightsEvent, thunderEvent, rainbowEvent, planeEvent, geeseEvent, blossomEvent, leavesEvent, railSnowEvent, birdEvent, blackcatEvent, dragonflyEvent, firstSnowEvent, dustEvent, frostEvent, fireworksEvent, towerEvent, spiderEvent]);
 
 // 이 장면에서 생길 수 있는 일: needs의 장소가 모두 있는 것만 (SCENE_PLAN.md 7장). 장면을 읽으면 다시 고른다
 const ok = e => !e.needs || e.needs.every(has);

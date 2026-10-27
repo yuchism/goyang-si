@@ -3,16 +3,16 @@
 import { WIN, skyRnd, wy } from './win.js';
 import { play } from './anim.js';
 import { ghostFree } from './behave.js';
-import { imageReady, img } from './assets.js';
+import { assetsWarm, imageReady, img } from './assets.js';
 import { curtainSkew, drawProp } from './draw.js';
 import { tr } from './i18n.js';
-import { O, S, objView, present, zOf } from './objects.js';
+import { O, PL, S, objView, present, zOf } from './objects.js';
 import { cv, ctx } from './stage.js';
 import { drawSkySprite } from './sprites.js';
 import { canStart } from './events.js';
 import { bub, fn, go, hold, run, until } from './steps.js';
 import { batTime, holiday, isNight, momentNow, moonPhase, nightOf, now, rainNow } from './time.js';
-import { RM, clamp, pick, rnd } from './util.js';
+import { INK, RM, clamp, pick, rnd } from './util.js';
 import { after, caption, cat, say, world } from './world.js';
 export const isHalloween = d => holiday(d) === 'halloween';
 // 박쥐·유령은 time.js batTime(해 진 뒤 18분 ~ 동틀 녘 시작), 마녀는 isNight(해 진 뒤 30분 ~ 동틀 녘 시작). 유령 횟수·10/31 마녀는 하룻밤(time.js nightOf)으로 센다
@@ -474,3 +474,109 @@ export const towerEvent = {
   id: 'witchTower',
   skyBack: drawWitchTower,
 };
+
+/* ───────── 천장 거미와 구석 거미줄 (tasks/halloween-room-extras.md 1장) ─────────
+   할로윈 기간 밤에 가끔 벽 위 천장에서 작은 거미가 실을 타고 내려와 대롱대롱하다 올라간다. 구석엔 거미줄(기간 내내).
+   자리는 objects.json halloween.spider (x, 천장 top, 가장 낮은 곳 low) · halloween.web (구석 x·y, 크기 r, 방향 dir: 1이면 오른쪽 아래로 펼침) */
+const SPIDER = { every: 900, down: 5, hang: [7, 14], up: 3.5 }; // 평균 몇 초에 한 번, 내려오기·대롱대롱·올라가기(초)
+export function startSpider() {
+  const sp = PL('halloween.spider');
+  if (world.spider || !sp)
+    return;
+  world.spider = { t: 0, hang: rnd(SPIDER.hang[0], SPIDER.hang[1]), low: rnd(0.75, 1), seen: false };
+}
+function spiderTick(d, real) {
+  const s = world.spider;
+  if (!s) {
+    if (isHalloween(d) && isNight(d) && !world.manduk && assetsWarm() && Math.random() < real / SPIDER.every)
+      startSpider();
+    return;
+  }
+  if (world.manduk && s.t < SPIDER.down + s.hang) // 만득 씨가 오면 바로 올라간다
+    s.t = SPIDER.down + s.hang;
+  s.t += real;
+  if (!s.seen && s.t > SPIDER.down && !cat.closed && !cat.bub && !world.manduk) {
+    s.seen = true;
+    say(cat, '👀', 3);
+  }
+  if (s.t > SPIDER.down + s.hang + SPIDER.up)
+    world.spider = null;
+}
+function drawSpiderWeb() {
+  const wb = PL('halloween.web');
+  if (!wb || !isHalloween(now()))
+    return;
+  const { x, y, r } = wb, dir = wb.dir || 1;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(245,240,230,.55)';
+  ctx.lineWidth = 1;
+  const A = [0, 0.28, 0.55, 0.8, 1].map(k => k * Math.PI / 2); // 구석에서 부채꼴로
+  const pt = (k, rr) => [x + dir * Math.cos(A[k]) * rr, y + Math.sin(A[k]) * rr];
+  A.forEach((_, k) => {
+    const [ex, ey] = pt(k, r);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+  });
+  for (const f of [0.3, 0.55, 0.8]) { // 처진 가로줄
+    ctx.beginPath();
+    for (let k = 0; k < A.length; k++) {
+      const [px, py] = pt(k, r * f);
+      if (!k)
+        ctx.moveTo(px, py);
+      else {
+        const [qx, qy] = pt(k - 1, r * f), mx = (px + qx) / 2 - dir * r * 0.04, my = (py + qy) / 2 - r * 0.04;
+        ctx.quadraticCurveTo(mx + (x - mx) * 0.12, my + (y - my) * 0.12, px, py);
+      }
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawSpider() {
+  drawSpiderWeb();
+  const s = world.spider, sp = PL('halloween.spider');
+  if (!s || !sp)
+    return;
+  const { down, up } = SPIDER, t = s.t;
+  const k = t < down ? t / down : t < down + s.hang ? 1 : 1 - (t - down - s.hang) / up; // 내려온 정도
+  const ease2 = u => u * u * (3 - 2 * u), y = sp.top + (sp.low - sp.top) * s.low * ease2(clamp(k, 0, 1));
+  const sw = RM ? 0 : Math.sin(world.t * 1.6) * 3 * (t > down ? 1 : k), x = sp.x + sw, bob = RM ? 0 : Math.sin(world.t * 4.3) * 0.6;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(240,236,228,.6)'; // 실
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(sp.x, sp.top);
+  ctx.lineTo(x, y - 4);
+  ctx.stroke();
+  ctx.strokeStyle = INK; // 다리 여덟
+  ctx.lineWidth = 1.2;
+  for (let i = 0; i < 4; i++)
+    for (const sd of [-1, 1]) {
+      const a0 = -0.9 + i * 0.55 + (RM ? 0 : Math.sin(world.t * 6 + i) * 0.06);
+      ctx.beginPath();
+      ctx.moveTo(x, y + bob);
+      ctx.quadraticCurveTo(x + sd * 6 * Math.cos(a0), y + bob - 4 + 7 * Math.sin(a0) - 3, x + sd * 9 * Math.cos(a0 * 0.8), y + bob + 7 * Math.sin(a0) + 2);
+      ctx.stroke();
+    }
+  ctx.fillStyle = INK;
+  ctx.beginPath();
+  ctx.ellipse(x, y + 3 + bob, 4.6, 5.4, 0, 0, 7); // 배
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, y - 3 + bob, 2.8, 0, 7); // 머리
+  ctx.fill();
+  ctx.restore();
+}
+export const spiderEvent = {
+  needs: ['halloween.spider'], // 장면에 이 자리가 없으면 이 일은 없다 (SCENE_PLAN.md 7장)
+  id: 'spider',
+  tick: (d, real) => spiderTick(d, real),
+  room: drawSpider,
+  reset() {
+    world.spider = null;
+  },
+  debug: { startSpider },
+};
+

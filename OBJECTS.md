@@ -206,4 +206,6 @@
 | `party.beams` | xs [250, 640, 1010] | 생일 파티 천장 색 조명이 내려오는 x |
 | `party.guests` | spots [{'x': 215, 'y': 724}, {'x': 310, 'y': 740}, {'x': 400, 'y': 722, 'small': True}, {'x': 255, 'y': 654, 'back': True}, {'x': 360, 'y': 664, 'back': True}] | 생일 깜짝 손님 발 자리. 작은 폰에서도 보이게 창가 쪽 한 무리 (BIRTHDAY_GUESTS_PLAN.md 7장). small: 작은 손님만(강고양이 씨 옆이라), back: 뒷줄(큰 손님은 안 섬) |
 | `chime.guest` | spots [{'x': 215, 'y': 724}, {'x': 480, 'y': 748}, {'x': 1030, 'y': 712}], away 190 | 정각 손님 발 자리 후보. 강고양이 씨와 겹치지 않는(away 이상 떨어진) 곳 중 가장 가까운 곳 — 좁은 화면에서도 같이 보이게 (HOURLY_CHIME_PLAN.md 5-3) |
+| `halloween.spider` | x 1110, top 0, low 210 | 할로윈 밤 천장에서 내려오는 거미: 실 x, 천장 top, 가장 낮이 내려오는 곳 low (tasks/halloween-room-extras.md 1장) |
+| `halloween.web` | x 868, y 0, r 70, dir 1 | 할로윈 구석 거미줄: 구석 x·y, 크기 r, dir 1이면 오른쪽 아래로 펼침 |
 | `party.disco` | x 470, y 205, r 30 | 디스코볼: 매달리는 자리(가운데)와 반지름. 배너 뒤(천장 위)에서 내려와 여기 걸린다 (BIRTHDAY_GUESTS_PLAN.md 10장) |
