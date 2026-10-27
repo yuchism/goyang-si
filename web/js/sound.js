@@ -8,11 +8,16 @@ export const BDAY_SONG = {
   notes: [[67, .75], [67, .25], [69, 1], [67, 1], [72, 1], [71, 2], [67, .75], [67, .25], [69, 1], [67, 1], [74, 1], [72, 2], [67, .75], [67, .25], [79, 1], [76, 1], [72, 1], [71, 1], [69, 2], [77, .75], [77, .25], [76, 1], [72, 1], [74, 1], [72, 2]] // [MIDI 음, 박]
 };
 /* ───────── 정각 종 표 (HOURLY_CHIME_PLAN.md 4-2) ─────────
-   숫자만 고치면 된다. 앞 차임(웨스트민스터 차임, 넷째 마디까지) 뒤에 시각만큼 타종. 손님 시간표는 chimePlan이 돌려주는 시각을 따른다 */
+   숫자만 고치면 된다. 앞 차임(웨스트민스터 차임, 넷째 마디까지) 뒤에 시각만큼 타종. 손님 시간표는 chimePlan이 돌려주는 시각을 따른다.
+   차임은 녹음 파일(file)을 쓴다. 파일을 아직 못 받았거나 못 읽으면 같은 박자로 만든 소리(melody). 박자는 녹음에 맞춘 것(첫 음 0.16초, 음 간격 0.845초) */
 export const CHIME = {
+  files: { quarters: 'sound/chime-westminster-v1.mp3', strike: 'sound/chime-strike-v1.mp3' }, // 녹음: 차임(20초, 음 16개 + 여운), 타종 한 번(2.5초). 출처는 ASSET_LICENSE.md
+  fileVol: 1.6, // 녹음 크기 (vol·volQuiet에 곱한다)
+  fileFar: 3200, // 녹음: 이 Hz 위를 깎는다 (녹음이 이미 멀리서 들리므로 덜 깎음)
+  lead: 0.16, // 녹음에서 첫 음까지(초). 만든 소리도 같은 시각에
   melody: [[68, 1], [66, 1], [64, 1], [59, 2], [64, 1], [68, 1], [66, 1], [59, 2], [64, 1], [66, 1], [68, 1], [64, 2], [68, 1], [64, 1], [66, 1], [59, 2]], // [MIDI 음, 박]
-  phrase: 1, // 마디(5박) 사이 쉼(박)
-  beat: 0.6, // 차임 한 박(초)
+  phrase: 0, // 마디(5박) 사이 쉼(박)
+  beat: 0.845, // 차임 한 박(초)
   hourNote: 52, // 타종 음 (E3)
   gap: 1.2, // 차임 끝 ~ 첫 타종(초)
   strike: 2.4, // 타종 간격(초)
@@ -28,7 +33,7 @@ export function chimePlan(n) {
   const c = CHIME, notes = [];
   let at = 0, inPhrase = 0;
   for (const [m, d] of c.melody) {
-    notes.push([at * c.beat, m, d * c.beat + 1.6]);
+    notes.push([c.lead + at * c.beat, m, d * c.beat + 1.6]);
     at += d;
     inPhrase += d;
     if (inPhrase >= 5) {
@@ -36,7 +41,7 @@ export function chimePlan(n) {
       inPhrase = 0;
     }
   }
-  const t0 = (at - c.phrase) * c.beat + c.gap, strikes = [];
+  const t0 = c.lead + (at - c.phrase) * c.beat + c.gap, strikes = [];
   for (let i = 0; i < n; i++)
     strikes.push(t0 + i * c.strike);
   return { notes, strikes, sec: strikes[strikes.length - 1] + c.tail };
@@ -219,6 +224,32 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
     });
     return { sec: at * beat + .15, beat, phrases };
   },
+  // 녹음 차임 준비: 소리가 켜져 있으면 파일을 받아 Web Audio로 풀어 둔다. 첫 종까지 못 풀면 그 종은 만든 소리. 매 장면 불러도 된다 (chime.js)
+  chimeBufs: {}, chimeRaw: {}, chimeBusy: {},
+  prepChime() {
+    if (!this.on) // 소리를 켠 사람만 받는다
+      return;
+    for (const [k, url] of Object.entries(CHIME.files || {})) {
+      if (this.chimeBufs[k] || this.chimeBusy[k] || this.chimeRaw[k] === false)
+        continue;
+      this.chimeBusy[k] = true;
+      const done = () => {
+        this.chimeBusy[k] = false;
+      }, bad = () => {
+        this.chimeRaw[k] = false; // false: 못 받음·못 읽음 → 만든 소리로
+      };
+      if (!this.chimeRaw[k])
+        fetch(url).then(r => r.ok ? r.arrayBuffer() : null).then(b => {
+          this.chimeRaw[k] = b || false;
+        }).catch(bad).finally(done);
+      else if (this.ac)
+        this.ac.decodeAudioData(this.chimeRaw[k].slice(0)).then(buf => {
+          this.chimeBufs[k] = buf;
+        }).catch(bad).finally(done);
+      else
+        done();
+    }
+  },
   // 정각 종: 소리가 켜져 있으면 plan(chimePlan)대로 울리고 true. 멀리서 들리게 고음을 깎는다
   chime(plan, quiet) {
     if (!this.on || !this.ac)
@@ -244,8 +275,28 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
         o.stop(t + dur + 0.05);
       });
     };
-    plan.notes.forEach(([t, m, ring]) => bell(t0 + t, m, ring, 0.8));
-    plan.strikes.forEach(t => bell(t0 + t, c.hourNote, 4.5, 1.2));
+    const B = this.chimeBufs;
+    let rec = null; // 녹음을 틀 곳 (한 번 만든다)
+    const playRec = (buf, t) => {
+      if (!rec) {
+        const fl = ac.createBiquadFilter();
+        rec = ac.createGain();
+        fl.type = 'lowpass';
+        fl.frequency.value = c.fileFar;
+        rec.gain.value = (quiet ? c.volQuiet : c.vol) * c.fileVol;
+        rec.connect(fl);
+        fl.connect(this.master);
+      }
+      const src = ac.createBufferSource();
+      src.buffer = buf;
+      src.connect(rec);
+      src.start(t);
+    };
+    if (B.quarters) // 녹음 차임 (0초부터 틀면 lead 뒤에 첫 음)
+      playRec(B.quarters, t0);
+    else
+      plan.notes.forEach(([t, m, ring]) => bell(t0 + t, m, ring, 0.8));
+    plan.strikes.forEach(t => B.strike ? playRec(B.strike, t0 + t) : bell(t0 + t, c.hourNote, 4.5, 1.2)); // 타종: 녹음 한 번을 시각만큼
     return true;
   },
   // 생일 손님이 "짠" 나타나고 사라질 때: 아주 작은 "뽁"

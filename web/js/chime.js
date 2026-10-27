@@ -95,6 +95,7 @@ export function chimeTick(d, real) {
       startChime(d);
   }
   prefetch(d);
+  Snd.prepChime(); // 녹음 차임 받아 두기 (sound.js)
   const run = C.run;
   if (!run)
     return;
