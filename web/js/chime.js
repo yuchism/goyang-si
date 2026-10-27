@@ -1,5 +1,5 @@
 /* 정각 종 · 정각 손님 (HOURLY_CHIME_PLAN.md): 매시 정각, 창밖 먼 곳에서 종이 울린다(차임 + 시각만큼 타종).
-   종이 울리는 동안 손님 하나가 "뿅" 나타나 살랑살랑 춤추다가, 마지막 종 여운이 끝날 때 "뿅" 사라진다. 왜 왔는지는 아무도 모른다.
+   앞 차임이 울리는 동안 손님 하나가 "뿅" 나타나 살랑살랑 춤추다가, 차임이 끝나고 타종 전에 "뿅" 사라진다. 왜 왔는지는 아무도 모른다.
    - 불 끈 뒤(nightDark): 종만 작게. 손님 없음. 예외: 할로윈 자정(마녀·외계인·호박머리, 어둠 속에서 눈·입이 빛남)
    - 생일 파티 중: 그 시각 종은 건너뜀 / 만득 씨가 있으면 손님 없음(오면 즉시 뿅) / 시간 점프·페이지를 연 뒤 처음 맞는 정각 전: 안 울림
    - 누가 오나는 시각으로 정한다(날짜 씨앗): 새로 고침해도, 누가 봐도 그 시각엔 같은 손님. 바로 전 시각 손님은 피한다
@@ -65,7 +65,7 @@ export function startChime(d, force, pick = {}) {
   const quiet = nightDark(d), hw = pick.hw != null ? !!pick.hw : halloweenMidnight(d), plan = chimePlan(strikesOf(d));
   if (!Snd.chime(plan, quiet))
     caption(tr('capChime'), Math.min(plan.sec, 8)); // 소리가 꺼져 있으면 자막
-  const run = { t: 0, sec: plan.sec, puffs: [], q: null, hw, force };
+  const run = { t: 0, sec: plan.sec, leave: plan.leave, puffs: [], q: null, hw, force };
   const g = pick.guest ? GUESTS.find(x => x.id === pick.guest) || null : !RM && !world.manduk && (hw || guestHour(d)) ? chimeGuestFor(hourStart(d), hw) : null;
   if (g && !imageReady(IMG['f_guest_' + g.id]))
     loadLazy('f_guest_' + g.id, guestSrc(g.id)); // 아직이면 받아 두고, 나올 때까지 오면 나온다
@@ -109,7 +109,7 @@ export function chimeTick(d, real) {
       q.t0 = run.t;
       puff(q, run);
     }
-    else if (run.t >= run.sec)
+    else if (run.t >= run.leave) // 차임이 끝나면 (타종은 손님 없이)
       leave(run);
   }
   if (run.t >= run.sec + 1)
@@ -178,6 +178,6 @@ export function drawChimeGlow(dk) {
 /* ───────── 점검용 (debug.js) ───────── */
 export const chimeDebug = () => ({
   chimeNow: (pick = {}) => startChime(now(), true, pick), // 지금 시각으로 바로 종 (분 확인 없이). 예: chimeNow({ guest: 'pumpkinhead', hw: true })
-  chimeState: () => C.run && { t: C.run.t, sec: C.run.sec, hw: C.run.hw, guest: C.run.q && C.run.q.g.id, shown: !!(C.run.q && C.run.q.shown), gone: !!(C.run.q && C.run.q.gone) },
+  chimeState: () => C.run && { t: C.run.t, sec: C.run.sec, leave: C.run.leave, hw: C.run.hw, guest: C.run.q && C.run.q.g.id, shown: !!(C.run.q && C.run.q.shown), gone: !!(C.run.q && C.run.q.gone) },
   chimeGuestFor,
 });

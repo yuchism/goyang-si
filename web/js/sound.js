@@ -21,14 +21,15 @@ export const CHIME = {
   hourNote: 52, // 타종 음 (E3)
   gap: 1.2, // 차임 끝 ~ 첫 타종(초)
   strike: 2.4, // 타종 간격(초)
-  tail: 2.2, // 마지막 타종 뒤 여운(초). 손님은 이때 사라진다
+  tail: 2.2, // 마지막 타종 뒤 여운(초)
   vol: 0.32, // 낮 소리 크기
   volQuiet: 0.1, // 불 꺼진 시간 (HOURLY_CHIME_PLAN.md 3장: 밤엔 작게)
   far: 1900, // 멀리서 들리게: 이 Hz 위를 깎는다
   guestAt: 1.2, // 손님이 나오는 때: 차임 시작 몇 초 뒤
+  guestOut: 0.4, // 차임 마지막 음 끝 ~ 손님 퇴장(초). gap보다 작게 (손님은 차임에서만, HOURLY_CHIME_PLAN.md 14장)
   danceBeat: 0.6, // 정각 손님 춤 한 칸(초). 파티(0.34)보다 느리게 살랑살랑
 };
-// 종 시간표 (소리가 꺼져 있어도 같은 길이): { notes: [[초, MIDI, 울림초]], strikes: [초], sec }
+// 종 시간표 (소리가 꺼져 있어도 같은 길이): { notes: [[초, MIDI, 울림초]], strikes: [초], leave: 손님 퇴장(초), sec }
 export function chimePlan(n) {
   const c = CHIME, notes = [];
   let at = 0, inPhrase = 0;
@@ -41,10 +42,10 @@ export function chimePlan(n) {
       inPhrase = 0;
     }
   }
-  const t0 = c.lead + (at - c.phrase) * c.beat + c.gap, strikes = [];
+  const end = c.lead + (at - c.phrase) * c.beat, t0 = end + c.gap, strikes = []; // end: 차임 마지막 음 끝
   for (let i = 0; i < n; i++)
     strikes.push(t0 + i * c.strike);
-  return { notes, strikes, sec: strikes[strikes.length - 1] + c.tail };
+  return { notes, strikes, leave: end + c.guestOut, sec: strikes[strikes.length - 1] + c.tail };
 }
 /* ───────── 소리 ───────── */
 export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null, tvG: null,
