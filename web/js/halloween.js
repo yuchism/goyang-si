@@ -257,10 +257,10 @@ export function maybeGhost(d, dt) {
   }
   if (!isHalloween(d) || !batTime(d) || rainNow(d) || world.witch || moonPhase(d).lit < 0.1)
     return; // 달이 떠 있는 밤에만 (빛나는 비율 10% 이상, MOON_PLAN.md 7장). 그믐 무렵엔 유령도 쉰다
-  const g = world.ghostNight;
-  if (g && g.k === nightOf(d) && g.n >= 2)
-    return; // 하룻밤에 두 번까지
-  if (Math.random() < dt / (2.5 * 3600))
+  const g = world.ghostNight, n = g && g.k === nightOf(d) ? g.n : 0;
+  if (n >= 4)
+    return; // 하룻밤에 네 번까지
+  if (Math.random() < dt / (n ? 3600 : 12 * 60)) // 그 밤 첫 유령은 곧(12분에 한 번 꼴), 그 뒤는 1시간에 한 번 꼴 (tasks/halloween-nightly.md)
     startGhost();
 }
 // 그림을 어두운 단색 실루엣으로 (한 번 만들어 둔다)
