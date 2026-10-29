@@ -276,13 +276,13 @@ function startSong() {
   const p = world.party;
   if (!p || p.end != null || p.song)
     return;
-  const info = Snd.birthdaySong(); // 소리 꺼짐이면 null
-  p.song = info ? { start: p.t, sec: info.sec, beat: info.beat, phrases: info.phrases } : { start: p.t, sec: NO_SOUND_SEC, beat: BDAY_SONG.beat, phrases: null };
+  const info = Snd.birthdaySong(); // 녹음이면 녹음의 박·소절, 만든 소리면 그 박·소절. 소리 꺼짐이면 null
+  p.song = info ? { start: p.t, sec: info.sec, beat: info.beat, phrases: info.phrases } : { start: p.t, sec: NO_SOUND_SEC, beat: BDAY_SONG.beat, phrases: null }; // 소리 꺼짐: 예전처럼 만든 소리의 박
   p.limit = p.t + p.song.sec + 20;
   guestsCue(p);
   fireworksBirthday(birthdayName, p.song); // 노래에 맞춰 창밖에 이름 불꽃 (소절마다, FIREWORKS_PLAN.md 5장)
 }
-// 춤 칸 번호(0~3): 노래 시계로 센다. 강고양이 씨와 손님이 같은 함수를 써서 늘 같은 칸 (BIRTHDAY_GUESTS_PLAN.md 4-4)
+// 춤 칸 번호(0~3): 노래 시계로 센다(한 칸 = 그 노래의 박 p.song.beat). 강고양이 씨와 손님이 같은 함수를 써서 늘 같은 칸 (BIRTHDAY_GUESTS_PLAN.md 4-4)
 export function danceCell(a) {
   const p = world.party, s = p && p.song;
   if (s)
@@ -301,6 +301,8 @@ function endBirthdayParty() {
   banner.setAttribute('aria-pressed', 'false');
 }
 export function tickParty(dt) {
+  if (birthdayMode)
+    Snd.prepSong(); // 녹음 생일 노래 받아 두기 (소리를 켠 사람만, sound.js)
   const p = world.party;
   if (!p)
     return;
