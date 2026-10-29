@@ -143,6 +143,30 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
     s.start(t, rnd(0, 2));
     s.stop(t + 0.3);
   },
+  // 불꽃 폭죽: 낮은 쿵(thump) + 300~1500Hz 짧은 "펑" + 뒤따르는 작은 "타닥" (녹음·작은 스피커에도 들리게)
+  boom(v = 1, f = 120) {
+    if (!this.on)
+      return;
+    this.thump(v, f);
+    const ac = this.ac, t = ac.currentTime, noise = (at, lo, hi, d, peak) => {
+      const s = ac.createBufferSource();
+      s.buffer = this.white;
+      const hp = ac.createBiquadFilter(), lp = ac.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = lo;
+      lp.type = 'lowpass';
+      lp.frequency.value = hi;
+      s.connect(hp);
+      hp.connect(lp);
+      this.env(lp, at, 0.002, d, peak);
+      s.start(at, rnd(0, 2));
+      s.stop(at + d + 0.05);
+    };
+    noise(t, 300, 1500, 0.12, 0.5 * v);
+    const n = 3 + Math.floor(rnd(0, 4));
+    for (let i = 0; i < n; i++)
+      noise(t + rnd(0.12, 0.6), 1500, 5000, 0.025, rnd(0.08, 0.18) * v);
+  },
   clink() {
     if (!this.on)
       return;

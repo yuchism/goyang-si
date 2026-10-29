@@ -472,7 +472,7 @@ function drawRoom(dk) {
 /* ───────── 진행: 소리·자막·강고양이 씨·만득 씨 ───────── */
 function onBurst(s, show) {
   const v = s.big ? 0.35 : s.kind === 'shape' ? 0.25 : 0.16;
-  after(() => Snd.thump(v, s.big ? 90 : 120), FW.sound + rnd(-0.1, 0.2));
+  after(() => Snd.boom(v, s.big ? 90 : 120), FW.sound + rnd(-0.1, 0.2));
   if (world.t - ST.capAt > 45 && s.big) {
     ST.capAt = world.t;
     after(() => caption(tr('capFireworks'), 3), FW.sound);
