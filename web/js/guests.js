@@ -43,12 +43,12 @@ export const guestsOf = (...kinds) => GUESTS.filter(g => kinds.includes(kindOf(g
 export const CELL_W = 420; // 시트 한 칸 폭 (px)
 export const guestSrc = id => 'sheet/guest-' + id + '-dance-v1.webp';
 const CAT_DANCE_H = 200; // 강고양이 씨 춤 그림의 키(발~모자, 깊이 1일 때 방 px). sprites.js drawCat: 213 × 681/724
-// 나오는 때: 몇 번째 소절(BDAY_SONG.phrases) + 몇 박 뒤. 4명이면 넷째 줄(3소절 중간)을 뺀다
+// 나오는 때: 몇 번째 소절(노래의 phrases) + 몇 박 뒤(beat), 또는 그 소절 길이의 몇 분의 몇 뒤(part). 4명이면 넷째 줄(3소절 중간)을 뺀다
 export const GUEST_CUES = [
   { phrase: 0, beat: 0 }, // 1소절 시작
   { phrase: 1, beat: 0 }, // 2소절 시작
   { phrase: 2, beat: 0 }, // 3소절 시작 ("사랑하는 ○○의", 클라이맥스)
-  { phrase: 2, beat: 3 }, // 3소절 중간 (5명일 때만)
+  { phrase: 2, part: 0.5 }, // 3소절 중간 (5명일 때만). 소절 길이의 절반 — 만든 소리 7박이든 녹음 12박이든 가운데 (BIRTHDAY_SONG_PLAN.md 4장)
   { phrase: 3, beat: 0 }, // 4소절 시작 (늦게 온 손님)
 ];
 export const GUEST_CUES_RATIO = [0, 0.2, 0.4, 0.55, 0.7]; // 소리가 꺼져 노래 박자가 없을 때: 춤 길이 비율
@@ -216,8 +216,9 @@ export function guestsCue(p) {
   const ratio = list.length >= 5 ? GUEST_CUES_RATIO : GUEST_CUES_RATIO.filter((c, i) => i !== 3);
   list.forEach((q, i) => {
     if (s.phrases) {
-      const c = cues[Math.min(i, cues.length - 1)];
-      q.at = (s.phrases[Math.min(c.phrase, s.phrases.length - 1)] + c.beat) * s.beat;
+      const c = cues[Math.min(i, cues.length - 1)], ph = s.phrases, k = Math.min(c.phrase, ph.length - 1);
+      const len = (k + 1 < ph.length ? ph[k + 1] : s.sec / s.beat) - ph[k]; // 소절 길이(박). 마지막 소절은 노래 끝까지
+      q.at = (ph[k] + (c.part != null ? c.part * len : c.beat)) * s.beat;
     }
     else
       q.at = ratio[Math.min(i, ratio.length - 1)] * s.sec;

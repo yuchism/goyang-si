@@ -1,9 +1,15 @@
 /* 소리: 방 잡음, 빗소리, 방울, 문, 생일 노래, TV 소리 (Web Audio로 만든다) */
 import { rnd } from './util.js';
 /* ───────── 생일 노래 표 ─────────
-   노래를 바꾸면(템포, 곡) 이 표만 맞춘다. phrases: 소절이 시작하는 박(음표 박 수를 더한 위치). 손님이 이 소절에 맞춰 나온다 (birthday.js·guests.js) */
+   노래를 바꾸면(템포, 곡) 이 표만 맞춘다. phrases: 소절이 시작하는 박(음표 박 수를 더한 위치). 손님이 이 소절에 맞춰 나온다 (birthday.js·guests.js)
+   노래는 녹음 파일(file)을 쓴다. 파일을 아직 못 받았거나 못 읽으면 만든 소리(notes, beat·phrases) (BIRTHDAY_SONG_PLAN.md 4장) */
 export const BDAY_SONG = {
-  beat: 0.34, // 한 박(초). 강고양이 씨·손님 춤도 한 박에 한 칸
+  file: 'sound/birthday-ukulele-v1.mp3', // 녹음: "Happy Ukulele Day" 10.1초부터 29.3초. 출처는 ASSET_LICENSE.md
+  fileBeat: 0.6, // 녹음 한 박(초, 약 100 BPM). 녹음 시작이 첫 박
+  filePhrases: [0, 12, 24, 36], // 녹음 소절 시작 박 (4소절 × 12박)
+  fileSec: 29.3, // 녹음 길이(초)
+  fileVol: 0.35, // 녹음 크기 (원본이 커서 줄임. 마스터를 거친다)
+  beat: 0.34, // 만든 소리 한 박(초). 강고양이 씨·손님 춤은 그 노래의 한 박에 한 칸
   phrases: [0, 6, 12, 19],
   notes: [[67, .75], [67, .25], [69, 1], [67, 1], [72, 1], [71, 2], [67, .75], [67, .25], [69, 1], [67, 1], [74, 1], [72, 2], [67, .75], [67, .25], [79, 1], [76, 1], [72, 1], [71, 1], [69, 2], [77, .75], [77, .25], [76, 1], [72, 1], [74, 1], [72, 2]] // [MIDI 음, 박]
 };
@@ -137,6 +143,30 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
     s.start(t, rnd(0, 2));
     s.stop(t + 0.3);
   },
+  // 불꽃 폭죽: 낮은 쿵(thump) + 300~1500Hz 짧은 "펑" + 뒤따르는 작은 "타닥" (녹음·작은 스피커에도 들리게)
+  boom(v = 1, f = 120) {
+    if (!this.on)
+      return;
+    this.thump(v, f);
+    const ac = this.ac, t = ac.currentTime, noise = (at, lo, hi, d, peak) => {
+      const s = ac.createBufferSource();
+      s.buffer = this.white;
+      const hp = ac.createBiquadFilter(), lp = ac.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = lo;
+      lp.type = 'lowpass';
+      lp.frequency.value = hi;
+      s.connect(hp);
+      hp.connect(lp);
+      this.env(lp, at, 0.002, d, peak);
+      s.start(at, rnd(0, 2));
+      s.stop(at + d + 0.05);
+    };
+    noise(t, 300, 1500, 0.12, 0.5 * v);
+    const n = 3 + Math.floor(rnd(0, 4));
+    for (let i = 0; i < n; i++)
+      noise(t + rnd(0.12, 0.6), 1500, 5000, 0.025, rnd(0.08, 0.18) * v);
+  },
   clink() {
     if (!this.on)
       return;
@@ -203,10 +233,20 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
     lfo.stop(t + sec + 0.1);
   },
   // 생일 노래: 소리가 켜져 있으면 연주하고 { sec, beat, phrases }를 돌려준다. 꺼져 있으면 null (BIRTHDAY_GUESTS_PLAN.md 4-1)
+  // 녹음을 받아 두었으면 녹음, 아니면 만든 소리 (BIRTHDAY_SONG_PLAN.md 4장)
   birthdaySong() {
     if (!this.on || !this.ac)
       return null;
     const ac = this.ac, start = ac.currentTime + 0.08, { beat, notes, phrases } = BDAY_SONG;
+    if (this.recBufs.birthday) {
+      const b = BDAY_SONG, src = ac.createBufferSource(), g = ac.createGain();
+      src.buffer = this.recBufs.birthday;
+      g.gain.value = b.fileVol;
+      src.connect(g);
+      g.connect(this.master);
+      src.start(start);
+      return { sec: b.fileSec, beat: b.fileBeat, phrases: b.filePhrases };
+    }
     let at = 0;
     notes.forEach(([m, d]) => {
       const t = start + at * beat, dur = d * beat, o = ac.createOscillator();
@@ -225,36 +265,46 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
     });
     return { sec: at * beat + .15, beat, phrases };
   },
-  // 녹음 차임 준비: 소리가 켜져 있으면 파일을 받아 Web Audio로 풀어 둔다. 첫 종까지 못 풀면 그 종은 만든 소리. 매 장면 불러도 된다 (chime.js)
-  chimeBufs: {}, chimeRaw: {}, chimeBusy: {}, chimeDone: false,
-  prepChime() {
-    if (!this.on || this.chimeDone) // 소리를 켠 사람만 받는다. 다 받았으면(또는 못 받기로 끝났으면) 바로 빠진다
+  // 녹음 준비: 소리가 켜져 있으면 파일을 받아 Web Audio로 풀어 둔다(recBufs[이름]). 쓸 때까지 못 풀면 그때는 만든 소리. 매 장면 불러도 된다
+  // group: 묶음 이름(다 받았으면 바로 빠진다), files: { 이름: 주소 }
+  recBufs: {}, recRaw: {}, recBusy: {}, recDone: {},
+  prepRec(group, files) {
+    if (!this.on || this.recDone[group]) // 소리를 켠 사람만 받는다. 다 받았으면(또는 못 받기로 끝났으면) 바로 빠진다
       return;
-    const files = Object.entries(CHIME.files || {});
-    if (files.every(([k]) => this.chimeBufs[k] || this.chimeRaw[k] === false)) {
-      this.chimeDone = true;
+    const list = Object.entries(files || {});
+    if (list.every(([k]) => this.recBufs[k] || this.recRaw[k] === false)) {
+      this.recDone[group] = true;
       return;
     }
-    for (const [k, url] of files) {
-      if (this.chimeBufs[k] || this.chimeBusy[k] || this.chimeRaw[k] === false)
+    for (const [k, url] of list) {
+      if (this.recBufs[k] || this.recBusy[k] || this.recRaw[k] === false)
         continue;
-      this.chimeBusy[k] = true;
+      this.recBusy[k] = true;
       const done = () => {
-        this.chimeBusy[k] = false;
+        this.recBusy[k] = false;
       }, bad = () => {
-        this.chimeRaw[k] = false; // false: 못 받음·못 읽음 → 만든 소리로
+        this.recRaw[k] = false; // false: 못 받음·못 읽음 → 만든 소리로
       };
-      if (!this.chimeRaw[k])
+      if (!this.recRaw[k])
         fetch(url).then(r => r.ok ? r.arrayBuffer() : null).then(b => {
-          this.chimeRaw[k] = b || false;
+          this.recRaw[k] = b || false;
         }).catch(bad).finally(done);
       else if (this.ac)
-        this.ac.decodeAudioData(this.chimeRaw[k].slice(0)).then(buf => {
-          this.chimeBufs[k] = buf;
+        this.ac.decodeAudioData(this.recRaw[k].slice(0)).then(buf => {
+          this.recBufs[k] = buf;
         }).catch(bad).finally(done);
       else
         done();
     }
+  },
+  // 녹음 차임 받아 두기. 첫 종까지 못 풀면 그 종은 만든 소리 (chime.js)
+  prepChime() {
+    this.prepRec('chime', CHIME.files);
+  },
+  // 녹음 생일 노래 받아 두기. 춤 시작까지 못 풀면 그 파티는 만든 소리 (birthday.js, 생일 링크일 때만)
+  prepSong() {
+    if (BDAY_SONG.file)
+      this.prepRec('song', { birthday: BDAY_SONG.file });
   },
   // 정각 종: 소리가 켜져 있으면 plan(chimePlan)대로 울리고 { t0: 시작한 오디오 시각, stop() }. 꺼져 있으면 false. 멀리서 들리게 고음을 깎는다
   chime(plan, quiet) {
@@ -281,7 +331,7 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
         o.stop(t + dur + 0.05);
       });
     };
-    const B = this.chimeBufs;
+    const B = this.recBufs;
     let rec = null; // 녹음을 틀 곳 (한 번 만든다)
     const playRec = (buf, t) => {
       if (!rec) {
