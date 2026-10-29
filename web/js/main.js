@@ -211,14 +211,14 @@ function render(d, real) {
       }, '케이크']);
   const c = world.cup;
   if (ownLayer(cat))
-    L.push([cat.inBox ? P.box.y : cat.y, () => drawActor(cat), '강고양이 씨 그리기']);
+    L.push([cat.inBox ? P.box.y : cat.y, () => drawActor(cat), '강고양이 씨 그리기', cat]);
   if (ownLayer(mouse))
-    L.push([mouse.y, () => drawActor(mouse), '쥐야쥐 그리기']);
+    L.push([mouse.y, () => drawActor(mouse), '쥐야쥐 그리기', mouse]);
   if (world.party)
     L.push(...(cut('생일 손님 순서', () => guestLayers(danceCell(cat))) || [])); // 생일 깜짝 손님 (guests.js)
   L.push(...(cut('정각 손님 순서', () => chimeLayers()) || [])); // 정각 손님 (chime.js)
   L.push(...playsLayers()); // 쳇바퀴 안의 고양이·쥐야쥐는 쳇바퀴가 같이 그린다 (steps.js SPOTS layer)
-  L.sort((a, b) => a[0] - b[0]).forEach(e => draw(e[2] || '놀이 그리기', e[1]));
+  L.sort((a, b) => a[0] - b[0]).forEach(e => draw(e[2] || '놀이 그리기', e[1])); // 넷째 칸 배우: 밤 화면 앞 다시 그리기에서 숨음·엿보기를 거른다
   if (c.state === 'falling')
     draw('떨어지는 컵', () => drawCup(c.x, c.fy, c.fall * 4));
   draw('놀이 위층', () => playsOverlay());
@@ -239,13 +239,13 @@ function render(d, real) {
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
     });
-  draw('TV 밤 불빛', () => drawTVNight(dk)); // 안에서도 tvBreak로 격리
+  draw('TV 밤 불빛', () => drawTVNight(dk, L)); // 안에서도 tvBreak로 격리. L: 화면 앞에 선 것을 다시 그리게
   draw('호박 불빛', () => drawPumpkinGlow(dk));
   draw('정각 손님 불빛', () => drawChimeGlow(dk)); // 할로윈 자정 손님 (chime.js)
   draw('이상한 책 불빛', () => drawOddGlow(dk));
   draw('그림자 사건', () => eventsShadow(dk)); // 커튼 그림자
   draw('놀이 불빛', () => playsLight());
-  draw('파티 불빛', () => drawPartyLights(dk));
+  draw('파티 불빛', () => drawPartyLights(dk, L)); // L: 노트북 화면 앞에 선 것을 다시 그리게
   if (world.party) {
     draw('디스코 빛', () => drawDiscoLights(dk));
     draw('디스코볼', () => drawDisco(dk));

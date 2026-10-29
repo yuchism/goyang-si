@@ -44,6 +44,57 @@ export function withCtx(c, draw) {
     ctx = o;
   }
 }
+// 어둠 위에 다시 그릴 때: 그림을 따로 그려 같은 어둠을 씌운 뒤 붙인다 (box 근처만)
+const tmpc = document.createElement('canvas'), tmx = tmpc.getContext('2d');
+export function redrawDark(draw, a, box) {
+  const m = ctx.getTransform();
+  if (tmpc.width !== cv.width || tmpc.height !== cv.height) {
+    tmpc.width = cv.width;
+    tmpc.height = cv.height;
+  }
+  const bx = Math.max(0, Math.floor(m.a * box[0] + m.e) - 4), by = Math.max(0, Math.floor(m.d * box[1] + m.f) - 4), bw = Math.ceil(m.a * box[2]) + 8, bh = Math.ceil(m.d * box[3]) + 8;
+  tmx.setTransform(1, 0, 0, 1, 0, 0);
+  tmx.clearRect(bx, by, bw, bh);
+  tmx.save();
+  tmx.beginPath();
+  tmx.rect(bx, by, bw, bh);
+  tmx.clip();
+  tmx.setTransform(m);
+  try {
+    withCtx(tmx, draw);
+  }
+  finally {
+    tmx.restore();
+  }
+  tmx.setTransform(1, 0, 0, 1, 0, 0);
+  tmx.globalCompositeOperation = 'source-atop';
+  tmx.fillStyle = `rgba(16,20,46,${a})`;
+  tmx.fillRect(bx, by, bw, bh);
+  tmx.globalCompositeOperation = 'source-over';
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(tmpc, bx, by, bw, bh, bx, by, bw, bh);
+  ctx.restore();
+}
+// 빛나는 화면(TV·노트북) 앞에 선 것을 같은 어둠으로 다시 올린다 (NIGHT_SCREEN_FRONT_PLAN.md 3장)
+// floor: main.js의 바닥 순서 목록 [깊이, 그리기, 이름, 배우?] (정렬된 것). depth보다 앞(깊이가 큰) 것만, 한 번에 그려 한 번 붙인다
+export function redrawFront(floor, depth, a, box) {
+  const front = (floor || []).filter(([y, , , ac]) => y > depth && !(ac && (ac.hidden || ac.peek || ac.tvPeek)));
+  if (!front.length)
+    return;
+  redrawDark(() => {
+    for (const e of front) {
+      ctx.save();
+      try {
+        e[1]();
+      }
+      catch (err) {} // 같은 그리기는 바닥 순서에서 이미 칸막이(guard.js)가 잡아 알렸다
+      finally {
+        ctx.restore();
+      }
+    }
+  }, a, box);
+}
 const wrap = document.getElementById('wrap');
 export let view = { s: 1, dpr: 1 };
 // 화면 맞추기: 넓은 화면은 방 전체를, 좁은 화면(세로 폰)은 방 높이를 채우고 일부만 보여주며 카메라가 따라간다

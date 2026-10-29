@@ -3,14 +3,13 @@ import { TV_META, imageReady, img } from './assets.js';
 import { tr } from './i18n.js';
 import { birthdayName, partyLevel } from './birthday.js';
 import { drawProp } from './draw.js';
-import { O, P, objView, present, zOf } from './objects.js';
-import { drawActor } from './sprites.js';
-import { ctx, cv, withCtx } from './stage.js';
+import { O, depthOf, objView, present, zOf } from './objects.js';
+import { ctx, redrawDark, redrawFront } from './stage.js';
 import { now } from './time.js';
 import { TVP, fmtH, tvBreak } from './tv.js';
 import { segAt } from './tv-core.js';
 import { HAND, clamp, ease } from './util.js';
-import { cat, mouse, world } from './world.js';
+import { world } from './world.js';
 /* 화면 버퍼 그리기 */
 export const tvBuf = document.createElement('canvas');
 tvBuf.width = 320;
@@ -277,39 +276,17 @@ export function drawTV(v) {
   ctx.restore();
   drawProp(v.look, v.pos.x, v.pos.y - zOf(O.tv), v.pos.w);
 }
-// 어둠 위에 다시 그릴 때: 그림을 따로 그려 같은 어둠을 씌운 뒤 붙인다 (화면 구멍 근처만)
-const tmpc = document.createElement('canvas'), tmx = tmpc.getContext('2d');
-function redrawDark(draw, a, box) {
-  const m = ctx.getTransform();
-  if (tmpc.width !== cv.width || tmpc.height !== cv.height) {
-    tmpc.width = cv.width;
-    tmpc.height = cv.height;
-  }
-  const bx = Math.max(0, Math.floor(m.a * box[0] + m.e) - 4), by = Math.max(0, Math.floor(m.d * box[1] + m.f) - 4), bw = Math.ceil(m.a * box[2]) + 8, bh = Math.ceil(m.d * box[3]) + 8;
-  tmx.setTransform(1, 0, 0, 1, 0, 0);
-  tmx.clearRect(bx, by, bw, bh);
-  tmx.setTransform(m);
-  withCtx(tmx, draw);
-  tmx.setTransform(1, 0, 0, 1, 0, 0);
-  tmx.globalCompositeOperation = 'source-atop';
-  tmx.fillStyle = `rgba(16,20,46,${a})`;
-  tmx.fillRect(bx, by, bw, bh);
-  tmx.globalCompositeOperation = 'source-over';
-  ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.drawImage(tmpc, bx, by, bw, bh, bx, by, bw, bh);
-  ctx.restore();
-}
 // 밤: 화면은 스스로 빛나므로 어둠 위에 다시 밝게, 앞을 가린 것들은 다시 어둡게. 그리고 방에 번지는 TV 불빛
-export function drawTVNight(dk) {
+// floor: main.js의 바닥 순서 목록 (TV 앞에 선 것을 다시 그릴 때)
+export function drawTVNight(dk, floor) {
   try {
-    drawNight(dk);
+    drawNight(dk, floor);
   }
   catch (e) {
     tvBreak(now(), e, '밤 불빛');
   }
 }
-function drawNight(dk) {
+function drawNight(dk, floor) {
   const T = world.tv, st = T.st;
   if (!O.tv || !present(O.tv) || !st)
     return;
@@ -327,13 +304,7 @@ function drawNight(dk) {
   drawScreenInto(ctx, r);
   ctx.globalAlpha = 1;
   redrawDark(() => drawProp(v.look, v.pos.x, v.pos.y - zOf(O.tv), v.pos.w), a, box);
-  for (const ac of [cat, mouse]) {
-    if (ac.hidden || ac.peek || ac.tvPeek)
-      continue;
-    if ((ac.inBox ? P.box.y : ac.y) <= v.pos.y)
-      continue;
-    redrawDark(() => drawActor(ac), a, box);
-  }
+  redrawFront(floor, depthOf(v), a, box); // 강고양이 씨·쥐야쥐·손님·앞의 바닥 물건 (NIGHT_SCREEN_FRONT_PLAN.md)
   ctx.restore();
   if (st.mode === 'off')
     return;

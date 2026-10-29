@@ -2,12 +2,12 @@
    깜짝 손님은 guests.js (BIRTHDAY_GUESTS_PLAN.md) */
 import { play } from './anim.js';
 import { FRAMES, IMG, imageReady, img } from './assets.js';
-import { A, O, PL, S, objView, socketOf } from './objects.js';
+import { A, O, PL, S, depthOf, objView, socketOf } from './objects.js';
 import { BDAY_SONG, Snd } from './sound.js';
 import { guestsCue, guestsLeave, guestsStart, guestsTick } from './guests.js';
 import { fireworksBirthday } from './fireworks.js';
 import { HOLE } from './sprites.js';
-import { H, W, ctx } from './stage.js';
+import { H, W, ctx, redrawFront } from './stage.js';
 import { bub, dance, fn, go, hold, run } from './steps.js';
 import { $, INK, RM, clamp, cutChars, ease, gcEvent, hash, onScene, pick, rnd } from './util.js';
 import { tr } from './i18n.js';
@@ -58,11 +58,27 @@ export function drawPartyScreen(v) {
 }
 // 밤의 생일 파티: 어둠 위에 무대 조명을 뿌린다 (천장에서 내려오는 색 조명 + 강고양이 씨 핀 조명 + 환한 노트북)
 const PARTY_BEAMS = [['255,140,180', 0.55, 0], ['255,214,110', 0.4, 2.1], ['130,220,210', 0.5, 4.2]]; // 색·빠르기·위상. 내려오는 x는 장면의 party.beams
-export function drawPartyLights(dk) {
+export function drawPartyLights(dk, floor) {
   const lv = partyLevel();
   if (!lv || dk < 0.05)
     return;
   const I = lv * Math.min(1, dk * 1.6), t = RM ? 0 : world.t;
+  const lp = O.laptop && socketOf(O.laptop, 'screenTL'), lq = O.laptop && socketOf(O.laptop, 'screenBR');
+  // 화면 글자는 어둠 위에 다시 그려 또렷하게, 그 앞에 선 것(강고양이 씨·쥐야쥐·손님)은 같은 어둠으로 다시 올린다 (NIGHT_SCREEN_FRONT_PLAN.md)
+  // 조명보다 먼저: 앞에 선 손님도 둘레와 같은 조명을 받게
+  if (lp && lq && objView(O.laptop).state === 'on') {
+    const box = [lp[0], lp[1], lq[0] - lp[0], lq[1] - lp[1]];
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, I * 1.1);
+    drawPartyScreen(objView(O.laptop));
+    ctx.restore();
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(...box);
+    ctx.clip();
+    redrawFront(floor, depthOf(objView(O.laptop)), world.lampOn ? dk * 0.6 : dk, box);
+    ctx.restore();
+  }
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   // 방 가운데를 따뜻하게 밝혀 어둠을 걷어냄
@@ -116,7 +132,6 @@ export function drawPartyLights(dk) {
   ctx.ellipse(px, py, 120, 34, 0, 0, 7);
   ctx.fill();
   // 노트북 화면 빛
-  const lp = O.laptop && socketOf(O.laptop, 'screenTL'), lq = O.laptop && socketOf(O.laptop, 'screenBR');
   if (lp && lq) {
     const cx = (lp[0] + lq[0]) / 2, cy = (lp[1] + lq[1]) / 2;
     g = ctx.createRadialGradient(cx, cy, 10, cx, cy, 150);
@@ -126,13 +141,6 @@ export function drawPartyLights(dk) {
     ctx.fillRect(cx - 150, cy - 150, 300, 300);
   }
   ctx.restore();
-  // 화면 글자는 어둠 위에 다시 그려 또렷하게
-  if (lp && lq && objView(O.laptop).state === 'on') {
-    ctx.save();
-    ctx.globalAlpha = Math.min(1, I * 1.1);
-    drawPartyScreen(objView(O.laptop));
-    ctx.restore();
-  }
 }
 /* ───────── 생일: 케이크 촛불과 창밖 꽃비 ───────── */
 export const CAKE = {}; // 장면의 party.cake: x, y, w, 그리는 깊이 depth (TV 오른쪽 뒤, 책 더미 왼쪽 뒤)

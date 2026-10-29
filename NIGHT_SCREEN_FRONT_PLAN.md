@@ -39,3 +39,10 @@
 - [ ] (참고) `check_scene`·`check_behave --quick`은 주인이 맥에서 손으로
 
 ## 6. 구현 메모
+
+- 공용 도우미는 `draw.js`가 아니라 **`stage.js`**에 뒀다: `redrawDark`(tv-screen.js에서 옮김)와 `redrawFront(floor, depth, a, box)`. `stage.js`에 `ctx`·`cv`·`withCtx`가 있고, `tv-screen.js`·`birthday.js`가 이미 `stage.js`를 부르므로 import가 새로 생기지 않는다(`draw.js`는 `birthday.js`·`tv-screen.js`를 부르므로 거기 두면 `birthday.js`→`draw.js` 순환이 생긴다).
+- `main.js`의 바닥 순서 목록 `L`을 `drawTVNight(dk, L)`·`drawPartyLights(dk, L)`에 넘긴다. 강고양이 씨·쥐야쥐 항목에는 넷째 칸으로 배우를 붙여, `redrawFront`가 숨음·엿보기·TV 엿보기(`hidden`·`peek`·`tvPeek`)를 지금처럼 거른다.
+- 앞: `depthOf(그 물건)`보다 깊이가 큰 항목 전부(TV 자신은 같은 깊이라 빠짐). 앞에 선 것들을 한 장에 차례로 그린 뒤 어둠은 한 번 씌우고 한 번 붙인다. 임시 캔버스에도 상자 근처로 클립을 걸어 가볍게. 항목이 틀려도 화면 불빛은 안 끊기게 항목마다 try/catch(그 오류는 원래 바닥 순서 그리기에서 칸막이가 이미 알림) — 그래서 손님 그리기 오류가 TV 고장(`tvBreak`)으로 번지지 않는다.
+- 달라진 점: TV 앞 다시 그리기가 배우 둘만이 아니라 `L` 전체를 쓴다. 놀이 자리(`layer: false`)에 있는 강고양이 씨는 예전엔 `drawActor`로 따로 다시 그렸지만, 이제는 그 놀이의 층(`playsLayers`)이 다시 그려진다. 앞에 놓인 바닥 물건도 다시 그려진다(그리기에 부수 효과가 있는 물건이 있다면 한 프레임에 두 번 불린다).
+- 노트북: 파티 화면과 앞에 선 것을 **파티 조명보다 먼저** 그린다(예전엔 조명 뒤에 화면). 앞에 선 손님이 둘레와 같은 조명을 받아 화면 가장자리에서 몸이 끊겨 보이지 않게. 그 대신 화면 글자 위에도 조명 빛이 조금 더해진다. 다시 그리기는 화면 상자(`screenTL`~`screenBR`)로 클립했다. 어둠 세기는 TV와 같은 식(`lampOn ? dk*0.6 : dk`, 호박 밤 추가 어둠은 빼고).
+- 검사: `node tools/check_time.mjs` 통과. 브라우저 검사·(사람) 항목은 아직.
