@@ -34,3 +34,14 @@ mixed for the hourly chime in this site:
 
 They are included only as part of this website. To use these sounds
 elsewhere, download them from Pixabay under its own license.
+
+The birthday party song is a sample track offered for free download on the
+[ElevenLabs birthday music page](https://elevenlabs.io/ko/music/birthday), which
+describes these samples as royalty-free and free to use (checked 2026-10-30).
+It is trimmed (from 10.1 s, 29.3 s long) for the birthday party in this site:
+
+| File | Original | Source |
+|---|---|---|
+| `birthday-ukulele-v1.mp3` | "Happy Ukulele Day" | ElevenLabs (Eleven Music) sample |
+
+It is included only as part of this website; it is not offered for reuse here.
