@@ -26,6 +26,11 @@
 - 납품: `assets/tv/programs/tv-<id>-<n>of<N>-320x240-v1.png`
 - 웹: `web/r/tv/tv_<id>_<n>of<N>.webp` (등록은 AI가 한다)
 
+**다듬기 (AI, 그림이 들어온 뒤)** — 다른 그림 도구(`tools/make_guests.py` 등)와 같은 파이썬 Pillow로:
+- 납품: 원본을 `Image.LANCZOS`로 **320×240**에 맞춰 줄여 `…-320x240-v1.png`로 저장(원본 비율이 4:3이 아니면 가운데를 기준으로 4:3으로 자른 뒤 줄임).
+- 웹: 납품 PNG를 `save(…, 'WEBP', quality=86, method=6)`로 `web/r/tv/tv_<id>_<n>of<N>.webp`.
+- 원본(`-source-v1.png`)은 그대로 둔다.
+
 표기: **L** = 평소(`loop`), **E-S/M/L** = 사건(크기 작음·중간·큼), **End** = 프로그램 끝 장면.
 
 ## 3. 원작과 닮지 않게 (모든 그림 공통)
