@@ -18,7 +18,7 @@
   - 커밋 작성자는 저장소 git 설정(`git config user.name/email`)을 따른다. 설정이 없으면 직전 커밋의 작성자를 `git -c`로 쓰고 그렇게 했다고 알린다.
 
 ## 2. 문서 위치
-- 결정 → `docs/adr/NNNN-제목.md` / 할 일 → `tasks/작업명.md`
+- 결정 → `docs/adr/NNNN-제목.md` / 할 일 → `tasks/작업명.md` (모양: `tasks/README.md` — 고양이 사무실 하네스가 읽음)
 - 그림 지시서 → `assets/briefs/작업명.md` / 검수 → `reviews/작업명.md`
 - 끝난 플랜(읽기 전용 기록) → `docs/plans/` / 끝난 그림 지시서 → `assets/briefs/` / 분류 목록 → `docs/plan-triage.md`
 - 아직 정하지 않은 생각 → `docs/ideas/` (작은 것은 README 한 줄, 큰 구상은 파일 하나). 정해지면 ADR·티켓으로 옮기고 상태만 바꾼다
