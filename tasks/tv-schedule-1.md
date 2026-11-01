@@ -1,7 +1,6 @@
 # TV 1차 편성 등록: 그림 들어온 4편 + 「창가에서」·「뮤직냥크」 편성 바꾸기
-- status: brief
+- status: on-hold   (12편 그림이 다 들어온 뒤 한 번에 — 2026-11-01 회의)
 - mode: needs-review
-- office: ready
 - brief: assets/briefs/tv-drama-kids.md
 - assets: web/r/tv/tv_dr_secret_*·tv_dr_joseon_*·tv_kid_five_*·tv_kid_hill_*.webp (이미 main에)
 - related-adr: 0006 · 0013 (평일은 본방만, 재방은 주말 몰아보기)
@@ -39,4 +38,4 @@
 
 ## 메모
 - 2026-11-01 지시서 작성(Claude, 회의). 고양이 사무실 1e(지시서를 커밋하면 등록)의 첫 실전.
-- `- office: ready` 줄은 하네스용: 이 줄이 있으면 하네스가 일감을 연다. 같은 값으로는 한 번만 — 다시 돌리려면 `ready 2`로.
+- 2026-11-01 회의: **보류.** 편성표가 12편 전체로 짜여 있어서 4편만 먼저 넣으면 빈 칸·회귀 기준을 두 번 손봐야 함 → 2·3차 그림이 다 들어온 뒤 12편 + 「창가에서」·「뮤직냥크」·「고양 괴담」 특집을 한 번에. 그때 이 지시서를 12편으로 넓히고 `- office: ready`.
