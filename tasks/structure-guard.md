@@ -1,5 +1,5 @@
 # 구조 지킴이 1단계: 더 나빠지지 않게 (파일 크기·엉킴 톱니바퀴)
-- status: brief
+- status: done
 - mode: needs-review
 - office: ready
 - brief: (그림 없음)
@@ -34,3 +34,8 @@
 
 ## 메모
 - 2026-11-01 지시서 작성(Claude, 회의).
+- 2026-11-01 구현(강고양이 씨): `tools/check_structure.mjs` + 기준 `tools/structure_baseline.json`. 지금: 파일 56 · 500줄 넘는 파일 5 · 엉킨 덩어리 44개 파일 / 가져오기 292.
+  - 가져오기 수는 파일→파일 짝(같은 짝을 두 번 가져와도 한 번). 덩어리 안 가져오기 = 양쪽 다 덩어리 안인 것. 가져오기 문장 전체는 481개.
+  - 실패 때 이름: 원래 덩어리 파일로 가는 새 가져오기는 하나하나(고리를 닫은 것), 새로 들어온 파일로 가는 것은 파일별 개수만(`--verbose`면 전부).
+  - `--write`: 늘어난 게 있으면 거부. `--write --force`로만 덮고, 덮을 땐 이 메모에 이유를 적는다.
+  - 일부러 어겨 보기(임시 복사본, 커밋 안 함): time.js +1줄 → 실패(931 > 930) / 덩어리 밖 util.js가 assets.js를 가져옴 → 실패(44→51개 파일, 292→463, 고리 `util.js → assets.js`, 들어온 파일 i18n·sound·time·tv-core·util·win·world) / 그 상태 `--write` → 거부 / 덩어리 안 anim.js → assets.js 새로 → 실패(292→293) / 새 파일 501줄 → 실패 / time.js 900줄로 줄임 → 통과 + "줄었습니다, --write" → `--write` 뒤 통과.

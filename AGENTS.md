@@ -66,7 +66,7 @@
 - 소리는 아직 자막만(소리 회의 전). 자막은 소리를 낸 자리에 띄운다.
 
 ## 8. 검사
-- 배포 전: `node tools/check_time.mjs` · `node tools/check_tv.mjs` · `node tools/check_scene.mjs [포트]` · `node tools/check_behave.mjs --quick` · `python3 tools/build_meta.py --check`
+- 배포 전: `node tools/check_structure.mjs` · `node tools/check_time.mjs` · `node tools/check_tv.mjs` · `node tools/check_scene.mjs [포트]` · `node tools/check_behave.mjs --quick` · `python3 tools/build_meta.py --check`
 - 보이는 동작을 바꾸지 않는 작업: 화면 점검(`visual_check.js` 전후 → `compare.py`)이 같아야 한다. 일부러 바꿨으면 달라진 장면만 눈으로 확인하고 그 사실을 적는다.
 - 화면 점검에서 "다름"이 나오면 먼저 같은 코드로 두 번 찍어 흔들림인지 가린다.
   알려진 흔들림: `ui` 장면 (654,618)–(748,621) → tasks/visual-check-ui-flake.md
