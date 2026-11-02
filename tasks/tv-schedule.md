@@ -30,7 +30,8 @@
 - [ ] `music`(뮤직냥크): 금 22:00으로
 - [ ] 할로윈 21:00 「고양 괴담」 특집(`special`) → 22시부터 기존 `horror`
 - [ ] `web/js/i18n.js`: 12편 이름(ko/en — The Switched Kitten / Goyang Diner / Annals of the Meow Dynasty / Goyang Ghost Stories / Goyang University ER / The Corner Store / Our Furball Family / Kneading Hill / Meow Meow Kindergarten / The Yarn Adventure / Paw Squad Meow Five / Dr. Why's Lab) + 자막
-- [ ] `assets/tv/tv-assets.json`에 46장 등록, `python3 tools/build_meta.py`로 메타 다시 만들기
+- [ ] `python3 tools/build_meta.py`로 웹 메타(`web/r/tv/meta.json`)가 46장을 다 담는지 확인(필요하면 다시 만들기)
+- [ ] (참고) `assets/tv/tv-assets.json`은 git 무시 대상인 주인 맥의 로컬 목록 — 작업 공간에서 고칠 수 없으니 티켓에선 하지 않는다(주인이 필요할 때 로컬에서). 작업 공간 밖을 찾지 않는다
 - [ ] `tools/check_tv.mjs` 기대값: 평일 드라마·어린이 `rerun` 0건 / 12편이 위 표의 요일·시각에 본방 / 본방 회차가 1씩 오름 / 주말 몰아보기 회차가 그 주 본방과 이어짐 / 금 22:00 뮤직냥크 / 할로윈 21~24시 공포 편성
 - [ ] 06시 막힘: 「창가에서」 새벽 재방을 빼면 05:10~07:00이 모자랄 수 있음 — 400일 편성 검사(빈틈·화면 조정 0)로 확인, 막히면 뉴스·날씨 등 새벽 조건으로 푼다
 - [ ] 의도한 편성 변경이므로 회귀 기준을 `node tools/check_tv.mjs --write-baseline`으로 다시 뽑아 같이 커밋(사람 검수에서 확인)
@@ -54,3 +55,4 @@
 
 ## 메모
 - 2026-11-03 지시서 작성(Claude, 회의). 주인 확인 뒤 `- office: ready`로 커밋(2026-11-03).
+- 2026-11-03 고침: `tv-assets.json` 46장 등록 요구를 뺌 — git 무시 대상이라 작업 공간에서 할 수 없는 일이었음(#47 검수 M1 → 일꾼 "할 수 없음", 찾다가 `find /`로 디스크 전체를 뒤짐). 지시서를 쓴 Claude의 잘못.
