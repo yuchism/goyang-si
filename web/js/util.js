@@ -1,10 +1,19 @@
 /* 자잘한 도구: 난수, 범위, 해시, 저장소, 손글씨 글꼴, 색 섞기 */
 // 손글씨 글꼴: 한국어는 Gaegu, 영어는 Patrick Hand를 앞에 둔다 (캔버스 글자는 그릴 때마다 HAND를 읽는다)
 export let HAND = '"Gaegu","Nanum Pen Script",cursive';
-export function setHandFont(lang) {
-  HAND = lang === 'en' ? '"Patrick Hand","Gaegu",cursive' : '"Gaegu","Nanum Pen Script",cursive';
+let handLang = 'ko';
+const loadHand = () => {
   if (document.fonts)
-    document.fonts.load('700 30px ' + (lang === 'en' ? '"Patrick Hand"' : 'Gaegu')).catch(() => { });
+    document.fonts.load('700 30px ' + (handLang === 'en' ? '"Patrick Hand"' : 'Gaegu')).catch(() => { });
+};
+// 글꼴 CSS는 첫 그리기 뒤에 온다(index.html #fontcss). 오기 전엔 @font-face가 없어 load가 빈손이므로 CSS가 오면 한 번 더 부른다
+const fontCss = document.getElementById('fontcss');
+if (fontCss && fontCss.media !== 'all')
+  fontCss.addEventListener('load', loadHand, { once: true });
+export function setHandFont(lang) {
+  handLang = lang;
+  HAND = lang === 'en' ? '"Patrick Hand","Gaegu",cursive' : '"Gaegu","Nanum Pen Script",cursive';
+  loadHand();
 }
 export const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 export const store = { get(k, d) {

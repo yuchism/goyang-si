@@ -27,7 +27,10 @@
 <meta name="apple-mobile-web-app-title" content="Kitty Kang">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&family=Patrick+Hand&display=swap">
+<!-- 글꼴 CSS가 첫 그리기를 막지 않게: 미리 받기(높은 우선순위) + print로 받아 두었다가 다 오면 all로 (tasks/fonts-render-block.md). 오기 전에는 --font-hand·--font-body의 대체 글꼴 -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&family=Patrick+Hand&display=swap">
+<link rel="stylesheet" id="fontcss" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&family=Patrick+Hand&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&family=Patrick+Hand&display=swap"></noscript>
 <script data-goatcounter="https://goyangsi.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <link rel="stylesheet" href="style.css">
 

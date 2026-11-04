@@ -1,5 +1,5 @@
 # Google Fonts가 첫 그리기를 막지 않게
-- status: brief
+- status: implemented   (검수 기다림 — 화면 점검·load_check·사람 항목은 맥에서)
 - mode: needs-review
 - office: ready
 - brief: (그림 없음)
@@ -30,3 +30,11 @@
 
 ## 메모
 - 2026-11-04 하네스로 맡김(`office: ready`). 확인 절·검사 블록을 더하고, 구멍 1 E(일꾼이 `~/Documents`를 못 읽음) 확인을 겸함 — 주인 요청.
+- 2026-11-04 구현 메모 (강고양이 씨, #49)
+  - 방법 비교: ① `media="print" onload` — 간단하지만 크롬은 print CSS를 가장 낮은 우선순위로 받아 글꼴이 늦게 온다. ② `rel="preload" as="style" onload="this.rel='stylesheet'"` — 빠르지만 preload를 모르는 브라우저에선 CSS가 영영 안 붙는다.
+    → 둘을 겹쳐 씀: `preload`(높은 우선순위로 미리 받기) + `media="print" onload="this.media='all'"`(같은 응답을 받아 두었다가 다 오면 적용). preload를 몰라도 ②의 구멍이 없다. 스크립트가 꺼진 경우를 위해 `<noscript>`로 보통 stylesheet.
+  - 대체 글꼴: `style.css`의 `--font-hand`·`--font-body` 순서는 그대로, `display=swap`도 그대로 → 글꼴이 오기 전엔 대체 글꼴로 보이다가 바뀐다(글자 깨짐 없음). 글자 폭이 조금 달라 바뀔 때 살짝 움직일 수 있음 — `size-adjust`로 맞추기는 범위 밖.
+  - 캔버스 글자: 말풍선·자막(`sprites.js`)·책 이름표(`shelf.js` `drawBookTag`)·TV 화면(`tv-screen.js`)·생일 노트북 띠(`birthday.js`)·만득 씨 말풍선(`manduk.js`)·참치 찾기(`draw.js`)·베란다(`veranda.js`) 모두 매 장면 `ctx.font`(HAND)·`measureText`·`fillText`로 다시 그린다 — 글자를 캐시하는 곳이 없어 글꼴이 오면 다음 장면부터 바뀐다. 책장 캐시(`buildCache`)에는 글자가 없고, 책장 판의 책등은 DOM(`.spine`)이라 CSS가 오면 저절로 바뀐다. 불꽃놀이 글자는 시스템 글꼴만 씀.
+  - 다만 CSS가 늦게 오면 `setHandFont`의 `document.fonts.load`가 @font-face가 없어 빈손으로 끝난다 → `util.js`에서 `#fontcss`의 load 때 한 번 더 부르게 함(지금 언어의 손글씨 글꼴).
+  - `check_structure` 통과. `load_check`·`visual_check`는 이 작업 공간에 Playwright(node_modules)가 없어 돌리지 못함 → 맥에서 전후 비교 필요. 두 점검 모두 글꼴 요청을 막으므로(`route abort`) 예전에도 막힌 CSS는 곧 실패로 끝나 첫 그리기를 오래 잡지 않았다 — `load_check` 수치는 거의 같고 화면 점검도 같아야 정상. 실제 효과는 (사람) Slow 4G 항목으로 본다.
+  - 리팩터 후보: `assets.js` 맨 위의 `document.fonts.load('700 30px Gaegu')`는 `setHandFont`와 겹친다(한국어일 때). 지울지는 승인 후.
