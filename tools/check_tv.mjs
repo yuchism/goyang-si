@@ -7,6 +7,7 @@
 //      하루 상한(maxPerDay), 생중계 앞 같은 종목 재방 없음, 한 편 길이 = runtime(재방은 rerunRuntime, flex만 짧게),
 //      할로윈 특집, 조건 충돌 없음, 같은 시즌의 같은 요일은 매주 같은 편성, 드라마 회차가 하나씩 오름. 프로그램별 하루 시간도 출력
 //      새 프로그램(영화·음악방송·누아르)이 제 시각에 나오고, 모든 프로그램이 400일 안에 한 번 이상 편성된다
+//      드라마·어린이(ADR 0013): 평일 재방 0, 정해진 요일·시각에 본방, 본방 회차가 1씩 오름, 주말 몰아보기 회차가 그 주 본방과 이어짐
 //   5. 가짜 프로그램(tools/tv_fake_programs.json: 크리스마스 특집·짧은 프로 하나 더)을 더해도 4가 통과하고, 특집이 제 시각에 나온다
 //   6. 앞으로 400일: 모든 칸의 사건 만들기가 끝나며, 오류가 없다 (할로윈·크리스마스 포함)
 //   7. 회귀 확인: tools/tv_baseline.json.gz와 지금 결과가 같다 (편성을 일부러 바꿨으면 --write-baseline으로 새로 뽑는다)
@@ -115,6 +116,7 @@ const dayAt = i => new Date(D0.getFullYear(), D0.getMonth(), D0.getDate() + i, 1
 const WDN = '일월화수목금토';
 const dname = bd => `${bd.getFullYear()}-${bd.getMonth() + 1}-${bd.getDate()}(${WDN[bd.getDay()]})`;
 const fm = m => core.fmtH(m / 60), M = h => Math.round(h * 60);
+const dkey = bd => `${bd.getFullYear()}-${bd.getMonth() + 1}-${bd.getDate()}`;
 const anyPeriod = bd => Object.keys(core.SCHED.periods).some(n => core.periodOn(n, bd));
 function checkRules(tag) {
   const on = M(core.TV_PROG0), off = M(core.TV_PROG1), week = {}, lastEp = {}, tot = {}, max = {};
@@ -180,6 +182,8 @@ function checkRules(tag) {
     }
     if (core.TVP.horror && core.periodOn('할로윈', bd) && !segs.some(s => s.p === 'horror' && s.kind === 'special' && M(s.s) === 22 * 60 && M(s.e) === 24 * 60))
       bad(`${ds}: 할로윈인데 22~24시 공포 특집이 없음`);
+    if (core.TVP.dr_ghost && core.periodOn('할로윈', bd) && !segs.some(s => s.p === 'dr_ghost' && s.kind === 'special' && M(s.s) === 21 * 60 && M(s.e) === 22 * 60))
+      bad(`${ds}: 할로윈인데 21~22시 괴담 특집이 없음`);
     // 같은 시즌의 같은 요일 = 같은 편성 (기간이 걸린 날은 빼고)
     if (!anyPeriod(bd)) {
       const key = (day.season ? day.season.toDateString() : '-') + ':' + bd.getDay(), sig = JSON.stringify(segs.map(s => [s.p, M(s.s), M(s.e), s.kind]));
@@ -219,7 +223,7 @@ section('새 프로그램 편성 (영화·음악방송·누아르·짧은 프로
     if (wd === 0)
       expect(bd, 'scifi', 21, 120);
     if (wd === 5)
-      expect(bd, 'music', 16, 60);
+      expect(bd, 'music', 22, 60);
     if (wd === 5 || wd === 6)
       expect(bd, 'noir', 24, 55);
     expect(bd, 'homeshop', 14.5, 60);
@@ -235,6 +239,89 @@ section('새 프로그램 편성 (영화·음악방송·누아르·짧은 프로
     if (!cnt[id] && id !== 'horror')
       fail(`${id}: 400일 동안 한 번도 편성되지 않음`);
   notes.push('400일 편성 횟수: ' + Object.entries(cnt).filter(([k]) => k !== '_short').sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(' · ') + ` (짧은 프로 합 ${cnt._short || 0})`);
+});
+// 드라마·어린이 (ADR 0013, tasks/tv-schedule.md): 평일은 본방만(재방 0), 정해진 요일·시각에 본방, 본방 회차가 1씩 오름,
+// 주말 몰아보기는 그 주(마지막 본방 날까지 7일) 본방 회차 중에서
+section('드라마·어린이 편성 (평일 본방만·제 시각·회차·주말 몰아보기)', () => {
+  const WK = [1, 2, 3, 4, 5];
+  const FIRST = {
+    dr_secret: [WK, 8, 30], dr_diner: [WK, 17, 30],
+    drama: [[1, 2], 21, 60], dr_joseon: [[3, 4], 21, 60], dr_ghost: [[5], 21, 60],
+    dr_er: [[1, 2], 22, 60], dr_store: [[3, 4], 22, 60], dr_family: [[0, 6], 12, 60],
+    kid_hill: [WK, 7.5, 30], kid_kinder: [WK, 10, 30], kid_yarn: [WK, 16, 30], kid_five: [WK, 16.5, 30], kid_lab: [WK, 17.5, 30]
+  };
+  const BINGE = { dr_secret: [0, 6], dr_diner: [0, 6], drama: [0, 6], dr_joseon: [0, 6], dr_ghost: [0, 6], dr_er: [0, 6], dr_store: [0, 6], kid_five: [6], kid_yarn: [6], kid_hill: [0], kid_kinder: [0] };
+  const lastEp = {}, firstEps = {}, binge = {};
+  let reruns = 0, shown = 0;
+  const bad = m => shown++ < 25 && fail(m);
+  for (let i = 0; i < DAYS; i++) {
+    const bd = dayAt(i), wd = bd.getDay(), segs = core.tvSegs(bd), key = dkey(bd);
+    for (const s of segs) {
+      const P = core.TVP[s.p];
+      if (!P || !P.episodes || s.kind !== 'rerun')
+        continue;
+      if (WK.includes(wd)) {
+        if (reruns++ < 10)
+          fail(`${dname(bd)} ${core.fmtH(s.s)}: 평일에 ${s.p} 재방`);
+        continue;
+      }
+      if (BINGE[s.p] && !BINGE[s.p].includes(wd))
+        bad(`${dname(bd)} ${core.fmtH(s.s)}: ${s.p} 몰아보기가 정해진 요일이 아님`);
+      // 그 주 본방: 지난 본방 날부터 거꾸로 7일 안의 본방 회차
+      let last = null;
+      for (let b = 1; b <= 14 && !last; b++) {
+        const d = dayAt(i - b);
+        if ((firstEps[s.p] || {})[dkey(d)] != null)
+          last = d;
+      }
+      if (!last || bd < P.episodes.from)
+        continue;
+      const week = [];
+      for (let b = 0; b < 7; b++) {
+        const e = firstEps[s.p][dkey(new Date(last.getFullYear(), last.getMonth(), last.getDate() - b, 12))];
+        if (e != null)
+          week.push(e);
+      }
+      if (!week.includes(s.ep))
+        bad(`${dname(bd)} ${core.fmtH(s.s)}: ${s.p} 몰아보기 ${s.ep}화가 그 주 본방(${week.sort((a, b) => a - b).join('·')}화)이 아님`);
+      binge[s.p] = (binge[s.p] || 0) + 1;
+    }
+    for (const [id, [days, h, len]] of Object.entries(FIRST)) {
+      const P = core.TVP[id];
+      if (!P) {
+        if (i === 0)
+          fail(`${id}: programs.json에 없음`);
+        continue;
+      }
+      const fs = segs.filter(s => s.p === id && s.kind === 'first');
+      if (anyPeriod(bd) && !fs.length)
+        continue; // 특집에 밀린 날
+      if (!days.includes(wd)) {
+        if (fs.length)
+          bad(`${dname(bd)}: ${id} 본방이 정해진 요일이 아닌 날에 나옴`);
+        continue;
+      }
+      if (fs.length !== 1 || M(fs[0].s) !== M(h) || M(fs[0].e) - M(fs[0].s) !== len) {
+        bad(`${dname(bd)}: ${id} 본방이 ${core.fmtH(h)}에 ${len}분으로 나오지 않음`);
+        continue;
+      }
+      if (bd < P.episodes.from)
+        continue;
+      if (fs[0].ep == null || (lastEp[id] != null && fs[0].ep !== lastEp[id] + 1))
+        bad(`${dname(bd)}: ${id} 본방 회차 ${lastEp[id]} → ${fs[0].ep}`);
+      lastEp[id] = fs[0].ep;
+      (firstEps[id] = firstEps[id] || {})[key] = fs[0].ep;
+    }
+  }
+  if (reruns > 10)
+    fail(`… 평일 드라마·어린이 재방 모두 ${reruns}건`);
+  if (shown > 25)
+    fail(`… 그 밖에 ${shown - 25}건`);
+  for (const id of Object.keys(BINGE))
+    if (core.TVP[id] && !binge[id])
+      fail(`${id}: 400일 동안 주말 몰아보기가 한 번도 없음`);
+  notes.push('드라마·어린이 400일 끝 회차: ' + Object.entries(lastEp).map(([k, v]) => `${k} ${v}`).join(' · '));
+  notes.push('주말 몰아보기 400일: ' + Object.entries(binge).map(([k, v]) => `${k} ${v}`).join(' · '));
 });
 section('가짜 프로그램으로 편성 시험 (tools/tv_fake_programs.json: 크리스마스 특집·짧은 프로 하나 더)', () => {
   const fake = JSON.parse(readFileSync(join(ROOT, 'tools/tv_fake_programs.json'), 'utf8')), added = [];

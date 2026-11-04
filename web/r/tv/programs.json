@@ -25,10 +25,199 @@
     "overlay": { "type": "subs", "text": "tvDramaSubs" },
     "watch": "long",
     "runtime": 60,
-    "maxPerDay": { "평일": 120, "주말": 240 },
+    "maxPerDay": 120,
     "episodes": { "from": "2026-09-07" },
-    "first": [["평일", "21:00"]],
-    "rerun": [["새벽"], ["오전"], ["낮"], ["밤"], ["심야"]]
+    "first": [["월", "화", "21:00"]],
+    "rerun": [["주말", "새벽"], ["주말", "오전"], ["주말", "낮"], ["주말", "밤"], ["주말", "심야"]]
+  },
+  "dr_secret": {
+    "name": "tvDrSecret",
+    "loop": [["tv_dr_secret_1of3", 3.6], ["tv_dr_secret_2of3", 2.4]],
+    "events": [
+      { "id": "milk", "w": 1, "size": 3, "dur": 6, "frames": ["tv_dr_secret_3of3"], "cap": "tvDrSecretMilk", "react": { "type": "startle", "p": 0.4 } }
+    ],
+    "gap": [180, 420],
+    "overlay": { "type": "subs", "text": "tvDrSecretSubs" },
+    "watch": "long",
+    "runtime": 30,
+    "maxPerDay": 90,
+    "episodes": { "from": "2026-11-02" },
+    "first": [["평일", "08:00"]],
+    "rerun": [["주말", "아침"], ["주말", "오전"]]
+  },
+  "dr_diner": {
+    "name": "tvDrDiner",
+    "loop": [["tv_dr_diner_1of3", 3.0], ["tv_dr_diner_2of3", 3.0]],
+    "events": [
+      { "id": "smoke", "w": 1, "size": 2, "dur": 5, "frames": ["tv_dr_diner_3of3"], "cap": "tvDrDinerSmoke", "react": { "type": "peekBehind", "p": 0.3 } }
+    ],
+    "gap": [180, 420],
+    "overlay": { "type": "subs", "text": "tvDrDinerSubs" },
+    "watch": "long",
+    "runtime": 30,
+    "maxPerDay": 90,
+    "episodes": { "from": "2026-11-02" },
+    "first": [["평일", "17:00"]],
+    "rerun": [["주말", "오전"], ["주말", "낮"]]
+  },
+  "dr_joseon": {
+    "name": "tvDrJoseon",
+    "loop": [["tv_dr_joseon_1of5", 4.0], ["tv_dr_joseon_2of5", 3.0]],
+    "events": [
+      { "id": "sleeve", "w": 3, "size": 2, "dur": 5, "frames": ["tv_dr_joseon_3of5"], "cap": "tvDrJoseonSleeve" },
+      { "id": "decree", "w": 1, "size": 3, "dur": 6, "frames": ["tv_dr_joseon_4of5"], "cap": "tvDrJoseonDecree", "react": { "type": "startle", "p": 0.3 } }
+    ],
+    "end": { "id": "next", "size": 1, "dur": 25, "frames": ["tv_dr_joseon_5of5"], "cap": "tvDramaNext" },
+    "gap": [150, 420],
+    "overlay": { "type": "subs", "text": "tvDrJoseonSubs" },
+    "watch": "long",
+    "runtime": 60,
+    "maxPerDay": 120,
+    "episodes": { "from": "2026-11-02" },
+    "first": [["수", "목", "21:00"]],
+    "rerun": [["주말", "오전"], ["주말", "낮"], ["주말", "밤"]]
+  },
+  "dr_ghost": {
+    "name": "tvDrGhost",
+    "loop": [["tv_dr_ghost_1of5", 2.6], ["tv_dr_ghost_2of5", 0.5]],
+    "events": [
+      { "id": "mirror", "w": 3, "size": 2, "dur": 5, "frames": ["tv_dr_ghost_3of5"], "cap": "tvDrGhostMirror" },
+      { "id": "behind", "w": 1, "size": 3, "dur": 6, "frames": ["tv_dr_ghost_4of5"], "cap": "tvDrGhostBehind", "react": { "type": "startle", "p": 0.6 } }
+    ],
+    "end": { "id": "next", "size": 1, "dur": 25, "frames": ["tv_dr_ghost_5of5"], "cap": "tvDramaNext" },
+    "gap": [150, 420],
+    "overlay": { "type": "subs", "text": "tvDrGhostSubs" },
+    "watch": "long",
+    "runtime": 60,
+    "maxPerDay": 60,
+    "episodes": { "from": "2026-11-02" },
+    "special": [["할로윈", "21:00"]],
+    "first": [["금", "21:00"]],
+    "rerun": [["주말", "새벽"], ["주말", "오전"], ["주말", "낮"]]
+  },
+  "dr_er": {
+    "name": "tvDrEr",
+    "loop": [["tv_dr_er_1of5", 1.6], ["tv_dr_er_2of5", 1.6]],
+    "events": [
+      { "id": "ambulance", "w": 3, "size": 2, "dur": 5, "frames": ["tv_dr_er_3of5"], "cap": "tvDrErAmbulance" },
+      { "id": "surgery", "w": 1, "size": 3, "dur": 6, "frames": ["tv_dr_er_4of5"], "cap": "tvDrErSurgery", "react": { "type": "peekBehind", "p": 0.3 } }
+    ],
+    "end": { "id": "next", "size": 1, "dur": 25, "frames": ["tv_dr_er_5of5"], "cap": "tvDramaNext", "react": { "type": "doze", "p": 0.3 } },
+    "gap": [150, 420],
+    "overlay": { "type": "subs", "text": "tvDrErSubs" },
+    "watch": "long",
+    "runtime": 60,
+    "maxPerDay": 120,
+    "episodes": { "from": "2026-11-02" },
+    "first": [["월", "화", "22:00"]],
+    "rerun": [["주말", "오전"], ["주말", "낮"]]
+  },
+  "dr_store": {
+    "name": "tvDrStore",
+    "loop": [["tv_dr_store_1of5", 4.0], ["tv_dr_store_2of5", 3.0]],
+    "events": [
+      { "id": "umbrella", "w": 3, "size": 2, "dur": 5, "frames": ["tv_dr_store_3of5"], "cap": "tvDrStoreRain" },
+      { "id": "confess", "w": 1, "size": 3, "dur": 6, "frames": ["tv_dr_store_4of5"], "cap": "tvDrStoreConfess", "react": "heart" }
+    ],
+    "end": { "id": "next", "size": 1, "dur": 25, "frames": ["tv_dr_store_5of5"], "cap": "tvDramaNext" },
+    "gap": [150, 420],
+    "overlay": { "type": "subs", "text": "tvDrStoreSubs" },
+    "watch": "long",
+    "runtime": 60,
+    "maxPerDay": 120,
+    "episodes": { "from": "2026-11-02" },
+    "first": [["수", "목", "22:00"]],
+    "rerun": [["주말", "오전"], ["주말", "낮"], ["주말", "밤"]]
+  },
+  "dr_family": {
+    "name": "tvDrFamily",
+    "loop": [["tv_dr_family_1of5", 3.0], ["tv_dr_family_2of5", 2.0]],
+    "events": [
+      { "id": "scold", "w": 3, "size": 2, "dur": 5, "frames": ["tv_dr_family_3of5"], "cap": "tvDrFamilyScold" },
+      { "id": "chaos", "w": 1, "size": 3, "dur": 6, "frames": ["tv_dr_family_4of5"], "cap": "tvDrFamilyChaos", "react": { "type": "pounce", "p": 0.3 } }
+    ],
+    "end": { "id": "next", "size": 1, "dur": 25, "frames": ["tv_dr_family_5of5"], "cap": "tvDramaNext", "react": "heart" },
+    "gap": [150, 420],
+    "overlay": { "type": "subs", "text": "tvDrFamilySubs" },
+    "watch": "long",
+    "runtime": 60,
+    "maxPerDay": 60,
+    "episodes": { "from": "2026-11-02" },
+    "first": [["토", "일", "12:00"]]
+  },
+  "kid_hill": {
+    "name": "tvKidHill",
+    "loop": [["tv_kid_hill_1of3", 0.8], ["tv_kid_hill_2of3", 0.8]],
+    "events": [
+      { "id": "nap", "w": 1, "size": 3, "dur": 8, "frames": ["tv_kid_hill_3of3"], "cap": "tvKidHillNap", "react": { "type": "doze", "p": 0.5 } }
+    ],
+    "gap": [180, 420],
+    "overlay": { "type": "subs", "text": "tvKidHillSubs" },
+    "watch": "normal",
+    "runtime": 30,
+    "maxPerDay": 90,
+    "episodes": { "from": "2026-11-02" },
+    "first": [["평일", "07:30"]],
+    "rerun": [["일", "아침"], ["일", "오전"]]
+  },
+  "kid_kinder": {
+    "name": "tvKidKinder",
+    "loop": [["tv_kid_kinder_1of3", 1.2], ["tv_kid_kinder_2of3", 1.2]],
+    "events": [
+      { "id": "cry", "w": 1, "size": 2, "dur": 6, "frames": ["tv_kid_kinder_3of3"], "cap": "tvKidKinderCry", "react": { "type": "heart", "p": 0.4 } }
+    ],
+    "gap": [180, 420],
+    "overlay": { "type": "subs", "text": "tvKidKinderSubs" },
+    "watch": "normal",
+    "runtime": 30,
+    "maxPerDay": 90,
+    "episodes": { "from": "2026-11-02" },
+    "first": [["평일", "10:00"]],
+    "rerun": [["일", "아침"], ["일", "오전"]]
+  },
+  "kid_yarn": {
+    "name": "tvKidYarn",
+    "loop": [["tv_kid_yarn_1of3", 1.0], ["tv_kid_yarn_2of3", 1.0]],
+    "events": [
+      { "id": "tangle", "w": 1, "size": 2, "dur": 6, "frames": ["tv_kid_yarn_3of3"], "cap": "tvKidYarnTangle", "react": { "type": "pawScreen", "p": 0.4 } }
+    ],
+    "gap": [180, 420],
+    "overlay": { "type": "subs", "text": "tvKidYarnSubs" },
+    "watch": "track",
+    "runtime": 30,
+    "maxPerDay": 90,
+    "episodes": { "from": "2026-11-02" },
+    "first": [["평일", "16:00"]],
+    "rerun": [["토", "아침"], ["토", "오전"]]
+  },
+  "kid_five": {
+    "name": "tvKidFive",
+    "loop": [["tv_kid_five_1of3", 2.0], ["tv_kid_five_2of3", 2.0]],
+    "events": [
+      { "id": "tower", "w": 1, "size": 3, "dur": 7, "frames": ["tv_kid_five_3of3"], "cap": "tvKidFiveTower", "react": { "type": "startle", "p": 0.4 } }
+    ],
+    "gap": [180, 420],
+    "overlay": { "type": "subs", "text": "tvKidFiveSubs" },
+    "watch": "track",
+    "runtime": 30,
+    "maxPerDay": 90,
+    "episodes": { "from": "2026-11-02" },
+    "first": [["평일", "16:30"]],
+    "rerun": [["토", "아침"], ["토", "오전"]]
+  },
+  "kid_lab": {
+    "name": "tvKidLab",
+    "loop": [["tv_kid_lab_1of3", 1.4], ["tv_kid_lab_2of3", 1.4]],
+    "events": [
+      { "id": "boom", "w": 1, "size": 2, "dur": 5, "frames": ["tv_kid_lab_3of3"], "cap": "tvKidLabBoom", "react": { "type": "startle", "p": 0.4 } }
+    ],
+    "gap": [180, 420],
+    "overlay": { "type": "subs", "text": "tvKidLabSubs" },
+    "watch": "normal",
+    "runtime": 30,
+    "maxPerDay": 30,
+    "episodes": { "from": "2026-11-02" },
+    "first": [["평일", "17:30"]]
   },
   "baseball": {
     "name": "tvBaseball",
@@ -211,7 +400,7 @@
     "gap": [150, 360],
     "watch": "track",
     "runtime": 60,
-    "air": [["금", "16:00"]]
+    "air": [["금", "22:00"]]
   },
   "homeshop": {
     "name": "tvHomeshop",
