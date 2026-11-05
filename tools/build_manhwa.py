@@ -22,7 +22,9 @@ import io
 import json
 import re
 import secrets
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -135,14 +137,34 @@ def sources(work, no):
 
 
 def build_images(work, ep):
+    """임시 폴더에서 변환을 끝낸 뒤에만 기존 그림을 바꾼다 (중간에 멈춰도 기존 회차는 그대로)"""
     files = sources(work, ep['no'])
-    out = paths(work)[1] / ep['slug']
-    out.mkdir(parents=True, exist_ok=True)
-    for old in out.glob('*.webp'):
-        old.unlink()
+    base = paths(work)[1]
+    base.mkdir(parents=True, exist_ok=True)
+    tmp = Path(tempfile.mkdtemp(prefix=f'.{ep["slug"]}-', dir=base))
+    try:
+        heights, v = convert(files, tmp)
+        out = base / ep['slug']
+        out.mkdir(exist_ok=True)
+        for old in [*out.glob('*.webp'), out / 'og.jpg']:
+            old.unlink(missing_ok=True)
+        for f in tmp.iterdir():
+            f.replace(out / f.name)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    ep['heights'] = heights
+    ep['v'] = v
+
+
+def convert(files, out):
     pieces = []
     for i, f in enumerate(files):
-        im, bg = trim(flat(Image.open(f)))
+        try:
+            with Image.open(f) as src:
+                src.load()
+                im, bg = trim(flat(src))
+        except (OSError, Image.DecompressionBombError) as err:
+            sys.exit(f'✗ {f.name}: 그림을 열 수 없습니다 ({err}) — 기존 그림은 그대로 둡니다')
         if im is None:
             print(f'  ⚠ {f.name}: 빈 장 — 건너뜀')
             continue
@@ -156,16 +178,15 @@ def build_images(work, ep):
             pieces.append(im.crop((0, a, WIDTH, b)))
         print(f'  {f.name}: {im.height}px → 조각 {len(ys) - 1}')
     if not pieces:
-        sys.exit('✗ 쓸 수 있는 장이 없습니다')
+        sys.exit('✗ 쓸 수 있는 장이 없습니다 — 기존 그림은 그대로 둡니다')
     sha = hashlib.sha1()
     for n, p in enumerate(pieces, 1):
         buf = io.BytesIO()
         p.save(buf, 'WEBP', quality=88, method=6)
         (out / f'{n:02d}.webp').write_bytes(buf.getvalue())
         sha.update(buf.getvalue())
-    ep['heights'] = [p.height for p in pieces]
-    ep['v'] = sha.hexdigest()[:8]
     make_og(pieces[0]).save(out / 'og.jpg', 'JPEG', quality=86, optimize=True)
+    return [p.height for p in pieces], sha.hexdigest()[:8]
 
 
 def make_og(first):
@@ -288,8 +309,8 @@ def check(work):
             continue
         d = base / slug
         want = [f'{n:02d}.webp' for n in range(1, len(hs) + 1)]
-        have = sorted(f.name for f in d.glob('*.webp')) if d.is_dir() else []
-        if have != want:
+        have = {f.name for f in d.glob('*.webp')} if d.is_dir() else set()
+        if have != set(want):
             errs.append(f'{tag}: 조각 파일이 맞지 않습니다 (episodes.json {len(want)}개, 폴더 {len(have)}개)')
             continue
         for name, h in zip(want, hs):
