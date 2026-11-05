@@ -1,0 +1,73 @@
+/* 만화방 뷰어 (tasks/manhwa-viewer.md). 폰은 화면 너비 꽉, 데스크톱은 가운데 720px */
+:root {
+  --mh-w: 720px;
+  --mh-bg: #17130f;
+  --mh-ink: #f3e6cf;
+  --mh-dim: #b8a98f;
+  --mh-acc: #e9c14d;
+  --mh-bar: rgba(23, 19, 15, .92);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--mh-bg); color: var(--mh-ink); }
+body.mh { font: 16px/1.5 system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; -webkit-tap-highlight-color: transparent; }
+a { color: inherit; }
+
+/* ── 원고: 조각을 경계 없이 잇는다 */
+.mh-strip { max-width: var(--mh-w); margin: 0 auto; background: #fff; }
+.mh-strip img { display: block; width: 100%; height: auto; border: 0; }
+
+/* ── 위·아래 막대 */
+.mh-bar { position: fixed; left: 0; right: 0; z-index: 10; background: var(--mh-bar); transition: transform .25s ease; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.mh-bar-in { max-width: var(--mh-w); margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 0 12px; height: 52px; }
+.mh-top { top: 0; padding-top: env(safe-area-inset-top); }
+.mh-bot { bottom: 0; padding-bottom: env(safe-area-inset-bottom); }
+.mh-hide .mh-top { transform: translateY(-100%); }
+.mh-hide .mh-bot { transform: translateY(100%); }
+.mh-icon { font-size: 28px; line-height: 1; text-decoration: none; padding: 4px 8px 6px 2px; }
+.mh-ttl { min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.mh-ttl b, .mh-ttl span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mh-ttl b { font-size: 15px; }
+.mh-ttl span { font-size: 13px; color: var(--mh-dim); }
+.mh-bot .mh-bar-in { justify-content: space-between; }
+.mh-bot a, .mh-bot .mh-off { flex: 1; text-align: center; text-decoration: none; padding: 14px 0; font-size: 15px; }
+.mh-off { opacity: .35; }
+
+/* ── 얇은 진행 막대 (늘 보인다) */
+.mh-progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 11; pointer-events: none; }
+.mh-progress i { display: block; height: 100%; background: var(--mh-acc); transform: scaleX(0); transform-origin: 0 50%; }
+
+/* ── 단추·안내 */
+.mh-btn { display: inline-block; font: inherit; padding: 11px 22px; border-radius: 999px; border: 1px solid #fff3dc55; background: #2e2838; color: inherit; text-decoration: none; cursor: pointer; }
+.mh-ghost { background: transparent; }
+.mh-home { color: var(--mh-acc); }
+.mh-when { color: var(--mh-dim); }
+.mh-msg, .mh-wait { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; text-align: center; }
+.mh-yet { font-size: 26px; letter-spacing: .04em; min-height: 1.5em; margin: 0; }
+
+/* ── 회차 끝 */
+.mh-end { max-width: var(--mh-w); margin: 0 auto; padding: 40px 16px calc(110px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.mh-next { background: var(--mh-acc); color: #17130f; border-color: transparent; font-weight: 700; }
+
+/* ── 이어 보기 */
+.mh-resume { position: fixed; left: 50%; bottom: calc(68px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 12; background: var(--mh-acc); color: #17130f; border-color: transparent; font-weight: 700; box-shadow: 0 4px 16px #0006; }
+
+/* ── 목록 */
+.mh-list { max-width: var(--mh-w); margin: 0 auto; padding: calc(28px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 18px; }
+.mh-head h1 { margin: 2px 0 4px; font-size: 26px; }
+.mh-head p { margin: 0; }
+.mh-room { color: var(--mh-acc); font-size: 14px; }
+.mh-by { color: var(--mh-dim); }
+.mh-koonly { display: inline-block; margin-top: 8px !important; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--mh-dim); font-size: 13px; color: var(--mh-dim); }
+.mh-about { margin-top: 10px !important; }
+.mh-resume-link { align-self: flex-start; background: var(--mh-acc); color: #17130f; border-color: transparent; font-weight: 700; }
+.mh-empty { color: var(--mh-dim); }
+.mh-eps { list-style: none; margin: 0; padding: 0; border-top: 1px solid #fff3dc22; }
+.mh-eps li { border-bottom: 1px solid #fff3dc22; }
+.mh-ep { display: flex; align-items: baseline; gap: 12px; padding: 14px 4px; text-decoration: none; }
+a.mh-ep:hover { background: #ffffff08; }
+.mh-ep b { flex: none; min-width: 3.2em; }
+.mh-ep-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mh-ep small { color: var(--mh-dim); }
+.mh-soon { color: var(--mh-dim); cursor: default; }
+.mh-list > .mh-home { align-self: flex-start; }
