@@ -1,7 +1,7 @@
 # tasks/ 상태 줄 정리 (끝난 것 done으로)
-- status: implemented
+- status: done
 - mode: needs-review
-- office: ready
+- office: done (헤드쿼터 #3, 2026-11-06)
 - brief: (그림 없음)
 - 출처: 회의 2026-11-05 — 진짜 헤드쿼터(goyang-hq)의 첫 일감. 주인이 정함: 할로윈 마녀의 집은 끝남
 
