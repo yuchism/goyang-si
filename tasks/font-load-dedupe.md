@@ -1,5 +1,5 @@
 # 손글씨 글꼴 부르기를 한 곳으로 (assets.js·util.js 중복 정리)
-- status: brief
+- status: implemented
 - mode: needs-review
 - office: ready
 - brief: (그림 없음)
@@ -33,3 +33,4 @@
 
 ## 메모
 - 2026-11-05 지시서 작성(Claude, 회의). 역할 설정(검수 = Codex) 첫 진짜 티켓.
+- 2026-11-05 구현(Claude): `assets.js`의 `document.fonts.load('700 30px Gaegu')`를 지웠다. 첫 화면은 `i18n.js`가 읽힐 때 `setHandFont(LANG)`을 부르고(→ `util.js` `loadHand()`, 글꼴 CSS가 늦으면 한 번 더), 언어 바꾸기는 `setLang()`이 부른다 — `util.js` 한 곳. 페이지는 `index.html` 하나뿐이고 `i18n.js`는 늘 읽히므로 `assets.js`에서 따로 부를 까닭이 없었다. 영어 `HAND`에는 `"Gaegu"`가 뒤 대체 글꼴로 남아 있어, 영어 화면에 한글이 그려질 때만 브라우저가 Gaegu를 받는다(전처럼 미리 받지는 않음).
