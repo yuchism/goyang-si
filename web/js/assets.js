@@ -48,10 +48,6 @@ export async function loadMeta() {
   if (birthdayMode) // 생일 깜짝 손님 춤 시트: 생일 링크로 들어왔을 때만 받는다(나중 묶음). 생일이 아닌 방문엔 안 받는다 (BIRTHDAY_GUESTS_PLAN.md 5장)
     GUESTS.filter(guestLoads).forEach(g => SRC['f_guest_' + g.id] = guestSrc(g.id)); // 할로윈 손님은 페이지를 열 때 할로윈 기간일 때만 (HOURLY_CHIME_PLAN.md 6-1)
 }
-try {
-  document.fonts && document.fonts.load('700 30px Gaegu');
-}
-catch (e) { }
 
 /* ───────── 두 묶음 (LOAD_PLAN.md 3장) ─────────
    여기 한 곳에만 적는다. 이름 앞부분 규칙 + 예외. 새 그림은 따로 적지 않으면 시작 묶음(방 소품)이나 나중 묶음(고양이 프레임)에 들어간다
