@@ -1,5 +1,5 @@
 # 고양이 홈쇼핑 6번째 상품: 「고양이 왕방울」
-- status: brief
+- status: implemented
 - mode: needs-review
 - relay: brief
 - office: ready
@@ -45,3 +45,7 @@
 ## 메모
 - 2026-11-05 지시서 작성(Claude, 회의). 주인이 고름: 목에 다는 큰 방울 · 츄르 1개 · 6개 × 10분.
 - 2026-11-05 그림 지시서 `assets/briefs/tv-homeshop-bell.md` 씀(강고양이 씨, 지시서 왕복 1차). 모델은 기존 다섯과 겹치지 않게 회색 단색 고양이, 발자국 자리는 기존 10장을 보고 오른쪽 위 (292, 24) 근처로 적음. `TV_PROGRAM_ASSET_PLAN.md` 8장 표에 링크 한 줄.
+- 2026-11-05 구현(강고양이 씨). 지시서 왕복 1번째에 통과 → 그림 2장 한 번에 요청 → 두 장 모두 지시서와 맞아 다시 그린 것 없음(원본 1448×1086 → 320×240, webp). `bell` 구간 평소 장면은 포즈 3초 · 딸랑 2초 번갈아.
+  - TV 그림은 `r/tv/meta.json`이 아니라 `programs.json`에서 바로 읽으므로 meta 등록은 없음(`build_meta.py`는 `r/tv/`를 건너뜀).
+  - 요일 순서 코드(`tv-core.js` `segOrder`)는 상품 수에 묶여 있지 않아 고치지 않음. 6개에서도 7가지 모두 다름(`check_tv` 출력): 일 fitness→facepack→cooker→coat→bell→hiking · 월 facepack→fitness→coat→cooker→hiking→bell · 화 cooker→coat→fitness→facepack→bell→hiking · 수 coat→cooker→facepack→fitness→hiking→bell · 목 bell→hiking→fitness→facepack→cooker→coat · 금 hiking→bell→facepack→fitness→coat→cooker · 토 bell→hiking→cooker→coat→fitness→facepack
+  - 회귀 기준: 바꾸기 전 기준으로 돌리니 실패 12건, **모두 `homeshop` 칸(14:30~15:30)의 장면 그림만** 다름(다른 프로그램·시각·사건 자막은 같음) → `--write-baseline`으로 다시 뽑음. 등산 정상 끝 장면(90초)은 10분 구간에도 그대로 들어감.

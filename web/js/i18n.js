@@ -352,6 +352,7 @@ export const STR = {
   tvShopFacepack: { ko: ['꿀털 팩', '츄르 3개'], en: ['Honey Fur Mask', '3 treats'] },
   tvShopFitness: { ko: ['캣휠 다이어트', '츄르 12개'], en: ['Cat Wheel Diet', '12 treats'] },
   tvShopHiking: { ko: ['뒷산 등산 배낭', '츄르 7개'], en: ['Backyard Hiking Pack', '7 treats'] },
+  tvShopBell: { ko: ['고양이 왕방울', '츄르 1개'], en: ['Cat Jumbo Bell', '1 treat'] },
   tvShopRush: { ko: '주문 폭주!', en: 'Orders flooding in!' },
   tvShopSoon: { ko: '매진 임박!', en: 'Almost sold out!' },
   tvShopSummit: { ko: '정상 도착! 야옹~', en: 'Summit! Meow~' },
