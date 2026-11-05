@@ -1,5 +1,5 @@
 # tasks/ 상태 줄 정리 (끝난 것 done으로)
-- status: brief
+- status: implemented
 - mode: needs-review
 - office: ready
 - brief: (그림 없음)
@@ -25,3 +25,4 @@
 
 ## 메모
 - 2026-11-05 지시서 작성(Claude, 회의).
+- 2026-11-05 구현(Claude): 세 지시서 status 줄·메모만 고침. 나머지 brief 5개는 그대로.
