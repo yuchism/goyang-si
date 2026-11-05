@@ -16,6 +16,7 @@
 - status: brief
 - mode: needs-review            ← 사람 검수 필수 (auto면 구현 시작 승인을 건너뜀)
 - office: ready                 ← 하네스에 맡김. 같은 값으로는 한 번만 — 다시 돌리려면 `ready 2`
+- relay: brief                  ← (넣으면) 지시서 왕복: 일꾼(Claude)이 먼저 그림 지시서를 쓰고 검수(ChatGPT)와 최대 3번 주고받은 뒤 그림까지. 주인은 확정·시작과 사람 검수만
 - brief: (그림 지시서 경로 또는 "그림 없음")
 - related-adr: …
 - 출처: 회의 YYYY-MM-DD
