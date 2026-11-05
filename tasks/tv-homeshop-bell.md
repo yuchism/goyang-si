@@ -21,16 +21,16 @@
 - 다른 상품 그림·띠 모양·정파 시각은 건드리지 않는다.
 
 ## 요구사항
-- [ ] 그림 지시서 `assets/briefs/tv-homeshop-bell.md`: 두 장의 장면, 기존 다섯 상품과 맞출 것(화풍·발자국 자리), 피할 것, 파일 이름·규격 — 그림 일꾼이 이 파일만 읽고 그릴 수 있게
-- [ ] 그림 2장을 그림 일꾼에게 한 번에 요청 → 들어오면 그림마다 지시서와 대조(다시 그릴 것만 다시) → 320×240 납품 PNG와 웹 `web/r/tv/tv_homeshop_bell_1of2.webp`·`_2of2.webp`
-- [ ] `programs.json` 홈쇼핑에 `bell` 구간(`shop`: `tvShopBell`), `segments.min` 12 → 10. `i18n.js`에 `tvShopBell` (ko `['고양이 왕방울', '츄르 1개']`, en `['Cat Jumbo Bell', '1 treat']`)
-- [ ] 요일마다 다른 순서가 6개에서도 7가지 모두 다름(코드가 다섯 개에 묶여 있으면 고친다)
-- [ ] 편성을 일부러 바꿨으므로 `node tools/check_tv.mjs --write-baseline`으로 회귀 기준을 다시 뽑고, 바뀐 것이 홈쇼핑 구간뿐인지 메모에
+- [x] 그림 지시서 `assets/briefs/tv-homeshop-bell.md`: 두 장의 장면, 기존 다섯 상품과 맞출 것(화풍·발자국 자리), 피할 것, 파일 이름·규격 — 그림 일꾼이 이 파일만 읽고 그릴 수 있게
+- [x] 그림 2장을 그림 일꾼에게 한 번에 요청 → 들어오면 그림마다 지시서와 대조(다시 그릴 것만 다시) → 320×240 납품 PNG와 웹 `web/r/tv/tv_homeshop_bell_1of2.webp`·`_2of2.webp`
+- [x] `programs.json` 홈쇼핑에 `bell` 구간(`shop`: `tvShopBell`), `segments.min` 12 → 10. `i18n.js`에 `tvShopBell` (ko `['고양이 왕방울', '츄르 1개']`, en `['Cat Jumbo Bell', '1 treat']`)
+- [x] 요일마다 다른 순서가 6개에서도 7가지 모두 다름(코드가 다섯 개에 묶여 있으면 고친다)
+- [x] 편성을 일부러 바꿨으므로 `node tools/check_tv.mjs --write-baseline`으로 회귀 기준을 다시 뽑고, 바뀐 것이 홈쇼핑 구간뿐인지 메모에
 
 ## 확인
-- [ ] `node tools/check_tv.mjs` 통과(새 기준으로)
-- [ ] `python3 tools/build_meta.py --check` 통과
-- [ ] `node tools/check_structure.mjs` 통과
+- [x] `node tools/check_tv.mjs` 통과(새 기준으로)
+- [x] `python3 tools/build_meta.py --check` 통과
+- [x] `node tools/check_structure.mjs` 통과
 - [ ] (사람) 검수 폴더 `_overview.png`: 두 장이 시나리오대로, 기존 홈쇼핑과 같은 화풍, 전화기 고양이 발자국이 오른쪽 위 같은 자리, 글자 없음
 - [ ] (사람) `?dev=1`로 14:30 이후 홈쇼핑 → 왕방울 구간과 띠「고양이 왕방울 · 츄르 1개」, 영어 화면 "Cat Jumbo Bell · 1 treat"
 - [ ] (사람) 하네스 시험: 지시서 왕복 댓글(📝)이 나오고, 확정·시작 뒤 사람 검수까지 주인이 말을 옮긴 일이 없었는지
@@ -49,3 +49,7 @@
   - TV 그림은 `r/tv/meta.json`이 아니라 `programs.json`에서 바로 읽으므로 meta 등록은 없음(`build_meta.py`는 `r/tv/`를 건너뜀).
   - 요일 순서 코드(`tv-core.js` `segOrder`)는 상품 수에 묶여 있지 않아 고치지 않음. 6개에서도 7가지 모두 다름(`check_tv` 출력): 일 fitness→facepack→cooker→coat→bell→hiking · 월 facepack→fitness→coat→cooker→hiking→bell · 화 cooker→coat→fitness→facepack→bell→hiking · 수 coat→cooker→facepack→fitness→hiking→bell · 목 bell→hiking→fitness→facepack→cooker→coat · 금 hiking→bell→facepack→fitness→coat→cooker · 토 bell→hiking→cooker→coat→fitness→facepack
   - 회귀 기준: 바꾸기 전 기준으로 돌리니 실패 12건, **모두 `homeshop` 칸(14:30~15:30)의 장면 그림만** 다름(다른 프로그램·시각·사건 자막은 같음) → `--write-baseline`으로 다시 뽑음. 등산 정상 끝 장면(90초)은 10분 구간에도 그대로 들어감.
+- 2026-11-05 회귀 메모 정정(강고양이 씨, 검수 M2). 위 "12건·장면 그림만"은 틀림: 12건은 `check_tv`가 보여 주는 최대 개수였고, 옛 기준(`ed2edd0`)과 새 기준을 모두 비교하니 68721곳 중 1919곳이 다름. 바뀐 범위:
+  - **모두 `homeshop` 칸 안**(표본 시각이 14:30~15:30 밖인 것 0곳, 다른 프로그램 0곳). 날짜·칸 수·표본 수와 모든 칸의 프로그램·시작·끝·제목은 같음.
+  - 칸 사건 목록 2212개 중 50개: 사건은 등산 정상(`summit`, 「정상 도착! 야옹~」) 하나뿐이고 개수·자막 글은 같으나 **시각이 바뀜** — 등산 구간이 12분 → 10분이 되고 자리가 밀려서(예: 2026-10-14 3510→2910초, 10-15 630→1110초, 10-16 630→510초).
+  - 표본 66509개 중 1869개: 장면 그림 1719 · 사건 id 98 · **사건 자막 98**(그 시각에 summit 자막이 새로 나오거나 없어짐, 예: 2026-10-14 한국어 15:19:37 없음→「정상 도착! 야옹~」, 15:29:56 「정상 도착! 야옹~」→없음 · 10-15 14:48:54 「매진 임박!」→「정상 도착! 야옹~」) · key 248 · **표본 시각 150**(사건 따라 뽑는 표본이라 summit 시각이 옮겨 가며 같이 옮겨 감).
