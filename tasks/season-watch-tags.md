@@ -1,5 +1,5 @@
 # 계절 구경 행동의 끼어들기 정하기
-- status: reviewed   (검수: reviews/season-watch-tags.md — 코드 적합 / 회귀·겹침 장면 확인 완료)
+- status: done   (검수: reviews/season-watch-tags.md — 코드 적합 / 회귀·겹침 장면 확인 완료)
 - mode: needs-review
 - brief: (그림 없음)
 - assets: (없음)
