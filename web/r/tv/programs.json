@@ -405,14 +405,15 @@
   "homeshop": {
     "name": "tvHomeshop",
     "segments": {
-      "min": 12,
+      "min": 10,
       "list": [
         { "id": "coat", "loop": [["tv_homeshop_coat_1of2", 2.2], ["tv_homeshop_coat_2of2", 2.2]], "shop": "tvShopCoat" },
         { "id": "cooker", "loop": [["tv_homeshop_cooker_1of2", 3.0], ["tv_homeshop_cooker_2of2", 3.0]], "shop": "tvShopCooker" },
         { "id": "facepack", "loop": [["tv_homeshop_facepack_1of2", 6.0], ["tv_homeshop_facepack_2of2", 3.0]], "shop": "tvShopFacepack" },
         { "id": "fitness", "loop": [["tv_homeshop_fitness_1of2", 6.0], ["tv_homeshop_fitness_2of2", 3.0]], "shop": "tvShopFitness" },
         { "id": "hiking", "loop": [["tv_homeshop_hiking_1of2", 5.0]], "shop": "tvShopHiking",
-          "end": { "id": "summit", "size": 2, "dur": 90, "frames": ["tv_homeshop_hiking_2of2"], "cap": "tvShopSummit", "react": "heart" } }
+          "end": { "id": "summit", "size": 2, "dur": 90, "frames": ["tv_homeshop_hiking_2of2"], "cap": "tvShopSummit", "react": "heart" } },
+        { "id": "bell", "loop": [["tv_homeshop_bell_1of2", 3.0], ["tv_homeshop_bell_2of2", 2.0]], "shop": "tvShopBell" }
       ]
     },
     "events": [
