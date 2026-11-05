@@ -1,7 +1,7 @@
 # TV 편성 등록: 드라마·어린이 12편 한 번에 + 「창가에서」·「뮤직냥크」·할로윈 「고양 괴담」
-- status: brief
+- status: done
 - mode: needs-review
-- office: ready
+- office: done (연습장 헤드쿼터 #47, 2026-11-05 진짜 헤드쿼터로 이사하며 닫음)
 - brief: assets/briefs/tv-drama-kids.md
 - related-adr: 0006 · 0013 (평일은 본방만, 재방은 주말 몰아보기)
 - 출처: 회의 2026-10-29(편성 결정) · 2026-11-01(12편이 다 모인 뒤 한 번에) · 2026-11-03(하나의 티켓으로). 결정 표는 `tasks/tv-drama-kids.md` "결정" 절이 기준. 이 지시서가 `tasks/tv-schedule-1.md`(4편, 보류)를 대신한다

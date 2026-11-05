@@ -1,7 +1,7 @@
 # TV 2차 그림: 30분 4편 (식당·유치원·털실·실험실)
-- status: brief
+- status: done
 - mode: needs-review
-- office: ready
+- office: done (연습장 헤드쿼터, 2026-11-05 진짜 헤드쿼터로 이사하며 닫음)
 - brief: assets/briefs/tv-drama-kids.md
 - assets: assets/tv/programs/tv-<id>-*of3-*.png (git 무시, 로컬) · web/r/tv/tv_<id>_*of3.webp
 - 출처: 회의 2026-11-01. 순서는 `tasks/tv-drama-kids.md` 메모 — 2차 30분 4편 → 3차 60분 4편 → 편성 등록 한 번(`tasks/tv-schedule-1.md`, 보류)

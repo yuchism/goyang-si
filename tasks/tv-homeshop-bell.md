@@ -1,8 +1,8 @@
 # 고양이 홈쇼핑 6번째 상품: 「고양이 왕방울」
-- status: implemented
+- status: done
 - mode: needs-review
 - relay: brief
-- office: ready
+- office: done (연습장 헤드쿼터 #53, 2026-11-05 진짜 헤드쿼터로 이사하며 닫음)
 - brief: assets/briefs/tv-homeshop-bell.md (이 티켓에서 새로 씀)
 - assets: assets/tv/homeshop/tv-homeshop_bell-<n>of2-*.png (git 무시, 로컬) · web/r/tv/tv_homeshop_bell_<n>of2.webp
 - related-adr: 0006

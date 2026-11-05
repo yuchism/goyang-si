@@ -1,7 +1,7 @@
 # Google Fonts가 첫 그리기를 막지 않게
-- status: implemented   (검수 기다림 — 화면 점검·load_check·사람 항목은 맥에서)
+- status: done
 - mode: needs-review
-- office: ready
+- office: done (연습장 헤드쿼터 #49, 2026-11-05 진짜 헤드쿼터로 이사하며 닫음)
 - brief: (그림 없음)
 - assets: (없음)
 - related-adr: 0007, 0008

@@ -1,7 +1,7 @@
 # 손글씨 글꼴 부르기를 한 곳으로 (assets.js·util.js 중복 정리)
-- status: implemented
+- status: done
 - mode: needs-review
-- office: ready
+- office: done (연습장 헤드쿼터 #51, 2026-11-05 진짜 헤드쿼터로 이사하며 닫음)
 - brief: (그림 없음)
 - related-adr: 0008
 - 출처: #49 검수(Codex 0단계 시험, 2026-11-05) "리팩터 후보: assets.js와 setHandFont의 글꼴 로딩 중복" · 회의 2026-11-05(역할 설정 첫 진짜 티켓 — 구현 Claude ↔ 검수 Codex, 격리 확인 겸함)

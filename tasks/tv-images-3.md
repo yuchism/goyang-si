@@ -1,7 +1,7 @@
 # TV 3차 그림: 60분 4편 (괴담·응급실·편의점·털뭉치)
-- status: brief
+- status: done
 - mode: needs-review
-- office: ready
+- office: done (연습장 헤드쿼터, 2026-11-05 진짜 헤드쿼터로 이사하며 닫음)
 - brief: assets/briefs/tv-drama-kids.md
 - assets: assets/tv/programs/tv-<id>-*of5-*.png (git 무시, 로컬) · web/r/tv/tv_<id>_*of5.webp
 - 출처: 회의 2026-11-01·02. 2차(`tasks/tv-images-2.md`, 30분 4편)와 같은 모양. 이게 끝나면 12편이 다 모여 편성 등록 한 번(`tasks/tv-schedule-1.md`, 보류)
