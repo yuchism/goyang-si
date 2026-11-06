@@ -13,7 +13,7 @@
   const EP_PAGE = PAGE === 'episode';
   const WORK_DIR = EP_PAGE ? '../' : './';
   const ROOT = EP_PAGE ? '../../../' : '../../';
-  const SHOP = ROOT + 'manhwa/'; // 만화방 안 (tasks/manhwa-3-shop.md). 고양.시로 가는 출입문은 만화방 안에만 있다
+  const SHOP = ROOT + 'manhwa/?via=comic'; // 만화 목록·회차에서 돌아올 때는 입장 둘러보기를 생략한다
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ───────── 글자 ───────── */

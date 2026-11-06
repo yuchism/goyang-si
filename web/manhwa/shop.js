@@ -8,6 +8,7 @@
    - ?dev=1: 시각 옮기기 + 그날 밤 편성 */
 import { atHour, clockText, isNight, nightOf, now, setSimMs } from '../js/time.js';
 import { hash } from '../js/util.js';
+import { tr as sharedTr } from '../js/i18n.js';
 import { pawsHTML } from '../js/catbook.js';
 import { MOVE_SEC, gymAt, moving, nightPlan } from './shop-plan.js';
 
@@ -15,6 +16,7 @@ const body = document.body;
 const DIR = 'shop/';
 const HOME = '/?from=manhwa'; // 고양.시가 딸랑 + 문으로 맞는다 (tasks/manhwa-2-gate.md)
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const VIA = new URL(location.href).searchParams.get('via');
 const DEV = /[?&]dev=1/.test(location.search);
 
 /* ───────── 글자 (viewer.js와 같은 규칙: 저장한 언어 → 브라우저 언어) ───────── */
@@ -121,6 +123,13 @@ const place = (n, [x, y, w, h]) => {
   Object.assign(n.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
   return n;
 };
+function makeSign(tag, cls, spec, text) {
+  const n = place(el(tag, 'painted-sign ' + cls), spec.rect);
+  if (spec.art)
+    n.append(img(DIR + spec.art, 'sign-art'));
+  n.append(place(el('span', 'sign-text', text), spec.text));
+  return n;
+}
 
 /* ───────── 말풍선: 몇 초 늦게, 한 글자씩 ───────── */
 let talkId = 0;
@@ -179,6 +188,22 @@ function build(cfg) {
     sc.append(bgs[k]);
   }
 
+  // 숫자 없는 벽시계. 자리 설정이 없으면 그리지 않는다.
+  const clock = cfg.clock ? place(el('div', 'wall-clock'), cfg.clock) : null;
+  let hourHand, minuteHand;
+  if (clock) {
+    clock.setAttribute('role', 'img');
+    for (let i = 0; i < 12; i++) {
+      const tick = el('i', 'clock-tick' + (i % 3 === 0 ? ' major' : ''));
+      tick.style.transform = `rotate(${i * 30}deg)`;
+      clock.append(tick);
+    }
+    hourHand = el('i', 'clock-hand hour');
+    minuteHand = el('i', 'clock-hand minute');
+    clock.append(hourHand, minuteHand, el('i', 'clock-pin'));
+    sc.append(clock);
+  }
+
   // 사장님 말풍선 (한 개를 낮·밤이 같이 쓴다)
   const bubble = el('p', 'bubble');
   bubble.hidden = true;
@@ -188,8 +213,8 @@ function build(cfg) {
   const door = place(el('a', 'door'), cfg.door);
   door.href = HOME;
   door.setAttribute('aria-label', tr('home'));
-  const sign = el('span', 'door-sign', '🔔 ' + tr('home'));
-  door.append(sign);
+  if (cfg.signs?.door)
+    door.append(makeSign('span', 'door-sign', cfg.signs.door, sharedTr('shopDoorSign')));
   leaveWith(door, 'go-home', '만화방 → 고양.시');
   sc.append(door);
 
@@ -308,6 +333,29 @@ function build(cfg) {
     talk(moving(state.slot, now()) >= 0 ? tr('move') : L(STR.ex[state.slot.ex]));
   });
 
+  // 그림 팻말 또는 계산대 앞면 표지에 번역 글자를 얹는다. 화살표는 장면 좌표로 정한다.
+  const signs = {};
+  for (const [key, textKey, target, action] of [
+    ['exit', 'shopExitSign', cfg.door[0] + cfg.door[2] / 2, () => talk(sharedTr('shopExitReply'))],
+    ['workout', 'shopWorkoutSign', gc.at[0], () => {
+      if (view.classList.contains('pan'))
+        panTo(gc.at[0]);
+      else
+        talk(sharedTr('shopHereReply'));
+    }],
+  ]) {
+    const spec = cfg.signs && cfg.signs[key];
+    if (!spec)
+      continue;
+    const rect = spec.rect;
+    const text = sharedTr(textKey).replace(/[←→]/, target < rect[0] + rect[2] / 2 ? '←' : '→');
+    const n = makeSign('button', 'counter-sign ' + key + '-sign', spec, text);
+    n.type = 'button';
+    n.addEventListener('click', action);
+    signs[key] = n;
+    sc.append(n);
+  }
+
   /* ── 관람금지 책 누름: 책이 앞으로 나오고(제목·딱지), 사장님이 느리게. 아주 가끔 99세 버튼 */
   const pop = el('div', 'pop');
   pop.hidden = true;
@@ -384,6 +432,15 @@ function build(cfg) {
   const apply = () => {
     const d = now(), night = isNight(d);
     const slot = night ? gymAt(d, gc.exercises) : null;
+    if (clock) {
+      const text = clockText(d.getTime());
+      const [hours, minutes] = text.split(':').map(Number);
+      hourHand.style.transform = `rotate(${(hours % 12 + minutes / 60) * 30}deg)`;
+      minuteHand.style.transform = `rotate(${minutes * 6}deg)`;
+      clock.setAttribute('aria-label', text);
+    }
+    if (signs.workout)
+      signs.workout.hidden = !(night && slot);
     const key = night + '|' + (slot ? slot.from : '');
     if (key !== state.key) {
       const wasNight = state.night;
@@ -441,12 +498,35 @@ function build(cfg) {
     view.classList.toggle('pan', !wide);
     return k;
   };
-  let first = true;
+  let scale = 1, panFrame = 0;
+  const stopPan = () => {
+    cancelAnimationFrame(panFrame);
+    panFrame = 0;
+  };
+  const scrollAt = x => Math.max(0, Math.min(view.scrollWidth - view.clientWidth, x * scale - view.clientWidth / 2));
+  function panTo(x) {
+    stopPan();
+    const from = view.scrollLeft, to = scrollAt(x);
+    if (RM) {
+      view.scrollLeft = to;
+      return;
+    }
+    const start = performance.now();
+    const step = t => {
+      const p = Math.min(1, (t - start) / 2800);
+      view.scrollLeft = from + (to - from) * (1 - (1 - p) ** 3);
+      panFrame = p < 1 ? requestAnimationFrame(step) : 0;
+    };
+    panFrame = requestAnimationFrame(step);
+  }
+  // 손님 입력이 오면 자동 둘러보기를 즉시 끝내고 기본 스크롤을 따른다.
+  for (const event of ['pointerdown', 'touchstart', 'wheel'])
+    view.addEventListener(event, stopPan, { passive: true });
+  document.addEventListener('keydown', stopPan);
+  const ownerX = () => state.night && state.slot ? gc.at[0] : cc.at[0];
   const onResize = () => {
-    const k = fit();
-    if (first && view.classList.contains('pan')) // 처음엔 신간 코너·계산대 쪽을 보며 들어온다
-      view.scrollLeft = Math.max(0, (cfg.view && cfg.view.phoneFocus || W / 2) * k - innerWidth / 2);
-    first = false;
+    stopPan();
+    scale = fit();
   };
   addEventListener('resize', onResize);
 
@@ -505,6 +585,14 @@ function build(cfg) {
   body.append(view);
   onResize();
   apply();
+  if (view.classList.contains('pan')) {
+    if (RM || VIA === 'comic')
+      view.scrollLeft = scrollAt(ownerX());
+    else {
+      view.scrollLeft = scrollAt(cfg.door[0] + cfg.door[2] / 2);
+      panTo(ownerX());
+    }
+  }
   setInterval(apply, 1000);
   return state;
 }
