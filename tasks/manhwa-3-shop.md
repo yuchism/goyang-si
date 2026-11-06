@@ -1,8 +1,8 @@
 # 만화방 3: 만화방 안 — 나무늘보 사장님(낮엔 졸고 밤엔 운동) · 99세 이하 관람금지 책장 · 신간 코너
-- status: review   (사람 검수 두 항목 남음)
+- status: done
 - mode: needs-review
 - relay: brief
-- office: ready
+- office: done (헤드쿼터 #11, 2026-11-06)
 - brief: assets/briefs/MANHWA_SHOP_ART.md (첫 티켓에서 새로 씀)
 - assets: assets/manhwa/shop/*-source-v1.png (git 무시, 로컬) · web/manhwa/shop/*.webp
 - related-adr: 0008, 0011
