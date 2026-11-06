@@ -1,7 +1,30 @@
 {
   "name": "쫄깃 소넷맛 치킨",
   "nameEn": "Chewy Sonnet-Flavored Chicken",
-  "series": "여전히 나는 기본값이다",
   "about": "",
-  "episodes": []
+  "episodes": [
+    {
+      "no": 1,
+      "slug": "v53eb",
+      "title": "역대 최강의 AI 등장",
+      "open": "2026-11-06",
+      "heights": [
+        1646,
+        1647,
+        1645,
+        1646,
+        1646,
+        1647,
+        1643,
+        1640,
+        1646,
+        1643,
+        1597
+      ],
+      "v": "db871b05"
+    }
+  ],
+  "cover": "75722335",
+  "tagline": "지금까지 이런 치킨은 없었다",
+  "taglineEn": "Never Has There Been a Chicken Like This"
 }

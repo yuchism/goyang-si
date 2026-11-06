@@ -530,7 +530,10 @@ function loadWorks(works, slots, spines) {
         }
         else
           a.classList.add('code');
-        a.append(el('span', 'cover-t', data.name)); // 코드 책일 때만 보인다
+        const title = el('span', 'cover-t');
+        title.append(el('b', '', LANG === 'en' && data.nameEn ? data.nameEn : data.name),
+          el('small', '', LANG === 'en' && data.taglineEn ? data.taglineEn : data.tagline));
+        a.append(title);
         leaveWith(a, 'fresh-list', '만화방 신간 코너 → 목록: ' + w);
         slot.append(a);
         // 관람금지 책장에서 한 권이 신간 코너로 옮겨 왔다

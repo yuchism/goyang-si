@@ -259,7 +259,7 @@ def e(s):
 
 
 def ep_heading(data, ep):
-    t = f"「{data['series']}」 {ep['no']}화"
+    t = f"「{data['name']}」 {ep['no']}화"
     return f"{t} — {ep['title']}" if ep.get('title') else t
 
 
@@ -299,7 +299,7 @@ def head(title, desc, url, image, alt, root):
 
 
 def desc_of(data):
-    d = f"고양.시 만화방 · {data['name']}"
+    d = f"고양.시 만화방 · {data['name']} — {data['tagline']}"
     return f"{d} — {data['about']}" if data.get('about') else d
 
 
@@ -317,7 +317,7 @@ def list_html(work, data):
     url = f"{SITE}/manhwa/{work}/"
     eps = data['episodes']
     image = f"{url}og.jpg" if data.get('cover') else f'{SITE}/og/room.jpg'
-    title = f"「{data['series']}」"
+    title = f"「{data['name']}」"
     return head(title, desc_of(data), url, image, title, '../../') + f"""<body class="mh" data-page="list" data-work="{e(work)}">
 <noscript><p class="mh-msg">만화를 보려면 자바스크립트를 켜 주세요.</p></noscript>
 </body>
@@ -338,7 +338,7 @@ def check(work):
     base = paths(work)[1]
     data = load_json(work)
     errs = []
-    for k in ('name', 'series'):
+    for k in ('name', 'nameEn', 'tagline', 'taglineEn'):
         if not data.get(k):
             errs.append(f'episodes.json 머리에 {k}가 없습니다')
     eps = data.get('episodes')
