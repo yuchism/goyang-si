@@ -1,0 +1,20 @@
+{
+  "_": "만화방 안 장면 설정 (tasks/manhwa-3-shop.md). 좌표는 바탕 그림 픽셀(size) 기준 — 받은 그림에서 잰 값(MANHWA_SHOP_ART.md 8절). 사람이 고치는 곳",
+  "size": [1752, 876],
+  "v": 1,
+  "bg": { "day": "bg-day.webp", "night": "bg-night.webp" },
+  "scale": 0.48,
+  "counter": { "at": [1240, 537], "anchor": [256, 480], "frames": { "awake": "sloth-counter.webp", "doze1": "sloth-doze-1.webp", "doze2": "sloth-doze-2.webp", "talk": "sloth-talk.webp" } },
+  "gym": { "at": [1563, 745], "anchor": [400, 760], "exercises": ["treadmill", "dumbbell", "bar", "mat"] },
+  "door": [45, 262, 220, 460],
+  "shelf": {
+    "cols": [[302, 113], [429, 112], [555, 113], [682, 113]],
+    "rows": [[178, 97], [287, 89], [388, 91], [491, 90], [593, 96]]
+  },
+  "fresh": {
+    "plate": [870, 388, 190, 55],
+    "slots": [[861, 492, 55, 74], [929, 492, 55, 74], [998, 492, 55, 74]]
+  },
+  "works": ["csf"],
+  "view": { "phoneFocus": 1100 }
+}

@@ -3,12 +3,13 @@ import { imageReady, img } from './assets.js';
 import { tObj, tr } from './i18n.js';
 import { rr } from './draw.js';
 import { O } from './objects.js';
-import { ctx, cv, view } from './stage.js';
+import { H, W, cam, ctx, cv, view } from './stage.js';
 import { closeBook, isPageBook, noteEl, openBook, scrEl, toStage } from './ui.js';
 import { HAND, RM, esc, gcEvent, onScene } from './util.js';
 import { cat, say, world } from './world.js';
 import { oddAt, oddVisible, openOdd } from './install.js';
 import { MARKS } from './spine-marks.js';
+import { openMap } from './frontdoor.js';
 /* ───────── 책장 메뉴 ─────────
   objects.json의 bookshelf.books 한 권이 메뉴 하나.
   큰 화면: 책에 올리면 살짝 빠지고 이름표, 누르면 그 책이 펼쳐진 목록.
@@ -340,8 +341,22 @@ function renderShelf(sel) {
     (cur.href ? `<a class="open" href="${esc(cur.href)}"${ext(cur.href) ? ' target="_blank" rel="noopener"' : ''}>${esc(tr('shelfOpen'))}</a>` : `<span class="empty">${esc(tr('shelfEmpty'))}</span>`)
     : `<p>${esc(tr('shelfPick'))}</p>`) + '</div>';
 }
+// 지도책(map:true): 책장을 닫고 현관문과 같은 동네 약도를 그 책 자리에서 펼친다 (들어온 길은 shelf)
+function openMapBook(b) {
+  closeShelf();
+  closeBook();
+  const map = O.door && O.door.map;
+  if (!map || world.manduk)
+    return;
+  const r = cv.getBoundingClientRect();
+  openMap(map, [r.left + (b.x + b.w / 2 - cam.x) / (view.vw || W) * r.width, r.top + (baseY(b) - b.h / 2) / H * r.height], 'shelf');
+}
 export function openShelf(id) {
   const b = id && BOOKS().find(b => b.id === id);
+  if (b && b.map) {
+    openMapBook(b);
+    return;
+  }
   if (isPageBook(b)) { // 설명책·고양이책·설정책은 책 창으로
     closeShelf();
     openBook(b.id);
@@ -373,7 +388,7 @@ export function initShelf() {
       closeShelf();
       return;
     }
-    // 통계 이름(gc)이 있는 책: 보내고 조금 있다가 떠난다 (만화책 → 만화방)
+    // 통계 이름(gc)이 있는 책: 보내고 조금 있다가 떠난다
     const op = e.target.closest('a.open'), ob = op && BOOKS().find(b => b.id === shelfUI.pull);
     if (ob && ob.gc && !op.target && !(e.metaKey || e.ctrlKey || e.shiftKey || e.button)) {
       e.preventDefault();
@@ -386,7 +401,8 @@ export function initShelf() {
       openOdd(); // 이상한 책은 책장 목록이 아니라 제 페이지로
       return;
     }
-    if (sp && isPageBook(BOOKS().find(b => b.id === sp.dataset.id))) {
+    const sb = sp && BOOKS().find(b => b.id === sp.dataset.id);
+    if (sb && (sb.map || isPageBook(sb))) {
       openShelf(sp.dataset.id);
       return;
     }

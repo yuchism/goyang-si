@@ -78,9 +78,9 @@
       "layer": "background",
       "area": [604, 0, 178, 346],
       "frame": { "x0": 608.2, "x1": 777.2, "rows": [[5.4, 158.7], [168.7, 334]], "board": 10, "cabinet": [609, 776.5, 343, 493], "note": "책장 칸 안쪽 x0~x1, rows = 칸마다 [천장 y, 바닥(선반 윗면) y], board = 선반 판 두께, cabinet = 수납장 [왼, 오, 위, 아래] (코드로 덮어 그림, 누를 수 없음. CABINET_PLAN.md)" },
-      "oddBook": { "lean": [672, 334.5], "tag": [676, 208, 100, 126], "note": "이상한 책: lean = 기대는 책(만화책 manhwa)의 오른쪽 끝 x와 선반 위 y, tag = 이름표를 띄울 영역 [x, y, 폭, 높이]" },
+      "oddBook": { "lean": [672, 334.5], "tag": [676, 208, 100, 126], "note": "이상한 책: lean = 기대는 책(지도책 manhwa)의 오른쪽 끝 x와 선반 위 y, tag = 이름표를 띄울 영역 [x, y, 폭, 높이]" },
       "touch": "shelf",
-      "note": "책 한 권이 메뉴 하나. title·desc·href(링크)를 고치면 된다. 영어는 en의 title·desc. 책은 코드로 그린다(shelf.js, BOOKSHELF_PLAN.md 10장): shelf = 칸(0 윗칸, 1 가운데 칸), x = 책 바닥 왼쪽, w·h = 두께·키, rot = 기울기(도, 음수면 왼쪽으로 기댐), color = 책 색, deco = 책등 꾸밈(bands: [위에서 비율, gold|gold2|line|dark], label: [위에서 비율, 높이], mark: face|yarn|paw, paw: [가로 비율, 세로 비율, 각도]). look을 주면 코드 대신 그 그림(assets 키)을 같은 자리·크기에 그린다. about:true는 설명책(문구는 i18n.js aboutBook. spine = 목록 책등에 쓰는 짧은 이름, 없으면 title), cat:true는 고양이책(발자국, catbook.js), settings:true는 설정 책 — 셋 다 오래된 책 페이지 창으로 열림. 폰에서는 책장 아무 데나 누르면 큰 목록이 뜬다",
+      "note": "책 한 권이 메뉴 하나. title·desc·href(링크)를 고치면 된다. 영어는 en의 title·desc. 책은 코드로 그린다(shelf.js, BOOKSHELF_PLAN.md 10장): shelf = 칸(0 윗칸, 1 가운데 칸), x = 책 바닥 왼쪽, w·h = 두께·키, rot = 기울기(도, 음수면 왼쪽으로 기댐), color = 책 색, deco = 책등 꾸밈(bands: [위에서 비율, gold|gold2|line|dark], label: [위에서 비율, 높이], mark: face|yarn|paw|comic|map, paw: [가로 비율, 세로 비율, 각도]). look을 주면 코드 대신 그 그림(assets 키)을 같은 자리·크기에 그린다. about:true는 설명책(문구는 i18n.js aboutBook. spine = 목록 책등에 쓰는 짧은 이름, 없으면 title), cat:true는 고양이책(발자국, catbook.js), settings:true는 설정 책 — 셋 다 오래된 책 페이지 창으로 열림. map:true는 지도책 — 책장을 닫고 현관문과 같은 동네 약도(door.map)를 펼친다(들어온 길 via=shelf). 폰에서는 책장 아무 데나 누르면 큰 목록이 뜬다",
       "books": [
         { "id": "red", "shelf": 0, "x": 612, "w": 30, "h": 128, "color": "#bf5a41",
           "deco": {"bands": [[0.07, "gold2"], [0.88, "gold2"]], "label": [0.22, 30], "mark": "face"},
@@ -101,9 +101,9 @@
           "deco": {"bands": [[0.07, "gold2"], [0.87, "gold2"]], "label": [0.2, 16], "mark": "paw", "paw": [0.52, 0.6, 14]},
           "title": "고양이책", "href": null, "cat": true, "en": {"title": "Cat Book"} },
         { "id": "manhwa", "shelf": 1, "x": 645, "w": 27, "h": 126, "color": "#c8432b",
-          "deco": {"bands": [[0.1, "dark"], [0.86, "dark"]], "mark": "comic"},
-          "title": "만화방", "desc": "동네 만화방으로 가는 지름길. 오늘은 무슨 만화가 들어왔을까요?", "href": "/manhwa/csf/?via=shelf", "gc": "shelf-manhwa",
-          "en": {"title": "Comic Café", "desc": "A shortcut to the neighborhood comic café. What came in today?"} }
+          "deco": {"bands": [[0.1, "dark"], [0.86, "dark"]], "mark": "map"},
+          "title": "동네 지도", "href": null, "map": true,
+          "en": {"title": "Neighborhood Map"} }
       ]
     },
     {
@@ -141,12 +141,12 @@
         "size": 1200,
         "home": [330, 1092],
         "shops": [
-          { "name": "mapManhwa", "href": "/manhwa/csf/?via=map", "gc": "map-manhwa",
+          { "name": "mapManhwa", "href": "/manhwa/", "gc": "manhwa",
             "day": "r/map/shop-day.webp", "night": "r/map/shop-night.webp",
             "box": [704, 247, 420, 420], "label": [914, 690] }
         ]
       },
-      "note": "닫힌 문은 배경 그림의 것. 열릴 때만 door_open 그림. sayY: 만득 씨 말풍선 높이(문 왼쪽에 뜬다). map: 문을 누르면 펼쳐지는 동네 약도(frontdoor.js, MANHWA_MAP_ART.md) — 좌표는 약도 그림 픽셀(size) 기준. home = 「고양.시」 이름표 가운데, shops = 가게(box = 가게 그림 [왼쪽, 위, 폭, 높이], label = 이름표 가운데, name = i18n 키, gc = 통계 이름). 가게가 생기면 shops에 한 줄. map이 없으면 문은 눌러도 아무 일 없음"
+      "note": "닫힌 문은 배경 그림의 것. 열릴 때만 door_open 그림. sayY: 만득 씨 말풍선 높이(문 왼쪽에 뜬다). map: 문을 누르면 펼쳐지는 동네 약도(frontdoor.js, MANHWA_MAP_ART.md) — 좌표는 약도 그림 픽셀(size) 기준. home = 「고양.시」 이름표 가운데, shops = 가게(box = 가게 그림 [왼쪽, 위, 폭, 높이], label = 이름표 가운데, name = i18n 키, href = 가게 주소(약도를 연 길이 ?via=map|shelf로 붙음), gc = 통계 이름(앞에 map-|shelf-가 붙음)). 가게가 생기면 shops에 한 줄. map이 없으면 문은 눌러도 아무 일 없음"
     },
     {
       "id": "curtain_l",
