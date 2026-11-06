@@ -133,27 +133,32 @@ for (const [dir, file] of [['f', 'f/meta.json'], ['r', 'r/meta.json']])
         SIZES[`${dir}/${k}`] = [v[0], v[1]];
 let fakeImgs = 0;
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript', '.json': 'application/json', '.css': 'text/css', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json' };
+// 경로 하나에 줄 답 [상태, 형식, 내용] — 서버와 브라우저 안 길잡이(route)가 같이 쓴다
+function answer(path) {
+  const u = decodeURIComponent(path), p = normalize(join(WEB, u === '/' ? 'index.html' : u));
+  if (!p.startsWith(WEB))
+    return [403];
+  if (existsSync(p) && statSync(p).isFile())
+    return [200, TYPES[extname(p)] || 'application/octet-stream', readFileSync(p)];
+  if (/\.(webp|png)$/.test(p)) { // 그림이 없으면 meta.json 크기의 투명 그림
+    const key = u.replace(/^\//, '').replace(/\.(webp|png)$/, ''), sz = SIZES[key] || [8, 8];
+    fakeImgs++;
+    return [200, 'image/png', png(Math.max(1, sz[0] | 0), Math.max(1, sz[1] | 0))];
+  }
+  return [404];
+}
+// 포트를 못 열면(샌드박스 listen EPERM 등) null — 그때는 runOne이 브라우저 안에서 바로 답한다
 function serve() {
   const srv = createServer((req, res) => {
-    const u = decodeURIComponent(new URL(req.url, 'http://x').pathname), p = normalize(join(WEB, u === '/' ? 'index.html' : u));
-    if (!p.startsWith(WEB)) {
-      res.writeHead(403).end();
-      return;
-    }
-    if (existsSync(p) && statSync(p).isFile()) {
-      res.writeHead(200, { 'Content-Type': TYPES[extname(p)] || 'application/octet-stream' }).end(readFileSync(p));
-      return;
-    }
-    if (/\.(webp|png)$/.test(p)) { // 그림이 없으면 meta.json 크기의 투명 그림
-      const key = u.replace(/^\//, '').replace(/\.(webp|png)$/, ''), sz = SIZES[key] || [8, 8];
-      fakeImgs++;
-      res.writeHead(200, { 'Content-Type': 'image/png' }).end(png(Math.max(1, sz[0] | 0), Math.max(1, sz[1] | 0)));
-      return;
-    }
-    res.writeHead(404).end();
+    const [st, type, body] = answer(new URL(req.url, 'http://x').pathname);
+    res.writeHead(st, type ? { 'Content-Type': type } : {}).end(body);
   });
-  return new Promise(r => srv.listen(0, '127.0.0.1', () => r(srv)));
+  return new Promise(r => {
+    srv.once('error', () => r(null));
+    srv.listen(0, '127.0.0.1', () => r(srv));
+  });
 }
+const LOCAL = 'http://goyang.test';
 
 /* ───────── 3. 브라우저 속 고정 시계·난수 (visual_check.js INIT + __warp) ───────── */
 const INIT = (T0, seed) => `(()=>{let t=0;const T0=${T0};const RD=Date;
@@ -207,6 +212,11 @@ async function runOne(browser, base, sc, tz, lang, seed) {
       errs.push('이름표: ' + t.slice(0, 120));
   });
   await p.route(/goatcounter|zgo\.at|fonts\.(googleapis|gstatic)/, r => r.abort());
+  if (base === LOCAL)
+    await p.route(LOCAL + '/**', r => {
+      const [status, contentType, body] = answer(new URL(r.request().url()).pathname);
+      return r.fulfill({ status, contentType, body });
+    });
   await p.addInitScript(INIT(localMs(tz, ...sc.d), seed));
   await p.goto(`${base}/index.html?dev=1${sc.q || ''}`);
   for (let i = 0; i < 150 && !(await p.evaluate(() => !!(window.__ready && window.__ready() && window.__goyang))); i++)
@@ -361,7 +371,7 @@ async function runOne(browser, base, sc, tz, lang, seed) {
       console.log('\n브라우저(Chromium)를 띄우지 못했어요. 이 폴더에서 한 번만:\n  npx playwright install chromium\n' + String(e.message || e).split('\n')[0]);
       process.exit(2);
     }
-    const srv = await serve(), base = `http://127.0.0.1:${srv.address().port}`;
+    const srv = await serve(), base = srv ? `http://127.0.0.1:${srv.address().port}` : LOCAL;
     try {
       for (const [i, sc] of SCEN.entries()) { // 시드는 시나리오 순번으로 정한다 (--only로 골라도 같은 시드)
         if (ONLY && !ONLY.includes(sc.n))
@@ -373,7 +383,7 @@ async function runOne(browser, base, sc, tz, lang, seed) {
     }
     finally {
       await browser.close();
-      srv.close();
+      srv?.close();
     }
     if (fakeImgs)
       notes.push(`없는 그림 ${fakeImgs}개를 대체 그림으로`);
