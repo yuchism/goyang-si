@@ -2,6 +2,7 @@
 - status: brief
 - mode: needs-review
 - relay: brief
+- office: ready
 - brief: assets/briefs/csf/SHEETS_ART.md (이 티켓에서 새로 씀)
 - assets: assets/briefs/csf/sheet-gag.png (새로) · assets/briefs/csf/sheet-serious.png (로고 칸만 바꿈)
 - 출처: 회의 2026-11-06~07 — 회차마다 진지판/개그판 시트를 골라 쓴다 · 로고는 CSF Chicken · 회차 하네스의 0단계 시험을 겸함
