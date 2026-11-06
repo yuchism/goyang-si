@@ -16,7 +16,7 @@ import { initTvDev } from './tv-dev.js';
 import { bannerText } from './birthday.js';
 import { $, esc, gcEvent, store } from './util.js';
 import { flipFrame } from './frame.js';
-import { toggleLaser } from './laser.js';
+import { laserOn, toggleLaser } from './laser.js';
 import { tapBowl } from './fish.js';
 import { playsDev, playsDrag, playsLift, playsPress } from './plays.js';
 import { actorLift } from './steps.js';
@@ -342,9 +342,9 @@ export function initUI() {
   };
   cv.addEventListener('pointerup', lift);
   cv.addEventListener('pointercancel', lift);
-  // 좁은 창의 트랙패드 가로 스크롤도 같은 둘러보기
+  // 좁은 창의 트랙패드 가로 스크롤도 같은 둘러보기. 레이저 중엔 방을 끌지 않는다(점만, 화면 끝에서 밀림)
   cv.addEventListener('wheel', e => {
-    if (!canLook() || Math.abs(e.deltaX) <= Math.abs(e.deltaY))
+    if (!canLook() || laserOn() || Math.abs(e.deltaX) <= Math.abs(e.deltaY))
       return;
     e.preventDefault();
     lookStart();
