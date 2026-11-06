@@ -60,6 +60,8 @@
 -->
 
 ## 메모
+- 2026-11-06 M1 수정(Codex): 「폰(좁은 화면, 가로 둘러보기)에서도 시계가 사장님·책장과 겹치지 않음」은 장면 좌표로 확인 완료. scene.json의 clock=[1188,192,104,104]이므로 아래 끝은 192+104=296. shop.js의 계산대 그림 배치식과 counter.at/anchor·scale=0.48에 따라 사장님 그림 위 끝은 537-480×0.48=306.6으로, 시계와 세로 간격 10.6px이 있다. 책장 오른쪽 끝은 마지막 칸 682+113=795로 시계 왼쪽 1188과 가로 간격 393px이 있다. shop.js의 fit()이 .sc 전체에 같은 scale(k)를 적용하고 가로 둘러보기는 스크롤만 바꾸므로 좁은 화면에서도 비겹침이 유지된다. scene.json 자리 변경은 필요 없음. 실제 폰 화면에서 자연스럽게 보이는지는 기존 (사람) 확인 항목으로 결과 대기.
+- M1 검사 통과: node tools/check_structure.mjs · python3 tools/build_manhwa.py csf --check. 문서 메모만 추가하여 화면 동작 변경 없음. status는 implemented 유지. 리팩터 후보: 이번 수정으로 늘어난 조건 분기·특수 케이스 플래그·중복 로직·길어진 함수 없음.
 - 2026-11-06 H1 수정(Codex): 하네스가 검수 통과한 `assets/manhwa/shop/signs-h1.png` 원본을 보존하고 세 칸의 소품만 잘라 무손실 투명 WebP(`web/manhwa/shop/sign-{door,exit,workout}.webp`)로 변환. scene.json에 그림 경로·자리·글자 영역을 등록하고 공통 makeSign()으로 코드 글자를 얹음. 문손잡이 나무 걸이판은 「고양.시로」/“To goyang.si”로 바꾸고 빨간 상자·종 이모지를 제거. 계산대 명패는 계산대 위, A형 칠판은 운동 중 빈 사장님 자리에 배치. 기존 화살표·클릭·운동 표시·입장 이동 동작을 유지하며 밤에는 세 소품에 색조 보정, 칠판 글자는 밝은 분필 느낌을 적용함.
 - H1 검사 통과: node tools/check_structure.mjs · python3 tools/build_manhwa.py csf --check · node tools/check_time.mjs · node --check web/manhwa/shop.js · git diff --check. 작업 공간에 Playwright가 없어 실제 브라우저 낮·밤·좁은 화면 검사는 미실행이며 (사람) 확인 결과는 계속 대기. 파일만 저장하고 커밋·푸시하지 않음(하네스 담당). status는 implemented 유지.
 - H1 리팩터 후보: 새 조건 분기 1개(문 팻말 설정 유무), 특수 플래그 없음. 세 소품 생성은 makeSign()으로 공통화하여 중복을 줄임. 기존 build() 분리 후보 외에 새 리팩터 후보 없음.
