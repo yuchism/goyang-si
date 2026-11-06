@@ -64,3 +64,8 @@
   - 못 돌린 검사: 이 샌드박스엔 브라우저가 없어 화면은 못 봄. 대신 가짜 DOM으로 `shop.js`를 낮→책 누름→사장님 누름→밤→바뀌는 순간→운동 중 누름까지 돌려 오류 없음. `build_manhwa.py csf --check`·`check_structure`·`check_time` 통과.
   - 알아 둘 것: `shop.js`가 `time.js`를 불러오면 `time.js`가 처음 온 날(`goyang.first`)을 적는다 — 만화방으로 먼저 들어온 사람도 그날이 처음 온 날이 됨(방과 같은 사이트라 그대로 둠).
 - 2026-11-06 검수 고침(M1, 강고양이 씨): 끝난 요구사항·자동 검사 체크, status → review. 다시 돌림 — `build_manhwa.py csf --check` 통과(회차 0개), `check_structure` 통과(파일 58 · 엉킨 덩어리 44 / 292). 사람 검수 두 항목(`_overview.png`, 폰·데스크톱 `/manhwa/`)은 결과를 받은 뒤 체크.
+- 2026-11-06 주인 검수 고침(H1, 강고양이 씨):
+  - 길: 만화 목록 아래·회차 끝의 「고양.시로 돌아가기」 → 「만화방으로」(`/manhwa/`, 통계 `manhwa/csf/go-shop`). 목록 맨 위 간판 띠 왼쪽에 뒤로(‹) → 만화방 안. 회차 위 막대의 ‹는 그대로 목록. 고양.시로 가는 출입문(`/?from=manhwa`)은 만화방 안에만.
+  - 책장 만화책 → 지도책: `objects.json` 책 `manhwa`(id·자리 그대로, 이상한 책이 기대는 책)를 `map: true`·이름 「동네 지도」/Neighborhood Map·책등 표시 `map`(접힌 지도, `spine-marks.js`)으로. 방 책장·폰 큰 목록 어디서 눌러도 책장을 닫고 현관문과 같은 약도(`frontdoor.js openMap(map, 자리, 'shelf')`)를 그 책 자리에서 펼친다 — 문틈은 열리지 않음, 만득 씨가 있으면 안 열림.
+  - 약도 가게 주소·통계: `door.map.shops`의 `href`는 `/manhwa/`, `gc`는 `manhwa`로 두고 연 길이 붙는다(`?via=map|shelf`, `map-manhwa`/`shelf-manhwa` — 이름은 전과 같음). 약도 열기 통계는 문 `door-map`, 지도책 `shelf-map`(새로).
+  - 다시 돌림: `build_manhwa.py csf --check`·`check_structure`·`check_time` 통과. 브라우저가 없어 화면(책등 표시·약도 펼침)은 못 봄 — 사람 검수 항목에서 같이 봐 주세요.

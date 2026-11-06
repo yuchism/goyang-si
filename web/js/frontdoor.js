@@ -1,6 +1,7 @@
 /* 현관문 (tasks/manhwa-2-gate.md): 문을 누르면 문이 살짝 열리고 문틈에서 동네 약도가 펼쳐진다. 약도의 가게를 누르면 그 가게로 간다.
    만화방에서 「고양.시로 돌아가기」로 오면(/?from=manhwa) 딸랑 + 문이 잠깐 열렸다 닫힌다(고양이 반응은 cat.js welcomeB).
    - 약도 자리·가게 목록: objects.json door.map (없으면 문은 눌러도 아무 일 없음). 좌표는 약도 그림 픽셀(size) 기준. 그림 규격 MANHWA_MAP_ART.md
+   - 책장 지도책(shelf.js)도 같은 약도를 펼친다. 연 길(via: map 문 · shelf 지도책)이 가게 주소 ?via=와 통계 이름 앞에 붙는다
    - 약도 그림은 시작 묶음에 넣지 않는다(0008) — 처음 펼칠 때 받는다. 못 받으면 종이색 판 + 이름표만
    - 가게 그림: 방 시계가 밤(time.js isNight)이면 night, 아니면 day
    - 문틈 열림 정도는 world.doorAjar(0~1, 그리기는 draw.js drawDoor). 만득 씨가 오면 약도는 바로 접힌다
@@ -14,7 +15,7 @@ import { after, caption, world } from './world.js';
 const mapEl = document.getElementById('mapp');
 const AJAR_SEC = 0.25; // 문이 살짝 열리고 닫히는 시간
 const BELL_WAIT = 12; // 돌아온 딸랑을 소리가 열릴 때까지 기다리는 시간(초). 그보다 늦은 첫 터치에는 울리지 않는다
-let cfg = null, back = false, bellAt = 0; // bellAt: 아직 못 울린 돌아옴 딸랑을 미룬 때(performance.now). 0이면 없음
+let cfg = null, via = 'map', back = false, bellAt = 0; // bellAt: 아직 못 울린 돌아옴 딸랑을 미룬 때(performance.now). 0이면 없음
 
 // 문틈 열림 정도를 목표값 쪽으로 (main.js 매 장면)
 export function doorTick(real) {
@@ -33,7 +34,8 @@ const at = (p, s) => `left:${pct(p[0], s)};top:${pct(p[1], s)}`;
 function render(map) {
   const s = map.size, night = isNight(now());
   const shops = (map.shops || []).map(sh => {
-    const b = sh.box, src = night ? sh.night : sh.day, name = esc(tr(sh.name)), go = `href="${esc(sh.href)}" data-gc="${esc(sh.gc || '')}"`;
+    const href = sh.href + (sh.href.includes('?') ? '&' : '?') + 'via=' + via;
+    const b = sh.box, src = night ? sh.night : sh.day, name = esc(tr(sh.name)), go = `href="${esc(href)}" data-gc="${esc(sh.gc ? via + '-' + sh.gc : '')}"`;
     return `<a class="shop" ${go} style="${at(b, s)};width:${pct(b[2], s)};height:${pct(b[3], s)}" tabindex="-1" aria-hidden="true">` +
       (src ? `<img src="${esc(src)}" alt="" decoding="async" onerror="this.remove()">` : '') + '</a>' +
       (sh.label ? `<a class="mlabel" ${go} style="${at(sh.label, s)}">${name}</a>` : '');
@@ -48,19 +50,24 @@ function render(map) {
   box.style.fontSize = Math.max(13, side / 24) + 'px';
   return box;
 }
-// 펼치기. from: 문의 화면 자리 [x, y] (약도가 거기서 자라난다)
-export function openMap(map, from) {
+// 펼치기. from: 약도가 자라나는 화면 자리 [x, y]. by: 연 길 — 'map' 현관문(문틈이 열림) · 'shelf' 책장 지도책
+export function openMap(map, from, by = 'map') {
   if (!mapReady(map) || isMapOpen())
     return;
   cfg = map;
-  world.doorTo = 1;
+  via = by;
+  if (by === 'map')
+    world.doorTo = 1;
   mapEl.hidden = false;
   const box = render(map), r = box.getBoundingClientRect();
   if (from)
     box.style.transformOrigin = `${Math.round(from[0] - r.left)}px ${Math.round(from[1] - r.top)}px`;
   mapEl.classList.toggle('grow', !RM);
   box.querySelector('.x').focus({ preventScroll: true });
-  gcEvent('door-map', '현관문 약도 열기');
+  if (by === 'map')
+    gcEvent('door-map', '현관문 약도 열기');
+  else
+    gcEvent('shelf-map', '책장 지도책으로 약도 열기');
 }
 // 접기 (펼쳐져 있었으면 true)
 export function closeMap() {

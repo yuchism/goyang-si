@@ -13,7 +13,7 @@
   const EP_PAGE = PAGE === 'episode';
   const WORK_DIR = EP_PAGE ? '../' : './';
   const ROOT = EP_PAGE ? '../../../' : '../../';
-  const HOME = '/?from=manhwa'; // 고양.시가 딸랑 + 문 + 고양이 반응으로 맞는다 (tasks/manhwa-2-gate.md)
+  const SHOP = ROOT + 'manhwa/'; // 만화방 안 (tasks/manhwa-3-shop.md). 고양.시로 가는 출입문은 만화방 안에만 있다
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ───────── 글자 ───────── */
@@ -26,7 +26,7 @@
     resume: { ko: '{n}화 이어 보기', en: 'Continue Ep. {n}' },
     opens: { ko: '{m}월 {d}일 공개', en: 'Opens {mon} {d}' },
     yet: { ko: '아…직…이…에…요…', en: 'N…o…t… y…e…t…' },
-    home: { ko: '고양.시로 돌아가기', en: 'Back to goyang.si' },
+    shop: { ko: '만화방으로', en: 'To the comic café' },
     start: { ko: '{n}화부터 보기', en: 'Start from Ep. {n}' },
     fresh: { ko: '신간', en: 'New' },
     end: { ko: '{n}화 끝!', en: 'End of Ep. {n}!' },
@@ -194,9 +194,9 @@
   };
   const piece = (ep, i) => String(i).padStart(2, '0') + '.webp?v=' + ep.v;
   const epHref = (ep, from) => WORK_DIR + ep.slug + '/' + (from ? '?from=' + from : '');
-  const homeLink = () => {
-    const a = link('mh-home', '🔔 ' + tr('home'), HOME);
-    leaveWith(a, 'go-home', '만화방 → 고양.시');
+  const shopLink = () => {
+    const a = link('mh-home', tr('shop'), SHOP);
+    leaveWith(a, 'go-shop', '만화 → 만화방 안');
     return a;
   };
 
@@ -269,6 +269,9 @@
     // 맨 위 짙은 띠: 고양이 얼굴(빼꼼 그림의 머리 부분) + 나무 간판 위에 글자
     const sign = el('header', 'mh-sign');
     const signIn = el('div', 'mh-sign-in');
+    const back = link('mh-icon', '‹', SHOP); // 뒤로: 만화방 안
+    back.setAttribute('aria-label', tr('shop'));
+    signIn.append(back);
     const face = el('span', 'mh-face');
     face.innerHTML = CAT_FACE;
     const board = el('span', 'mh-board');
@@ -330,7 +333,7 @@
     }
     if (ol.children.length)
       main.append(ol);
-    main.append(homeLink());
+    main.append(shopLink());
     body.append(sign, main);
   }
 
@@ -413,7 +416,7 @@
       strip.append(img);
     });
 
-    // 회차 끝: 크림 종이 칸 위로 강고양이 씨가 빼꼼, "N화 끝!", 다음 화 카드, 고양.시로
+    // 회차 끝: 크림 종이 칸 위로 강고양이 씨가 빼꼼, "N화 끝!", 다음 화 카드, 만화방으로
     const end = el('section', 'mh-end');
     const peek = el('div', 'mh-peek');
     peek.innerHTML = CAT_PEEK;
@@ -444,7 +447,7 @@
     else if (next && next === firstSoon)
       end.append(soonCard(next, tr('next')));
     const row = el('div', 'mh-end-row');
-    row.append(link('mh-btn', tr('list'), listHref), homeLink());
+    row.append(link('mh-btn', tr('list'), listHref), shopLink());
     end.append(row);
     const endWrap = el('div', 'mh-end-wrap');
     endWrap.append(end);

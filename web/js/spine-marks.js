@@ -99,6 +99,38 @@ function comic(c, x, y, r) {
   c.fill();
   c.restore();
 }
+// 지도책 표시: 세 번 접힌 지도 (접힌 면이 번갈아 밝고 어둡게, 그 위로 점선 길과 빨간 점)
+function foldedMap(c, x, y, s) {
+  const w = s, h = s * 1.25, l = x - w / 2, t = y - h / 2, f = w / 3, k = h * 0.08;
+  c.save();
+  c.lineWidth = 1.2;
+  c.strokeStyle = INKC;
+  c.lineJoin = 'round';
+  for (let i = 0; i < 3; i++) {
+    const a = l + f * i, dy = i % 2 ? k : 0;
+    c.beginPath();
+    c.moveTo(a, t + (i % 2 ? 0 : k));
+    c.lineTo(a + f, t + dy);
+    c.lineTo(a + f, t + h + dy);
+    c.lineTo(a, t + h + (i % 2 ? 0 : k));
+    c.closePath();
+    c.fillStyle = i % 2 ? '#e8dcc0' : '#fff8ea';
+    c.fill();
+    c.stroke();
+  }
+  c.setLineDash([1.6, 1.6]);
+  c.lineWidth = 1;
+  c.beginPath();
+  c.moveTo(l + w * 0.12, t + h * 0.8);
+  c.quadraticCurveTo(l + w * 0.45, t + h * 0.3, l + w * 0.8, t + h * 0.38);
+  c.stroke();
+  c.setLineDash([]);
+  c.fillStyle = '#d0503f';
+  c.beginPath();
+  c.arc(l + w * 0.8, t + h * 0.36, s * 0.1, 0, 7);
+  c.fill();
+  c.restore();
+}
 
 export const MARKS = {
   face: (c, { w, h, deco: d }) => catFace(c, w / 2, -h + (d.label ? d.label[0] * h + d.label[1] / 2 + 1 : h * 0.35), Math.min(18, w * 0.62)),
@@ -108,4 +140,5 @@ export const MARKS = {
     paw(c, w * px, -h + h * py, Math.min(w * 0.62, 16), pa);
   },
   comic: (c, { w, h }) => comic(c, w / 2, -h * 0.5, Math.min(w * 0.36, 10)),
+  map: (c, { w, h }) => foldedMap(c, w / 2, -h * 0.5, Math.min(w * 0.7, 18)),
 };
