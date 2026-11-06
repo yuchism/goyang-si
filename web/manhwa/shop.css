@@ -73,6 +73,23 @@ body.shop { overflow: hidden; background: var(--mh-bg); }
 .is-night .painted-sign { filter: brightness(.68) saturate(.75); }
 .counter-sign:focus-visible { outline: 4px dashed var(--sumi); outline-offset: 5px; }
 
+/* 머그잔: 그림과 김 자리는 scene.json. 밤(운동 중)에는 식은 잔만 남는다. */
+.mug { inset: 0; z-index: 4; pointer-events: none; }
+.mug[hidden] { display: none; }
+.mug-art, .mug-steam { position: absolute; }
+.is-night .mug-art { filter: brightness(.68) saturate(.75); }
+.mug-steam { color: #fff9e5; }
+.wisp { position: absolute; left: 15%; bottom: 0; width: 22%; height: 60%; box-sizing: border-box; border-left: 1.5px solid currentColor; border-radius: 50%; opacity: 0; animation: mug-steam 5s ease-in-out infinite; }
+.wisp:nth-child(2) { left: 43%; animation-delay: -1.7s; animation-duration: 5.5s; }
+.wisp:nth-child(3) { left: 70%; animation-delay: -3.4s; animation-duration: 6s; }
+.is-night .mug-steam { display: none; }
+@keyframes mug-steam {
+  0% { opacity: 0; transform: translate(0, 0) scaleX(.8); }
+  25% { opacity: .55; }
+  55% { opacity: .4; transform: translate(15%, -45%) scaleX(1.15); }
+  100% { opacity: 0; transform: translate(-20%, -100%) scaleX(.8); }
+}
+
 /* 사장님: 여러 장을 겹쳐 두고 .on만 보인다 (천천히 비쳐 바뀐다) */
 .sloth { z-index: 3; }
 .sloth .fr { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 2.4s ease-in-out; }
@@ -128,6 +145,8 @@ body.shop { overflow: hidden; background: var(--mh-bg); }
 .dev li.cur { color: var(--mh-acc); font-weight: 700; }
 
 @media (prefers-reduced-motion: reduce) {
+  .mug-steam { display: none; }
+  .wisp { animation: none; }
   .bg-night, .sloth .fr, .spine, .cover { transition: none; }
   .gl.go-in, .gl.go-out { animation: none; }
 }

@@ -272,6 +272,24 @@ function build(cfg) {
   }
   sc.append(counter);
 
+  /* 계산대 머그잔: 그림이 없으면 김도 함께 숨긴다. 자리·김 영역은 scene.json. */
+  if (cfg.mug) {
+    const mug = el('div', 'mug');
+    mug.hidden = true;
+    mug.setAttribute('aria-hidden', 'true');
+    const art = el('img', 'mug-art');
+    art.alt = '';
+    place(art, cfg.mug.rect);
+    art.onload = () => { mug.hidden = false; };
+    art.onerror = () => { mug.hidden = true; };
+    const steam = place(el('div', 'mug-steam'), cfg.mug.steam);
+    for (let i = 0; i < 3; i++)
+      steam.append(el('i', 'wisp'));
+    mug.append(art, steam);
+    sc.append(mug);
+    art.src = DIR + cfg.mug.art + '?v=' + cfg.v;
+  }
+
   /* 운동 자리 (밤) */
   const gc = cfg.gym, GS = 800 * S;
   const gym = el('button', 'sloth gym');
