@@ -1,8 +1,8 @@
 # 만화방 2: 현관문 → 동네 약도 · 책장 만화책 · 출입문으로 돌아오기
-- status: brief
+- status: done
 - mode: needs-review
 - relay: brief
-- office: ready
+- office: done (헤드쿼터 #9, 2026-11-06)
 - brief: assets/briefs/MANHWA_MAP_ART.md (이 티켓에서 새로 씀)
 - assets: assets/manhwa/map/*-source-v1.png (git 무시, 로컬) · web/r/map/*.webp
 - related-adr: 0008, 0010, 0011
