@@ -1,8 +1,8 @@
 # 만화방 그림 1: 빼꼼 강고양이 씨 · 만화방 간판 · 포장하는 사장님
-- status: implemented
+- status: done
 - mode: needs-review
 - relay: brief
-- office: ready
+- office: done (헤드쿼터 #7, 2026-11-06)
 - brief: assets/briefs/MANHWA_UI_ART.md (이 티켓에서 새로 씀)
 - assets: assets/manhwa/ui/*-source-v1.png (git 무시, 로컬) · web/manhwa/ui/*.webp
 - related-adr: 0011
