@@ -24,7 +24,8 @@ const PATHS = {
   blue: circle(50, 50, 18, 200, 300, 10), // 가운데에서 한 바퀴 맴돌다 멈춤
   green: [[76, 78, -20], [84, 70, 15], [88, 86, 160], [72, 90, 95]], // 오른쪽 아래 구석에 옹기종기
   blue2: walk(-2, 66, 103, 38, 9), // 왼쪽에서 들어와 오른쪽 밖으로 (마지막 발자국은 반쯤 잘림)
-  green2: [[50, 50, 0]] // 한가운데 딱 하나
+  green2: [[50, 50, 0]], // 한가운데 딱 하나
+  manhwa99: walk(46, 96, 54, 6, 7, 4) // 만화방 99세 이상 페이지: 아래에서 위로 똑바로 걸어 나감 (manhwa/shop.js)
 };
 // 발바닥 하나: 큰 볼록 + 작은 볼록 넷 (위쪽이 발가락)
 const PAW = '<svg viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="20" cy="27" rx="9.5" ry="8"/><ellipse cx="9" cy="15.5" rx="3.6" ry="4.6" transform="rotate(-22 9 15.5)"/><ellipse cx="16" cy="9.5" rx="3.8" ry="4.9" transform="rotate(-7 16 9.5)"/><ellipse cx="24" cy="9.5" rx="3.8" ry="4.9" transform="rotate(7 24 9.5)"/><ellipse cx="31" cy="15.5" rx="3.6" ry="4.6" transform="rotate(22 31 15.5)"/></svg>';

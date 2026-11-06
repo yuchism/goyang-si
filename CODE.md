@@ -24,6 +24,9 @@ web/                      ← GitHub Pages로 배포되는 폴더 (이 안만 �
   sheet/                  ← meta.json 밖의 큰 시트 (생일 춤·케이크·깜짝 손님 guest-*-dance-v1, webp). build_meta.py 검사 밖. LOAD_PLAN.md 5장. 손님 시트는 make_guests.py가 만든다
   js/                     ← 코드 (JS 모듈)
   manhwa/                 ← 만화방 (방과 따로, 방 시작 묶음에 안 섞임). tasks/manhwa-viewer.md
+    index.html·shop.js·shop.css ← 만화방 안 /manhwa/ (약도·책장 만화책의 목적지): 낮엔 계산대에서 조는 사장님, 밤엔 운동. 관람금지 책장(코드)·99세 버튼·신간 코너·출입문. 시간은 js/time.js, 발자국은 js/catbook.js만 빌린다. ?dev=1 시각 옮기기·그날 밤 편성. tasks/manhwa-3-shop.md
+    shop-plan.js          ← 밤 운동 편성 (하룻밤을 씨앗으로 40~60분마다, 앞과 다른 기구. 화면 없이 계산만 — 노드에서도 불러짐)
+    shop/                 ← 만화방 안 그림 14장(MANHWA_SHOP_ART.md) + scene.json(자리·배율·작품 목록 works — 사람이 고치는 곳, 바탕 픽셀 기준)
     viewer.js·viewer.css  ← 웹툰 뷰어 (의존성 없음, 글자 표 STR·강고양이 씨 SVG도 이 안). 목록·회차 페이지가 같이 쓴다. episodes.json을 읽어 공개일(서울 자정)·이어 보기·통계. 종이 느낌(고양.시 글꼴 Gaegu·Gowun Dodum)
     csf/episodes.json     ← 작품 정보 + 회차 표 {no, slug, title, open, heights, v} + cover(표지 지문, 도구가 씀). 사람이 고치는 곳(제목·공개일). 바꾼 뒤 `python3 tools/build_manhwa.py csf`
     csf/index.html        ← 목록 (build_manhwa.py가 만든다 — 직접 고치지 않는다). cover.webp(목록 표지 1080×≤1350)·og.jpg(목록 미리보기)도

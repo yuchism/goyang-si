@@ -102,7 +102,7 @@
           "title": "고양이책", "href": null, "cat": true, "en": {"title": "Cat Book"} },
         { "id": "manhwa", "shelf": 1, "x": 645, "w": 27, "h": 126, "color": "#c8432b",
           "deco": {"bands": [[0.1, "dark"], [0.86, "dark"]], "mark": "comic"},
-          "title": "만화방", "desc": "동네 만화방으로 가는 지름길. 오늘은 무슨 만화가 들어왔을까요?", "href": "/manhwa/csf/?via=shelf", "gc": "shelf-manhwa",
+          "title": "만화방", "desc": "동네 만화방으로 가는 지름길. 오늘은 무슨 만화가 들어왔을까요?", "href": "/manhwa/?via=shelf", "gc": "shelf-manhwa",
           "en": {"title": "Comic Café", "desc": "A shortcut to the neighborhood comic café. What came in today?"} }
       ]
     },
@@ -141,7 +141,7 @@
         "size": 1200,
         "home": [330, 1092],
         "shops": [
-          { "name": "mapManhwa", "href": "/manhwa/csf/?via=map", "gc": "map-manhwa",
+          { "name": "mapManhwa", "href": "/manhwa/?via=map", "gc": "map-manhwa",
             "day": "r/map/shop-day.webp", "night": "r/map/shop-night.webp",
             "box": [704, 247, 420, 420], "label": [914, 690] }
         ]

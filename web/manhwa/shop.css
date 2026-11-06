@@ -1,0 +1,109 @@
+/* 만화방 안 (tasks/manhwa-3-shop.md, shop.js). 장면은 바탕 픽셀 크기(.sc)로 그리고 화면에 맞게 통째로 줄인다.
+   폰(세로)은 높이에 맞추고 가로로 둘러보기, 데스크톱은 전체가 보이게(남는 곳은 짙은 띠) */
+body.shop { overflow: hidden; background: var(--mh-bg); }
+.sv { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.sv.pan { justify-content: flex-start; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.sv.pan::-webkit-scrollbar { display: none; }
+.ss { position: relative; flex: none; overflow: hidden; }
+.sc { position: absolute; left: 0; top: 0; transform-origin: 0 0; background: var(--paper); user-select: none; -webkit-user-select: none; }
+.sc > * { position: absolute; }
+.sc button { margin: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.sc img { display: block; pointer-events: none; }
+
+/* 바탕: 낮·밤 두 장을 겹쳐 두고 밤에만 밤 그림 */
+.bg { left: 0; top: 0; width: 100%; height: 100%; }
+.bg-night { opacity: 0; transition: opacity 2s ease; }
+.is-night .bg-night { opacity: 1; }
+.is-night .sc { background: #2b2d4a; }
+
+/* 출입문 (그림을 못 받으면 코드 문) */
+.door { display: block; z-index: 2; text-decoration: none; border-radius: 4px; }
+.nobg-day .door { background: #9a6a3a; border: 6px solid #6b4423; }
+.door-sign { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%) rotate(-3deg); white-space: nowrap; font: 700 30px/1 var(--font-hand); color: #fff; background: var(--tag); padding: 9px 14px 8px; border-radius: 6px; border: 3px solid var(--sumi); box-shadow: 3px 3px 0 var(--sumi); }
+.door:active .door-sign, .door:hover .door-sign { transform: translate(-50%, -50%) rotate(0deg) scale(1.05); }
+
+/* 관람금지 책장: 칸마다 책등 (그림을 못 받으면 칸 뒤판도 코드) */
+.shelf { left: 0; top: 0; width: 0; height: 0; z-index: 1; }
+.cell { position: absolute; }
+.nobg-day .cell { background: #5a3418; box-shadow: inset 0 -6px 0 #3a200e; }
+.spine { position: absolute; bottom: 0; border: 2px solid #1d1612 !important; border-bottom-width: 1px !important; border-radius: 2px 2px 0 0; box-shadow: inset 3px 0 0 rgba(255, 255, 255, .14), inset -3px 0 0 rgba(0, 0, 0, .18); transition: transform .3s ease; }
+.spine::before, .spine::after { content: ""; position: absolute; left: 2px; right: 2px; height: 3px; background: rgba(233, 193, 77, .65); }
+.spine::before { top: 8%; }
+.spine::after { bottom: 8%; }
+.spine:hover, .spine:focus-visible { transform: translateY(-6px); }
+.spine.moved { visibility: hidden; pointer-events: none; }
+/* 딱지: 빨간 동그라미에 99 (책을 꺼내면 「99세 이하 관람금지」 전체가 보인다) */
+.tag { position: absolute; left: 50%; top: 30%; transform: translateX(-50%); width: 14px; height: 14px; border-radius: 50%; background: var(--tag); border: 1.5px solid #fff; color: #fff; font: 700 8px/12px var(--font-body); font-style: normal; text-align: center; letter-spacing: -.04em; }
+.is-night .shelf { filter: brightness(.72) saturate(.9); }
+
+/* 신간 코너: 이름판 글자 · 표지 (표지가 없으면 코드 책) */
+.plate { z-index: 1; display: flex; align-items: center; justify-content: center; font: 700 38px/1 var(--font-hand); color: var(--sumi); }
+.nobg-day .plate { background: #e7b05c; border: 4px solid #8a5a2c; border-radius: 6px; }
+.slot { z-index: 1; display: flex; align-items: flex-end; justify-content: center; }
+.nobg-day .slot { background: #d9a050; }
+.cover { position: relative; display: block; width: 100%; height: 100%; border: 2.5px solid var(--sumi); box-shadow: 3px 3px 0 rgba(29, 22, 18, .5); overflow: hidden; background: #fff; transform: rotate(-4deg); transform-origin: 50% 100%; transition: transform .25s ease; }
+.cover img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.cover:hover, .cover:active { transform: rotate(-4deg) translateY(-6px) scale(1.06); }
+.cover-t { display: none; }
+.cover.code { background: var(--tag); }
+.cover.code .cover-t { display: flex; position: absolute; inset: 4px; align-items: center; justify-content: center; text-align: center; font: 700 13px/1.15 var(--font-hand); color: #fff; word-break: keep-all; border: 1.5px solid rgba(255, 255, 255, .6); padding: 2px; }
+.is-night .cover.code { filter: brightness(.95); }
+
+/* 사장님: 여러 장을 겹쳐 두고 .on만 보인다 (천천히 비쳐 바뀐다) */
+.sloth { z-index: 3; }
+.sloth .fr { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 2.4s ease-in-out; }
+.counter .fr.on { opacity: 1; }
+.counter .fr[src*="talk"] { transition-duration: .9s; }
+.is-night .counter { visibility: hidden; }
+.gym { visibility: hidden; }
+.is-night .gym { visibility: visible; }
+.gl { position: absolute; inset: 0; }
+.gl .fr { transition-duration: 1.6s; }
+.gl .fr:first-child { opacity: 1; }
+.gl.two .fr:first-child { opacity: 0; }
+.gl.two .fr:last-child { opacity: 1; }
+/* 기구를 옮겨 가는 짧은 순간 (shop-plan.js MOVE_SEC = 24s와 같게) */
+.gl.go-out { animation: gym-out 24s linear both; }
+.gl.go-in { animation: gym-in 24s linear both; }
+@keyframes gym-out { 0% { opacity: 1; transform: none; } 35% { opacity: 0; transform: translateX(14px); } 100% { opacity: 0; transform: translateX(14px); } }
+@keyframes gym-in {
+  0%, 30% { opacity: 0; transform: translateX(-90px); }
+  45% { opacity: .9; transform: translate(-70px, -6px); }
+  55% { transform: translate(-52px, 0); }
+  65% { transform: translate(-36px, -6px); }
+  75% { transform: translate(-22px, 0); }
+  85% { transform: translate(-10px, -5px); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* 말풍선: 사장님 머리 위 */
+.bubble { z-index: 5; margin: 0; transform: translate(-50%, -100%); max-width: 420px; width: max-content; padding: 12px 20px 11px; background: #fffaf0; color: var(--sumi); border: 3px solid var(--sumi); border-radius: 22px; box-shadow: 3px 3px 0 rgba(29, 22, 18, .5); font: 700 30px/1.25 var(--font-hand); letter-spacing: .02em; word-break: keep-all; pointer-events: none; }
+.bubble::after { content: ""; position: absolute; left: 50%; bottom: -14px; width: 20px; height: 20px; background: #fffaf0; border: solid var(--sumi); border-width: 0 3px 3px 0; transform: translateX(-50%) rotate(45deg); }
+.bubble[hidden] { display: none; }
+
+/* 책 꺼내 보기 · 99세 이상 페이지 (화면 위에 따로) */
+.pop { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: rgba(23, 19, 15, .55); padding: 20px; }
+.pop[hidden] { display: none; }
+.pop-in { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.book { width: min(46vw, 210px); aspect-ratio: 2 / 3; border: 4px solid #1d1612; border-radius: 4px 10px 10px 4px; box-shadow: inset 12px 0 0 rgba(0, 0, 0, .18), 6px 6px 0 rgba(0, 0, 0, .45); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 22px 14px; color: #fff; text-align: center; }
+.book-t { font: 700 26px/1.2 var(--font-hand); word-break: keep-all; text-shadow: 1px 1px 0 #1d1612; }
+.book-tag { display: inline-block; font: 700 17px/1.15 var(--font-hand); background: var(--tag); color: #fff; border: 2.5px solid #fff; outline: 2px solid #1d1612; border-radius: 6px; padding: 7px 10px; transform: rotate(-6deg); word-break: keep-all; }
+.pop-x { position: absolute; top: -14px; right: -14px; width: 38px; height: 38px; border-radius: 50%; border: 3px solid var(--sumi); background: var(--paper); color: var(--sumi); font: 700 24px/1 var(--font-body); cursor: pointer; box-shadow: 2px 2px 0 var(--sumi); }
+.page99 { width: min(92vw, 560px); padding: 26px 24px 20px; background: #f3e4c4; border: 3px solid #5a3f27; border-radius: 6px; box-shadow: 6px 6px 0 rgba(0, 0, 0, .4); }
+/* 고양이책 발자국 (web/style.css .paws와 같은 모양) */
+.paws { position: relative; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; margin: 2px 0 4px; }
+.paws i { position: absolute; width: 9%; max-width: 44px; aspect-ratio: 1; color: #3a2a1c; opacity: .42; }
+.paws svg { display: block; width: 100%; height: 100%; fill: currentColor; }
+
+/* 미리보기 (?dev=1) */
+.dev { position: fixed; left: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 30; max-width: min(94vw, 360px); max-height: 60vh; overflow: auto; background: rgba(23, 19, 15, .88); color: var(--mh-ink); border-radius: 8px; padding: 8px 10px; font: 13px/1.4 var(--font-body); }
+.dev b { display: block; font-size: 15px; margin-bottom: 4px; }
+.dev button { margin: 0 4px 4px 0; padding: 3px 8px; font: inherit; border-radius: 4px; border: 1px solid var(--mh-dim); background: transparent; color: inherit; cursor: pointer; }
+.dev ol { margin: 4px 0 0; padding-left: 20px; }
+.dev li { cursor: pointer; }
+.dev li.cur { color: var(--mh-acc); font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-night, .sloth .fr, .spine, .cover { transition: none; }
+  .gl.go-in, .gl.go-out { animation: none; }
+}
