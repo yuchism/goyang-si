@@ -70,8 +70,9 @@ html:has(body.mh-paper) { background: var(--paper); }
 .mh-sign b { font: 700 24px/1 var(--font-hand); letter-spacing: .02em; }
 /* 그림을 받으면 (MANHWA_UI_ART.md): 얼굴은 빼꼼 그림(512×320)의 머리(x 70~440 · y 10~262)만, 글자는 나무 간판의 왼쪽 글자 자리(가로 4~78%)에 먹색으로 */
 .mh-face.mh-art { width: 48px; height: 33px; background: no-repeat -9.1px -1.3px / 66.4px auto; }
-.mh-board.mh-art { flex: 0 1 300px; min-width: 0; aspect-ratio: 4 / 1; display: flex; align-items: center; padding: 0 22% 0 4%; background: no-repeat center / 100% 100%; color: var(--sumi); }
-.mh-board.mh-art b { font-size: clamp(17px, 5.4vw, 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 글자 자리의 %는 간판 자체 너비 기준이어야 하므로 간판의 padding(부모 너비 기준)이 아니라 글자의 margin·width(간판 너비 기준)로 잡는다 */
+.mh-board.mh-art { flex: 0 1 300px; min-width: 0; aspect-ratio: 4 / 1; display: flex; align-items: center; background: no-repeat center / 100% 100%; color: var(--sumi); }
+.mh-board.mh-art b { flex: none; width: 74%; margin-left: 4%; font-size: clamp(17px, 5.4vw, 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ── 목록: 표지 + 제목 */
 .mh-list { max-width: var(--mh-w); margin: 0 auto; padding: 0 0 calc(40px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 22px; }

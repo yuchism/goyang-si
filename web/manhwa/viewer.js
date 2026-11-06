@@ -36,6 +36,7 @@
     fail: { ko: '불러오지 못했어요.', en: 'Could not load.' },
     retry: { ko: '다시 해 보기', en: 'Try again' },
     room: { ko: '고양.시 만화방', en: 'goyang.si Manhwa Room' },
+    sign: { ko: '고양.시 만화방', en: 'Goyang Comic Café' }, // 목록 맨 위 간판 글자 (MANHWA_UI_ART.md)
   };
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const lsGet = (k, d) => {
@@ -262,7 +263,7 @@
     const face = el('span', 'mh-face');
     face.innerHTML = CAT_FACE;
     const board = el('span', 'mh-board');
-    board.append(el('b', '', tr('room')));
+    board.append(el('b', '', tr('sign')));
     signIn.append(face, board);
     sign.append(signIn);
     art('cat-peek-open', im => {
