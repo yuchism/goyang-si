@@ -41,7 +41,8 @@
 - [ ] 숫자(기준 거리, 15초, 끝 12%, 스르륵 시간)는 카메라 설정 한 곳(`stage.json` camera)에
 
 ## 확인
-- [ ] `node tools/check_structure.mjs` · `node tools/check_time.mjs` · `node tools/check_behave.mjs` 통과
+- [ ] `node tools/check_structure.mjs` · `node tools/check_time.mjs` 통과
+- [ ] (사람) `node tools/check_behave.mjs` — 일꾼 샌드박스에서는 못 돌림(로컬 포트·브라우저). 푸시 때 배포 작업이 돌리거나 주인이 맥에서
 - [ ] (사람) 폰: 끌어서 둘러보기, 15초 뒤 돌아옴, 만득 씨 오면 바로 문으로
 - [ ] (사람) 폰: 레이저로 고양이를 방 끝까지 끌고 가기, 실뭉치 톡 굴리기가 끌기로 오해받지 않음
 - [ ] (사람) 폰: 처음 들어올 때·만화방에서 돌아올 때 문 → 고양이 스르륵, 생일 링크는 안 함
@@ -50,8 +51,8 @@
 <!-- office:verify
 - node tools/check_structure.mjs
 - node tools/check_time.mjs
-- node tools/check_behave.mjs
 -->
 
 ## 메모
 - 2026-11-07 지시서 작성(Claude, 회의). 구현은 기본 일꾼(Claude).
+- 2026-11-07 검사 블록에서 `check_behave` 뺌 — 일꾼 샌드박스가 로컬 포트·Chromium을 막음(첫 구현 eec88c2에서 확인). 사람 확인 항목으로 옮김.
