@@ -44,10 +44,10 @@ body.shop { overflow: hidden; background: var(--mh-bg); }
 .cover { position: relative; display: block; width: 100%; height: 100%; border: 2.5px solid var(--sumi); box-shadow: 3px 3px 0 rgba(29, 22, 18, .5); overflow: hidden; background: #fff; transform: rotate(-4deg); transform-origin: 50% 100%; transition: transform .25s ease; }
 .cover img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
 .cover:hover, .cover:active { transform: rotate(-4deg) translateY(-6px) scale(1.06); }
-.cover-t { display: flex; flex-direction: column; position: absolute; inset: auto 0 0; padding: 5px 3px; text-align: center; background: #f6eedf; color: var(--sumi); font: 700 13px/1.15 var(--font-hand); word-break: keep-all; }
+.cover-t { display: none; } /* 표지 그림에 이미 제목이 있다 — 코드 책일 때만 보인다 */
 .cover-t small { display: block; margin-top: 3px; font-size: 9px; font-weight: 400; }
 .cover.code { background: var(--tag); }
-.cover.code .cover-t { display: flex; position: absolute; inset: 4px; align-items: center; justify-content: center; text-align: center; font: 700 13px/1.15 var(--font-hand); color: #fff; word-break: keep-all; border: 1.5px solid rgba(255, 255, 255, .6); padding: 2px; }
+.cover.code .cover-t { display: flex; flex-direction: column; position: absolute; inset: 4px; align-items: center; justify-content: center; text-align: center; font: 700 13px/1.15 var(--font-hand); color: #fff; word-break: keep-all; border: 1.5px solid rgba(255, 255, 255, .6); padding: 2px; }
 .is-night .cover.code { filter: brightness(.95); }
 
 /* 사장님: 여러 장을 겹쳐 두고 .on만 보인다 (천천히 비쳐 바뀐다) */
