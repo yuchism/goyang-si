@@ -7,6 +7,7 @@
   "counter": { "at": [1240, 537], "anchor": [256, 480], "frames": { "awake": "sloth-counter.webp", "doze1": "sloth-doze-1.webp", "doze2": "sloth-doze-2.webp", "talk": "sloth-talk.webp" } },
   "gym": { "at": [1563, 745], "anchor": [400, 760], "exercises": ["treadmill", "dumbbell", "bar", "mat"] },
   "clock": [1188, 192, 104, 104],
+  "mug": { "art": "mug.webp", "rect": [1326, 495, 56, 56], "steam": [1337, 478, 24, 31] },
   "signs": {
     "door": { "rect": [129, 251, 108, 84], "art": "sign-door.webp", "text": [9, 47, 90, 31] },
     "exit": { "rect": [1180, 611, 120, 34], "text": [0, 0, 120, 34] },
