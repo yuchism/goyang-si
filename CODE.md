@@ -24,10 +24,10 @@ web/                      ← GitHub Pages로 배포되는 폴더 (이 안만 �
   sheet/                  ← meta.json 밖의 큰 시트 (생일 춤·케이크·깜짝 손님 guest-*-dance-v1, webp). build_meta.py 검사 밖. LOAD_PLAN.md 5장. 손님 시트는 make_guests.py가 만든다
   js/                     ← 코드 (JS 모듈)
   manhwa/                 ← 만화방 (방과 따로, 방 시작 묶음에 안 섞임). tasks/manhwa-viewer.md
-    viewer.js·viewer.css  ← 웹툰 뷰어 (의존성 없음, 글자 표 STR도 이 안). 목록·회차 페이지가 같이 쓴다. episodes.json을 읽어 공개일(서울 자정)·이어 보기·통계
-    csf/episodes.json     ← 작품 정보 + 회차 표 {no, slug, title, open, heights, v}. 사람이 고치는 곳(제목·공개일). 바꾼 뒤 `python3 tools/build_manhwa.py csf`
-    csf/index.html        ← 목록 (build_manhwa.py가 만든다 — 직접 고치지 않는다)
-    csf/<이름>/           ← 회차: index.html(공유 미리보기)·og.jpg(1200×630)·01.webp…(폭 1080 세로 조각). build_manhwa.py가 만든다
+    viewer.js·viewer.css  ← 웹툰 뷰어 (의존성 없음, 글자 표 STR·강고양이 씨 SVG도 이 안). 목록·회차 페이지가 같이 쓴다. episodes.json을 읽어 공개일(서울 자정)·이어 보기·통계. 종이 느낌(고양.시 글꼴 Gaegu·Gowun Dodum)
+    csf/episodes.json     ← 작품 정보 + 회차 표 {no, slug, title, open, heights, v} + cover(표지 지문, 도구가 씀). 사람이 고치는 곳(제목·공개일). 바꾼 뒤 `python3 tools/build_manhwa.py csf`
+    csf/index.html        ← 목록 (build_manhwa.py가 만든다 — 직접 고치지 않는다). cover.webp(목록 표지 1080×≤1350)·og.jpg(목록 미리보기)도
+    csf/<이름>/           ← 회차: index.html(공유 미리보기)·og.jpg(1200×630)·thumb.webp(360×270 썸네일)·01.webp…(폭 1080 세로 조각). build_manhwa.py가 만든다
   package.json            ← "type": "module" 한 줄 (web/js는 ES 모듈. 노드 검사 도구가 불러올 때 경고가 나지 않게, 사이트 동작과 상관없음)
 package.json              ← 검사 도구용 playwright 버전 고정 (check_behave.mjs·visual_check.js. 배포는 pages.yml이 npm install). 사이트는 빌드 없음
 tools/
@@ -52,7 +52,7 @@ tools/
   make_apt_mask.py        ← 건너편 아파트 마스크(r/apt_day_mask·apt_night_mask.webp: 하늘을 뺀 건물만, 산 앞에 덮는다). 그림 하늘이 투명하면(v2 그림부터) 그림 그대로, 하늘이 칠해진 예전 그림이면 하늘을 찾아 뺀다. 그림 형식은 APT_ART_GUIDE.md
   make_guests.py          ← 생일 깜짝 손님 춤 시트(assets/birthday/guests/guest-<이름>-dance-v*.png, 가장 높은 판) → web/sheet/guest-<이름>-dance-v1.webp (옆 칸으로 넘친 조각은 자기 칸으로, 칸 420px × 4, 0.75배). 손님마다 발 y·키를 출력 → js/guests.js GUESTS 표. BIRTHDAY_GUESTS_PLAN.md 5장
   make_mountains.py       ← 창밖 산 그림(assets/scenery/ 먼 산 mountain-far-*-v2.png, 가까운 산 mountain-near-*-v3.png. 판은 `VER`) → r/scenery/*.webp (여름 알파로 통일, 1200×550). `--show` → assets/references/mountain-check-v1.png. WINDOW_PLAN_3.md 6장
-  build_manhwa.py         ← 만화방 회차 도구: `python3 tools/build_manhwa.py csf 3 [--open YYYY-MM-DD] [--title 제목]` 원고(assets/manhwa/csf/3/01.png…, git 무시) → 위아래 고른 줄(바깥 여백·테두리) 자르기·폭 1080·최대 약 2000px 조각 → web/manhwa/csf/<이름>/, episodes.json·HTML·og.jpg. 작품만 주면 HTML만 다시, `--check`는 맞는지만. tasks/manhwa-viewer.md
+  build_manhwa.py         ← 만화방 회차 도구: `python3 tools/build_manhwa.py csf 3 [--open YYYY-MM-DD] [--title 제목]` 원고(assets/manhwa/csf/3/01.png…, git 무시) → 위아래 고른 줄(바깥 여백·테두리) 자르기·폭 1080·최대 약 2000px 조각 → web/manhwa/csf/<이름>/, episodes.json·HTML·og.jpg·thumb.webp. 표지는 assets/manhwa/csf/cover.png(없으면 1화 첫 장). 원고 규격(표지 제목은 맨 위 1/10 밖에)은 assets/briefs/manhwa-manuscript.md. 작품만 주면 HTML만 다시, `--check`는 맞는지만. tasks/manhwa-viewer.md
   map_windows.py          ← 건너편 아파트 밤 그림에서 창 사각형을 찾아 r/apt_windows.json (창 불빛). --show로 확인 그림
 make_objects_doc.py       ← scenes/room/objects.json → OBJECTS.md
 ```

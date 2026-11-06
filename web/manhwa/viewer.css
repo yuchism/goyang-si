@@ -1,73 +1,118 @@
-/* 만화방 뷰어 (tasks/manhwa-viewer.md). 폰은 화면 너비 꽉, 데스크톱은 가운데 720px */
+/* 만화방 뷰어 (tasks/manhwa-viewer.md). 폰은 화면 너비 꽉, 데스크톱은 가운데 720px
+   목록·안내는 고양.시처럼 따뜻한 종이(크림 종이·먹색·딱지 빨강, 제목·버튼 Gaegu, 본문 Gowun Dodum). 회차 막대는 짙게 */
 :root {
   --mh-w: 720px;
+  --mh-barh: 52px;                 /* 위쪽 막대 높이 — 원고 머리 띠도 이만큼 (+ safe-area) */
   --mh-bg: #17130f;
   --mh-ink: #f3e6cf;
   --mh-dim: #b8a98f;
   --mh-acc: #e9c14d;
   --mh-bar: rgba(23, 19, 15, .92);
+  --paper: #f6eedf;
+  --paper-2: #ede1ca;
+  --sumi: #2b2118;
+  --sumi-dim: #6e5f4f;
+  --tag: #c8432b;
+  --font-hand: "Gaegu", "Nanum Pen Script", "Apple SD Gothic Neo", cursive;
+  --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
   color-scheme: dark;
 }
+html[lang="en"] { --font-hand: "Patrick Hand", "Gaegu", cursive; }  /* 고양.시 style.css와 같은 규칙 */
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--mh-bg); color: var(--mh-ink); }
-body.mh { font: 16px/1.5 system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; -webkit-tap-highlight-color: transparent; }
+body.mh { font: 16px/1.5 var(--font-body); -webkit-tap-highlight-color: transparent; }
 a { color: inherit; }
+body.mh-paper { background: var(--paper); color: var(--sumi); color-scheme: light; }
+html:has(body.mh-paper) { background: var(--paper); }
 
-/* ── 원고: 조각을 경계 없이 잇는다 */
+/* ── 원고: 조각을 경계 없이 잇는다. 머리 띠(위쪽 막대 자리) 밑에서 시작 */
+.mh-reading { padding-top: calc(var(--mh-barh) + env(safe-area-inset-top)); }
 .mh-strip { max-width: var(--mh-w); margin: 0 auto; background: #fff; }
 .mh-strip img { display: block; width: 100%; height: auto; border: 0; }
 
-/* ── 위·아래 막대 */
+/* ── 위·아래 막대 (짙게) */
 .mh-bar { position: fixed; left: 0; right: 0; z-index: 10; background: var(--mh-bar); transition: transform .25s ease; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-.mh-bar-in { max-width: var(--mh-w); margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 0 12px; height: 52px; }
+.mh-bar-in { max-width: var(--mh-w); margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 0 12px; height: var(--mh-barh); }
 .mh-top { top: 0; padding-top: env(safe-area-inset-top); }
 .mh-bot { bottom: 0; padding-bottom: env(safe-area-inset-bottom); }
 .mh-hide .mh-top { transform: translateY(-100%); }
 .mh-hide .mh-bot { transform: translateY(100%); }
 .mh-icon { font-size: 28px; line-height: 1; text-decoration: none; padding: 4px 8px 6px 2px; }
-.mh-ttl { min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.mh-ttl { min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
 .mh-ttl b, .mh-ttl span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mh-ttl b { font-size: 15px; }
+.mh-ttl b { font: 700 19px/1.15 var(--font-hand); }
 .mh-ttl span { font-size: 13px; color: var(--mh-dim); }
 .mh-bot .mh-bar-in { justify-content: space-between; }
-.mh-bot a, .mh-bot .mh-off { flex: 1; text-align: center; text-decoration: none; padding: 14px 0; font-size: 15px; }
+.mh-bot a, .mh-bot .mh-off { flex: 1; text-align: center; text-decoration: none; padding: 12px 0; font: 700 18px/1.2 var(--font-hand); }
 .mh-off { opacity: .35; }
 
 /* ── 얇은 진행 막대 (늘 보인다) */
 .mh-progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 11; pointer-events: none; }
 .mh-progress i { display: block; height: 100%; background: var(--mh-acc); transform: scaleX(0); transform-origin: 0 50%; }
 
-/* ── 단추·안내 */
-.mh-btn { display: inline-block; font: inherit; padding: 11px 22px; border-radius: 999px; border: 1px solid #fff3dc55; background: #2e2838; color: inherit; text-decoration: none; cursor: pointer; }
-.mh-ghost { background: transparent; }
-.mh-home { color: var(--mh-acc); }
-.mh-when { color: var(--mh-dim); }
-.mh-msg, .mh-wait { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; text-align: center; }
-.mh-yet { font-size: 26px; letter-spacing: .04em; min-height: 1.5em; margin: 0; }
+/* ── 단추 */
+.mh-btn, .mh-home, .mh-cta { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font: 700 20px/1.1 var(--font-hand); padding: 11px 22px; border-radius: 999px; border: 3px solid var(--sumi); background: var(--paper); color: var(--sumi); text-decoration: none; cursor: pointer; box-shadow: 3px 3px 0 var(--sumi); }
+.mh-btn:active, .mh-home:active, .mh-cta:active, a.mh-card:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--sumi); }
+.mh-home { background: var(--tag); color: #fff; }
+.mh-cta { background: var(--tag); color: #fff; font-size: 24px; padding: 14px 30px; }
 
-/* ── 회차 끝 */
-.mh-end { max-width: var(--mh-w); margin: 0 auto; padding: 40px 16px calc(110px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.mh-next { background: var(--mh-acc); color: #17130f; border-color: transparent; font-weight: 700; }
+/* ── 안내 (없는 회차·불러오지 못함·공개 전) */
+.mh-msg, .mh-wait { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; text-align: center; }
+.mh-msg p { margin: 0; font: 700 22px/1.3 var(--font-hand); }
+.mh-yet { font: 700 34px/1.3 var(--font-hand); letter-spacing: .04em; min-height: 1.3em; margin: 0; }
+.mh-when { margin: 0; color: var(--sumi-dim); font: 700 20px/1.3 var(--font-hand); }
+
+/* ── 목록: 간판 띠 */
+.mh-sign { background: var(--sumi); color: var(--paper); padding-top: env(safe-area-inset-top); }
+.mh-sign-in { max-width: var(--mh-w); margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 8px 16px; }
+.mh-face { display: block; width: 40px; height: 35px; flex: none; }
+.mh-face svg { display: block; width: 100%; height: 100%; }
+.mh-sign b { font: 700 24px/1 var(--font-hand); letter-spacing: .02em; }
+
+/* ── 목록: 표지 + 제목 */
+.mh-list { max-width: var(--mh-w); margin: 0 auto; padding: 0 0 calc(40px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 22px; }
+.mh-hero { position: relative; display: flex; flex-direction: column; }
+.mh-cover { position: relative; }
+.mh-cover img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; object-position: top; }
+.mh-cover::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 55%; pointer-events: none; background: linear-gradient(to bottom, rgba(246, 238, 223, 0) 0%, rgba(246, 238, 223, .8) 45%, var(--paper) 78%); }
+.mh-hero-txt { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 28px 20px 0; }
+.mh-has-cover .mh-hero-txt { margin-top: -38%; }
+.mh-tag { display: inline-block; font: 700 18px/1 var(--font-hand); color: #fff; background: var(--tag); padding: 6px 12px 5px; border-radius: 4px; transform: rotate(-3deg); box-shadow: 2px 2px 0 var(--sumi); }
+.mh-hero h1 { margin: 4px 0 0; font: 700 clamp(34px, 9vw, 52px)/1.08 var(--font-hand); color: var(--sumi); text-shadow: 0 0 10px var(--paper), 0 0 2px var(--paper); }
+.mh-by { margin: 0; font-size: 16px; color: var(--sumi-dim); }
+.mh-koonly { margin: 2px 0 0; padding: 2px 10px; border-radius: 999px; border: 2px solid var(--sumi); font: 700 16px/1.3 var(--font-hand); }
+.mh-hero .mh-cta { margin-top: 12px; }
+.mh-about { margin: 0 20px; }
+.mh-empty { margin: 0 20px; color: var(--sumi-dim); }
+.mh-list > .mh-home { align-self: center; margin-top: 8px; }
+
+/* ── 회차 카드: 굵은 먹색 테두리 + 만화 칸 같은 그림자 */
+.mh-cards { list-style: none; margin: 0; padding: 0 16px; display: flex; flex-direction: column; gap: 16px; }
+.mh-card { display: flex; align-items: stretch; background: #fffaf0; border: 3px solid var(--sumi); box-shadow: 5px 5px 0 var(--sumi); text-decoration: none; color: var(--sumi); overflow: hidden; }
+.mh-thumb { flex: none; width: 38%; max-width: 200px; aspect-ratio: 4 / 3; border-right: 3px solid var(--sumi); background: var(--paper-2); display: flex; align-items: center; justify-content: center; }
+.mh-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.mh-card-t { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 10px 14px; }
+.mh-card-t b { font: 700 24px/1.1 var(--font-hand); }
+.mh-card-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mh-card-t small { color: var(--sumi-dim); font-size: 13px; }
+.mh-card-t .mh-kick { color: var(--tag); font: 700 17px/1 var(--font-hand); }
+.mh-soon { cursor: default; box-shadow: 5px 5px 0 #2b211855; border-style: dashed; }
+.mh-soon .mh-card-title { font: 700 19px/1.2 var(--font-hand); color: var(--tag); }
+.mh-stripes { font-size: 30px; background: repeating-linear-gradient(-45deg, var(--paper-2) 0 10px, #e2d3b8 10px 20px); }
+
+/* ── 회차 끝: 크림 종이 칸, 강고양이 씨가 위로 빼꼼 */
+.mh-end-wrap { max-width: var(--mh-w); margin: 0 auto; padding: 120px 16px calc(var(--mh-barh) + 40px + env(safe-area-inset-bottom)); }
+.mh-end { position: relative; background: var(--paper); color: var(--sumi); color-scheme: light; border: 3px solid var(--sumi); box-shadow: 6px 6px 0 #000a; padding: 28px 18px 24px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.mh-peek { position: absolute; width: 140px; height: 112px; top: -103px; right: 22px; }
+.mh-peek svg { display: block; width: 100%; height: 100%; }
+.mh-end-t { margin: 0; font: 700 38px/1.1 var(--font-hand); }
+.mh-end > .mh-card { align-self: stretch; }
+.mh-end-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
 
 /* ── 이어 보기 */
-.mh-resume { position: fixed; left: 50%; bottom: calc(68px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 12; background: var(--mh-acc); color: #17130f; border-color: transparent; font-weight: 700; box-shadow: 0 4px 16px #0006; }
+.mh-resume { position: fixed; left: 50%; bottom: calc(68px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 12; background: var(--mh-acc); color: #17130f; font-weight: 700; white-space: nowrap; }
+.mh-resume:active { transform: translate(-50%, 2px); }
 
-/* ── 목록 */
-.mh-list { max-width: var(--mh-w); margin: 0 auto; padding: calc(28px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 18px; }
-.mh-head h1 { margin: 2px 0 4px; font-size: 26px; }
-.mh-head p { margin: 0; }
-.mh-room { color: var(--mh-acc); font-size: 14px; }
-.mh-by { color: var(--mh-dim); }
-.mh-koonly { display: inline-block; margin-top: 8px !important; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--mh-dim); font-size: 13px; color: var(--mh-dim); }
-.mh-about { margin-top: 10px !important; }
-.mh-resume-link { align-self: flex-start; background: var(--mh-acc); color: #17130f; border-color: transparent; font-weight: 700; }
-.mh-empty { color: var(--mh-dim); }
-.mh-eps { list-style: none; margin: 0; padding: 0; border-top: 1px solid #fff3dc22; }
-.mh-eps li { border-bottom: 1px solid #fff3dc22; }
-.mh-ep { display: flex; align-items: baseline; gap: 12px; padding: 14px 4px; text-decoration: none; }
-a.mh-ep:hover { background: #ffffff08; }
-.mh-ep b { flex: none; min-width: 3.2em; }
-.mh-ep-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mh-ep small { color: var(--mh-dim); }
-.mh-soon { color: var(--mh-dim); cursor: default; }
-.mh-list > .mh-home { align-self: flex-start; }
+@media (prefers-reduced-motion: reduce) {
+  .mh-bar { transition: none; }
+}

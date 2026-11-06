@@ -25,9 +25,11 @@
     ep: { ko: '{n}화', en: 'Ep. {n}' },
     resume: { ko: '{n}화 이어 보기', en: 'Continue Ep. {n}' },
     opens: { ko: '{m}월 {d}일 공개', en: 'Opens {mon} {d}' },
-    nextOpens: { ko: '다음 화는 {m}월 {d}일 공개', en: 'Next episode opens {mon} {d}' },
     yet: { ko: '아…직…이…에…요…', en: 'N…o…t… y…e…t…' },
-    home: { ko: '고양.시로', en: 'To goyang.si' },
+    home: { ko: '고양.시로 돌아가기', en: 'Back to goyang.si' },
+    start: { ko: '{n}화부터 보기', en: 'Start from Ep. {n}' },
+    fresh: { ko: '신간', en: 'New' },
+    end: { ko: '{n}화 끝!', en: 'End of Ep. {n}!' },
     empty: { ko: '아직 연재 전이에요.', en: 'No episodes yet.' },
     koOnly: { ko: '', en: 'Korean only' },
     missing: { ko: '없는 회차예요.', en: 'This episode does not exist.' },
@@ -81,6 +83,39 @@
   };
   const TODAY = todaySeoul();
   const isOpen = ep => ep.open <= TODAY;
+  // 「신간」 딱지: 마지막 공개 화가 이 날수 안에 열렸을 때
+  const FRESH_DAYS = 14;
+  const daysAgo = n => new Date(Date.parse(TODAY + 'T00:00:00Z') - n * 864e5).toISOString().slice(0, 10);
+
+  /* ───────── 강고양이 씨 (코드로 그린다 — 그림 파일 없음) ───────── */
+  const INK = '#2b2118', FUR = '#fbf3e6', PATCH = '#8a5a3c', PINK = '#f2a7b5';
+  // 간판의 작은 얼굴
+  const CAT_FACE = '<svg viewBox="0 0 48 42" aria-hidden="true">'
+    + `<path d="M8 20 L6 3 L20 12 Z M40 20 L42 3 L28 12 Z" fill="${FUR}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>`
+    + `<path d="M9 15 L8 8 L14 12 Z M39 15 L40 8 L34 12 Z" fill="${PINK}"/>`
+    + `<ellipse cx="24" cy="25" rx="18" ry="15" fill="${FUR}" stroke="${INK}" stroke-width="2.5"/>`
+    + `<ellipse cx="31" cy="23" rx="7" ry="6" fill="${PATCH}"/>`
+    + `<circle cx="17" cy="23" r="2.4" fill="${INK}"/><circle cx="31" cy="23" r="2.4" fill="${INK}"/>`
+    + `<path d="M22 28 h4 l-2 2.4 z" fill="#e07a8a"/>`
+    + `<path d="M20 31 q2 2 4 0 q2 2 4 0" fill="none" stroke="${INK}" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+  // 회차 끝 칸 위로 빼꼼: 머리는 칸 테두리(y=100) 뒤에, 앞발은 테두리 위에
+  const CAT_PEEK = '<svg viewBox="0 0 140 112" aria-hidden="true">'
+    + '<defs><clipPath id="mh-peek-clip"><rect width="140" height="100"/></clipPath></defs>'
+    + '<g clip-path="url(#mh-peek-clip)">'
+    + `<path d="M34 44 L26 4 L60 26 Z M106 44 L114 4 L80 26 Z" fill="${FUR}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>`
+    + `<path d="M36 34 L31 13 L50 26 Z M104 34 L109 13 L90 26 Z" fill="${PINK}"/>`
+    + `<ellipse cx="70" cy="70" rx="50" ry="42" fill="${FUR}" stroke="${INK}" stroke-width="3.5"/>`
+    + `<g fill="${FUR}" stroke="${INK}" stroke-width="2.5"><circle cx="62" cy="31" r="6"/><circle cx="71" cy="28" r="7"/><circle cx="80" cy="32" r="6"/></g>`
+    + `<ellipse cx="91" cy="62" rx="18" ry="15" fill="${PATCH}"/>`
+    + `<ellipse cx="50" cy="62" rx="5" ry="6.5" fill="${INK}"/><ellipse cx="91" cy="62" rx="5" ry="6.5" fill="${INK}"/>`
+    + '<circle cx="52" cy="59.5" r="1.8" fill="#fff"/><circle cx="93" cy="59.5" r="1.8" fill="#fff"/>'
+    + '<path d="M66 74 h8 l-4 4.5 z" fill="#e07a8a"/>'
+    + `<path d="M62 80 q4 4 8 0 q4 4 8 0" fill="none" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/>`
+    + `<path d="M67 82 q3 9 7 0" fill="#f08a9c" stroke="${INK}" stroke-width="2"/>`
+    + '<ellipse cx="44" cy="80" rx="7" ry="4" fill="#f4b9b9" opacity=".7"/><ellipse cx="98" cy="80" rx="7" ry="4" fill="#f4b9b9" opacity=".7"/>'
+    + '</g>'
+    + `<g fill="${FUR}" stroke="${INK}" stroke-width="3"><ellipse cx="38" cy="101" rx="15" ry="9"/><ellipse cx="102" cy="101" rx="15" ry="9"/></g>`
+    + `<path d="M33 97 v6 M43 97 v6 M97 97 v6 M107 97 v6" stroke="${INK}" stroke-width="2" stroke-linecap="round"/></svg>`;
 
   /* ───────── 통계 (GoatCounter goyangsi, 방 util.js gcEvent와 같은 방식) ───────── */
   const gcEvent = (path, title) => {
@@ -145,9 +180,50 @@
   };
   const piece = (ep, i) => String(i).padStart(2, '0') + '.webp?v=' + ep.v;
   const epHref = (ep, from) => WORK_DIR + ep.slug + '/' + (from ? '?from=' + from : '');
+  const homeLink = () => {
+    const a = link('mh-home', '🔔 ' + tr('home'), HOME);
+    leaveWith(a, 'go-home', '만화방 → 고양.시');
+    return a;
+  };
+
+  // 회차 카드: 썸네일(그 화 첫 장 위쪽) + N화 · 제목 · 공개일
+  function card(ep, from, kicker) {
+    const a = link('mh-card', null, epHref(ep, from));
+    const th = el('span', 'mh-thumb');
+    const img = el('img');
+    img.width = 360;
+    img.height = 270;
+    img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.src = WORK_DIR + ep.slug + '/thumb.webp?v=' + ep.v;
+    th.append(img);
+    const t = el('span', 'mh-card-t');
+    if (kicker)
+      t.append(el('small', 'mh-kick', kicker));
+    t.append(el('b', '', tr('ep', { n: ep.no })), el('span', 'mh-card-title', ep.title || ''));
+    if (!kicker)
+      t.append(el('small', '', ep.open.replace(/-/g, '.')));
+    a.append(th, t);
+    return a;
+  }
+  // 공개 전 다음 한 화: 줄무늬 칸 + 🐾 + 날짜 (누르지 못함)
+  function soonCard(ep, kicker) {
+    const d = el('div', 'mh-card mh-soon');
+    d.setAttribute('aria-disabled', 'true');
+    const th = el('span', 'mh-thumb mh-stripes', '🐾');
+    th.setAttribute('aria-hidden', 'true');
+    const t = el('span', 'mh-card-t');
+    if (kicker)
+      t.append(el('small', 'mh-kick', kicker));
+    t.append(el('b', '', tr('ep', { n: ep.no })), el('span', 'mh-card-title', tr('opens', dateVars(ep.open))));
+    d.append(th, t);
+    return d;
+  }
 
   function fail() {
     body.textContent = '';
+    body.classList.add('mh-paper');
     const box = el('div', 'mh-msg');
     const btn = el('button', 'mh-btn', tr('retry'));
     btn.onclick = () => location.reload();
@@ -158,46 +234,65 @@
   /* ───────── 목록 ───────── */
   function renderList(data) {
     const eps = data.episodes;
-    const main = el('main', 'mh-list');
-    const head = el('header', 'mh-head');
-    head.append(el('p', 'mh-room', tr('room')), el('h1', '', data.series));
-    head.append(el('p', 'mh-by', LANG === 'en' && data.nameEn ? data.name + ' · ' + data.nameEn : data.name));
-    if (LANG === 'en')
-      head.append(el('p', 'mh-koonly', tr('koOnly')));
-    if (data.about)
-      head.append(el('p', 'mh-about', data.about));
-    main.append(head);
-
-    const rt = resumeTarget(eps);
-    if (rt) {
-      const a = link('mh-btn mh-resume-link', tr('resume', { n: rt.ep.no }), epHref(rt.ep, 'list') + '&resume=1');
-      main.append(a);
-    }
-
     const open = eps.filter(isOpen);
     const soon = eps.find(e => !isOpen(e)); // 다음 한 화만 보인다
+    body.classList.add('mh-paper');
+
+    // 맨 위 짙은 띠: 고양이 얼굴 + 간판
+    const sign = el('header', 'mh-sign');
+    const signIn = el('div', 'mh-sign-in');
+    const face = el('span', 'mh-face');
+    face.innerHTML = CAT_FACE;
+    signIn.append(face, el('b', '', tr('room')));
+    sign.append(signIn);
+
+    // 표지(아래쪽이 종이색으로 이어짐) 위에 딱지·연재 제목·작품명·큰 버튼
+    const main = el('main', 'mh-list');
+    const hero = el('section', 'mh-hero');
+    if (data.cover) {
+      hero.classList.add('mh-has-cover');
+      const box = el('div', 'mh-cover');
+      const img = el('img');
+      img.alt = '';
+      img.src = 'cover.webp?v=' + data.cover;
+      box.append(img);
+      hero.append(box);
+    }
+    const txt = el('div', 'mh-hero-txt');
+    const latest = open[open.length - 1];
+    if (latest && latest.open >= daysAgo(FRESH_DAYS))
+      txt.append(el('span', 'mh-tag', tr('fresh')));
+    txt.append(el('h1', '', data.series));
+    txt.append(el('p', 'mh-by', LANG === 'en' && data.nameEn ? data.name + ' · ' + data.nameEn : data.name));
+    if (LANG === 'en')
+      txt.append(el('p', 'mh-koonly', tr('koOnly')));
+    const rt = resumeTarget(eps);
+    if (rt)
+      txt.append(link('mh-cta', tr('resume', { n: rt.ep.no }), epHref(rt.ep, 'list') + '&resume=1'));
+    else if (open.length)
+      txt.append(link('mh-cta', tr('start', { n: open[0].no }), epHref(open[0], 'list')));
+    hero.append(txt);
+    main.append(hero);
+    if (data.about)
+      main.append(el('p', 'mh-about', data.about));
+
     if (!open.length && !soon)
       main.append(el('p', 'mh-empty', tr('empty')));
-    const ol = el('ol', 'mh-eps');
+    const ol = el('ol', 'mh-cards');
     for (const ep of open) {
-      const a = link('mh-ep', null, epHref(ep, 'list'));
-      a.append(el('b', '', tr('ep', { n: ep.no })), el('span', 'mh-ep-t', ep.title || ''), el('small', '', ep.open.replace(/-/g, '.')));
       const li = el('li');
-      li.append(a);
+      li.append(card(ep, 'list'));
       ol.append(li);
     }
     if (soon) {
-      const li = el('li', 'mh-ep mh-soon');
-      li.setAttribute('aria-disabled', 'true');
-      li.append(el('b', '', tr('ep', { n: soon.no })), el('span', 'mh-ep-t', tr('opens', dateVars(soon.open))));
+      const li = el('li');
+      li.append(soonCard(soon));
       ol.append(li);
     }
     if (ol.children.length)
       main.append(ol);
-    const home = link('mh-home', tr('home'), HOME);
-    leaveWith(home, 'go-home', '만화방 → 고양.시');
-    main.append(home);
-    body.append(main);
+    main.append(homeLink());
+    body.append(sign, main);
   }
 
   /* ───────── 회차 ───────── */
@@ -208,6 +303,7 @@
     const ep = eps[i];
     const listHref = WORK_DIR;
     if (!ep) {
+      body.classList.add('mh-paper');
       const box = el('div', 'mh-msg');
       box.append(el('p', '', tr('missing')), link('mh-btn', tr('list'), listHref));
       body.append(box);
@@ -219,6 +315,7 @@
 
     // 공개 전: 원고를 불러오지 않는다
     if (!isOpen(ep)) {
+      body.classList.add('mh-paper');
       const box = el('div', 'mh-wait');
       const yet = el('p', 'mh-yet');
       yet.setAttribute('aria-label', tr('yet'));
@@ -277,18 +374,23 @@
       strip.append(img);
     });
 
+    // 회차 끝: 크림 종이 칸 위로 강고양이 씨가 빼꼼, "N화 끝!", 다음 화 카드, 고양.시로
     const end = el('section', 'mh-end');
+    const peek = el('div', 'mh-peek');
+    peek.innerHTML = CAT_PEEK;
+    end.append(peek, el('h2', 'mh-end-t', tr('end', { n: ep.no })));
     if (nextOpen) {
-      const a = link('mh-btn mh-next', tr('nextEp') + ' ›', epHref(next, 'next'));
+      const a = card(next, 'next', tr('nextEp') + ' ›');
       leaveWith(a, ep.no + '/next-click', '만화방 다음 화 누름: ' + ep.no + '화');
       end.append(a);
     }
     else if (next && next === firstSoon)
-      end.append(el('p', 'mh-when', tr('nextOpens', dateVars(next.open))));
-    end.append(link('mh-btn mh-ghost', tr('list'), listHref));
-    const home = link('mh-home', tr('home'), HOME);
-    leaveWith(home, 'go-home', '만화방 → 고양.시');
-    end.append(home);
+      end.append(soonCard(next, tr('next')));
+    const row = el('div', 'mh-end-row');
+    row.append(link('mh-btn', tr('list'), listHref), homeLink());
+    end.append(row);
+    const endWrap = el('div', 'mh-end-wrap');
+    endWrap.append(end);
 
     const bot = el('nav', 'mh-bar mh-bot');
     const botIn = el('div', 'mh-bar-in');
@@ -303,7 +405,9 @@
     botIn.append(navBtn('‹ ' + tr('prev'), prev, null), link('', tr('list'), listHref), nb);
     bot.append(botIn);
 
-    body.append(prog, top, strip, end, bot);
+    // 원고는 위쪽 막대 높이(safe-area 포함)만큼 아래에서 시작한다 (첫 장 맨 위를 막대가 덮지 않게 — CSS .mh-reading)
+    body.classList.add('mh-reading');
+    body.append(prog, top, strip, endWrap, bot);
 
     /* 위치 ↔ 비율 (기기마다 폭이 달라도 같은 자리) */
     const span = () => Math.max(1, strip.offsetTop + strip.offsetHeight - innerHeight);

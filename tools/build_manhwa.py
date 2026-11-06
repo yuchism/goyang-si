@@ -8,7 +8,11 @@
       - 장과 장 사이에는 그 장 바탕색으로 PAGE_GAP만큼 띄운다(여백을 다 자르면 다음 장 칸이 바로 붙으므로)
       - 처음이면 이름(소문자·숫자 5자)을 뽑아 episodes.json에 회차를 더한다(공개일 --open, 없으면 오늘 서울 날짜)
       - 다시 돌리면 그림만 다시 만든다(이름은 그대로). --open·--title을 주면 그 칸도 바꾼다
+      - 회차마다 썸네일 thumb.webp(첫 조각 위쪽을 잘라 작게)도 만든다 — 목록 카드·회차 끝 다음 화 카드
       - 회차 HTML(index.html, 공유 미리보기 og.jpg)과 목록 web/manhwa/csf/index.html도 같이 만든다
+      - 표지: assets/manhwa/csf/cover.png(또는 .jpg)가 있으면 목록 표지 cover.webp·목록 공유 미리보기 og.jpg로 쓴다.
+        없으면 1화 첫 장(첫 조각 위쪽)
+      - 원고 첫 장의 표지 제목은 맨 위 1/10 밖에 둔다 (뷰어는 위쪽 막대 밑에서 원고를 시작하지만, 썸네일·미리보기가 위쪽을 자른다)
   python3 tools/build_manhwa.py csf
       그림은 두고 HTML만 다시 만든다 (episodes.json에서 제목을 고친 뒤)
   python3 tools/build_manhwa.py csf --check
@@ -40,7 +44,10 @@ NOISE = 0.003         # 한 줄에서 이만큼(비율)까지는 다른 색이 �
 SLUG_CHARS = 'abcdefghijkmnpqrstuvwxyz23456789'  # 0·o·1·l 뺌
 SLUG_LEN = 5
 OG_W, OG_H = 1200, 630
+THUMB_W, THUMB_H = 360, 270   # 회차 썸네일 (첫 조각 위쪽)
+COVER_H = 1350                # 목록 표지: 폭 1080, 위에서부터 1350(4:5)까지
 SRC_EXT = ('.png', '.jpg', '.jpeg')
+FONTS = 'https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&amp;family=Gowun+Dodum&amp;family=Patrick+Hand&amp;display=swap'
 
 
 def paths(work):
@@ -126,6 +133,21 @@ def cut_points(im):
     return cuts
 
 
+def piece_files(d):
+    """조각(01.webp, 02.webp …)만. thumb.webp는 빼고"""
+    return [f for f in d.glob('*.webp') if re.fullmatch(r'\d{2,}\.webp', f.name)] if d.is_dir() else []
+
+
+def fit_top(im, w, h):
+    """폭을 w에 맞추고 위에서부터 h까지 자른다 (짧으면 아래를 마지막 줄 색으로)"""
+    im = im.resize((w, max(1, round(im.height * w / im.width))), Image.LANCZOS)
+    if im.height >= h:
+        return im.crop((0, 0, w, h))
+    bg = Image.new('RGB', (w, h), row_color(im, im.height - 1) or (255, 255, 255))
+    bg.paste(im, (0, 0))
+    return bg
+
+
 def sources(work, no):
     d = paths(work)[0] / str(no)
     if not d.is_dir():
@@ -146,7 +168,7 @@ def build_images(work, ep):
         heights, v = convert(files, tmp)
         out = base / ep['slug']
         out.mkdir(exist_ok=True)
-        for old in [*out.glob('*.webp'), out / 'og.jpg']:
+        for old in [*out.glob('*.webp'), out / 'og.jpg']:  # 조각·thumb.webp·og.jpg
             old.unlink(missing_ok=True)
         for f in tmp.iterdir():
             f.replace(out / f.name)
@@ -185,18 +207,49 @@ def convert(files, out):
         p.save(buf, 'WEBP', quality=88, method=6)
         (out / f'{n:02d}.webp').write_bytes(buf.getvalue())
         sha.update(buf.getvalue())
-    make_og(pieces[0]).save(out / 'og.jpg', 'JPEG', quality=86, optimize=True)
+    fit_top(pieces[0], OG_W, OG_H).save(out / 'og.jpg', 'JPEG', quality=86, optimize=True)
+    fit_top(pieces[0], THUMB_W, THUMB_H).save(out / 'thumb.webp', 'WEBP', quality=82, method=6)
     return [p.height for p in pieces], sha.hexdigest()[:8]
 
 
-def make_og(first):
-    """첫 조각을 1200×630에 맞춘다: 폭을 맞추고 위에서부터 자른다 (짧으면 아래를 바탕색으로)"""
-    im = first.resize((OG_W, round(first.height * OG_W / first.width)), Image.LANCZOS)
-    if im.height >= OG_H:
-        return im.crop((0, 0, OG_W, OG_H))
-    bg = Image.new('RGB', (OG_W, OG_H), row_color(im, im.height - 1) or (255, 255, 255))
-    bg.paste(im, (0, 0))
-    return bg
+def cover_source(work):
+    for ext in SRC_EXT:
+        f = paths(work)[0] / ('cover' + ext)
+        if f.exists():
+            return f
+    return None
+
+
+def build_cover(work, data, rebuilt_no=None):
+    """목록 표지 cover.webp와 목록 공유 미리보기 og.jpg. cover.png가 있으면 그것, 없으면 1화 첫 조각.
+    cover.png가 없는 기기에서 HTML만 다시 만들 때는 있던 표지를 그대로 둔다 (1화를 다시 만들 때만 새로)"""
+    base = paths(work)[1]
+    src = cover_source(work)
+    ep1 = next((x for x in data['episodes'] if x['no'] == 1 and x.get('heights')), None)
+    if src is None and data.get('cover') and (base / 'cover.webp').exists() and rebuilt_no != 1:
+        return
+    if src is not None:
+        try:
+            with Image.open(src) as im:
+                im.load()
+                im = flat(im)
+        except (OSError, Image.DecompressionBombError) as err:
+            sys.exit(f'✗ {src.name}: 그림을 열 수 없습니다 ({err})')
+    elif ep1 is not None:
+        with Image.open(base / ep1['slug'] / '01.webp') as im:
+            im = im.convert('RGB')
+    else:
+        for f in (base / 'cover.webp', base / 'og.jpg'):
+            f.unlink(missing_ok=True)
+        data.pop('cover', None)
+        return
+    cover = fit_top(im, WIDTH, min(COVER_H, round(im.height * WIDTH / im.width)))
+    buf = io.BytesIO()
+    cover.save(buf, 'WEBP', quality=86, method=6)
+    (base / 'cover.webp').write_bytes(buf.getvalue())
+    fit_top(im, OG_W, OG_H).save(base / 'og.jpg', 'JPEG', quality=86, optimize=True)
+    data['cover'] = hashlib.sha1(buf.getvalue()).hexdigest()[:8]
+    print(f'  표지: {src.name if src else "1화 첫 장"} → cover.webp·og.jpg')
 
 
 # ── HTML ───────────────────────────────────────────────
@@ -236,6 +289,9 @@ def head(title, desc, url, image, alt, root):
 <link rel="icon" href="{root}favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="{root}apple-touch-icon.png">
 <script data-goatcounter="https://goyangsi.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="{FONTS}"><!-- 고양.시 web/index.html과 같은 글꼴 주소 (캐시를 같이 쓴다) -->
 <link rel="stylesheet" href="{root}manhwa/viewer.css">
 <script defer src="{root}manhwa/viewer.js"></script>
 </head>
@@ -260,7 +316,7 @@ def episode_html(work, data, ep):
 def list_html(work, data):
     url = f"{SITE}/manhwa/{work}/"
     eps = data['episodes']
-    image = f"{url}{eps[0]['slug']}/og.jpg" if eps else f'{SITE}/og/room.jpg'
+    image = f"{url}og.jpg" if data.get('cover') else f'{SITE}/og/room.jpg'
     title = f"「{data['series']}」"
     return head(title, desc_of(data), url, image, title, '../../') + f"""<body class="mh" data-page="list" data-work="{e(work)}">
 <noscript><p class="mh-msg">만화를 보려면 자바스크립트를 켜 주세요.</p></noscript>
@@ -309,7 +365,7 @@ def check(work):
             continue
         d = base / slug
         want = [f'{n:02d}.webp' for n in range(1, len(hs) + 1)]
-        have = {f.name for f in d.glob('*.webp')} if d.is_dir() else set()
+        have = {f.name for f in piece_files(d)}
         if have != set(want):
             errs.append(f'{tag}: 조각 파일이 맞지 않습니다 (episodes.json {len(want)}개, 폴더 {len(have)}개)')
             continue
@@ -317,19 +373,29 @@ def check(work):
             with Image.open(d / name) as im:
                 if im.size != (WIDTH, h):
                     errs.append(f'{tag} {name}: 크기 {im.size[0]}×{im.size[1]} — episodes.json은 {WIDTH}×{h}')
-        og = d / 'og.jpg'
-        if not og.exists():
-            errs.append(f'{tag}: og.jpg가 없습니다')
-        else:
-            with Image.open(og) as im:
-                if im.size != (OG_W, OG_H):
-                    errs.append(f'{tag}: og.jpg 크기 {im.size}')
+        for name, size in (('og.jpg', (OG_W, OG_H)), ('thumb.webp', (THUMB_W, THUMB_H))):
+            if not (d / name).exists():
+                errs.append(f'{tag}: {name}이 없습니다 (도구로 다시 만드세요)')
+                continue
+            with Image.open(d / name) as im:
+                if im.size != size:
+                    errs.append(f'{tag}: {name} 크기 {im.size}')
         page = d / 'index.html'
         if not page.exists() or page.read_text('utf8') != episode_html(work, data, ep):
             errs.append(f'{tag}: index.html이 episodes.json과 다릅니다 → python3 tools/build_manhwa.py {work}')
     for d in base.iterdir() if base.is_dir() else []:
         if d.is_dir() and d.name not in slugs:
             errs.append(f'episodes.json에 없는 폴더: {d.relative_to(ROOT)}')
+    if data.get('cover'):
+        for name, w in (('cover.webp', WIDTH), ('og.jpg', OG_W)):
+            if not (base / name).exists():
+                errs.append(f'목록 {name}이 없습니다 → python3 tools/build_manhwa.py {work}')
+                continue
+            with Image.open(base / name) as im:
+                if im.width != w or (name == 'og.jpg' and im.height != OG_H):
+                    errs.append(f'목록 {name} 크기 {im.size}')
+    elif eps:
+        errs.append(f'episodes.json에 cover가 없습니다 → python3 tools/build_manhwa.py {work}')
     page = base / 'index.html'
     if not page.exists() or page.read_text('utf8') != list_html(work, data):
         errs.append(f'목록 index.html이 episodes.json과 다릅니다 → python3 tools/build_manhwa.py {work}')
@@ -356,6 +422,8 @@ def main():
         return check(a.work)
     data = load_json(a.work)
     if a.no is None:
+        build_cover(a.work, data)
+        save_json(a.work, data)
         write_html(a.work, data)
         print(f'HTML을 다시 만들었습니다 (회차 {len(data["episodes"])}개)')
         return
@@ -380,6 +448,7 @@ def main():
             ep['title'] = a.title
         print(f'{a.no}화 그림을 다시 만듦: 이름 {ep["slug"]}, 공개일 {ep["open"]}')
     build_images(a.work, ep)
+    build_cover(a.work, data, a.no)
     save_json(a.work, data)
     write_html(a.work, data)
     print(f'→ web/manhwa/{a.work}/{ep["slug"]}/  조각 {len(ep["heights"])}개')
