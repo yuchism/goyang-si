@@ -252,6 +252,7 @@
 
   /* ───────── 목록 ───────── */
   function renderList(data) {
+    document.title = (LANG === 'en' && data.nameEn ? data.nameEn : data.name) + ' · ' + tr('room');
     const eps = data.episodes;
     const open = eps.filter(isOpen);
     const soon = eps.find(e => !isOpen(e)); // 다음 한 화만 보인다
@@ -304,8 +305,8 @@
     const latest = open[open.length - 1];
     if (latest && latest.open >= daysAgo(FRESH_DAYS))
       txt.append(el('span', 'mh-tag', tr('fresh')));
-    txt.append(el('h1', '', data.series));
-    txt.append(el('p', 'mh-by', LANG === 'en' && data.nameEn ? data.name + ' · ' + data.nameEn : data.name));
+    txt.append(el('h1', '', (LANG === 'en' && data.nameEn ? data.nameEn : data.name)));
+    txt.append(el('p', 'mh-by', LANG === 'en' && data.taglineEn ? data.taglineEn : data.tagline));
     if (LANG === 'en')
       txt.append(el('p', 'mh-koonly', tr('koOnly')));
     const rt = resumeTarget(eps);
@@ -387,7 +388,7 @@
       history.scrollRestoration = 'manual';
 
     const epLabel = tr('ep', { n: ep.no });
-    document.title = data.series + ' ' + epLabel + (ep.title ? ' — ' + ep.title : '') + ' · ' + tr('room');
+    document.title = (LANG === 'en' && data.nameEn ? data.nameEn : data.name) + ' ' + epLabel + (ep.title ? ' — ' + ep.title : '') + ' · ' + tr('room');
 
     const prog = el('div', 'mh-progress');
     const bar = el('i');
@@ -398,7 +399,7 @@
     const back = link('mh-icon', '‹', listHref);
     back.setAttribute('aria-label', tr('list'));
     const ttl = el('div', 'mh-ttl');
-    ttl.append(el('b', '', data.series), el('span', '', epLabel + (ep.title ? ' · ' + ep.title : '')));
+    ttl.append(el('b', '', (LANG === 'en' && data.nameEn ? data.nameEn : data.name)), el('span', '', epLabel + (ep.title ? ' · ' + ep.title : '')));
     topIn.append(back, ttl);
     top.append(topIn);
 
@@ -408,7 +409,7 @@
       const img = el('img');
       img.width = 1080;
       img.height = h;
-      img.alt = k === 0 ? data.series + ' ' + epLabel : '';
+      img.alt = k === 0 ? (LANG === 'en' && data.nameEn ? data.nameEn : data.name) + ' ' + epLabel : '';
       img.decoding = 'async';
       if (k > 1)
         img.loading = 'lazy'; // 보이기 직전에 (처음 두 조각은 바로)
