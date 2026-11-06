@@ -87,7 +87,7 @@
   const FRESH_DAYS = 14;
   const daysAgo = n => new Date(Date.parse(TODAY + 'T00:00:00Z') - n * 864e5).toISOString().slice(0, 10);
 
-  /* ───────── 강고양이 씨 (코드로 그린다 — 그림 파일 없음) ───────── */
+  /* ───────── 강고양이 씨 코드 그림 (그림 파일을 못 받았을 때) ───────── */
   const INK = '#2b2118', FUR = '#fbf3e6', PATCH = '#8a5a3c', PINK = '#f2a7b5';
   // 간판의 작은 얼굴
   const CAT_FACE = '<svg viewBox="0 0 48 42" aria-hidden="true">'
@@ -116,6 +116,19 @@
     + '</g>'
     + `<g fill="${FUR}" stroke="${INK}" stroke-width="3"><ellipse cx="38" cy="101" rx="15" ry="9"/><ellipse cx="102" cy="101" rx="15" ry="9"/></g>`
     + `<path d="M33 97 v6 M43 97 v6 M97 97 v6 M107 97 v6" stroke="${INK}" stroke-width="2" stroke-linecap="round"/></svg>`;
+
+  /* ───────── 만화방 그림 (assets/briefs/MANHWA_UI_ART.md) ─────────
+     다 받은 뒤에만 바꿔 끼운다 — 못 받으면 위 코드 그림·줄무늬 칸이 그대로 남는다(깨진 그림 표시 없음).
+     서비스 워커는 본 것만 만화방 칸에 담는다(sw.js). 그림을 바꾸면 UI_V를 올린다 */
+  const UI_V = 1;
+  const uiSrc = name => WORK_DIR + '../ui/' + name + '.webp?v=' + UI_V;
+  const art = (name, ok) => {
+    const im = new Image();
+    im.decoding = 'async';
+    im.alt = '';
+    im.onload = () => ok(im);
+    im.src = uiSrc(name);
+  };
 
   /* ───────── 통계 (GoatCounter goyangsi, 방 util.js gcEvent와 같은 방식) ───────── */
   const gcEvent = (path, title) => {
@@ -207,12 +220,17 @@
     a.append(th, t);
     return a;
   }
-  // 공개 전 다음 한 화: 줄무늬 칸 + 🐾 + 날짜 (누르지 못함)
+  // 공개 전 다음 한 화: 포장하는 사장님(못 받으면 줄무늬 칸 + 🐾) + 날짜 (누르지 못함)
   function soonCard(ep, kicker) {
     const d = el('div', 'mh-card mh-soon');
     d.setAttribute('aria-disabled', 'true');
     const th = el('span', 'mh-thumb mh-stripes', '🐾');
     th.setAttribute('aria-hidden', 'true');
+    art('sloth-wrap', im => {
+      th.className = 'mh-thumb';
+      th.textContent = '';
+      th.append(im);
+    });
     const t = el('span', 'mh-card-t');
     if (kicker)
       t.append(el('small', 'mh-kick', kicker));
@@ -238,13 +256,24 @@
     const soon = eps.find(e => !isOpen(e)); // 다음 한 화만 보인다
     body.classList.add('mh-paper');
 
-    // 맨 위 짙은 띠: 고양이 얼굴 + 간판
+    // 맨 위 짙은 띠: 고양이 얼굴(빼꼼 그림의 머리 부분) + 나무 간판 위에 글자
     const sign = el('header', 'mh-sign');
     const signIn = el('div', 'mh-sign-in');
     const face = el('span', 'mh-face');
     face.innerHTML = CAT_FACE;
-    signIn.append(face, el('b', '', tr('room')));
+    const board = el('span', 'mh-board');
+    board.append(el('b', '', tr('room')));
+    signIn.append(face, board);
     sign.append(signIn);
+    art('cat-peek-open', im => {
+      face.textContent = '';
+      face.classList.add('mh-art');
+      face.style.backgroundImage = 'url("' + im.src + '")';
+    });
+    art('sign', im => {
+      board.classList.add('mh-art');
+      board.style.backgroundImage = 'url("' + im.src + '")';
+    });
 
     // 표지(아래쪽이 종이색으로 이어짐) 위에 딱지·연재 제목·작품명·큰 버튼
     const main = el('main', 'mh-list');
@@ -379,6 +408,24 @@
     const peek = el('div', 'mh-peek');
     peek.innerHTML = CAT_PEEK;
     end.append(peek, el('h2', 'mh-end-t', tr('end', { n: ep.no })));
+    // 그림: 눈 뜬 것을 받으면 바꿔 끼우고, 감은 것까지 받으면 가끔 깜빡 (동작 줄이기면 깜빡이지 않음)
+    art('cat-peek-open', open => {
+      peek.textContent = '';
+      peek.classList.add('mh-art');
+      peek.append(open);
+      if (RM)
+        return;
+      art('cat-peek-blink', shut => {
+        shut.className = 'mh-shut';
+        peek.append(shut);
+        const blink = () => {
+          peek.classList.add('mh-blink');
+          setTimeout(() => peek.classList.remove('mh-blink'), 160);
+          setTimeout(blink, 2500 + Math.random() * 4000);
+        };
+        setTimeout(blink, 1500 + Math.random() * 2000);
+      });
+    });
     if (nextOpen) {
       const a = card(next, 'next', tr('nextEp') + ' ›');
       leaveWith(a, ep.no + '/next-click', '만화방 다음 화 누름: ' + ep.no + '화');
