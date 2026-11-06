@@ -13,7 +13,8 @@ import { after, caption, world } from './world.js';
 
 const mapEl = document.getElementById('mapp');
 const AJAR_SEC = 0.25; // 문이 살짝 열리고 닫히는 시간
-let cfg = null, back = false;
+const BELL_WAIT = 12; // 돌아온 딸랑을 소리가 열릴 때까지 기다리는 시간(초). 그보다 늦은 첫 터치에는 울리지 않는다
+let cfg = null, back = false, bellAt = 0; // bellAt: 아직 못 울린 돌아옴 딸랑을 미룬 때(performance.now). 0이면 없음
 
 // 문틈 열림 정도를 목표값 쪽으로 (main.js 매 장면)
 export function doorTick(real) {
@@ -87,10 +88,24 @@ function readBack() {
   }
 }
 export const cameBack = () => back;
-// 딸랑 + 문이 잠깐 열렸다 닫힘 (소리가 꺼져 있으면 자막만)
-export function ringDoor() {
+// 딸랑 + 문이 잠깐 열렸다 닫힘 (소리가 꺼져 있으면 자막만. 소리가 아직 안 열렸으면 딸랑은 첫 터치 때 bellLate)
+const heard = () => Snd.on && Snd.ac && Snd.ac.state === 'running';
+function bell() {
   Snd.bell(1.4);
   after(() => Snd.bell(1.1), 0.14);
+}
+// 새 문서는 소리가 닫힌 채 시작한다(브라우저가 첫 입력 전엔 막음). 그땐 딸랑을 미뤄 두고, 소리가 열리면 ui.js가 이걸 부른다. 한 번만 울린다
+export function bellLate() {
+  const at = bellAt;
+  bellAt = 0;
+  if (at && heard() && performance.now() - at < BELL_WAIT * 1000)
+    bell();
+}
+export function ringDoor() {
+  if (heard())
+    bell();
+  else
+    bellAt = performance.now();
   caption(tr('capDoorBell'), 2.6);
   world.doorTo = 1;
   after(() => {

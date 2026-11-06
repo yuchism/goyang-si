@@ -58,3 +58,6 @@
   - 구조 검사: 표시 그리기를 넣자 `shelf.js`가 500줄을 넘어서 책등 표시(face·yarn·paw·comic)를 `spine-marks.js` 표 `MARKS`로 옮김(그리는 법은 그대로). `frontdoor.js`는 덩어리 밖 모듈만 가져와 엉킨 덩어리 그대로(44개 / 292).
   - 통계 이름: `door-map`(약도 열기) · `map-manhwa`(약도에서 만화방) · `shelf-manhwa`(책장 만화책) · `manhwa-return`(돌아옴) · 만화방 쪽 `manhwa/csf/in-map`·`in-shelf`.
   - 못 돌린 검사: `check_scene.mjs`·`visual_check.js`는 서버·브라우저가 필요한데 이 샌드박스에서 로컬 서버를 띄우는 명령이 막힘 → 사람 검수 때 맥에서. 돌린 것: `check_structure`·`check_time`·`check_tv` 통과, `build_meta.py --check` 맞음, 바꾼 JS `node --check` 통과.
+- 2026-11-06 검수 고침(강고양이 씨).
+  - M2 돌아옴 딸랑: 새 문서는 소리가 닫힌 채 시작해서(첫 입력 전엔 브라우저가 막음) 0.8초 뒤 `Snd.bell`이 그냥 지나갔다. 이제 소리가 열려 있지 않으면 `frontdoor.js`가 딸랑을 미뤄 두고(`bellAt`), `ui.js` `soundUnlock`이 소리를 실제로 연 뒤(`ac.resume()` 끝) `bellLate`를 부른다. 한 번만(미룬 표시를 먼저 지움), 12초(`BELL_WAIT`) 안의 첫 입력에만, 소리를 끈 사람은 그대로 자막만.
+  - M1 `visual_check` 전후: 이 샌드박스에서 다시 시도 — 로컬 서버는 포트 열기가 막히고(EPERM), 서버 없이 파일을 바로 돌려주게 감싸도 Chromium이 뜨자마자 죽는다(`bootstrap_check_in … MachPortRendezvousServer: Permission denied`). 여기선 못 찍음 → 맥에서: `cd web && python3 -m http.server 8000 &` 뒤 `git archive b990203 web`로 꺼낸 전 판과 지금 판을 각각 `node tools/visual_check.js 8000 …` → `python3 tools/compare.py`. 다를 수 있는 곳은 책장이 보이는 장면의 만화책 한 권뿐이어야 한다.

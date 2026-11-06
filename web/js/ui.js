@@ -23,7 +23,7 @@ import { actorLift } from './steps.js';
 import { STANDALONE, closeOdd, oddAt, openOdd, toggleOdd } from './install.js';
 import { pawsHTML } from './catbook.js';
 import { caption, cat, mouse, say, world } from './world.js';
-import { closeMap, openMap } from './frontdoor.js';
+import { bellLate, closeMap, openMap } from './frontdoor.js';
 /* ───────── 입력 ───────── */
 export function toStage(e) {
   const r = cv.getBoundingClientRect();
@@ -96,6 +96,8 @@ function soundUnlock() {
       Snd.toggle();
     else if (Snd.ac && Snd.ac.state !== 'running')
       Snd.ac.resume();
+    if (Snd.ac) // 소리가 실제로 열린 뒤 미뤄 둔 돌아옴 딸랑 (frontdoor.js)
+      Snd.ac.resume().then(bellLate, () => {});
     if (Snd.ac && Snd.ac.state === 'running')
       UNLOCK.forEach(t => document.removeEventListener(t, go, true));
   };
