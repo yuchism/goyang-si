@@ -6,7 +6,8 @@ import { SRC, loadImages, loadMeta, onWarm } from './assets.js';
 import { CAKE, bannerText, birthdayMode, danceCell, drawCakeGlow, drawDisco, drawDiscoLights, drawPartyLights, drawPartyMouse, tickParty } from './birthday.js';
 import { drawPuffs, guestLayers } from './guests.js';
 import { chimeLayers, chimeTick, drawChimeGlow, drawChimePuffs } from './chime.js';
-import { calmDown, catBrain, cupTick, sunbeamTick } from './cat.js';
+import { calmDown, catBrain, cupTick, sunbeamTick, welcomeB } from './cat.js';
+import { cameBack, doorTick, initFrontDoor, ringDoor } from './frontdoor.js';
 import { exposeDebug } from './debug.js';
 import { ERRORS, guard, guardDraw, reportError } from './guard.js';
 import { resetActor, resetDuet } from './recover.js';
@@ -146,6 +147,7 @@ function step(tNow) {
     }
   }
   cut('만득 씨', () => updateManduk(real));
+  cut('현관문', () => doorTick(real)); // 문틈·약도 (frontdoor.js)
   if (world.paw) {
     world.paw.t += real;
     if (world.paw.t > 2.5)
@@ -311,6 +313,7 @@ if (devErrs)
 applyDom();
 bannerText();
 initShelf();
+initFrontDoor();
 initUI();
 initInstall();
 initJump();
@@ -334,6 +337,11 @@ export function start() {
     world.dayKey = calDay(d);
     world.lampOn = lampShouldBeOn(d);
     settleCat(d);
+    if (cameBack()) // 만화방에서 돌아옴: 방이 뜬 뒤 딸랑 + 문 + 강고양이 씨 반응 (frontdoor.js, cat.js)
+      after(() => {
+        ringDoor();
+        welcomeB();
+      }, 0.8);
   }
   catch (e) {
     reportError('시작', e);

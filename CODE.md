@@ -113,6 +113,8 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `chime.js` | 정각 종·정각 손님(HOURLY_CHIME_PLAN.md): 매시 정각 먼 종(`sound.js` `CHIME`·`chimePlan`·`Snd.chime`, 녹음 `web/sound/`), 차임 동안 손님 하나(시각 씨앗, 장면 `chime.guest` 자리)가 뿅 나와 춤추고 뿅. 불 끈 뒤엔 종만 작게, 할로윈 자정은 마녀·외계인·호박머리(어둠 속 눈 빛). 진행 시계는 소리가 울리면 오디오 시계. 점검 `__goyang.chimeNow({ guest, hw })` |
 | `glow.js` | 노란 불빛 마스크 `glowMask(im)`: 그림의 밝은 노랑 픽셀만 촛불빛으로(호박·할로윈 자정 손님 눈). 다른 모듈을 안 부름 |
 | `shelf.js` | 책장 메뉴 (`objects.json`의 `bookshelf.books`): 방 책장 그리기(뒤판·선반·수납장·책을 코드로, 처음 한 번 캐시해 두고 붙임. BOOKSHELF_PLAN.md 10장)·이름표, 📖 목록(책등은 `spine`이 있으면 그것). 설명책·고양이책·설정책은 목록이 아니라 책 창(`ui.js openBook`)으로 |
+| `spine-marks.js` | 책등 표시 표 `MARKS` (`deco.mark`: face·yarn·paw·comic). `shelf.js`에서 나눔 — 새 표시는 표에 한 줄 |
+| `frontdoor.js` | 현관문: 누르면 문틈(`world.doorAjar`) + 동네 약도 창(`objects.json` `door.map`, 그림 `r/map/` — 문을 누를 때 받음). 만화방에서 돌아옴(`/?from=manhwa`) 딸랑 + 문. tasks/manhwa-2-gate.md |
 | `catbook.js` | 고양이책 발자국: 책마다 발자국 길 표 `PATHS`와 그리기 `pawsHTML` (BOOKSHELF_PLAN.md 5장) |
 | `frame.js` | 벽 액자: 날짜마다 바뀌는 가족사진(`objects.json`의 `frame.photos`), 누르면 다음 사진·조금씩 삐뚤어짐, 만득 씨가 다녀가면 반듯. 넘긴 사진·기울기는 그 기기에 저장. FRAME_PHOTOS_PLAN.md |
 | `ui.js` | 캔버스 누르기, 쪽지·노트북 창, **책 창** `openBook`/`closeBook`(설명책·고양이책·설정책, 이상한 책과 같은 페이지 창 `#bookp`), 설정 책의 소리(기본 켜짐, 첫 누르기에 조용히 열기)·켜 두기(화면 꺼짐 방지)·전체 화면, 미리보기 도구. MOBILE_PLAN.md 14장, BOOKSHELF_PLAN.md |

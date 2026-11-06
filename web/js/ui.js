@@ -2,9 +2,9 @@
 import { assetsWarm, imageReady, img } from './assets.js';
 import { LANG, setLang, tObj, tr } from './i18n.js';
 import { knockB, petCat, secretB } from './cat.js';
-import { startVisit, todaysNote } from './manduk.js';
+import { mandukWait, startVisit, todaysNote } from './manduk.js';
 import { mouseHide, spawnMouse } from './mouse.js';
-import { O, OBJ, objView, present, zOf } from './objects.js';
+import { O, OBJ, P, objView, present, zOf } from './objects.js';
 import { eventsDev } from './events.js';
 import { bookAt, closeShelf, onShelf, openShelf, shelfUI } from './shelf.js';
 import { Snd } from './sound.js';
@@ -23,6 +23,7 @@ import { actorLift } from './steps.js';
 import { STANDALONE, closeOdd, oddAt, openOdd, toggleOdd } from './install.js';
 import { pawsHTML } from './catbook.js';
 import { caption, cat, mouse, say, world } from './world.js';
+import { bellLate, closeMap, openMap } from './frontdoor.js';
 /* ───────── 입력 ───────── */
 export function toStage(e) {
   const r = cv.getBoundingClientRect();
@@ -54,6 +55,19 @@ const TOUCH = {
     scrEl.focus();
   },
 };
+// 현관문 (frontdoor.js): 누르면 약도. 만득 씨가 문 앞에 있으면 열리지 않고 "잠깐만~". door.map이 없으면 아무 일 없음
+const doorAt = (x, y) => !!P.door && x > P.door.x && x < P.door.x + P.door.w && y > P.door.y && y < P.door.y + P.door.h;
+function doorTouch() {
+  const map = O.door && O.door.map;
+  if (!map)
+    return;
+  if (world.manduk) {
+    mandukWait();
+    return;
+  }
+  const d = P.door, r = cv.getBoundingClientRect(); // 약도가 자라나는 곳: 문틈(문 왼쪽 끝) 화면 자리
+  openMap(map, [r.left + (d.x + d.w * 0.15 - cam.x) / (view.vw || W) * r.width, r.top + (d.y + d.h * 0.45) / H * r.height]);
+}
 export let devOpen = false, wake = null;
 /* 화면 꺼짐 방지 (MOBILE_PLAN.md 5장)
    켜는 경우: 「켜 두기」를 켰을 때(기기·충전 상태와 상관없이), 전체 화면일 때.
@@ -82,6 +96,8 @@ function soundUnlock() {
       Snd.toggle();
     else if (Snd.ac && Snd.ac.state !== 'running')
       Snd.ac.resume();
+    if (Snd.ac) // 소리가 실제로 열린 뒤 미뤄 둔 돌아옴 딸랑 (frontdoor.js)
+      Snd.ac.resume().then(bellLate, () => {});
     if (Snd.ac && Snd.ac.state === 'running')
       UNLOCK.forEach(t => document.removeEventListener(t, go, true));
   };
@@ -223,6 +239,7 @@ export function initUI() {
     closeBook();
     closeTvGuide();
     closeOdd();
+    const wasMap = closeMap(); // 약도가 펼쳐져 있었으면 이번 누르기는 접기만 (문을 다시 눌러도 다시 펴지 않음)
     // 놀이(plays.js)가 먼저 본다: 레이저 놀이 중이면 점만 움직이고, 실뭉치는 고양이 앞발 밑에 있을 때가 많아 고양이보다 먼저
     if (playsPress(x, y, 'first') || playsPress(x, y, 'before'))
       return;
@@ -271,6 +288,8 @@ export function initUI() {
       TOUCH[hit.touch]();
       return;
     }
+    if (!wasMap && doorAt(x, y))
+      doorTouch();
   });
   // 누른 채 움직이기 (레이저 점)
   cv.addEventListener('pointermove', e => playsDrag(...toStage(e), e));
@@ -287,6 +306,7 @@ export function initUI() {
   document.getElementById('aScreen').onclick = TOUCH.screen;
   document.getElementById('aTv').onclick = TOUCH.tv;
   document.getElementById('aFrame').onclick = TOUCH.frame;
+  document.getElementById('aDoor').onclick = () => closeMap() || doorTouch();
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible')
       wakeLock(); // 다른 앱에 다녀오면 풀려 있으니 다시 요청 (켜 둘 이유가 있을 때만)

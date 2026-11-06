@@ -303,6 +303,17 @@ function drawDoor(v) {
     ctx.fillStyle = 'rgba(255,226,160,.9)';
     ctx.fillRect(o.x, FLOOR - 4, o.w, 4);
   }
+  // 현관문 문틈 (frontdoor.js world.doorAjar 0~1): 문이 살짝 열려 손잡이 쪽(왼쪽) 틈으로 바깥 빛
+  const aj = open ? 0 : world.doorAjar || 0;
+  if (aj > 0.01) {
+    const gw = o.w * 0.16 * aj;
+    ctx.fillStyle = '#f1dfb6';
+    ctx.fillRect(o.x, o.y, gw, o.h + 2);
+    ctx.fillStyle = 'rgba(255,236,190,.5)';
+    ctx.fillRect(o.x - 24 * aj, FLOOR, gw + 24 * aj, 12);
+    ctx.fillStyle = INK;
+    ctx.fillRect(o.x + gw, o.y, 3, o.h + 2);
+  }
 }
 export function drawCup(x, y, rot) {
   drawProp(rot ? 'cup_down' : 'cup_up', x, y, rot ? 44 : 42);

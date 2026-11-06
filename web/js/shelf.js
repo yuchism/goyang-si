@@ -5,9 +5,10 @@ import { rr } from './draw.js';
 import { O } from './objects.js';
 import { ctx, cv, view } from './stage.js';
 import { closeBook, isPageBook, noteEl, openBook, scrEl, toStage } from './ui.js';
-import { HAND, RM, esc, onScene } from './util.js';
+import { HAND, RM, esc, gcEvent, onScene } from './util.js';
 import { cat, say, world } from './world.js';
 import { oddAt, oddVisible, openOdd } from './install.js';
+import { MARKS } from './spine-marks.js';
 /* ───────── 책장 메뉴 ─────────
   objects.json의 bookshelf.books 한 권이 메뉴 하나.
   큰 화면: 책에 올리면 살짝 빠지고 이름표, 누르면 그 책이 펼쳐진 목록.
@@ -211,83 +212,6 @@ function band(c, w, y, k) {
     c.stroke();
   }
 }
-function paw(c, x, y, s, a) { // 흐린 발자국 (catbook.js 발바닥과 같은 모양)
-  c.save();
-  c.translate(x, y);
-  c.rotate(a * RAD);
-  c.scale(s / 40, s / 40);
-  c.translate(-20, -20);
-  c.fillStyle = INKC;
-  c.globalAlpha = 0.38;
-  for (const [ex, ey, rx, ry, r] of [[20, 27, 9.5, 8, 0], [9, 15.5, 3.6, 4.6, -22], [16, 9.5, 3.8, 4.9, -7], [24, 9.5, 3.8, 4.9, 7], [31, 15.5, 3.6, 4.6, 22]]) {
-    c.beginPath();
-    c.ellipse(ex, ey, rx, ry, r * RAD, 0, 7);
-    c.fill();
-  }
-  c.restore();
-}
-function catFace(c, x, y, s) { // 강고양이 씨 얼굴: 흰 바탕에 오른쪽 갈색 얼룩
-  c.save();
-  c.translate(x, y);
-  c.scale(s / 20, s / 20);
-  c.lineWidth = 1.5;
-  c.strokeStyle = INKC;
-  c.lineJoin = 'round';
-  c.fillStyle = '#fbf3e6';
-  c.beginPath();
-  c.moveTo(-8, -3);
-  c.lineTo(-7, -11);
-  c.lineTo(-2, -6.5);
-  c.moveTo(8, -3);
-  c.lineTo(7, -11);
-  c.lineTo(2, -6.5);
-  c.fill();
-  c.stroke();
-  c.beginPath();
-  c.ellipse(0, 0, 9.5, 7.5, 0, 0, 7);
-  c.fill();
-  c.save();
-  c.clip();
-  c.fillStyle = '#9a6a45';
-  c.beginPath();
-  c.ellipse(5.5, -1.5, 5, 4.5, -0.3, 0, 7);
-  c.fill();
-  c.restore();
-  c.beginPath();
-  c.ellipse(0, 0, 9.5, 7.5, 0, 0, 7);
-  c.stroke();
-  c.fillStyle = INKC;
-  c.fillRect(-5.2, -1, 2.6, 1.3);
-  c.fillRect(2.6, -1, 2.6, 1.3);
-  c.fillStyle = '#e88a9a';
-  c.beginPath();
-  c.arc(0, 2, 1, 0, 7);
-  c.fill();
-  c.restore();
-}
-function yarn(c, x, y, r) { // 빨간 실뭉치
-  c.save();
-  c.lineWidth = 1.3;
-  c.strokeStyle = INKC;
-  c.beginPath();
-  c.moveTo(x + r * 0.6, y + r * 0.8);
-  c.quadraticCurveTo(x + r * 1.6, y + r * 2, x + r * 0.4, y + r * 2.6);
-  c.stroke();
-  c.beginPath();
-  c.arc(x, y, r, 0, 7);
-  c.fillStyle = '#d0503f';
-  c.fill();
-  c.stroke();
-  c.clip();
-  c.strokeStyle = 'rgba(42,26,18,.7)';
-  c.lineWidth = 1;
-  for (const k of [-0.5, 0, 0.5]) {
-    c.beginPath();
-    c.ellipse(x + k * r, y, r * 0.35, r * 1.2, 0.5, 0, 7);
-    c.stroke();
-  }
-  c.restore();
-}
 // 책 한 권: 바닥 왼쪽 모서리가 원점, 위가 -y
 function paintBook(c, b) {
   const { w, h, color } = b, d = b.deco || {};
@@ -326,14 +250,9 @@ function paintBook(c, b) {
     c.lineWidth = 1.3;
     c.stroke();
   }
-  if (d.mark === 'face')
-    catFace(c, w / 2, -h + (d.label ? d.label[0] * h + d.label[1] / 2 + 1 : h * 0.35), Math.min(18, w * 0.62));
-  else if (d.mark === 'yarn')
-    yarn(c, w / 2, -h * 0.55, Math.min(6.5, w * 0.24));
-  else if (d.mark === 'paw') {
-    const [px, py, pa] = d.paw || [0.5, 0.5, 0];
-    paw(c, w * px, -h + h * py, Math.min(w * 0.62, 16), pa);
-  }
+  const mark = MARKS[d.mark];
+  if (mark)
+    mark(c, b);
   rrect(c, 0, -h, w, h, 3.2);
   c.strokeStyle = INKC;
   c.lineWidth = 2.5;
@@ -452,6 +371,14 @@ export function initShelf() {
   shelfEl.addEventListener('click', e => {
     if (e.target.closest('.x')) {
       closeShelf();
+      return;
+    }
+    // 통계 이름(gc)이 있는 책: 보내고 조금 있다가 떠난다 (만화책 → 만화방)
+    const op = e.target.closest('a.open'), ob = op && BOOKS().find(b => b.id === shelfUI.pull);
+    if (ob && ob.gc && !op.target && !(e.metaKey || e.ctrlKey || e.shiftKey || e.button)) {
+      e.preventDefault();
+      gcEvent(ob.gc, '책장 책: ' + ob.gc);
+      setTimeout(() => { location.href = op.href; }, 180);
       return;
     }
     const sp = e.target.closest('.spine');
