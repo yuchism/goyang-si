@@ -9,8 +9,8 @@
   "clock": [1188, 192, 104, 104],
   "signs": {
     "door": { "rect": [129, 251, 108, 84], "art": "sign-door.webp", "text": [9, 47, 90, 31] },
-    "exit": { "rect": [1110, 457, 260, 106], "art": "sign-exit.webp", "text": [25, 14, 210, 64] },
-    "workout": { "rect": [1120, 395, 240, 183], "art": "sign-workout.webp", "text": [40, 36, 145, 90] }
+    "exit": { "rect": [1180, 611, 120, 34], "text": [0, 0, 120, 34] },
+    "workout": { "rect": [1168, 440.2, 144, 109.8], "art": "sign-workout.webp", "text": [24, 21.6, 87, 54] }
   },
   "door": [45, 262, 220, 460],
   "shelf": {

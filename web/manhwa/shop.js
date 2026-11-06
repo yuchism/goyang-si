@@ -125,7 +125,9 @@ const place = (n, [x, y, w, h]) => {
 };
 function makeSign(tag, cls, spec, text) {
   const n = place(el(tag, 'painted-sign ' + cls), spec.rect);
-  n.append(img(DIR + spec.art, 'sign-art'), place(el('span', 'sign-text', text), spec.text));
+  if (spec.art)
+    n.append(img(DIR + spec.art, 'sign-art'));
+  n.append(place(el('span', 'sign-text', text), spec.text));
   return n;
 }
 
@@ -331,7 +333,7 @@ function build(cfg) {
     talk(moving(state.slot, now()) >= 0 ? tr('move') : L(STR.ex[state.slot.ex]));
   });
 
-  // 승인된 소품 그림 위에 번역 글자를 얹는다. 화살표는 장면 좌표로 정한다.
+  // 그림 팻말 또는 계산대 앞면 표지에 번역 글자를 얹는다. 화살표는 장면 좌표로 정한다.
   const signs = {};
   for (const [key, textKey, target, action] of [
     ['exit', 'shopExitSign', cfg.door[0] + cfg.door[2] / 2, () => talk(sharedTr('shopExitReply'))],

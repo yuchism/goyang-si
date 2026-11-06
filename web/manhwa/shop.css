@@ -61,12 +61,13 @@ body.shop { overflow: hidden; background: var(--mh-bg); }
 .clock-pin { position: absolute; left: 45%; top: 45%; width: 10%; height: 10%; border-radius: 50%; background: currentColor; }
 .is-night .wall-clock { background: #a5a29a; border-color: #33303b; color: #292733; box-shadow: 2px 3px 0 #17172588, inset 0 0 0 2px #777483; }
 
-/* 나무 걸이판·명패·A형 칠판: 그림은 무자막, 글자 자리는 scene.json. */
+/* 나무 걸이판·운동 칠판과 계산대 앞면 출구 표지. 자리·글자 영역은 scene.json. */
 .painted-sign { color: #433120; }
 .sign-art { width: 100%; height: 100%; }
 .sign-text { position: absolute; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-family: var(--font-hand); font-weight: 700; line-height: 1; }
 .sc .counter-sign { z-index: 4; font-size: 25px; color: #433120; }
-.sc .workout-sign { color: #f1edcf; font-size: 23px; }
+.sc .exit-sign { background: #237347; color: #fff; border-radius: 2px; box-shadow: inset 0 0 0 2px #ffffffbb; font-size: 18px; }
+.sc .workout-sign { color: #f1edcf; font-size: 13.8px; }
 .workout-sign .sign-text { text-shadow: .5px 0 #d7dfcb, 0 .5px #d7dfcb; }
 .counter-sign[hidden] { display: none; }
 .is-night .painted-sign { filter: brightness(.68) saturate(.75); }
