@@ -2,7 +2,7 @@
 import { P } from './objects.js';
 import { shelfUI } from './shelf.js';
 import { HOLE } from './sprites.js';
-import { clamp } from './util.js';
+import { RM, clamp } from './util.js';
 import { cat, mouse, world } from './world.js';
 /* ───────── 무대 ───────── */
 // 무대 숫자는 장면의 stage.json에서 온다 (SCENE_PLAN.md 2장). 아래 값은 읽기 전 기본값(= 방)
@@ -12,7 +12,8 @@ export const WALK = { x0: 40, x1: 1160, y0: 592, y1: 740 };
 // 걷는 바닥 안으로: 가로는 몸 반폭(half, 배우의 a.half)만큼 더 안쪽까지만 (SCENE_PLAN.md 3장)
 export const walkX = (x, half = 0) => clamp(x, WALK.x0 + half, WALK.x1 - half);
 export const walkY = y => clamp(y, WALK.y0, WALK.y1);
-const CAM = { shelf: 692, door: 1080, window: 300, party: 430, partyMouse: 700 }; // party: 생일 파티(손님 무리·강고양이 씨·케이크), partyMouse: 노래 끝나고 쥐야쥐 박수 (BIRTHDAY_GUESTS_PLAN.md 7-1)
+// look: 좁은 화면 둘러보기·들어올 때 스르륵 숫자 (tasks/room-pan.md). 장면에 없으면 둘러보기도 스르륵도 없다
+const CAM = { shelf: 692, door: 1080, window: 300, party: 430, partyMouse: 700, look: null }; // party: 생일 파티(손님 무리·강고양이 씨·케이크), partyMouse: 노래 끝나고 쥐야쥐 박수 (BIRTHDAY_GUESTS_PLAN.md 7-1)
 // 방 자체 밝기 (SCENE_PLAN.md 6장): base = 바깥 빛이 하나도 안 들어올 때 방 어둠 (0 밝음 ~ 1)
 const ROOM_LIGHT = { base: 0 };
 // 방 어둠 = 방 자체 어둠 × (1 − 창 가중치) + 창으로 들어오는 바깥 어둠 × 가중치. 스탠드·호박은 그리는 쪽(main.js)에서
@@ -109,13 +110,14 @@ export function fit() {
   cv.height = Math.floor(H * s * dpr);
   view = { s, dpr, vw };
   cam.x = clamp(cam.x, 0, W - vw);
+  cv.classList.toggle('look', canLook()); // 둘러보기가 되는 화면: 가로 끌기는 브라우저가 아니라 방이 받는다 (style.css)
   const bd = document.getElementById('birthday');
   if (bd)
     bd.style.top = Math.round(Math.max(0, (r.height - H * s) / 2) + H * s * 0.035) + 'px'; // 생일 배너는 방 위쪽에 붙임
 }
 export const cam = { x: 0 };
-// 카메라가 볼 곳: 만득 씨가 오면 문, UFO·산타는 창, 둘이 함께면 둘 사이, 평소엔 강고양이 씨
-function camTarget() {
+// 큰 일: 둘러보던 손님도 바로 데려가는 곳 (tasks/room-pan.md). 없으면 null
+function bigTarget() {
   if (shelfUI.open || shelfUI.oddOpen || shelfUI.book) // 책장 목록·이상한 책·책 창(설명책·고양이책·설정책)이 펼쳐져 있으면 책장을 본다
     return CAM.shelf;
   if (world.manduk && world.manduk.phase !== 'steps')
@@ -125,22 +127,142 @@ function camTarget() {
   const pc = world.party && world.party.cam; // 생일 파티: 손님 무리 → 노래 끝나면 쥐야쥐 (birthday.js)
   if (pc)
     return pc === 'mouse' ? CAM.partyMouse : CAM.party;
+  return null;
+}
+// 카메라가 볼 곳: 큰 일(책장·만득 씨 문·UFO 창·파티) 다음, 쥐야쥐와 함께면 둘 사이, 평소엔 강고양이 씨
+function camTarget() {
+  const big = bigTarget();
+  if (big != null)
+    return big;
   if (!mouse.hidden && !mouse.peek && Math.abs(mouse.x - cat.x) < view.vw * 0.8)
     return (cat.x + mouse.x) / 2;
   if (mouse.peek)
     return (cat.x + HOLE.cx) / 2;
   return cat.inBox ? P.box.x : cat.x;
 }
+/* 둘러보기 (tasks/room-pan.md): 좁은 화면에서 손님이 방을 끌면 자동 카메라가 멈춘다.
+   놓으면 관성으로 미끄러지다 서고, 손을 떼고 look.idle초 지나면 천천히 자동 카메라로. 큰 일(bigTarget)이 생기면 바로.
+   intro: 들어올 때 문에서 자동 카메라 대상까지 스르륵 (만화방 입장과 같은 ease-out) */
+const look = { on: false, held: false, idle: 0, v: 0, back: false, moves: [] };
+let intro = null, lastBig = null, pushed = false;
+export const canLook = () => !!CAM.look && (view.vw || W) < W;
+export const lookDragPx = () => CAM.look.dragPx;
+const camMax = () => W - (view.vw || W);
+// 손이 닿음: 스르륵을 멈추고 손님 손을 따른다. 미끄러지던 방도 잡힌다
+export function lookTouch() {
+  if (!canLook() || (!intro && !look.on))
+    return;
+  intro = null;
+  Object.assign(look, { on: true, held: true, idle: 0, v: 0, moves: [] });
+}
+export function lookStart() {
+  if (!canLook())
+    return;
+  intro = null;
+  Object.assign(look, { on: true, held: true, idle: 0, v: 0, back: false, moves: [] });
+}
+// 방을 dx(방 좌표, +는 오른쪽을 보기)만큼. 끌기는 관성을 위해 움직임을 적어 둔다 (트랙패드 가로 스크롤은 자기 관성이 있어 안 적음)
+export function lookBy(dx, drag) {
+  if (!look.on)
+    return;
+  cam.x = clamp(cam.x + dx, 0, camMax());
+  look.idle = 0;
+  if (drag) {
+    const t = performance.now();
+    look.moves = look.moves.filter(m => t - m[0] < 120).concat([[t, dx]]);
+  }
+}
+export function lookRelease() {
+  if (!look.on)
+    return;
+  const t = performance.now(), m = look.moves.filter(x => t - x[0] < 120);
+  look.held = false;
+  look.idle = 0;
+  look.v = RM || m.length < 2 ? 0 : m.reduce((s, x) => s + x[1], 0) / Math.max(0.016, (t - m[0][0]) / 1000);
+  look.moves = [];
+}
+// 놀잇감을 눌렀을 때·큰 일: 둘러보기를 끝내고 지금의 자동 카메라 대상으로
+export function camAuto() {
+  intro = null;
+  look.back = false;
+  if (look.on) {
+    look.on = false;
+    cam.moving = true;
+  }
+}
+// 들어올 때 스르륵: 문에서 시작 (넓은 화면·동작 줄이기에선 안 함. 생일 파티 링크는 부르는 쪽(main.js)이 거른다)
+export function camIntro() {
+  if (!canLook() || RM || !CAM.look.introSec)
+    return;
+  const from = clamp(CAM.door - view.vw / 2, 0, camMax());
+  cam.x = from;
+  intro = { t: 0, from };
+}
+// 레이저 점이 화면 끝(edge) 안에 있으면 방을 그쪽으로 민다. 움직인 만큼(방 좌표)을 돌려준다 (laser.js가 누른 손가락 밑 점을 같이 옮김)
+export function camPush(x, dt) {
+  if (!canLook() || intro)
+    return 0;
+  const vw = view.vw, f = (x - cam.x) / vw, e = CAM.look.edge, dir = f < e ? -1 : f > 1 - e ? 1 : 0;
+  if (!dir)
+    return 0;
+  look.on = false;
+  pushed = true;
+  const x0 = cam.x;
+  cam.x = clamp(cam.x + dir * CAM.look.edgeSpeed * dt, 0, camMax());
+  return cam.x - x0;
+}
 export function updateCam(dt) {
   const vw = view.vw || W;
   if (vw >= W) {
     cam.x = 0;
+    look.on = false;
+    intro = null;
     return;
   }
+  const big = bigTarget();
+  if (big !== lastBig) { // 큰 일이 새로 생기면 둘러보기를 끝낸다 (그 뒤에 다시 끄는 건 손님 마음)
+    lastBig = big;
+    if (big != null)
+      camAuto();
+  }
   const tx = clamp(camTarget() - vw / 2, 0, W - vw), d = tx - cam.x;
+  if (intro) {
+    intro.t += dt;
+    const p = Math.min(1, intro.t / CAM.look.introSec);
+    cam.x = intro.from + (tx - intro.from) * (1 - (1 - p) ** 3);
+    if (p >= 1) {
+      intro = null;
+      cam.moving = false;
+    }
+    return;
+  }
+  if (look.on) {
+    if (look.held)
+      return;
+    if (look.v) { // 관성: 미끄러지다 선다. 방 끝에 닿으면 바로
+      const x0 = cam.x;
+      cam.x = clamp(cam.x + look.v * dt, 0, W - vw);
+      look.v *= Math.exp(-CAM.look.friction * dt);
+      if (cam.x === x0 || Math.abs(look.v) < 5)
+        look.v = 0;
+    }
+    look.idle += dt;
+    if (look.idle >= CAM.look.idle) {
+      look.on = false;
+      look.back = true;
+      cam.moving = true;
+    }
+    return;
+  }
+  if (pushed) { // 이번 장면은 레이저 점이 방을 밀었다
+    pushed = false;
+    return;
+  }
   if (Math.abs(d) > vw * 0.12 || cam.moving) {
     cam.moving = Math.abs(d) > 4;
-    cam.x += d * Math.min(1, dt * 1.2);
+    if (!cam.moving)
+      look.back = false;
+    cam.x += d * Math.min(1, dt * (look.back ? CAM.look.backRate : 1.2)); // 둘러보다 돌아갈 때는 천천히
   }
 }
 new ResizeObserver(fit).observe(wrap);

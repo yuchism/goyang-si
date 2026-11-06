@@ -5,6 +5,8 @@
   "depth": { "y": [588, 738], "scale": [0.88, 1] },
   "walk": { "x": [40, 1160], "y": [592, 740] },
   "minViewW": 560,
-  "camera": { "shelf": 692, "door": 1080, "window": 300, "party": 430, "partyMouse": 700 },
+  "camera": { "shelf": 692, "door": 1080, "window": 300, "party": 430, "partyMouse": 700,
+    "look": { "dragPx": 10, "idle": 15, "backRate": 0.5, "friction": 4, "edge": 0.12, "edgeSpeed": 220, "introSec": 2.8,
+      "note": "좁은 화면 둘러보기·들어올 때 스르륵 (tasks/room-pan.md). dragPx: 이만큼(화면 px) 넘게 움직이면 끌기, 덜 움직이면 탭. idle: 손을 떼고 이 초 동안 아무것도 안 하면 자동 카메라로(backRate: 돌아가는 빠르기). friction: 놓은 뒤 관성이 줄어드는 빠르기. edge: 레이저 점이 화면 폭의 이 비율만큼 끝 안에 있으면 방이 그쪽으로 edgeSpeed(방 px/초)로 밀림. introSec: 들어올 때 문 → 고양이 스르륵 시간(초)" } },
   "light": { "base": 0 }
 }

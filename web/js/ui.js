@@ -8,17 +8,17 @@ import { O, OBJ, P, objView, present, zOf } from './objects.js';
 import { eventsDev } from './events.js';
 import { bookAt, closeShelf, onShelf, openShelf, shelfUI } from './shelf.js';
 import { Snd } from './sound.js';
-import { DEPTH, H, W, cam, cv, fit, view } from './stage.js';
+import { DEPTH, H, W, cam, camAuto, canLook, cv, fit, lookBy, lookDragPx, lookRelease, lookStart, lookTouch, view } from './stage.js';
 import { boxToday, holidayOverride, mandukAsleep, mandukHome, now, rainNow, resetSim, seasonOverride, setOverride, setSimMs, setSpeed } from './time.js';
 import { timeJumped } from './jump.js';
 import { closeTvGuide, openTvGuide } from './tv-guide.js';
 import { initTvDev } from './tv-dev.js';
 import { bannerText } from './birthday.js';
-import { $, esc, store } from './util.js';
+import { $, esc, gcEvent, store } from './util.js';
 import { flipFrame } from './frame.js';
-import { toggleLaser } from './laser.js';
+import { laserOn, toggleLaser } from './laser.js';
 import { tapBowl } from './fish.js';
-import { playsDev, playsDrag, playsPress } from './plays.js';
+import { playsDev, playsDrag, playsLift, playsPress } from './plays.js';
 import { actorLift } from './steps.js';
 import { STANDALONE, closeOdd, oddAt, openOdd, toggleOdd } from './install.js';
 import { pawsHTML } from './catbook.js';
@@ -214,6 +214,64 @@ async function wakeLock() {
   catch (e) { }
   asking = false;
 }
+// 방을 눌렀다 뗌(탭): 쥐야쥐 → 고양이 → 어항 → 이상한 책 → 책장 → 물건 → 현관문. 놀이(레이저·실뭉치)는 누르는 순간 따로 본다
+function tapAt(x, y, wasMap) {
+  if (hitActor(mouse, x, y)) {
+    say(mouse, '‼️', 1.5);
+    mouseHide(true);
+    return;
+  }
+  if (hitActor(cat, x, y)) {
+    petCat();
+    return;
+  }
+  if (playsPress(x, y, 'after')) // 어항처럼 코드로 그리는 놀이 물건 (아래 일반 판정 대신)
+    return;
+  if (oddAt(x, y)) {
+    openOdd();
+    return;
+  }
+  if (onShelf(x, y)) {
+    const b = bookAt(x, y);
+    openShelf(b && b.id);
+    return;
+  }
+  // 누르는 범위는 그림보다 사방 6(hitPad로 바꿈). 범위가 겹치면 그림에 더 가까운 물건 (같으면 목록 앞쪽)
+  let hit = null, hitD = Infinity;
+  for (const o of OBJ) {
+    if (!o.touch || !present(o))
+      continue;
+    const v = objView(o);
+    let im = img(v.look);
+    if (!imageReady(im) && v.photos)
+      im = img(v.photos[0]);
+    if (!v.pos || !imageReady(im))
+      continue;
+    const w = v.pos.w, h = w * im.height / im.width, by = v.pos.y - zOf(o), pad = v.hitPad != null ? v.hitPad : 6;
+    const x0 = v.pos.x - w / 2, x1 = v.pos.x + w / 2, y0 = by - h;
+    if (x > x0 - pad && x < x1 + pad && y > y0 - pad && y < by + pad) {
+      const dd = Math.hypot(Math.max(x0 - x, 0, x - x1), Math.max(y0 - y, 0, y - by));
+      if (dd < hitD) {
+        hitD = dd;
+        hit = o;
+      }
+    }
+  }
+  if (hit) {
+    TOUCH[hit.touch]();
+    return;
+  }
+  if (!wasMap && doorAt(x, y))
+    doorTouch();
+}
+// 좁은 화면에서 누르고 있는 손가락 (탭인지 끌기인지 아직 모름). panned: 통계 room-pan을 이번 방문에 보냈나
+let held = null, panned = false;
+function panOnce() {
+  if (panned)
+    return;
+  panned = true;
+  gcEvent('room-pan', '방 둘러보기'); // 방을 처음 끌었을 때 방문당 한 번
+}
 const SEASONS = [null, 'spring', 'summer', 'autumn', 'winter'];
 // 입력과 버튼 연결
 export function initUI() {
@@ -240,59 +298,60 @@ export function initUI() {
     closeTvGuide();
     closeOdd();
     const wasMap = closeMap(); // 약도가 펼쳐져 있었으면 이번 누르기는 접기만 (문을 다시 눌러도 다시 펴지 않음)
-    // 놀이(plays.js)가 먼저 본다: 레이저 놀이 중이면 점만 움직이고, 실뭉치는 고양이 앞발 밑에 있을 때가 많아 고양이보다 먼저
-    if (playsPress(x, y, 'first') || playsPress(x, y, 'before'))
-      return;
-    if (hitActor(mouse, x, y)) {
-      say(mouse, '‼️', 1.5);
-      mouseHide(true);
-      return;
-    }
-    if (hitActor(cat, x, y)) {
-      petCat();
+    lookTouch(); // 스르륵·관성 중이면 그 자리에서 멈추고 손님 손을 따른다 (tasks/room-pan.md)
+    // 놀이(plays.js)가 먼저 본다: 레이저 놀이 중이면 점만 움직이고, 실뭉치는 고양이 앞발 밑에 있을 때가 많아 고양이보다 먼저.
+    // 놀잇감은 누르는 순간 받는다(끌기로 오해받지 않게). 둘러보던 카메라는 자동으로
+    if (playsPress(x, y, 'first') || playsPress(x, y, 'before')) {
+      camAuto();
       return;
     }
-    if (playsPress(x, y, 'after')) // 어항처럼 코드로 그리는 놀이 물건 (아래 일반 판정 대신)
-      return;
-    if (oddAt(x, y)) {
-      openOdd();
-      return;
-    }
-    if (onShelf(x, y)) {
-      const b = bookAt(x, y);
-      openShelf(b && b.id);
-      return;
-    }
-    // 누르는 범위는 그림보다 사방 6(hitPad로 바꿈). 범위가 겹치면 그림에 더 가까운 물건 (같으면 목록 앞쪽)
-    let hit = null, hitD = Infinity;
-    for (const o of OBJ) {
-      if (!o.touch || !present(o))
-        continue;
-      const v = objView(o);
-      let im = img(v.look);
-      if (!imageReady(im) && v.photos)
-        im = img(v.photos[0]);
-      if (!v.pos || !imageReady(im))
-        continue;
-      const w = v.pos.w, h = w * im.height / im.width, by = v.pos.y - zOf(o), pad = v.hitPad != null ? v.hitPad : 6;
-      const x0 = v.pos.x - w / 2, x1 = v.pos.x + w / 2, y0 = by - h;
-      if (x > x0 - pad && x < x1 + pad && y > y0 - pad && y < by + pad) {
-        const dd = Math.hypot(Math.max(x0 - x, 0, x - x1), Math.max(y0 - y, 0, y - by));
-        if (dd < hitD) {
-          hitD = dd;
-          hit = o;
-        }
+    // 좁은 화면: 탭인지 끌기인지는 손을 뗄 때 안다. 넓은 화면은 지금처럼 누르는 순간 탭
+    if (canLook()) {
+      held = { id: e.pointerId, cx: e.clientX, cy: e.clientY, lx: e.clientX, x, y, wasMap, drag: false };
+      try {
+        cv.setPointerCapture(e.pointerId);
       }
-    }
-    if (hit) {
-      TOUCH[hit.touch]();
+      catch (err) { }
       return;
     }
-    if (!wasMap && doorAt(x, y))
-      doorTouch();
+    tapAt(x, y, wasMap);
   });
-  // 누른 채 움직이기 (레이저 점)
-  cv.addEventListener('pointermove', e => playsDrag(...toStage(e), e));
+  // 누른 채 움직이기: 좁은 화면에서 기준 거리(stage.json camera.look.dragPx)를 넘으면 방 끌기. 아니면 놀이(레이저 점)
+  cv.addEventListener('pointermove', e => {
+    if (held && e.pointerId === held.id) {
+      if (!held.drag && Math.hypot(e.clientX - held.cx, e.clientY - held.cy) > lookDragPx()) {
+        held.drag = true;
+        lookStart();
+        panOnce();
+      }
+      if (held.drag)
+        lookBy(-(e.clientX - held.lx) / view.s, true);
+      held.lx = e.clientX;
+      return;
+    }
+    playsDrag(...toStage(e), e);
+  });
+  const lift = e => {
+    const h = held && e.pointerId === held.id ? held : null;
+    if (h)
+      held = null;
+    lookRelease();
+    if (h && !h.drag && e.type === 'pointerup')
+      tapAt(h.x, h.y, h.wasMap);
+    playsLift(e);
+  };
+  cv.addEventListener('pointerup', lift);
+  cv.addEventListener('pointercancel', lift);
+  // 좁은 창의 트랙패드 가로 스크롤도 같은 둘러보기. 레이저 중엔 방을 끌지 않는다(점만, 화면 끝에서 밀림)
+  cv.addEventListener('wheel', e => {
+    if (!canLook() || laserOn() || Math.abs(e.deltaX) <= Math.abs(e.deltaY))
+      return;
+    e.preventDefault();
+    lookStart();
+    lookBy(e.deltaX / view.s);
+    lookRelease();
+    panOnce();
+  }, { passive: false });
   noteEl.addEventListener('click', () => noteEl.hidden = true);
   scrEl.addEventListener('click', () => scrEl.hidden = true);
   document.getElementById('aCat').onclick = () => petCat();
