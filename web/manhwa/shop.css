@@ -50,6 +50,24 @@ body.shop { overflow: hidden; background: var(--mh-bg); }
 .cover.code .cover-t { display: flex; flex-direction: column; position: absolute; inset: 4px; align-items: center; justify-content: center; text-align: center; font: 700 13px/1.15 var(--font-hand); color: #fff; word-break: keep-all; border: 1.5px solid rgba(255, 255, 255, .6); padding: 2px; }
 .is-night .cover.code { filter: brightness(.95); }
 
+/* 벽시계: 숫자·초침 없이 열두 눈금, 바늘 각도는 만화방 now(). */
+.wall-clock { z-index: 1; box-sizing: border-box; border: 6px solid #503a2b; border-radius: 50%; background: #fffdf5; color: #302820; box-shadow: 2px 3px 0 #503a2b55, inset 0 0 0 2px #bba88a; }
+.clock-tick { position: absolute; inset: 5%; }
+.clock-tick::before { content: ''; position: absolute; left: 49%; top: 0; width: 2%; height: 8%; background: currentColor; border-radius: 1px; }
+.clock-tick.major::before { left: 48%; width: 4%; height: 13%; }
+.clock-hand { position: absolute; left: 47.5%; bottom: 50%; width: 5%; border-radius: 4px; background: currentColor; transform-origin: 50% 100%; }
+.clock-hand.hour { height: 27%; }
+.clock-hand.minute { height: 38%; width: 3.5%; left: 48.25%; }
+.clock-pin { position: absolute; left: 45%; top: 45%; width: 10%; height: 10%; border-radius: 50%; background: currentColor; }
+.is-night .wall-clock { background: #a5a29a; border-color: #33303b; color: #292733; box-shadow: 2px 3px 0 #17172588, inset 0 0 0 2px #777483; }
+
+/* 접은 종이 세움 팻말. 운동 중에는 빈 계산대 자리에도 놓는다. */
+.sc .counter-sign { z-index: 4; box-sizing: border-box; padding: 5px 8px 9px; border: 3px solid #58432e; border-bottom: 8px solid #bda581; border-radius: 3px; background: #fff2d6; color: #433120; box-shadow: 3px 3px 0 #3a291d55; font: 700 27px/1 var(--font-hand); white-space: nowrap; transform: rotate(-2deg); }
+.sc .workout-sign { transform: rotate(2deg); }
+.counter-sign[hidden] { display: none; }
+.is-night .sc .counter-sign { background: #bcb29d; color: #292735; border-color: #51495a; border-bottom-color: #817782; }
+.counter-sign:focus-visible { outline: 4px dashed var(--sumi); outline-offset: 5px; }
+
 /* 사장님: 여러 장을 겹쳐 두고 .on만 보인다 (천천히 비쳐 바뀐다) */
 .sloth { z-index: 3; }
 .sloth .fr { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 2.4s ease-in-out; }

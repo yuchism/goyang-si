@@ -6,6 +6,8 @@
   "scale": 0.48,
   "counter": { "at": [1240, 537], "anchor": [256, 480], "frames": { "awake": "sloth-counter.webp", "doze1": "sloth-doze-1.webp", "doze2": "sloth-doze-2.webp", "talk": "sloth-talk.webp" } },
   "gym": { "at": [1563, 745], "anchor": [400, 760], "exercises": ["treadmill", "dumbbell", "bar", "mat"] },
+  "clock": [1188, 192, 104, 104],
+  "signs": { "exit": [1110, 575, 260, 57], "workout": [1140, 480, 200, 53] },
   "door": [45, 262, 220, 460],
   "shelf": {
     "cols": [[302, 113], [429, 112], [555, 113], [682, 113]],
