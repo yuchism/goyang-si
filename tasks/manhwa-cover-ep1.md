@@ -2,7 +2,7 @@
 - status: done
 - mode: needs-review
 - implement: codex
-- office: ready
+- office: done
 - brief: assets/briefs/MANHWA_COVER_ART.md (이 티켓에서 새로 씀)
 - assets: assets/manhwa/csf/cover.png (git 무시, 로컬) · web/manhwa/csf/cover.webp·og.jpg · web/manhwa/csf/<1화 이름>/
 - related-adr: 0011
