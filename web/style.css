@@ -19,6 +19,7 @@ header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
 .status{font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums;min-width:0}
 .stagewrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
 canvas{display:block;border-radius:6px;box-shadow:0 0 0 1px var(--line),0 20px 60px rgba(0,0,0,.45);touch-action:manipulation;cursor:default;max-width:100%}
+canvas.look{touch-action:pan-y pinch-zoom} /* 좁은 화면 둘러보기: 가로 끌기는 방이 받는다 (stage.js, tasks/room-pan.md) */
 button{font:inherit;font-size:.82rem;color:var(--paper);background:var(--frame);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
 button:hover{border-color:var(--muted)}
 button:focus-visible{outline:2px solid var(--bell);outline-offset:2px}

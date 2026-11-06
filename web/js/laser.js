@@ -8,7 +8,7 @@ import { inked, rr } from './draw.js';
 import { tr } from './i18n.js';
 import { mouseHide } from './mouse.js';
 import { A, O, PL, ay } from './objects.js';
-import { ctx, cv, walkX, walkY } from './stage.js';
+import { camPush, ctx, cv, walkX, walkY } from './stage.js';
 import { fn, go, hold, routeTo, run, stepToward } from './steps.js';
 import { RM, clamp, rnd } from './util.js';
 import { caption, cat, mouse, say, world } from './world.js';
@@ -122,6 +122,10 @@ export function laserTick(real) {
     endLaser();
     return;
   }
+  // 좁은 화면: 점이 화면 끝 가까이 있으면 방이 그쪽으로 밀린다. 손가락(마우스)이 점을 잡고 있으면 점도 손 밑에 그대로 (tasks/room-pan.md)
+  const dx = camPush(L.x, real);
+  if (dx && L.held)
+    L.x = clamp(L.x + dx, 0, 1200);
   // 쥐야쥐는 점이 가까이 오면 놀라서 구멍으로
   if (!mouse.hidden && !mouse.peek && mouse.state !== 'flee' && Math.hypot(L.x - mouse.x, L.y - mouse.y) < 70) {
     say(mouse, '‼️', 1.5);
@@ -293,8 +297,10 @@ export const laserPlay = {
     if (L) {
       if (penAt(x, y))
         endLaser();
-      else
+      else {
         moveDot(x, y);
+        L.held = true;
+      }
       return true;
     }
     if (penAt(x, y)) {
@@ -305,8 +311,14 @@ export const laserPlay = {
     return false;
   },
   drag(x, y, e) { // 컴퓨터는 마우스를 따라가고, 폰은 누른 채 끄는 곳으로
-    if (L && (e.pointerType === 'mouse' || e.buttons))
+    if (L && (e.pointerType === 'mouse' || e.buttons)) {
       moveDot(x, y);
+      L.held = true;
+    }
+  },
+  lift: e => { // 폰은 손가락을 떼면 점을 놓는다 (방이 밀려도 점은 그 자리). 마우스는 계속 따라간다
+    if (L && e.pointerType !== 'mouse')
+      L.held = false;
   },
   abort: () => endLaser(), // 오류 뒤 되돌리기 (STABILITY_PLAN.md 3-1, recover.js)
   dev: { btn: 'dLaser', go: () => toggleLaser() },

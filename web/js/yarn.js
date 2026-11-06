@@ -14,6 +14,7 @@ import { RM, clamp, rnd } from './util.js';
 import { after, cat, mouse, say, world } from './world.js';
 
 const R = 22; // 방에서 실뭉치 반지름
+const HIT_PAD = 22; // 누르는 자리: 그림보다 사방 이만큼 더 (예전 12. 폰 손가락으로 톡 굴리기 쉽게, tasks/room-pan.md)
 const BALL_HALF = 5; // 걷는 바닥 가로 끝에서 실뭉치 중심이 들어갈 수 있는 거리 (SCENE_PLAN.md 3장)
 const FRICTION = 1.7; // 굴러가다 서는 빠르기
 const OUT_X = -60; // 화면 밖 (실 끝이 있는 곳)
@@ -234,7 +235,7 @@ export function yarnAt(x, y) {
   if (!Y.state || Y.state === 'held' || Y.state === 'pull')
     return false;
   const r = R * DEPTH(Y.y);
-  return Math.hypot(x - Y.x, y - (Y.y - r)) < r + 12;
+  return Math.hypot(x - Y.x, y - (Y.y - r)) < r + HIT_PAD;
 }
 export function tapYarn(x) {
   push(x < Y.x ? 1 : -1, rnd(200, 280));

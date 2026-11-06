@@ -20,7 +20,7 @@ import { loadScene } from './scene.js';
 import { drawBookTag, drawBooks, initShelf } from './shelf.js';
 import { Snd } from './sound.js';
 import { drawActor, drawBubble, drawCaptions } from './sprites.js';
-import { H, W, cam, ctx, fit, roomDark, updateCam, view } from './stage.js';
+import { H, W, cam, camIntro, ctx, fit, roomDark, updateCam, view } from './stage.js';
 import { windowLight } from './win.js';
 import { bub, fn, go, hold, ownLayer, run, tickActor } from './steps.js';
 import { advanceClock, calDay, sceneryAt, sunTimes, yearPos, inWindow, lampShouldBeOn, mandukAsleep, mandukHome, markClock, moonName, moonPhase, now, passedEvents, rainNow, resetClock, routineOf, season, snowing, speed, timeInfo } from './time.js';
@@ -337,6 +337,8 @@ export function start() {
     world.dayKey = calDay(d);
     world.lampOn = lampShouldBeOn(d);
     settleCat(d);
+    if (!birthdayMode) // 좁은 화면: 문에서 강고양이 씨까지 스르륵 (만화방에서 돌아올 때도 문으로 들어오니 같다). 생일 링크는 파티 카메라가 먼저 (tasks/room-pan.md)
+      camIntro();
     if (cameBack()) // 만화방에서 돌아옴: 방이 뜬 뒤 딸랑 + 문 + 강고양이 씨 반응 (frontdoor.js, cat.js)
       after(() => {
         ringDoor();
