@@ -2,6 +2,7 @@
 - status: brief
 - mode: needs-review
 - relay: brief
+- office: ready
 - brief: assets/briefs/MANHWA_SHOP_ART.md (첫 티켓에서 새로 씀)
 - assets: assets/manhwa/shop/*-source-v1.png (git 무시, 로컬) · web/manhwa/shop/*.webp
 - related-adr: 0008, 0011
@@ -47,4 +48,4 @@
 -->
 
 ## 메모
-- 2026-11-06 지시서 작성(Claude, 회의). 운동 넷과 40~60분은 초기값 — 주인 확인 뒤 `- office: ready`.
+- 2026-11-06 지시서 작성(Claude, 회의). 운동 넷과 40~60분은 초기값, 주인 확인 뒤 `- office: ready`(2026-11-06). 만화방 2가 합쳐진 뒤에 구현 시작.
