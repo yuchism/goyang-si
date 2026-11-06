@@ -13,7 +13,7 @@
   const EP_PAGE = PAGE === 'episode';
   const WORK_DIR = EP_PAGE ? '../' : './';
   const ROOT = EP_PAGE ? '../../../' : '../../';
-  const HOME = '/';
+  const HOME = '/?from=manhwa'; // 고양.시가 딸랑 + 문 + 고양이 반응으로 맞는다 (tasks/manhwa-2-gate.md)
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ───────── 글자 ───────── */
@@ -256,6 +256,15 @@
     const open = eps.filter(isOpen);
     const soon = eps.find(e => !isOpen(e)); // 다음 한 화만 보인다
     body.classList.add('mh-paper');
+
+    // 들어온 길: 고양.시 약도(map)·책장 만화책(shelf). 세고 나서 주소 꼬리를 지운다 (새로 고침·뒤로 가기는 세지 않는다)
+    const via = new URLSearchParams(location.search).get('via');
+    if (via === 'map' || via === 'shelf') {
+      const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+      if (!nav || nav.type === 'navigate')
+        gcEvent('in-' + via, '만화방 들어온 길: ' + ({ map: '고양.시 약도', shelf: '고양.시 책장 만화책' })[via]);
+      history.replaceState(null, '', location.pathname + location.hash);
+    }
 
     // 맨 위 짙은 띠: 고양이 얼굴(빼꼼 그림의 머리 부분) + 나무 간판 위에 글자
     const sign = el('header', 'mh-sign');

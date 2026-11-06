@@ -10,7 +10,7 @@
 - --check: 아무것도 고치지 않고 맞는지만 본다. 그림은 있는데 meta.json에 없거나(그 그림은 화면에 안 나온다),
   meta.json에만 있고 그림이 없으면 실패(종료 코드 1). 배포(.github/workflows/pages.yml)가 올리기 전에 돌린다.
   Pillow가 없어도 돈다 (있으면 크기도 본다).
-- r/tv/ 는 따로 r/tv/meta.json을 쓰므로 건드리지 않는다. r/scenery/(창밖 산 그림, tools/make_mountains.py)도 크기가 정해져 있고 필요할 때만 받으므로 건드리지 않는다. 큰 시트(생일 춤, 케이크)는 web/sheet/에 두고 코드(js/assets.js EXTRA_SRC)에 따로 적는다 (이 검사 밖).
+- r/tv/ 는 따로 r/tv/meta.json을 쓰므로 건드리지 않는다. r/scenery/(창밖 산 그림, tools/make_mountains.py)·r/map/(현관문 약도, frontdoor.js — 문을 누를 때 받음)도 크기가 정해져 있고 필요할 때만 받으므로 건드리지 않는다. 큰 시트(생일 춤, 케이크)는 web/sheet/에 두고 코드(js/assets.js EXTRA_SRC)에 따로 적는다 (이 검사 밖).
 
 쓰는 법:  python3 tools/build_meta.py          (고양시 폴더에서)
           python3 tools/build_meta.py --check  (확인만)
@@ -97,7 +97,7 @@ def check(folder, skip=()):
 if CHECK:
     if Image is None:
         print('(Pillow 없음: 크기는 보지 않고 이름만 맞춰 본다)')
-    bad = check('f') + check('r', skip=('tv', 'scenery'))
+    bad = check('f') + check('r', skip=('tv', 'scenery', 'map'))
     if bad:
         print(f'\n맞지 않는 곳 {len(bad)}군데. python3 tools/build_meta.py 로 채운 뒤 다시 올리세요.')
         sys.exit(1)
@@ -105,4 +105,4 @@ if CHECK:
 if Image is None:
     sys.exit('Pillow가 필요하다: pip3 install pillow')
 update('f', 'frame')
-update('r', 'room', skip=('tv', 'scenery'))
+update('r', 'room', skip=('tv', 'scenery', 'map'))

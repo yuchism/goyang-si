@@ -13,6 +13,7 @@ import { boxToday, inBeam, inParts, isNight, mandukAsleep, mandukHome, nightDark
 import { TVP, tvOn, tvPrime } from './tv.js';
 import { tvTopB, tvTopBlockedB, tvWatchB } from './tv-cat.js';
 import { pick, rnd, store } from './util.js';
+import { tvFree } from './behave.js';
 import { tr } from './i18n.js';
 import { oddLookB, oddLookWeight } from './install.js';
 import { after, cat, mouse, say, world } from './world.js';
@@ -307,6 +308,21 @@ export function pawB() {
     hold(3, 'stand'),
     hold(10, 'loaf')
   ], 'paw');
+}
+// 만화방에서 돌아온 사람 맞이 (frontdoor.js 딸랑 뒤, tasks/manhwa-2-gate.md): 고개를 들어 문 쪽을 보거나, 가끔 문 앞으로 마중.
+// 몰두 중(TV 사건도 무시하는 행동)·상자 안·만득 씨가 있을 때는 그대로
+const WELCOME_GO = 1 / 3; // 마중 나갈 확률 (초기값)
+export function welcomeB() {
+  if (world.manduk || cat.inBox || !tvFree(cat))
+    return;
+  const g = S('door.greet');
+  if (g && !cat.closed && Math.random() < WELCOME_GO) {
+    run(cat, [bub('❗', 1.4), go(g[0], g[1], 95), hold(2.5, 'stand', false, 1), bub('❤️', 2.5), hold(2, 'stand', false, 1)], 'welcome');
+    return;
+  }
+  if (!cat.closed && !cat.moving) // 자고 있으면 귀만 쫑긋
+    cat.face = g && g[0] < cat.x ? -1 : 1;
+  say(cat, cat.closed ? '👂' : '👀', 2.5);
 }
 export function petCat() {
   if (world.manduk)

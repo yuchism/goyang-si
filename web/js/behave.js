@@ -31,6 +31,7 @@ export const BEHAVIOR = {
   greet:      [N, N, N], // 쥐야쥐·만득 씨 인사
   birthday:   [N, N, N], // 생일 파티
   wait:       [N, N, N], // 문 앞에서 만득 씨 기다리기
+  welcome:    [N, N, N], // 만화방에서 돌아온 사람 마중 (cat.js welcomeB)
   innocent:   [N, N, N], // 만득 씨 앞에서 시치미
   secret:     [N, N, N], // 몰래 노트북
   box:        [N, N, N], // 상자 안

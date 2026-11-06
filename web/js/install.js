@@ -31,7 +31,7 @@ export const odd = { show: !STANDALONE, gone: 0, open: false, lift: 0, sway: 0, 
 
 /* ───────── 이상한 책: 자리와 모양 ─────────
    그림(256×640)의 책은 x 38~218, y 120~640. 방에서 폭 42가 되게 줄이고,
-   왼쪽 아래 모서리를 축으로 약 15도 기울여 왼쪽 풀잎 책(green2, 오른쪽 끝 x 680)에 기댄다. */
+   왼쪽 아래 모서리를 축으로 약 15도 기울여 왼쪽 책(만화책 manhwa, 오른쪽 끝 x 672)에 기댄다. */
 const IMG_X0 = 38, IMG_W = 180, IMG_BOTTOM = 640, EMBLEM = [128, 380];
 const S = 42 / IMG_W, BW = 42, BH = (640 - 120) * S;
 const LEAN = 15 * Math.PI / 180;

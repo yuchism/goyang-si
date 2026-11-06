@@ -51,3 +51,10 @@
 ## 메모
 - 2026-11-06 지시서 작성(Claude, 회의). 주인 확인 뒤 `- office: ready`(2026-11-06). 만화방은 24시간 영업(주인 같은 날 고침 — 셔터·영업시간 뺌, 밤에는 사장님 운동 장면).
 - 2026-11-06 그림 지시서 `assets/briefs/MANHWA_MAP_ART.md` 씀(강고양이 씨) — 약도 1200×1200 종이색, 건물 512×512 투명(땅 선 y 496, 약도 (880, 580)에 320×320으로 얹음). 검수 왕복 뒤 그림 요청.
+- 2026-11-06 구현(강고양이 씨). 그림 3장 대조 — 다시 그린 것 없음. 약도는 지시서 좌표에서 조금 벗어남(고양.시 집이 y 1034까지 내려와 이름표 자리를 덮고, 만화방 터는 x 741~1088 · y 272~655로 큼) → 지시서대로 좌표는 장면 설정에 실제 그림 기준으로 적음(`objects.json` `door.map`: 만화방 그림 box [704, 247, 420, 420], 이름표 「고양.시」(330, 1092) 집 아래 길 · 「만화방」(914, 690) 가게 앞 길). 밤 그림 2층 창 실루엣은 사람 같은 둥근 머리로도 보임 — 사람 검수 때 볼 것.
+  - 코드: `web/js/frontdoor.js`(새, 약도 창·문틈 `world.doorAjar`·돌아옴 딸랑) · `ui.js`(문 누르기 판정, a11y 버튼 `aDoor`) · `draw.js`(문틈 빛) · `manduk.js` `mandukWait`("잠깐만~") · `cat.js` `welcomeB`(마중 확률 `WELCOME_GO` 초기값 1/3, `behave.js` `welcome`) · `main.js`(시작·매 장면) · `viewer.js`(돌아가기 `/?from=manhwa`, 목록에서 `?via=map|shelf` 세고 지움) · `i18n.js` · `style.css` · `index.html`.
+  - 약도 그림은 `r/map/`(build_meta 대상 밖, `scenery`처럼) — 시작·나중 묶음 어디에도 없고 문을 누를 때 `<img>`가 받는다. 못 받으면 종이색 판 + 이름표만.
+  - 책장: 고양이책 `green2` → 만화책 `manhwa`(같은 자리·크기, 빨강 `#c8432b`, 표시 `comic` 말풍선). 책장 목록·폰 큰 목록에 「만화방」, 펼치기 → `/manhwa/csf/?via=shelf`.
+  - 구조 검사: 표시 그리기를 넣자 `shelf.js`가 500줄을 넘어서 책등 표시(face·yarn·paw·comic)를 `spine-marks.js` 표 `MARKS`로 옮김(그리는 법은 그대로). `frontdoor.js`는 덩어리 밖 모듈만 가져와 엉킨 덩어리 그대로(44개 / 292).
+  - 통계 이름: `door-map`(약도 열기) · `map-manhwa`(약도에서 만화방) · `shelf-manhwa`(책장 만화책) · `manhwa-return`(돌아옴) · 만화방 쪽 `manhwa/csf/in-map`·`in-shelf`.
+  - 못 돌린 검사: `check_scene.mjs`·`visual_check.js`는 서버·브라우저가 필요한데 이 샌드박스에서 로컬 서버를 띄우는 명령이 막힘 → 사람 검수 때 맥에서. 돌린 것: `check_structure`·`check_time`·`check_tv` 통과, `build_meta.py --check` 맞음, 바꾼 JS `node --check` 통과.

@@ -304,12 +304,19 @@ export function todaysNote(d) {
   const NOTES = tr('notes'), idx = Math.floor((dayNum(d) - dayNum(FIRST) + NOTES.length * 100)) % NOTES.length;
   return NOTES[idx];
 }
+// 보는 사람이 문을 열려고 할 때 만득 씨가 문 앞에 있으면 (frontdoor.js 현관문): "잠깐만~"만 잠깐 (방문 대사보다 앞)
+export function mandukWait() {
+  const m = world.manduk;
+  if (m)
+    m.wait = { say: tr('mandukWait'), until: world.t + 2.2 };
+}
 // 만득 씨는 목소리(말풍선)로만 등장한다
 export function drawManduk() {
   const m = world.manduk;
-  if (!m || !['enter', 'act', 'leave'].includes(m.phase))
-    return;
-  drawMandukSay(m);
+  if (m && m.wait && world.t < m.wait.until)
+    drawMandukSay(m.wait);
+  else if (m && ['enter', 'act', 'leave'].includes(m.phase))
+    drawMandukSay(m);
 }
 function drawMandukSay(m) {
   if (m.say) {
