@@ -68,6 +68,11 @@ html:has(body.mh-paper) { background: var(--paper); }
 .mh-face { display: block; width: 40px; height: 35px; flex: none; }
 .mh-face svg { display: block; width: 100%; height: 100%; }
 .mh-sign b { font: 700 24px/1 var(--font-hand); letter-spacing: .02em; }
+/* 그림을 받으면 (MANHWA_UI_ART.md): 얼굴은 빼꼼 그림(512×320)의 머리(x 70~440 · y 10~262)만, 글자는 나무 간판의 왼쪽 글자 자리(가로 4~78%)에 먹색으로 */
+.mh-face.mh-art { width: 48px; height: 33px; background: no-repeat -9.1px -1.3px / 66.4px auto; }
+/* 글자 자리의 %는 간판 자체 너비 기준이어야 하므로 간판의 padding(부모 너비 기준)이 아니라 글자의 margin·width(간판 너비 기준)로 잡는다 */
+.mh-board.mh-art { flex: 0 1 300px; min-width: 0; aspect-ratio: 4 / 1; display: flex; align-items: center; background: no-repeat center / 100% 100%; color: var(--sumi); }
+.mh-board.mh-art b { flex: none; width: 74%; margin-left: 4%; font-size: clamp(17px, 5.4vw, 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ── 목록: 표지 + 제목 */
 .mh-list { max-width: var(--mh-w); margin: 0 auto; padding: 0 0 calc(40px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 22px; }
@@ -105,6 +110,12 @@ html:has(body.mh-paper) { background: var(--paper); }
 .mh-end { position: relative; background: var(--paper); color: var(--sumi); color-scheme: light; border: 3px solid var(--sumi); box-shadow: 6px 6px 0 #000a; padding: 28px 18px 24px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
 .mh-peek { position: absolute; width: 140px; height: 112px; top: -103px; right: 22px; }
 .mh-peek svg { display: block; width: 100%; height: 100%; }
+/* 그림(512×320)의 종이 끝 선 y 300이 칸 윗변(테두리)에 오게: 105 × 300/320 ≈ 98 → 테두리 3px 위로 -101px. 아래로는 앞발 끝만 칸에 겹친다 */
+.mh-peek.mh-art { width: 168px; height: 105px; top: -101px; right: 16px; }
+.mh-peek img { display: block; width: 100%; height: 100%; }
+.mh-peek .mh-shut { position: absolute; inset: 0; visibility: hidden; }
+.mh-peek.mh-blink .mh-shut { visibility: visible; }
+.mh-peek.mh-blink img:first-child { visibility: hidden; }
 .mh-end-t { margin: 0; font: 700 38px/1.1 var(--font-hand); }
 .mh-end > .mh-card { align-self: stretch; }
 .mh-end-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
