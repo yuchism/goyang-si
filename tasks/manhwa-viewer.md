@@ -1,7 +1,7 @@
 # 만화방 1: 웹툰 뷰어 + 회차 목록(episodes.json) + 공개일 + 회차 도구
-- status: implemented
+- status: done
 - mode: needs-review
-- office: ready
+- office: done (헤드쿼터 #5, 2026-11-06)
 - brief: (그림 없음 — 원고는 주인이 그림)
 - related-adr: 0007, 0008
 - 출처: 구상 goyang-hq `ideas/MANHWABANG_IDEAS.md` v1 3·4·5장 · 회의 2026-11-06(회차 주소는 무작위 이름, 회차 정보는 episodes.json, 원고는 회마다 여러 장, 1화는 만화방 여는 날 공개)
