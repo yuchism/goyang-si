@@ -60,6 +60,9 @@
 -->
 
 ## 메모
+- 2026-11-06 H1 수정(Codex): 하네스가 검수 통과한 `assets/manhwa/shop/signs-h1.png` 원본을 보존하고 세 칸의 소품만 잘라 무손실 투명 WebP(`web/manhwa/shop/sign-{door,exit,workout}.webp`)로 변환. scene.json에 그림 경로·자리·글자 영역을 등록하고 공통 makeSign()으로 코드 글자를 얹음. 문손잡이 나무 걸이판은 「고양.시로」/“To goyang.si”로 바꾸고 빨간 상자·종 이모지를 제거. 계산대 명패는 계산대 위, A형 칠판은 운동 중 빈 사장님 자리에 배치. 기존 화살표·클릭·운동 표시·입장 이동 동작을 유지하며 밤에는 세 소품에 색조 보정, 칠판 글자는 밝은 분필 느낌을 적용함.
+- H1 검사 통과: node tools/check_structure.mjs · python3 tools/build_manhwa.py csf --check · node tools/check_time.mjs · node --check web/manhwa/shop.js · git diff --check. 작업 공간에 Playwright가 없어 실제 브라우저 낮·밤·좁은 화면 검사는 미실행이며 (사람) 확인 결과는 계속 대기. 파일만 저장하고 커밋·푸시하지 않음(하네스 담당). status는 implemented 유지.
+- H1 리팩터 후보: 새 조건 분기 1개(문 팻말 설정 유무), 특수 플래그 없음. 세 소품 생성은 makeSign()으로 공통화하여 중복을 줄임. 기존 build() 분리 후보 외에 새 리팩터 후보 없음.
 - 2026-11-06 구현(Codex): scene.json에 시계·팻말 자리를 추가. 숫자·초침 없는 코드 시계는 now() → clockText()로 바늘을 맞추고 밤 색조를 적용. 시계 영역은 사장님 그림 상단보다 위, 책장 오른쪽 빈 벽에 배치했으며 화면 배율을 함께 따름.
 - 계산대 안내판·운동 중 팻말은 같은 종이 세움판 스타일. 새 KO/EN 문구는 js/i18n.js에 등록. 문·운동 자리 좌표로 화살표 방향을 정하고, 안내판은 사장님 말풍선만 띄움. 운동 팻말은 편성 이동 중에도 유지.
 - 폰 첫 입장은 문 → 낮 계산대/밤 운동 자리로 2.8초 cubic ease-out. 터치·포인터·휠·키 입력과 창 크기 변경 시 중단. 넓은 화면은 이동 없음, 동작 줄이기는 즉시 사장님 자리. 만화 목록·회차의 복귀 링크에 via=comic을 붙여 재입장 이동을 생략함.

@@ -21,6 +21,7 @@ export const STR = {
   aFrame: { ko: '액자 사진 넘기기', en: 'Flip the photo frame' },
   aDoor: { ko: '현관문 열기 (동네 약도)', en: 'Open the front door (neighborhood map)' },
   /* ── 현관문 약도 (frontdoor.js, tasks/manhwa-2-gate.md) ── */
+  shopDoorSign: { ko: '고양.시로', en: 'To goyang.si' },
   shopExitSign: { ko: '← 나가는 길은 저쪽', en: "← Exit's that way" },
   shopWorkoutSign: { ko: '운동 중 →', en: 'Working out →' },
   shopExitReply: { ko: '저…쪽…이…요…', en: 'T…h…a…t… w…a…y…' },

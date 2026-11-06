@@ -123,6 +123,11 @@ const place = (n, [x, y, w, h]) => {
   Object.assign(n.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
   return n;
 };
+function makeSign(tag, cls, spec, text) {
+  const n = place(el(tag, 'painted-sign ' + cls), spec.rect);
+  n.append(img(DIR + spec.art, 'sign-art'), place(el('span', 'sign-text', text), spec.text));
+  return n;
+}
 
 /* ───────── 말풍선: 몇 초 늦게, 한 글자씩 ───────── */
 let talkId = 0;
@@ -206,8 +211,8 @@ function build(cfg) {
   const door = place(el('a', 'door'), cfg.door);
   door.href = HOME;
   door.setAttribute('aria-label', tr('home'));
-  const sign = el('span', 'door-sign', '🔔 ' + tr('home'));
-  door.append(sign);
+  if (cfg.signs?.door)
+    door.append(makeSign('span', 'door-sign', cfg.signs.door, sharedTr('shopDoorSign')));
   leaveWith(door, 'go-home', '만화방 → 고양.시');
   sc.append(door);
 
@@ -326,7 +331,7 @@ function build(cfg) {
     talk(moving(state.slot, now()) >= 0 ? tr('move') : L(STR.ex[state.slot.ex]));
   });
 
-  // 같은 세움 팻말을 계산대의 두 자리에 쓴다. 화살표는 장면 좌표로 정한다.
+  // 승인된 소품 그림 위에 번역 글자를 얹는다. 화살표는 장면 좌표로 정한다.
   const signs = {};
   for (const [key, textKey, target, action] of [
     ['exit', 'shopExitSign', cfg.door[0] + cfg.door[2] / 2, () => talk(sharedTr('shopExitReply'))],
@@ -337,11 +342,12 @@ function build(cfg) {
         talk(sharedTr('shopHereReply'));
     }],
   ]) {
-    const rect = cfg.signs && cfg.signs[key];
-    if (!rect)
+    const spec = cfg.signs && cfg.signs[key];
+    if (!spec)
       continue;
+    const rect = spec.rect;
     const text = sharedTr(textKey).replace(/[←→]/, target < rect[0] + rect[2] / 2 ? '←' : '→');
-    const n = place(el('button', 'counter-sign ' + key + '-sign', text), rect);
+    const n = makeSign('button', 'counter-sign ' + key + '-sign', spec, text);
     n.type = 'button';
     n.addEventListener('click', action);
     signs[key] = n;

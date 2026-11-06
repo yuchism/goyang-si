@@ -19,8 +19,8 @@ body.shop { overflow: hidden; background: var(--mh-bg); }
 /* 출입문 (그림을 못 받으면 코드 문) */
 .door { display: block; z-index: 2; text-decoration: none; border-radius: 4px; }
 .nobg-day .door { background: #9a6a3a; border: 6px solid #6b4423; }
-.door-sign { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%) rotate(-3deg); white-space: nowrap; font: 700 30px/1 var(--font-hand); color: #fff; background: var(--tag); padding: 9px 14px 8px; border-radius: 6px; border: 3px solid var(--sumi); box-shadow: 3px 3px 0 var(--sumi); }
-.door:active .door-sign, .door:hover .door-sign { transform: translate(-50%, -50%) rotate(0deg) scale(1.05); }
+.door-sign { position: absolute; font-size: 18px; transform-origin: 50% 8%; }
+.door:active .door-sign, .door:hover .door-sign { transform: rotate(-3deg); }
 
 /* 관람금지 책장: 칸마다 책등 (그림을 못 받으면 칸 뒤판도 코드) */
 .shelf { left: 0; top: 0; width: 0; height: 0; z-index: 1; }
@@ -61,11 +61,15 @@ body.shop { overflow: hidden; background: var(--mh-bg); }
 .clock-pin { position: absolute; left: 45%; top: 45%; width: 10%; height: 10%; border-radius: 50%; background: currentColor; }
 .is-night .wall-clock { background: #a5a29a; border-color: #33303b; color: #292733; box-shadow: 2px 3px 0 #17172588, inset 0 0 0 2px #777483; }
 
-/* 접은 종이 세움 팻말. 운동 중에는 빈 계산대 자리에도 놓는다. */
-.sc .counter-sign { z-index: 4; box-sizing: border-box; padding: 5px 8px 9px; border: 3px solid #58432e; border-bottom: 8px solid #bda581; border-radius: 3px; background: #fff2d6; color: #433120; box-shadow: 3px 3px 0 #3a291d55; font: 700 27px/1 var(--font-hand); white-space: nowrap; transform: rotate(-2deg); }
-.sc .workout-sign { transform: rotate(2deg); }
+/* 나무 걸이판·명패·A형 칠판: 그림은 무자막, 글자 자리는 scene.json. */
+.painted-sign { color: #433120; }
+.sign-art { width: 100%; height: 100%; }
+.sign-text { position: absolute; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-family: var(--font-hand); font-weight: 700; line-height: 1; }
+.sc .counter-sign { z-index: 4; font-size: 25px; color: #433120; }
+.sc .workout-sign { color: #f1edcf; font-size: 23px; }
+.workout-sign .sign-text { text-shadow: .5px 0 #d7dfcb, 0 .5px #d7dfcb; }
 .counter-sign[hidden] { display: none; }
-.is-night .sc .counter-sign { background: #bcb29d; color: #292735; border-color: #51495a; border-bottom-color: #817782; }
+.is-night .painted-sign { filter: brightness(.68) saturate(.75); }
 .counter-sign:focus-visible { outline: 4px dashed var(--sumi); outline-offset: 5px; }
 
 /* 사장님: 여러 장을 겹쳐 두고 .on만 보인다 (천천히 비쳐 바뀐다) */
