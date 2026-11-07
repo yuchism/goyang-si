@@ -8,6 +8,8 @@ export const STR = {
   title: { ko: '쥐구멍 기지', en: 'Mousehole Base' },
   home: { ko: '고양.시 거실로', en: 'Back to the living room' },
   board: { ko: '상황판 — 누르면 다음 화면', en: 'Status board — tap for next screen' },
+  enlarge: { ko: '눌러서 크게', en: 'Tap to enlarge' },
+  close: { ko: '닫기', en: 'Close' },
   practice: { ko: '연습 화면', en: 'Practice board' },
   last: { ko: '마지막 소식: ', en: 'Last update: ' },
   screens: {

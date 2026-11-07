@@ -15,7 +15,10 @@
     "screenSec": 12,
     "flip": { "stepMs": 80, "spins": 3, "colMs": 22, "rowMs": 40 },
     "clickGapMs": 22,
-    "clickVol": 0.05
+    "clickVol": 0.05,
+    "_hint": "좁은 화면: 상황판 아래 \"눌러서 크게\" 표시 [판 아래 틈, 높이](바탕 px). popPad: 큰 상황판 창의 화면 가장자리 여백(화면 px)",
+    "hint": [6, 30],
+    "popPad": 16
   },
   "status": {
     "_": "상태 JSON. 하네스가 3시간마다 올린다. 읽기는 페이지 열 때 + everyMin분마다. maxBytes 넘으면 읽지 않음",
