@@ -45,12 +45,12 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 .fr .main { flex: 1; min-width: 0; }
 .fr .rt { position: relative; flex: none; width: var(--side); }
 .fr .side, .fr .num { position: absolute; inset: 0; }
-.fr .num { display: none; justify-content: flex-end; gap: 1px; }
+.fr .num { display: none; justify-content: flex-end; gap: 1px; background: var(--flap-gap); }
 .fr.isnum .side { display: none; }
 .fr.isnum .num { display: flex; }
-.fl { position: relative; display: block; perspective: 200px; background: var(--flap); border-radius: 1px; overflow: hidden; color: var(--flap-ink); font: 700 var(--fs, 15px)/1 var(--font-body); }
+.fl { position: relative; display: block; background: var(--flap); border-radius: 1px; overflow: hidden; color: var(--flap-ink); font: 700 var(--fs, 15px)/1 var(--font-body); }
 .fl::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: #0b0d14aa; z-index: 3; }
-.fl .h { position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; background: inherit; backface-visibility: hidden; }
+.fl .h { position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; background: var(--flap); }
 .fl .h i { display: block; height: 200%; line-height: var(--rh); font-style: normal; white-space: pre; text-align: center; }
 .word .h i { text-align: left; padding: 0 .4em; overflow: hidden; text-overflow: ellipsis; }
 .fl .t, .fl .ft { top: 0; }
@@ -61,8 +61,9 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 .fl .fb { transform-origin: 50% 0; }
 .fl.go .ft { display: block; animation: flap-top var(--fd) ease-in both; }
 .fl.go .fb { display: block; animation: flap-bot var(--fd) ease-out both; }
-@keyframes flap-top { from { transform: rotateX(0); } 50%, to { transform: rotateX(-90deg); } }
-@keyframes flap-bot { from, 50% { transform: rotateX(90deg); } to { transform: rotateX(0); } }
+/* 넘김은 2D(납작해졌다 펴짐). 3D 회전·inherit 배경은 일부 안드로이드(삼성 인터넷)에서 반쪽이 하얗게 칠해져서 쓰지 않는다 */
+@keyframes flap-top { from { transform: scaleY(1); } 50%, to { transform: scaleY(0); } }
+@keyframes flap-bot { from, 50% { transform: scaleY(0); } to { transform: scaleY(1); } }
 .dg { width: .78em; flex: none; font-variant-numeric: tabular-nums; }
 .unit { flex: none; width: 1.5em; }
 .unit .h i { padding: 0 .15em; text-align: center; }
