@@ -1,6 +1,6 @@
 /* 쥐구멍 기지 홀 (tasks/base-1-hall.md) — /base/. 만화방처럼 별도 페이지. 방 코드는 시간(time.js)만 빌린다
    - 바탕 한 장(bg.webp) + 밤 색조(방 시계 isNight): 전체를 어둡게, 샹들리에는 더 어둡게, 단말기·램프 불빛은 남긴다
-   - 상황판: 상태 JSON(status.js) → 네 화면(screens.js) → 넘김 판(board.js). 누르면 다음 화면 (좁은 화면은 큰 상황판 창)
+   - 상황판: 상태 JSON(status.js) → 네 화면(screens.js) → 넘김 판(board.js). 누르면 다음 화면
    - 상단 띠: "마지막 소식: 오늘·어제·며칠 전" 또는 "연습 화면"(데모)
    - 발바닥 판: 고양.시 거실로(/?from=base). 귀환 장면은 base-3
    - 자리·숫자는 scene.json (바탕 그림 픽셀). 그림을 못 받으면 바위색 바탕 + 코드 상황판·발바닥 단추
@@ -114,9 +114,6 @@ function build(cfg) {
   board.append(said);
   sc.append(board);
   const show = makeBoard(grid, B, RM);
-  // 좁은 화면: 상황판 아래 "눌러서 크게" (누르면 큰 상황판 창)
-  const hint = place(el('span', 'hint', tr('enlarge')), [B.rect[0], B.rect[1] + B.rect[3] + B.hint[0], B.rect[2], B.hint[1]]);
-  sc.append(hint);
 
   // 발바닥 판 → 거실
   const paw = place(el('a', 'paw'), cfg.paw);
@@ -130,52 +127,6 @@ function build(cfg) {
   band.setAttribute('aria-live', 'polite');
   body.append(band);
 
-  /* ── 큰 상황판 창 (좁은 화면): 같은 넘김·같은 화면. 창 안을 누르면 다음 화면, 바깥·닫기·Esc면 닫힘 (만화방 책 창처럼) */
-  const pop = el('div', 'pop');
-  pop.hidden = true;
-  const popIn = el('div', 'pop-in');
-  const big = el('button', 'board big');
-  big.type = 'button';
-  big.setAttribute('aria-label', tr('board'));
-  big.style.width = B.rect[2] + 'px';
-  big.style.height = B.rect[3] + 'px';
-  const bigGrid = el('span', 'grid');
-  bigGrid.style.padding = grid.style.padding;
-  big.append(bigGrid);
-  const x = el('button', 'pop-x', '×');
-  x.type = 'button';
-  x.setAttribute('aria-label', tr('close'));
-  popIn.append(big, x);
-  pop.append(popIn);
-  body.append(pop);
-  const showBig = makeBoard(bigGrid, B, RM);
-  const fitBig = () => {
-    const k = Math.min((innerWidth - 2 * B.popPad) / B.rect[2], (innerHeight - 2 * B.popPad) / B.rect[3]);
-    big.style.transform = `scale(${k})`;
-    popIn.style.width = Math.round(B.rect[2] * k) + 'px';
-    popIn.style.height = Math.round(B.rect[3] * k) + 'px';
-  };
-  const openBig = () => {
-    pop.hidden = false;
-    fitBig();
-    render();
-    x.focus({ preventScroll: true });
-  };
-  const closeBig = () => {
-    if (pop.hidden)
-      return;
-    pop.hidden = true;
-    board.focus({ preventScroll: true });
-  };
-  pop.addEventListener('click', e => {
-    if (e.target === pop || e.target.closest('.pop-x'))
-      closeBig();
-  });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape')
-      closeBig();
-  });
-
   /* ── 화면 돌리기 */
   let all = [], at = 0, timer = 0, counted = false, data = null, demo = true;
   const render = () => {
@@ -183,8 +134,6 @@ function build(cfg) {
     if (!pg)
       return;
     show(pg.lines);
-    if (!pop.hidden)
-      showBig(pg.lines);
     said.textContent = pg.lines.map(l => [l.l, l.r, l.n, l.u].filter(Boolean).join(' ')).filter(Boolean).join(' / ');
   };
   const next = () => {
@@ -193,16 +142,13 @@ function build(cfg) {
     render();
     timer = setTimeout(next, B.screenSec * 1000);
   };
-  const flip = () => {
+  board.addEventListener('click', () => {
     if (!counted) {
       counted = true;
       gcEvent('base-board', '기지 상황판 눌러 넘김');
     }
     next();
-  };
-  // 넓은 화면: 누르면 다음 화면 / 좁은 화면(둘러보기): 큰 상황판 창
-  board.addEventListener('click', () => view.classList.contains('pan') ? openBig() : flip());
-  big.addEventListener('click', flip);
+  });
   const setBand = () => {
     if (!data) {
       band.hidden = true;
@@ -281,8 +227,6 @@ function build(cfg) {
   addEventListener('resize', () => {
     stopPan();
     scale = fit();
-    if (!pop.hidden)
-      fitBig();
   });
 
   body.append(view);

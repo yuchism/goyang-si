@@ -70,15 +70,6 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 .fr.head .fl { color: var(--gold); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-/* 좁은 화면: 상황판 아래 "눌러서 크게" + 큰 상황판 창 (만화방 책 창처럼) */
-.hint { z-index: 3; display: none; text-align: center; font: 700 22px/30px var(--font-hand); color: var(--gold); text-shadow: 0 1px 3px #000c; pointer-events: none; }
-.pan .hint { display: block; }
-.pop { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: rgba(10, 8, 6, .72); }
-.pop[hidden] { display: none; }
-.pop-in { position: relative; flex: none; }
-.board.big { position: absolute; left: 0; top: 0; transform-origin: 0 0; box-shadow: 0 0 0 3px var(--gold); }
-.pop-x { position: absolute; z-index: 1; top: -14px; right: -6px; width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--gold); background: var(--rock); color: var(--ink); font: 700 24px/1 var(--font-body); cursor: pointer; }
-
 /* 발바닥 판: 그림 위에 투명한 단추 (그림이 없으면 코드 판) */
 .paw { z-index: 3; display: block; border-radius: 50%; }
 .paw:hover, .paw:focus-visible { box-shadow: 0 0 0 5px #ffe9a8aa, 0 0 26px 8px #ffd77a88; outline: none; }
