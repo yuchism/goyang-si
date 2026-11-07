@@ -198,8 +198,10 @@ function build(cfg) {
     view.classList.toggle('pan', !wide);
     return k;
   };
-  let scale = 1, panFrame = 0;
+  let scale = 1, panFrame = 0, panWait = 0;
   const stopPan = () => {
+    clearTimeout(panWait);
+    panWait = 0;
     cancelAnimationFrame(panFrame);
     panFrame = 0;
   };
@@ -236,7 +238,7 @@ function build(cfg) {
       view.scrollLeft = scrollAt(V.focus);
     else {
       view.scrollLeft = scrollAt(V.start);
-      setTimeout(() => panTo(V.focus, V.panMs), 400);
+      panWait = setTimeout(() => panTo(V.focus, V.panMs), 400);
     }
   }
 }

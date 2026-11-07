@@ -38,17 +38,17 @@
 - GoatCounter: 기지 방문(`base-visit`), 상황판 화면을 눌러 넘김(`base-board`, 방문당 한 번).
 
 ## 요구사항
-- [ ] 그림 지시서 `assets/briefs/BASE_HALL_ART.md` → 지시서 왕복 → 배경 그림 → 그림 검수 → `web/base/bg.webp`
-- [ ] `/base/` 페이지: 배경, 밤 색조, 좁은 화면 끌기·스르륵, 발바닥 판 → 거실
-- [ ] 넘김 상황판: 화면 넷, 넘김 동작·소리(설정 따름), 동작 줄이기, KO/EN, 칸 자르기
-- [ ] 상태 JSON 읽기·검사·실패 시 데모, "마지막 소식"·"연습 화면" 띠
-- [ ] `web/base/demo.json` (모든 `stage` 한 번씩, 통계 예시)
-- [ ] `sw.js`에 기지 담기 규칙
-- [ ] GoatCounter 두 이벤트
-- [ ] 숫자(화면 시간, 읽기 간격, 칸 수, 자리)는 `web/base/scene.json` 한 곳
+- [x] 그림 지시서 `assets/briefs/BASE_HALL_ART.md` → 지시서 왕복 → 배경 그림 → 그림 검수 → `web/base/bg.webp`
+- [x] `/base/` 페이지: 배경, 밤 색조, 좁은 화면 끌기·스르륵, 발바닥 판 → 거실
+- [x] 넘김 상황판: 화면 넷, 넘김 동작·소리(설정 따름), 동작 줄이기, KO/EN, 칸 자르기
+- [x] 상태 JSON 읽기·검사·실패 시 데모, "마지막 소식"·"연습 화면" 띠
+- [x] `web/base/demo.json` (모든 `stage` 한 번씩, 통계 예시)
+- [x] `sw.js`에 기지 담기 규칙
+- [x] GoatCounter 두 이벤트
+- [x] 숫자(화면 시간, 읽기 간격, 칸 수, 자리)는 `web/base/scene.json` 한 곳
 
 ## 확인
-- [ ] `node tools/check_structure.mjs` · `node tools/check_time.mjs` 통과
+- [x] `node tools/check_structure.mjs` · `node tools/check_time.mjs` 통과
 - [ ] (사람) `/base/` 넓은 화면·폰, 낮·밤
 - [ ] (사람) 상황판이 촤라락 넘어가며 네 화면이 돌고, 소리 끄면 조용, 영어 화면
 - [ ] (사람) 데모 JSON의 모든 단계가 "지금" 화면에 이상 없이 나옴, 이상한 JSON(긴 글자·모르는 값)을 넣어도 안 깨짐
@@ -70,3 +70,4 @@
   - 한국 날짜 비교는 screens.js에 두었다(+9시간, 서머타임 없음). time.js에 넣으면 구조 검사 기준(930줄)을 넘기 때문이다.
   - 미리보기 주소: `?night=1`/`?night=0`, `?demo=1`, `?status=시험.json`(같은 사이트 파일만).
   - 브라우저 검사는 하지 못했다(이 셸에 Playwright 패키지가 없음). (사람) 항목으로 확인해야 한다.
+- 2026-11-07 검수 지적 고침(일꾼 Claude): 요구사항·자동 검사 체크 갱신((사람)은 남김). 스르륵 시작 대기(400ms) 중에 만져도 멈추게 `stopPan`이 대기 타이머도 취소. 상태 JSON은 받은 바이트를 세며 읽고 `maxBytes`를 넘으면 읽기를 끊는다(Content-Length 없을 때도).

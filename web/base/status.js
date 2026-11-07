@@ -52,6 +52,34 @@ export function clean(raw) {
   return { day: raw.day, factory: { blocked: f.blocked === true, limit: f.limit === true }, roles, tasks, recent, stats };
 }
 
+// 받은 바이트를 세며 읽다가 상한을 넘으면 끊는다 (Content-Length가 없거나 틀려도)
+async function readCapped(r, maxBytes) {
+  if (!r.body) {
+    const buf = await r.arrayBuffer();
+    return buf.byteLength > maxBytes ? null : new TextDecoder().decode(buf);
+  }
+  const reader = r.body.getReader(), parts = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done)
+      break;
+    size += value.byteLength;
+    if (size > maxBytes) {
+      reader.cancel().catch(() => { });
+      return null;
+    }
+    parts.push(value);
+  }
+  const all = new Uint8Array(size);
+  let at = 0;
+  for (const p of parts) {
+    all.set(p, at);
+    at += p.byteLength;
+  }
+  return new TextDecoder().decode(all);
+}
+
 // 주소에서 읽기: 크기 상한을 넘거나 JSON이 아니거나 모양이 다르면 null
 async function load(url, maxBytes) {
   try {
@@ -61,8 +89,8 @@ async function load(url, maxBytes) {
     const len = Number(r.headers.get('content-length'));
     if (len > maxBytes)
       return null;
-    const text = await r.text();
-    if (!text.trim() || text.length > maxBytes)
+    const text = await readCapped(r, maxBytes);
+    if (text === null || !text.trim())
       return null;
     return clean(JSON.parse(text));
   }
