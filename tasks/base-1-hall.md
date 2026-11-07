@@ -1,5 +1,5 @@
 # 쥐구멍 기지 1: 기지 홀 `/base/` · 공항식 넘김 상황판 · 기지 배경 그림
-- status: implemented
+- status: done
 - mode: needs-review
 - relay: brief
 - office: ready
@@ -82,3 +82,4 @@
   - 촤라락 넘김·네 화면·소리 끄면 조용·영어 화면 — 통과.
   - 데모 전체 단계·이상한 JSON — 통과(Claude 브라우저 시험, 1e4f2eb: 긴 제목 …로 잘림, 모르는 단계·HTML 제목 줄 빠짐(실행 안 됨), v 다름·JSON 아님·null 칸 → 연습 화면, 500개도 안 깨짐, 페이지 오류 0).
 - 2026-11-08 고침(일꾼 Claude) — 다크 모드가 바꿔 칠하는 것은 배경'색'이라 색을 쓰지 않는 방법으로: 밤 색조는 색 덮개(.night 배경색 + mix-blend) 대신 같은 배경 그림 한 장 더에 CSS filter(saturate·sepia·hue-rotate·brightness), 샹들리에 둘레는 가림막(mask)을 씌운 한 장 더(더 어둡게). 불빛(.glows)은 그대로 위에. 숫자 칸 판·틈 배경은 한 색 그러데이션(`linear-gradient(색, 색)`)으로. 다크 모드 켬에서 숫자 칸·밤 색조 다시 확인 필요((사람) 첫 항목은 그때까지 남김).
+- 2026-11-08 마무리(Claude, 주인 결정): 하네스는 검수자가 (사람) 재확인 결과를 꼭 고칠 것으로 내서 막힘(구멍 2 후보 1) → 밤 색조를 Claude가 직접 고침(`bg-night.webp` 미리 굽기, `tools/base_night.py`)·주인이 밤 색 확인 후 `main`에 직접 합침. 이상한 JSON 시험은 Claude 브라우저(1e4f2eb)를 주인이 받아들임. 삼성 인터넷 다크 모드 숫자 칸은 배포 뒤 폰에서 한 번 더 볼 것.
