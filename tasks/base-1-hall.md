@@ -60,3 +60,4 @@
 
 ## 메모
 - 2026-11-07 지시서 작성(Claude, 회의). 구현은 기본 일꾼(Claude).
+- 2026-11-07 그림 지시서 v1 `assets/briefs/BASE_HALL_ART.md` 작성(일꾼 Claude) — 지시서 왕복 대기.
