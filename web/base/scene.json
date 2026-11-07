@@ -3,6 +3,7 @@
   "size": [1774, 887],
   "v": 1,
   "bg": "bg.webp",
+  "bgNight": "bg-night.webp",
   "board": {
     "_": "상황판 안쪽 판 [x, y, w, h]. rows줄(첫 줄은 화면 이름). 한 줄 = 왼쪽 줄 판 + 오른쪽 자리(side: 줄 너비 중 비율) — 오른쪽은 줄 판 하나 또는 숫자 칸 digits개 + 단위. gap: 판 사이 틈(px), fontRatio: 줄 높이 대비 글자 크기. screenSec: 한 화면(쪽) 보이는 초",
     "rect": [657, 142, 457, 258],

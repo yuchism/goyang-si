@@ -90,15 +90,15 @@ function build(cfg) {
   bg.src = cfg.bg + '?v=' + cfg.v;
   sc.append(bg);
 
-  // 밤 색조: 같은 그림에 CSS 필터(어둡게·푸르게) + 샹들리에 둘레는 더 어둡게(가림막으로 한 겹 더) + 불빛(CRT·램프)은 위에 다시.
-  // 색 덮개(배경색·섞기)는 삼성 인터넷 다크 모드가 바꿔 칠해서 쓰지 않는다
+  // 밤 색조: 미리 구운 밤 그림(tools/base_night.py — 낮 그림에 남보라빛 곱하기, 색은 그대로·조명만 낮춤) + 샹들리에 둘레는 더 어둡게(밝기만) + 불빛(CRT·램프)은 위에 다시.
+  // 색 덮개(배경색·섞기)는 삼성 인터넷 다크 모드가 바꿔 칠하고, 색 돌리기 필터는 궁궐 색을 잃어서 쓰지 않는다
   const night = el('div', 'night');
   const shade = cls => {
     const n = el('img', cls);
     n.alt = '';
     n.decoding = 'async';
     n.draggable = false;
-    n.src = bg.src;
+    n.src = cfg.bgNight ? cfg.bgNight + '?v=' + cfg.v : bg.src;
     n.onerror = () => n.remove();
     return n;
   };

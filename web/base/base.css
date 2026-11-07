@@ -43,8 +43,7 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
    색 덮개(배경색 + mix-blend)는 삼성 인터넷 다크 모드가 덮개 색을 바꿔 칠해서 쓰지 않는다 — 필터·가림막은 바꿔 칠하지 않는다 */
 .night, .glows { left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity 2s ease; }
 .night img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
-.night .nt { filter: saturate(.35) sepia(.4) hue-rotate(190deg) brightness(.42); }
-.night .dim { filter: saturate(.35) sepia(.4) hue-rotate(190deg) brightness(.25); }
+.night .dim { filter: brightness(.55); } /* 밤 그림(bg-night.webp) 위 샹들리에 둘레만 더 어둡게 — 밝기만, 색은 안 돌림 */
 .nobg .night { display: none; }
 .glows { mix-blend-mode: screen; }
 .glow { position: absolute; border-radius: 10px; }
