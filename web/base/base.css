@@ -1,0 +1,79 @@
+/* 쥐구멍 기지 홀 (tasks/base-1-hall.md, base.js). 장면은 바탕 픽셀 크기(.bc)로 그리고 화면에 맞게 통째로 줄인다.
+   폰(세로)은 높이에 맞추고 가로로 둘러보기, 데스크톱은 전체가 보이게(남는 곳은 짙은 바위색) */
+:root {
+  --rock: #1a1410;
+  --ink: #f3e6cf;
+  --gold: #e9b93a;
+  --flap: #23283a;
+  --flap-ink: #f6eed6;
+  --font-hand: "Gaegu", "Nanum Pen Script", "Apple SD Gothic Neo", cursive;
+  --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  color-scheme: dark;
+}
+html[lang="en"] { --font-hand: "Patrick Hand", "Gaegu", cursive; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--rock); color: var(--ink); }
+body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highlight-color: transparent; }
+
+.bv { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.bv.pan { justify-content: flex-start; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.bv.pan::-webkit-scrollbar { display: none; }
+.bs { position: relative; flex: none; overflow: hidden; }
+.bc { position: absolute; left: 0; top: 0; transform-origin: 0 0; background: #8a5a2c; user-select: none; -webkit-user-select: none; }
+.bc > * { position: absolute; }
+.bc img { display: block; pointer-events: none; }
+.bg { left: 0; top: 0; width: 100%; height: 100%; }
+.bc.nobg { background: linear-gradient(#6b4a2c, #4a3320 80%, #3a2a1c); }
+
+/* 밤 색조: 그늘 한 겹(곱하기) + 샹들리에 더 어둡게. 불빛(CRT·램프)은 위에 다시 */
+.night, .glows { left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity 2s ease; }
+.night { background: #3a4170; mix-blend-mode: multiply; }
+.night .dim { position: absolute; border-radius: 50%; background: radial-gradient(#1c2040 30%, transparent 70%); }
+.glows { mix-blend-mode: screen; }
+.glow { position: absolute; border-radius: 10px; }
+.glow.crt { background: #7fe8a0; box-shadow: 0 0 30px 12px #7fe8a066; opacity: .55; }
+.glow.lamp { background: radial-gradient(ellipse at center, #ffb34799 0%, transparent 70%); transform: scale(1.6); }
+.is-night .night { opacity: 1; }
+.is-night .glows { opacity: 1; }
+
+/* 상황판: 공항식 넘김 칸 */
+.board { z-index: 3; margin: 0; padding: 0; border: 0; background: #12151f; cursor: pointer; display: block; }
+.board:focus-visible { outline: 4px dashed var(--gold); outline-offset: 6px; }
+.grid { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(var(--cols), 1fr); grid-template-rows: repeat(var(--rows), 1fr); gap: 3px 2px; }
+.fc { position: relative; perspective: 120px; background: var(--flap); border-radius: 2px; overflow: hidden; color: var(--flap-ink); font: 700 var(--fs, 15px)/1 var(--font-body); }
+.fc::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: #0a0c12; z-index: 3; }
+.fc .h { position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; background: inherit; backface-visibility: hidden; }
+.fc .h i { display: flex; align-items: center; justify-content: center; height: 200%; font-style: normal; white-space: pre; }
+.fc .t, .fc .ft { top: 0; }
+.fc .b, .fc .fb { bottom: 0; }
+.fc .b i, .fc .fb i { transform: translateY(-50%); }
+.fc .ft, .fc .fb { display: none; z-index: 2; background: var(--flap); }
+.fc .ft { transform-origin: 50% 100%; }
+.fc .fb { transform-origin: 50% 0; }
+.fc.go .ft { display: block; animation: flap-top var(--fd) ease-in both; }
+.fc.go .fb { display: block; animation: flap-bot var(--fd) ease-out both; }
+@keyframes flap-top { from { transform: rotateX(0); } 50%, to { transform: rotateX(-90deg); } }
+@keyframes flap-bot { from, 50% { transform: rotateX(90deg); } to { transform: rotateX(0); } }
+/* 맨 윗줄(화면 이름)은 금빛 */
+.fc.head { color: var(--gold); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* 발바닥 판: 그림 위에 투명한 단추 (그림이 없으면 코드 판) */
+.paw { z-index: 3; display: block; border-radius: 50%; }
+.paw:hover, .paw:focus-visible { box-shadow: 0 0 0 5px #ffe9a8aa, 0 0 26px 8px #ffd77a88; outline: none; }
+.paw:active { transform: scale(.96); }
+.nobg .paw { background: #c9962e; border: 5px solid #7a5418; }
+.nobg .paw::after { content: "🐾"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+
+/* 상단 띠 */
+.band { position: fixed; z-index: 10; left: 50%; top: calc(8px + env(safe-area-inset-top)); transform: translateX(-50%); margin: 0; padding: 4px 14px; border-radius: 999px; background: rgba(26, 20, 16, .78); color: var(--ink); font: 700 17px/1.3 var(--font-hand); white-space: nowrap; pointer-events: none; }
+.band.demo { background: rgba(200, 67, 43, .9); color: #fff; }
+.band[hidden] { display: none; }
+
+.msg { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-size: 40px; }
+.btn { font: 700 20px/1 var(--font-hand); color: var(--ink); border: 2px solid var(--ink); border-radius: 8px; padding: 10px 16px; text-decoration: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .night, .glows { transition: none; }
+  .fc.go .ft, .fc.go .fb { animation: none; display: none; }
+}

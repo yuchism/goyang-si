@@ -1,5 +1,5 @@
 # 쥐구멍 기지 1: 기지 홀 `/base/` · 공항식 넘김 상황판 · 기지 배경 그림
-- status: brief
+- status: implemented
 - mode: needs-review
 - relay: brief
 - office: ready
@@ -62,3 +62,11 @@
 - 2026-11-07 지시서 작성(Claude, 회의). 구현은 기본 일꾼(Claude).
 - 2026-11-07 그림 지시서 v1 `assets/briefs/BASE_HALL_ART.md` 작성(일꾼 Claude) — 지시서 왕복 대기.
 - 2026-11-07 배경 그림 검수 통과 → `web/base/bg.webp` (1774×887, 키우지 않음). 상태 JSON 모양(goyang-hq 2-4장)을 작업 공간에서 볼 수 없어 코드 전에 질문.
+- 2026-11-07 구현(일꾼 Claude) — `web/base/`: index.html · base.js(장면) · board.js(넘김 판) · screens.js(네 화면 글자) · status.js(상태 읽기) · scene.json · demo.json · base.css. 여기에 `sw.js` 기지 칸을 더했다. 구현 메모:
+  - 상태 JSON 모양은 주인이 준 하네스 `public-status.ts` v1을 그대로 따른다(stage 13개, stats 열쇠 11개). "이번 주" 화면에는 stats.week·month·noBlockDays와 기지 상태(factory)·당번(roles)을 보인다.
+  - 바탕이 1774×887로 와서 좌표는 그 크기 기준이다. 상황판은 8줄 × 24칸(한 칸 약 17×28). 지금 화면의 단계 칸은 KO 6칸·EN 12칸이다. 넘치는 줄은 쪽을 나눠 "1/2"로 돌리고, 한 쪽은 12초 보인다.
+  - 하네스는 tasks를 12개까지 보내지만 데모는 13개라, 받는 상한은 20으로 두었다.
+  - 글자는 만화방(shop.js)처럼 기지 파일 안의 STR 표(screens.js)에 두었다. 거실 i18n.js는 건드리지 않았다.
+  - 한국 날짜 비교는 screens.js에 두었다(+9시간, 서머타임 없음). time.js에 넣으면 구조 검사 기준(930줄)을 넘기 때문이다.
+  - 미리보기 주소: `?night=1`/`?night=0`, `?demo=1`, `?status=시험.json`(같은 사이트 파일만).
+  - 브라우저 검사는 하지 못했다(이 셸에 Playwright 패키지가 없음). (사람) 항목으로 확인해야 한다.
