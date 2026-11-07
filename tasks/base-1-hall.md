@@ -26,7 +26,7 @@
 - KO/EN 둘 다. 칸 수에 맞게 자르기.
 
 ### 상태 JSON 읽기
-- 주소는 장면 설정에(`goyang-status` Pages 주소, 아직 없으면 빈 값). 비어 있거나 읽기에 실패하면 **`web/base/demo.json`**(모든 단계가 한 번씩 나오는 예시)으로, 상단 띠에 "연습 화면".
+- 주소는 장면 설정에: `https://yuchism.github.io/goyang-status/status.json` (하네스가 3시간마다 올림, 2026-11-07 첫 게시 확인. 나중에 `status.goyang.si`로 바뀔 수 있음 — 설정 한 줄). 비어 있거나 읽기에 실패하면 **`web/base/demo.json`**(모든 단계가 한 번씩 나오는 예시)으로, 상단 띠에 "연습 화면".
 - 믿지 않는 입력으로 다룸: 크기 상한, 모양 검사, 모르는 열쇠·`stage`는 무시, 글자는 `textContent`로만. 마지막으로 정상 받은 것을 기억(기기에만).
 - 3시간 게시라 읽기도 드물게(페이지 열 때 + 30분마다 `초기값`).
 - 모양은 goyang-hq `ideas/CAT_INC_IDEAS.md` 2-4장(`v`, `day`, `factory`, `roles`, `tasks[stage·round·title]`, `recent`, `stats`).
