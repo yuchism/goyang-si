@@ -1,6 +1,6 @@
 # 에셋: 쥐구멍 기지 2a — 쥐야쥐 왕 · 강고양이 씨 두 자세 · 두루마리 · 보물상자 (BASE_FAMILY_A_ART)
 
-> 상태: **지시서 씀 (2026-11-08) — 지시서 왕복 중.** 티켓 `tasks/base-2a-family.md`.
+> 상태: **지시서 왕복 통과 (2026-11-08) — 그림 11장 요청함(A 7장 · B 4장).** 티켓 `tasks/base-2a-family.md`.
 > 넣을 곳: 기지 홀 `/base/` (`web/base/`). 기지 바탕(`web/base/bg.webp`) 위에 코드가 얹는다. 자리·배율은 `web/base/scene.json`.
 
 ## 1. 한 줄 요약
