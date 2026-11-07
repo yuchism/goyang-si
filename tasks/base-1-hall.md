@@ -1,5 +1,5 @@
 # 쥐구멍 기지 1: 기지 홀 `/base/` · 공항식 넘김 상황판 · 기지 배경 그림
-- status: brief
+- status: done
 - mode: needs-review
 - relay: brief
 - office: ready
@@ -38,20 +38,20 @@
 - GoatCounter: 기지 방문(`base-visit`), 상황판 화면을 눌러 넘김(`base-board`, 방문당 한 번).
 
 ## 요구사항
-- [ ] 그림 지시서 `assets/briefs/BASE_HALL_ART.md` → 지시서 왕복 → 배경 그림 → 그림 검수 → `web/base/bg.webp`
-- [ ] `/base/` 페이지: 배경, 밤 색조, 좁은 화면 끌기·스르륵, 발바닥 판 → 거실
-- [ ] 넘김 상황판: 화면 넷, 넘김 동작·소리(설정 따름), 동작 줄이기, KO/EN, 칸 자르기
-- [ ] 상태 JSON 읽기·검사·실패 시 데모, "마지막 소식"·"연습 화면" 띠
-- [ ] `web/base/demo.json` (모든 `stage` 한 번씩, 통계 예시)
-- [ ] `sw.js`에 기지 담기 규칙
-- [ ] GoatCounter 두 이벤트
-- [ ] 숫자(화면 시간, 읽기 간격, 칸 수, 자리)는 `web/base/scene.json` 한 곳
+- [x] 그림 지시서 `assets/briefs/BASE_HALL_ART.md` → 지시서 왕복 → 배경 그림 → 그림 검수 → `web/base/bg.webp`
+- [x] `/base/` 페이지: 배경, 밤 색조, 좁은 화면 끌기·스르륵, 발바닥 판 → 거실
+- [x] 넘김 상황판: 화면 넷, 넘김 동작·소리(설정 따름), 동작 줄이기, KO/EN, 칸 자르기
+- [x] 상태 JSON 읽기·검사·실패 시 데모, "마지막 소식"·"연습 화면" 띠
+- [x] `web/base/demo.json` (모든 `stage` 한 번씩, 통계 예시)
+- [x] `sw.js`에 기지 담기 규칙
+- [x] GoatCounter 두 이벤트
+- [x] 숫자(화면 시간, 읽기 간격, 칸 수, 자리)는 `web/base/scene.json` 한 곳
 
 ## 확인
-- [ ] `node tools/check_structure.mjs` · `node tools/check_time.mjs` 통과
+- [x] `node tools/check_structure.mjs` · `node tools/check_time.mjs` 통과
 - [ ] (사람) `/base/` 넓은 화면·폰, 낮·밤
-- [ ] (사람) 상황판이 촤라락 넘어가며 네 화면이 돌고, 소리 끄면 조용, 영어 화면
-- [ ] (사람) 데모 JSON의 모든 단계가 "지금" 화면에 이상 없이 나옴, 이상한 JSON(긴 글자·모르는 값)을 넣어도 안 깨짐
+- [x] (사람) 상황판이 촤라락 넘어가며 네 화면이 돌고, 소리 끄면 조용, 영어 화면
+- [x] (사람) 데모 JSON의 모든 단계가 "지금" 화면에 이상 없이 나옴, 이상한 JSON(긴 글자·모르는 값)을 넣어도 안 깨짐
 
 <!-- office:verify
 - node tools/check_structure.mjs
@@ -60,3 +60,26 @@
 
 ## 메모
 - 2026-11-07 지시서 작성(Claude, 회의). 구현은 기본 일꾼(Claude).
+- 2026-11-07 그림 지시서 v1 `assets/briefs/BASE_HALL_ART.md` 작성(일꾼 Claude) — 지시서 왕복 대기.
+- 2026-11-07 배경 그림 검수 통과 → `web/base/bg.webp` (1774×887, 키우지 않음). 상태 JSON 모양(goyang-hq 2-4장)을 작업 공간에서 볼 수 없어 코드 전에 질문.
+- 2026-11-07 구현(일꾼 Claude) — `web/base/`: index.html · base.js(장면) · board.js(넘김 판) · screens.js(네 화면 글자) · status.js(상태 읽기) · scene.json · demo.json · base.css. 여기에 `sw.js` 기지 칸을 더했다. 구현 메모:
+  - 상태 JSON 모양은 주인이 준 하네스 `public-status.ts` v1을 그대로 따른다(stage 13개, stats 열쇠 11개). "이번 주" 화면에는 stats.week·month·noBlockDays와 기지 상태(factory)·당번(roles)을 보인다.
+  - 바탕이 1774×887로 와서 좌표는 그 크기 기준이다. 상황판은 8줄 × 24칸(한 칸 약 17×28). 지금 화면의 단계 칸은 KO 6칸·EN 12칸이다. 넘치는 줄은 쪽을 나눠 "1/2"로 돌리고, 한 쪽은 12초 보인다.
+  - 하네스는 tasks를 12개까지 보내지만 데모는 13개라, 받는 상한은 20으로 두었다.
+  - 글자는 만화방(shop.js)처럼 기지 파일 안의 STR 표(screens.js)에 두었다. 거실 i18n.js는 건드리지 않았다.
+  - 한국 날짜 비교는 screens.js에 두었다(+9시간, 서머타임 없음). time.js에 넣으면 구조 검사 기준(930줄)을 넘기 때문이다.
+  - 미리보기 주소: `?night=1`/`?night=0`, `?demo=1`, `?status=시험.json`(같은 사이트 파일만).
+  - 브라우저 검사는 하지 못했다(이 셸에 Playwright 패키지가 없음). (사람) 항목으로 확인해야 한다.
+- 2026-11-07 검수 지적 고침(일꾼 Claude): 요구사항·자동 검사 체크 갱신((사람)은 남김). 스르륵 시작 대기(400ms) 중에 만져도 멈추게 `stopPan`이 대기 타이머도 취소. 상태 JSON은 받은 바이트를 세며 읽고 `maxBytes`를 넘으면 읽기를 끊는다(Content-Length 없을 때도).
+- 2026-11-07 사람 검수 고침(일꾼 Claude) — 상황판 가독성: 8줄×24칸 글자 판을 공항식 6줄로 바꿨다. 한 줄 = 왼쪽 줄 판(제목·이름, 낱말째 넘김) + 오른쪽 자리(단계·상태 줄 판, 또는 통계 숫자 5칸 + 단위 판). 지금 화면은 공항처럼 왼쪽 제목·오른쪽 단계. 판 사이 틈은 판 색에 가까운 2px 선, 접힘선만 살짝. 글자는 줄 높이의 0.6배(바탕 기준 약 23px, 전보다 약 1.4배). 긴 글자는 판 끝에서 …로 잘린다. 숫자(rows·side·digits·gap·fontRatio)는 scene.json board.
+- 2026-11-07 사람 검수 고침(일꾼 Claude) — 폰 상황판: 넓은 화면은 그대로(누르면 다음 화면). 좁은 화면(둘러보기)에서는 상황판을 누르면 화면 너비에 맞춘 큰 상황판 창이 뜬다(같은 넘김 판·같은 화면 순서, 창 안을 누르면 다음 화면, 바깥·닫기 ×·Esc로 닫힘 — 만화방 책 창처럼). 상황판 아래 "눌러서 크게 / Tap to enlarge"(좁은 화면에서만). 숫자는 scene.json board.hint·popPad.
+- 2026-11-07 사람 검수 고침(일꾼 Claude) — 폰 큰 상황판 창은 빼기로 함(써 보니 필요 없음): 큰 창·"눌러서 크게" 표시와 scene.json board.hint·popPad를 되돌렸다. 폰에서도 상황판을 누르면 넓은 화면처럼 다음 화면으로 넘어간다. 낱말째 줄 판·숫자 칸·6줄·모눈 없음은 그대로.
+- 2026-11-07 사람 검수 고침(일꾼 Claude) — 갤럭시(삼성 인터넷, 다크 모드)에서 숫자 칸 배경이 하얗게 보임: 넘김을 3D 회전(rotateX·perspective·backface-visibility) 대신 2D `scaleY`(납작해졌다 펴짐)로 바꿨다(글자 판·숫자 칸 같게). 판의 모든 겹(.fl·.h·.ft·.fb)에 판 색을, 숫자 칸 묶음(.num)에 틈 색을 직접 칠했다(`inherit` 없음). 페이지 머리에 `<meta name="color-scheme" content="dark">`. 거실·만화방에는 3D 회전·inherit 배경·mix-blend가 없고 CSS `color-scheme: dark`가 이미 있어 그대로 두었다.
+- 2026-11-07 (일꾼 Claude, 1e4f2eb) 기지·거실·만화방 CSS에 `prefers-color-scheme: dark` 블록(같은 색 다시 적기), 숫자 칸 겹마다 판 배경·크림 글자 직접.
+- 2026-11-08 사람 확인 결과(주인, 갤럭시 FOLD 8 · 삼성 인터넷 30.0.5.27):
+  - 숫자 칸(네 화면): 다크 모드 끔 — 통과, 켬 — **실패**(1e4f2eb로도 숫자 칸 배경이 바뀌어 칠해짐).
+  - `/base/` 넓은 화면·폰 끌기·스르륵·발바닥 판 — 통과. 삼성 인터넷 다크 모드 + 밤 — **실패**(밤 덮개 색이 바뀌어 보임).
+  - 촤라락 넘김·네 화면·소리 끄면 조용·영어 화면 — 통과.
+  - 데모 전체 단계·이상한 JSON — 통과(Claude 브라우저 시험, 1e4f2eb: 긴 제목 …로 잘림, 모르는 단계·HTML 제목 줄 빠짐(실행 안 됨), v 다름·JSON 아님·null 칸 → 연습 화면, 500개도 안 깨짐, 페이지 오류 0).
+- 2026-11-08 고침(일꾼 Claude) — 다크 모드가 바꿔 칠하는 것은 배경'색'이라 색을 쓰지 않는 방법으로: 밤 색조는 색 덮개(.night 배경색 + mix-blend) 대신 같은 배경 그림 한 장 더에 CSS filter(saturate·sepia·hue-rotate·brightness), 샹들리에 둘레는 가림막(mask)을 씌운 한 장 더(더 어둡게). 불빛(.glows)은 그대로 위에. 숫자 칸 판·틈 배경은 한 색 그러데이션(`linear-gradient(색, 색)`)으로. 다크 모드 켬에서 숫자 칸·밤 색조 다시 확인 필요((사람) 첫 항목은 그때까지 남김).
+- 2026-11-08 마무리(Claude, 주인 결정): 하네스는 검수자가 (사람) 재확인 결과를 꼭 고칠 것으로 내서 막힘(구멍 2 후보 1) → 밤 색조를 Claude가 직접 고침(`bg-night.webp` 미리 굽기, `tools/base_night.py`)·주인이 밤 색 확인 후 `main`에 직접 합침. 이상한 JSON 시험은 Claude 브라우저(1e4f2eb)를 주인이 받아들임. 삼성 인터넷 다크 모드 숫자 칸은 배포 뒤 폰에서 한 번 더 볼 것.

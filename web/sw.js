@@ -5,6 +5,8 @@
    - Google Fonts: 한 번 받으면 캐시
    - 만화방(manhwa/): 페이지·episodes.json은 위처럼 네트워크 먼저. 그림은 본 것만 따로(MANHWA) 담고, MANHWA_MAX장이 넘으면
      먼저 담은 것부터 지운다. 그림 주소에 ?v=(회차 그림 지문)가 붙어 있어 다시 만들면 새로 받는다. 'warm'(방 시작 묶음)에는 넣지 않는다
+   - 쥐구멍 기지(base/): 페이지·scene.json·demo.json은 네트워크 먼저. 그림은 본 것만 따로(BASE) 담는다. 'warm'에는 넣지 않는다.
+     상태 JSON(goyang-status, 바깥 주소)은 담지 않는다 — 늘 새로 (아래 바깥 주소 규칙)
    - GoatCounter 등 그 밖의 바깥 주소: 손대지 않음(네트워크만)
    __VERSION__은 배포 때 pages.yml이 커밋 해시로 바꾼다. 바뀌지 않았으면(로컬 개발) 그림도 네트워크 먼저.
    새 서비스 워커는 skipWaiting 없이, 다음에 열 때 적용된다 (켜 둔 화면이 갑자기 바뀌지 않게). */
@@ -15,7 +17,8 @@ const IMAGES = 'goyang-img-' + VERSION;
 const FONTS = 'goyang-fonts';
 const MANHWA = 'goyang-manhwa';
 const MANHWA_MAX = 120; // 조각 수 (한 장 약 0.2MB → 약 25MB, 4~5화)
-const KEEP = [PAGES, IMAGES, FONTS, MANHWA];
+const BASE = 'goyang-base';
+const KEEP = [PAGES, IMAGES, FONTS, MANHWA, BASE];
 
 self.addEventListener('install', () => { /* 미리 받지 않는다(데이터 절약). 첫 방문에 본 것만 'warm'으로 담는다 */ });
 
@@ -30,6 +33,7 @@ self.addEventListener('activate', e => {
 
 const isImage = url => /\.(webp|png|jpe?g|gif|ico|svg)$/i.test(url.pathname);
 const isManhwa = url => url.pathname.startsWith(new URL('manhwa/', self.registration.scope).pathname);
+const isBase = url => url.pathname.startsWith(new URL('base/', self.registration.scope).pathname);
 const isFont = url => url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
 
 // 리디렉트된 응답은 사파리가 페이지로 쓰지 못하므로 새 응답으로 감싼다
@@ -50,8 +54,8 @@ async function networkFirst(req, url) {
     return res;
   }
   catch (err) {
-    // 만화방 페이지는 방으로 대신하지 않는다
-    const hit = await cache.match(stripKey(req, url)) || (req.mode === 'navigate' && !isManhwa(url) && await cache.match(new URL('./', self.registration.scope).href));
+    // 만화방·기지 페이지는 방으로 대신하지 않는다
+    const hit = await cache.match(stripKey(req, url)) || (req.mode === 'navigate' && !isManhwa(url) && !isBase(url) && await cache.match(new URL('./', self.registration.scope).href));
     if (hit)
       return hit;
     throw err;
@@ -107,6 +111,8 @@ self.addEventListener('fetch', e => {
     return;
   if (isImage(url) && isManhwa(url))
     e.respondWith(manhwaImage(req));
+  else if (isImage(url) && isBase(url))
+    e.respondWith(cacheFirst(BASE, req)); // 주소에 ?v=(scene.json v)가 붙어 있어 바꾸면 새로 받는다
   else if (isImage(url) && !DEV)
     e.respondWith(cacheFirst(IMAGES, req));
   else
@@ -126,8 +132,8 @@ self.addEventListener('message', e => {
         let name = null;
         if (isFont(url))
           name = FONTS;
-        else if (isManhwa(url))
-          continue; // 만화방은 방 시작 묶음에 넣지 않는다
+        else if (isManhwa(url) || isBase(url))
+          continue; // 만화방·기지는 방 시작 묶음에 넣지 않는다
         else if (url.origin === self.location.origin && !url.pathname.endsWith('/sw.js'))
           name = isImage(url) && !DEV ? IMAGES : PAGES;
         if (!name)

@@ -1,0 +1,41 @@
+{
+  "_": "쥐구멍 기지 홀 장면 설정 (tasks/base-1-hall.md). 좌표는 바탕 그림 픽셀(size) 기준 — 받은 그림에서 잰 값(BASE_HALL_ART.md 6절). 사람이 고치는 곳",
+  "size": [1774, 887],
+  "v": 1,
+  "bg": "bg.webp",
+  "bgNight": "bg-night.webp",
+  "board": {
+    "_": "상황판 안쪽 판 [x, y, w, h]. rows줄(첫 줄은 화면 이름). 한 줄 = 왼쪽 줄 판 + 오른쪽 자리(side: 줄 너비 중 비율) — 오른쪽은 줄 판 하나 또는 숫자 칸 digits개 + 단위. gap: 판 사이 틈(px), fontRatio: 줄 높이 대비 글자 크기. screenSec: 한 화면(쪽) 보이는 초",
+    "rect": [657, 142, 457, 258],
+    "pad": [8, 8],
+    "rows": 6,
+    "side": 0.36,
+    "digits": 5,
+    "gap": 2,
+    "fontRatio": 0.6,
+    "screenSec": 12,
+    "flip": { "stepMs": 80, "spins": 3, "colMs": 22, "rowMs": 40 },
+    "clickGapMs": 22,
+    "clickVol": 0.05
+  },
+  "status": {
+    "_": "상태 JSON. 하네스가 3시간마다 올린다. 읽기는 페이지 열 때 + everyMin분마다. maxBytes 넘으면 읽지 않음",
+    "url": "https://yuchism.github.io/goyang-status/status.json",
+    "everyMin": 30,
+    "maxBytes": 65536,
+    "demo": "demo.json"
+  },
+  "hole": [40, 585, 125, 135],
+  "paw": [178, 533, 84, 84],
+  "throne": [826, 450, 125, 175],
+  "chair": [388, 528, 150, 205],
+  "desk": [1228, 608, 276, 125],
+  "crt": [1293, 516, 92, 68],
+  "easel": [1571, 503, 106, 122],
+  "chest": [1102, 700, 128, 46],
+  "perch": [1520, 146, 182, 46],
+  "vent": [163, 36, 134, 72],
+  "chandeliers": [[447, 190, 120], [1325, 190, 120]],
+  "lamps": [[350, 482, 80, 22], [474, 482, 80, 22], [1232, 482, 80, 22], [1362, 482, 80, 22], [1508, 482, 80, 22], [1648, 482, 80, 22]],
+  "view": { "start": 100, "focus": 888, "panMs": 3200 }
+}

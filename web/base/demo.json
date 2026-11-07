@@ -1,0 +1,29 @@
+{
+  "v": 1,
+  "day": "2026-11-07",
+  "factory": { "blocked": true, "limit": true },
+  "roles": { "implement": "busy", "review": "busy", "image": "idle" },
+  "tasks": [
+    { "stage": "approval", "title": "까치 둥지 고치기" },
+    { "stage": "ready", "title": "치즈 창고 정리" },
+    { "stage": "relay", "round": "2/3", "title": "쥐구멍 기지 1" },
+    { "stage": "implement", "title": "만화방 신간 코너" },
+    { "stage": "checks", "title": "방 둘러보기" },
+    { "stage": "image", "title": "왕좌 쿠션 그림" },
+    { "stage": "image_check", "title": "샹들리에 다시 그림" },
+    { "stage": "review", "title": "넘김 상황판" },
+    { "stage": "question", "title": null },
+    { "stage": "human_review", "title": "고양.방송 새 편성" },
+    { "stage": "deploy", "title": "머그잔 김 모락모락" },
+    { "stage": "blocked", "title": "아주아주 긴 제목이 들어오면 어디까지 보일…" },
+    { "stage": "limit", "title": null }
+  ],
+  "recent": [
+    { "title": "방 둘러보기", "day": "2026-11-07" },
+    { "title": "만화방 머그잔", "day": "2026-11-06" },
+    { "title": null, "day": "2026-11-05" },
+    { "title": "생일 우쿨렐레", "day": "2026-11-02" },
+    { "title": "정각 종", "day": "2026-10-28" }
+  ],
+  "stats": { "done": 42, "week": 5, "month": 12, "noBlockDays": 3, "deploys": 17, "images": 31, "redraws": 11, "firstPassPct": 40, "relayAvg": 1.8, "rejected": 4, "avgDays": 1.2 }
+}

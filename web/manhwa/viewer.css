@@ -17,6 +17,16 @@
   --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
   color-scheme: dark;
 }
+/* 삼성 인터넷 다크 모드가 크림 종이·막대 색을 다시 칠하지 않게: 이 질의가 있어야 사이트가 다크 화면을 스스로 가진 것으로 본다. 같은 색 그대로 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mh-bg: #17130f;
+    --mh-ink: #f3e6cf;
+    --paper: #f6eedf;
+    --sumi: #2b2118;
+    color-scheme: dark;
+  }
+}
 html[lang="en"] { --font-hand: "Patrick Hand", "Gaegu", cursive; }  /* 고양.시 style.css와 같은 규칙 */
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--mh-bg); color: var(--mh-ink); }
