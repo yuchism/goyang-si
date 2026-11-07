@@ -5,6 +5,7 @@
   --ink: #f3e6cf;
   --gold: #e9b93a;
   --flap: #23283a;
+  --flap-gap: #1a1e2c;
   --flap-ink: #f6eed6;
   --font-hand: "Gaegu", "Nanum Pen Script", "Apple SD Gothic Neo", cursive;
   --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
@@ -36,26 +37,37 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 .is-night .night { opacity: 1; }
 .is-night .glows { opacity: 1; }
 
-/* 상황판: 공항식 넘김 칸 */
-.board { z-index: 3; margin: 0; padding: 0; border: 0; background: #12151f; cursor: pointer; display: block; }
+/* 상황판: 공항식 넘김 판. 틈은 판 색과 거의 같은 어두운 선, 판 가운데 접힘선만 살짝 (모눈이 보이지 않게) */
+.board { z-index: 3; margin: 0; padding: 0; border: 0; background: var(--flap-gap); cursor: pointer; display: block; }
 .board:focus-visible { outline: 4px dashed var(--gold); outline-offset: 6px; }
-.grid { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(var(--cols), 1fr); grid-template-rows: repeat(var(--rows), 1fr); gap: 3px 2px; }
-.fc { position: relative; perspective: 120px; background: var(--flap); border-radius: 2px; overflow: hidden; color: var(--flap-ink); font: 700 var(--fs, 15px)/1 var(--font-body); }
-.fc::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: #0a0c12; z-index: 3; }
-.fc .h { position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; background: inherit; backface-visibility: hidden; }
-.fc .h i { display: flex; align-items: center; justify-content: center; height: 200%; font-style: normal; white-space: pre; }
-.fc .t, .fc .ft { top: 0; }
-.fc .b, .fc .fb { bottom: 0; }
-.fc .b i, .fc .fb i { transform: translateY(-50%); }
-.fc .ft, .fc .fb { display: none; z-index: 2; background: var(--flap); }
-.fc .ft { transform-origin: 50% 100%; }
-.fc .fb { transform-origin: 50% 0; }
-.fc.go .ft { display: block; animation: flap-top var(--fd) ease-in both; }
-.fc.go .fb { display: block; animation: flap-bot var(--fd) ease-out both; }
+.grid { position: absolute; inset: 0; display: flex; flex-direction: column; gap: var(--gap); }
+.fr { display: flex; gap: var(--gap); height: var(--rh); flex: none; }
+.fr .main { flex: 1; min-width: 0; }
+.fr .rt { position: relative; flex: none; width: var(--side); }
+.fr .side, .fr .num { position: absolute; inset: 0; }
+.fr .num { display: none; justify-content: flex-end; gap: 1px; }
+.fr.isnum .side { display: none; }
+.fr.isnum .num { display: flex; }
+.fl { position: relative; display: block; perspective: 200px; background: var(--flap); border-radius: 1px; overflow: hidden; color: var(--flap-ink); font: 700 var(--fs, 15px)/1 var(--font-body); }
+.fl::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: #0b0d14aa; z-index: 3; }
+.fl .h { position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; background: inherit; backface-visibility: hidden; }
+.fl .h i { display: block; height: 200%; line-height: var(--rh); font-style: normal; white-space: pre; text-align: center; }
+.word .h i { text-align: left; padding: 0 .4em; overflow: hidden; text-overflow: ellipsis; }
+.fl .t, .fl .ft { top: 0; }
+.fl .b, .fl .fb { bottom: 0; }
+.fl .b i, .fl .fb i { transform: translateY(-50%); }
+.fl .ft, .fl .fb { display: none; z-index: 2; background: var(--flap); }
+.fl .ft { transform-origin: 50% 100%; }
+.fl .fb { transform-origin: 50% 0; }
+.fl.go .ft { display: block; animation: flap-top var(--fd) ease-in both; }
+.fl.go .fb { display: block; animation: flap-bot var(--fd) ease-out both; }
 @keyframes flap-top { from { transform: rotateX(0); } 50%, to { transform: rotateX(-90deg); } }
 @keyframes flap-bot { from, 50% { transform: rotateX(90deg); } to { transform: rotateX(0); } }
+.dg { width: .78em; flex: none; font-variant-numeric: tabular-nums; }
+.unit { flex: none; width: 1.5em; }
+.unit .h i { padding: 0 .15em; text-align: center; }
 /* 맨 윗줄(화면 이름)은 금빛 */
-.fc.head { color: var(--gold); }
+.fr.head .fl { color: var(--gold); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
 /* 발바닥 판: 그림 위에 투명한 단추 (그림이 없으면 코드 판) */
@@ -75,5 +87,5 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 
 @media (prefers-reduced-motion: reduce) {
   .night, .glows { transition: none; }
-  .fc.go .ft, .fc.go .fb { animation: none; display: none; }
+  .fl.go .ft, .fl.go .fb { animation: none; display: none; }
 }

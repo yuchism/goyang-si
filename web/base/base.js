@@ -134,7 +134,7 @@ function build(cfg) {
     if (!pg)
       return;
     show(pg.lines);
-    said.textContent = pg.lines.map(l => l.join('').trim()).filter(Boolean).join(' / ');
+    said.textContent = pg.lines.map(l => [l.l, l.r, l.n, l.u].filter(Boolean).join(' ')).filter(Boolean).join(' / ');
   };
   const next = () => {
     clearTimeout(timer);
@@ -164,7 +164,7 @@ function build(cfg) {
     const first = !data;
     data = got.data;
     demo = got.demo;
-    all = pages(data, LANG, B.rows, B.cols, B.stageW[LANG]);
+    all = pages(data, LANG, B.rows, B.digits);
     setBand();
     if (first) {
       at = 0;

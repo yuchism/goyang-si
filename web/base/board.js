@@ -1,8 +1,9 @@
-/* 공항식 넘김 상황판 (tasks/base-1-hall.md) — rows×cols 글자 칸. 칸이 바뀔 때 위아래 반쪽이 촤라락 넘어간다
-   - 칸마다 몇 번 아무 글자로 넘어가다 새 글자에서 멈춘다(spins). 왼쪽 위부터 조금씩 늦게(colMs·rowMs) — 숫자는 scene.json board.flip
+/* 공항식 넘김 상황판 (tasks/base-1-hall.md) — rows줄. 판이 바뀔 때 위아래 반쪽이 촤라락 넘어간다
+   - 한 줄 = 왼쪽 큰 줄 판(제목·이름, 낱말째 넘김) + 오른쪽 자리. 오른쪽은 줄 판 하나(단계·상태) 또는 숫자 칸 digits개 + 단위 판(통계)
+   - 판마다 몇 번 다른 낱말·숫자로 넘어가다 새 값에서 멈춘다(spins). 위 줄부터 조금씩 늦게(colMs·rowMs) — 숫자는 scene.json board.flip
    - 소리: 코드로 만든 짧은 딸깍(Web Audio). 설정 책의 소리 켜기(goyang.sound, 기본 켜짐)를 따르고, 누르기 전엔 브라우저가 막으므로 첫 누름에 연다
    - 동작 줄이기: 넘김 없이 바로 바뀐다(소리도 없음) */
-const SPIN = '가나다라마바사아자차카타파하0123456789ABCDEFGHJKLMNPRSTUVWXYZ'.split('');
+const DIGITS = '0123456789'.split('');
 
 /* ── 딸깍 소리 */
 const soundWanted = () => {
@@ -48,91 +49,114 @@ const Click = { ac: null, buf: null, last: 0, gap: 22, vol: 0.05,
 for (const t of ['pointerdown', 'keydown', 'touchend'])
   document.addEventListener(t, () => Click.unlock(), { capture: true, passive: true });
 
-/* ── 칸 하나: 위 반쪽·아래 반쪽 + 넘어가는 두 날개 */
+/* ── 판 하나(줄 판·숫자 칸 같은 모양): 위 반쪽·아래 반쪽 + 넘어가는 두 날개 */
 function half(cls) {
   const h = document.createElement('span');
   h.className = 'h ' + cls;
   h.append(document.createElement('i'));
   return h;
 }
-function makeCell() {
+function makeFlap(cls, spin) {
   const c = document.createElement('span');
-  c.className = 'fc';
+  c.className = 'fl ' + cls;
   const parts = { t: half('t'), b: half('b'), ft: half('ft'), fb: half('fb') };
   c.append(parts.t, parts.b, parts.ft, parts.fb);
-  return { el: c, parts, ch: ' ', want: ' ', token: 0 };
+  return { el: c, parts, spin, ch: '', want: '', token: 0 };
 }
 const put = (h, ch) => { h.firstChild.textContent = ch; };
-function setNow(cell, ch) {
-  cell.ch = ch;
-  cell.el.classList.remove('go');
-  for (const h of Object.values(cell.parts))
+function setNow(f, ch) {
+  f.ch = ch;
+  f.el.classList.remove('go');
+  for (const h of Object.values(f.parts))
     put(h, ch);
 }
 
 export function makeBoard(host, cfg, RM) {
-  const { rows, cols, flip } = cfg;
+  const { rows, digits, flip } = cfg;
   Click.gap = cfg.clickGapMs;
   Click.vol = cfg.clickVol;
-  host.style.setProperty('--rows', rows);
-  host.style.setProperty('--cols', cols);
   host.style.setProperty('--fd', flip.stepMs + 'ms');
-  const cells = [];
-  // 글자 크기: 칸 너비·높이에 맞게 (한글 한 글자가 칸을 넘지 않게)
-  const [, , w, h] = cfg.rect, [px, py] = cfg.pad;
-  const cw = (w - 2 * px - (cols - 1) * 2) / cols, chh = (h - 2 * py - (rows - 1) * 3) / rows;
-  host.style.setProperty('--fs', Math.min(cw * 0.92, chh * 0.62).toFixed(1) + 'px');
-  for (let i = 0; i < rows * cols; i++) {
-    const c = makeCell();
-    if (i < cols)
-      c.el.classList.add('head'); // 맨 윗줄: 화면 이름
-    setNow(c, ' ');
-    host.append(c.el);
-    cells.push(c);
+  // 글자 크기: 줄 높이에 맞게
+  const [, , , h] = cfg.rect, [, py] = cfg.pad;
+  const rh = (h - 2 * py - (rows - 1) * cfg.gap) / rows;
+  host.style.setProperty('--rh', rh.toFixed(1) + 'px');
+  host.style.setProperty('--fs', (rh * cfg.fontRatio).toFixed(1) + 'px');
+  host.style.setProperty('--gap', cfg.gap + 'px');
+  host.style.setProperty('--side', (cfg.side * 100).toFixed(1) + '%');
+  let pool = [];
+  const lines = [];
+  for (let r = 0; r < rows; r++) {
+    const row = document.createElement('span');
+    row.className = 'fr' + (r === 0 ? ' head' : ''); // 맨 윗줄: 화면 이름
+    const main = makeFlap('word main', 'word'), side = makeFlap('word side', 'word'), unit = makeFlap('word unit', 'word');
+    const num = document.createElement('span');
+    num.className = 'num';
+    const cells = [];
+    for (let k = 0; k < digits; k++) {
+      cells.push(makeFlap('dg', 'digit'));
+      num.append(cells[k].el);
+    }
+    num.append(unit.el);
+    const right = document.createElement('span');
+    right.className = 'rt';
+    right.append(side.el, num);
+    row.append(main.el, right);
+    host.append(row);
+    lines.push({ row, flaps: [main, side, ...cells, unit] });
   }
   // 한 번 넘김: old → ch
-  const step = (cell, ch) => {
-    const p = cell.parts, old = cell.ch;
-    cell.el.classList.remove('go');
+  const step = (f, ch) => {
+    const p = f.parts, old = f.ch;
+    f.el.classList.remove('go');
     put(p.t, ch);
     put(p.b, old);
     put(p.ft, old);
     put(p.fb, ch);
-    void cell.el.offsetWidth; // 애니메이션 다시 시작
-    cell.el.classList.add('go');
-    cell.ch = ch;
+    void f.el.offsetWidth; // 애니메이션 다시 시작
+    f.el.classList.add('go');
+    f.ch = ch;
     Click.play();
   };
-  const run = (cell, i, ch) => {
-    const token = ++cell.token;
-    const r = Math.floor(i / cols), c = i % cols;
+  const pick = f => {
+    const from = f.spin === 'digit' ? DIGITS : pool;
+    return from.length ? from[Math.floor(Math.random() * from.length)] : '';
+  };
+  const run = (f, start, ch) => {
+    const token = ++f.token;
     const n = 1 + Math.floor(Math.random() * flip.spins);
     const seq = [];
     for (let k = 0; k < n - 1; k++)
-      seq.push(SPIN[Math.floor(Math.random() * SPIN.length)]);
+      seq.push(pick(f));
     seq.push(ch);
-    const start = c * flip.colMs + r * flip.rowMs;
     seq.forEach((x, k) => setTimeout(() => {
-      if (cell.token !== token)
+      if (f.token !== token)
         return;
-      step(cell, x);
+      step(f, x);
       if (k === seq.length - 1)
-        setTimeout(() => cell.token === token && setNow(cell, x), flip.stepMs + 20);
+        setTimeout(() => f.token === token && setNow(f, x), flip.stepMs + 20);
     }, start + k * flip.stepMs));
   };
-  // lines: 글자 배열 × rows (screens.js pages)
-  return function show(lines) {
-    cells.forEach((cell, i) => {
-      const ch = (lines[Math.floor(i / cols)] || [])[i % cols] || ' ';
-      if (ch === cell.want)
-        return;
-      cell.want = ch;
-      if (RM) {
-        cell.token++;
-        setNow(cell, ch);
-      }
-      else
-        run(cell, i, ch);
+  // page: [{ l, r } 또는 { l, n, u }] × rows (screens.js pages). n은 오른쪽 맞춤 숫자 칸
+  return function show(page) {
+    pool = page.flatMap(x => [x.l, x.r]).filter(Boolean);
+    lines.forEach(({ row, flaps }, r) => {
+      const x = page[r] || {}, isNum = x.n != null;
+      row.classList.toggle('isnum', isNum);
+      const n = isNum ? Array.from(x.n).slice(-digits) : [];
+      const want = [x.l || '', isNum ? '' : x.r || '']
+        .concat(Array.from({ length: digits }, (_, k) => n[k - (digits - n.length)] ?? ''), isNum ? x.u || '' : '');
+      flaps.forEach((f, i) => {
+        const ch = want[i];
+        if (ch === f.want)
+          return;
+        f.want = ch;
+        if (RM) {
+          f.token++;
+          setNow(f, ch);
+        }
+        else
+          run(f, r * flip.rowMs + i * flip.colMs, ch);
+      });
     });
   };
 }
