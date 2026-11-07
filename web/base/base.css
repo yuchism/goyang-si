@@ -11,6 +11,19 @@
   --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
   color-scheme: dark;
 }
+/* 삼성 인터넷 다크 모드는 color-scheme만으론 물러서지 않고, 이 미디어 질의가 있어야 "사이트가 다크 화면을 스스로 가짐"으로 보고 색을 다시 칠하지 않는다.
+   기지는 원래 어두우니 같은 색을 그대로 다시 적는다 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rock: #1a1410;
+    --ink: #f3e6cf;
+    --gold: #e9b93a;
+    --flap: #23283a;
+    --flap-gap: #1a1e2c;
+    --flap-ink: #f6eed6;
+    color-scheme: dark;
+  }
+}
 html[lang="en"] { --font-hand: "Patrick Hand", "Gaegu", cursive; }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--rock); color: var(--ink); }
@@ -65,6 +78,8 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 @keyframes flap-top { from { transform: scaleY(1); } 50%, to { transform: scaleY(0); } }
 @keyframes flap-bot { from, 50% { transform: scaleY(0); } to { transform: scaleY(1); } }
 .dg { width: .78em; flex: none; font-variant-numeric: tabular-nums; }
+/* 숫자 칸: 판 배경·크림 글자를 겹마다 직접 (물려받기에 기대지 않는다) */
+.num .fl, .num .fl .h { background: var(--flap); color: var(--flap-ink); -webkit-text-fill-color: var(--flap-ink); }
 .unit { flex: none; width: 1.5em; }
 .unit .h i { padding: 0 .15em; text-align: center; }
 /* 맨 윗줄(화면 이름)은 금빛 */
