@@ -90,10 +90,26 @@ function build(cfg) {
   bg.src = cfg.bg + '?v=' + cfg.v;
   sc.append(bg);
 
-  // 밤 색조: 전체 그늘 + 샹들리에 더 어둡게 + 불빛(CRT·램프)은 위에 다시
+  // 밤 색조: 같은 그림에 CSS 필터(어둡게·푸르게) + 샹들리에 둘레는 더 어둡게(가림막으로 한 겹 더) + 불빛(CRT·램프)은 위에 다시.
+  // 색 덮개(배경색·섞기)는 삼성 인터넷 다크 모드가 바꿔 칠해서 쓰지 않는다
   const night = el('div', 'night');
-  for (const [x, y, r] of cfg.chandeliers || [])
-    night.append(place(el('i', 'dim'), [x - r, y - r, r * 2, r * 2]));
+  const shade = cls => {
+    const n = el('img', cls);
+    n.alt = '';
+    n.decoding = 'async';
+    n.draggable = false;
+    n.src = bg.src;
+    n.onerror = () => n.remove();
+    return n;
+  };
+  const dim = shade('dim');
+  const holes = (cfg.chandeliers || []).map(([x, y, r]) => `radial-gradient(circle ${r}px at ${x}px ${y}px, #000 30%, transparent 100%)`).join(', ');
+  if (holes) {
+    dim.style.webkitMaskImage = holes;
+    dim.style.maskImage = holes;
+    night.append(shade('nt'), dim);
+  } else
+    night.append(shade('nt'));
   sc.append(night);
   const glow = el('div', 'glows');
   if (cfg.crt)

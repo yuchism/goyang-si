@@ -39,10 +39,13 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 .bg { left: 0; top: 0; width: 100%; height: 100%; }
 .bc.nobg { background: linear-gradient(#6b4a2c, #4a3320 80%, #3a2a1c); }
 
-/* 밤 색조: 그늘 한 겹(곱하기) + 샹들리에 더 어둡게. 불빛(CRT·램프)은 위에 다시 */
+/* 밤 색조: 배경 그림 한 장 더(필터로 어둡고 푸르게) + 샹들리에 둘레 한 장 더(가림막). 불빛(CRT·램프)은 위에 다시.
+   색 덮개(배경색 + mix-blend)는 삼성 인터넷 다크 모드가 덮개 색을 바꿔 칠해서 쓰지 않는다 — 필터·가림막은 바꿔 칠하지 않는다 */
 .night, .glows { left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity 2s ease; }
-.night { background: #3a4170; mix-blend-mode: multiply; }
-.night .dim { position: absolute; border-radius: 50%; background: radial-gradient(#1c2040 30%, transparent 70%); }
+.night img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.night .nt { filter: saturate(.35) sepia(.4) hue-rotate(190deg) brightness(.42); }
+.night .dim { filter: saturate(.35) sepia(.4) hue-rotate(190deg) brightness(.25); }
+.nobg .night { display: none; }
 .glows { mix-blend-mode: screen; }
 .glow { position: absolute; border-radius: 10px; }
 .glow.crt { background: #7fe8a0; box-shadow: 0 0 30px 12px #7fe8a066; opacity: .55; }
@@ -78,8 +81,10 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 @keyframes flap-top { from { transform: scaleY(1); } 50%, to { transform: scaleY(0); } }
 @keyframes flap-bot { from, 50% { transform: scaleY(0); } to { transform: scaleY(1); } }
 .dg { width: .78em; flex: none; font-variant-numeric: tabular-nums; }
-/* 숫자 칸: 판 배경·크림 글자를 겹마다 직접 (물려받기에 기대지 않는다) */
-.num .fl, .num .fl .h { background: var(--flap); color: var(--flap-ink); -webkit-text-fill-color: var(--flap-ink); }
+/* 숫자 칸: 판 배경·크림 글자를 겹마다 직접 (물려받기에 기대지 않는다).
+   삼성 인터넷 다크 모드가 숫자 칸 배경색을 하얗게 바꿔 칠해서(2026-11-07 FOLD 8 확인) 배경은 색이 아니라 한 색 그러데이션(그림)으로 칠한다 */
+.fr .num { background: linear-gradient(var(--flap-gap), var(--flap-gap)); }
+.num .fl, .num .fl .h { background: linear-gradient(var(--flap), var(--flap)); color: var(--flap-ink); -webkit-text-fill-color: var(--flap-ink); }
 .unit { flex: none; width: 1.5em; }
 .unit .h i { padding: 0 .15em; text-align: center; }
 /* 맨 윗줄(화면 이름)은 금빛 */
