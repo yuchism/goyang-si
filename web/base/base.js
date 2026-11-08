@@ -3,10 +3,12 @@
    - 상황판: 상태 JSON(status.js) → 네 화면(screens.js) → 넘김 판(board.js). 누르면 다음 화면
    - 상단 띠: "마지막 소식: 오늘·어제·며칠 전" 또는 "연습 화면"(데모)
    - 발바닥 판: 고양.시 거실로(/?from=base). 귀환 장면은 base-3
+   - 식구 넷(family.js, tasks/base-2a-family.md): 상태 → 연출. 데모면 상황판을 넘길 때마다 데모 쪽(demo.json scenes)이 바뀐다
    - 자리·숫자는 scene.json (바탕 그림 픽셀). 그림을 못 받으면 바위색 바탕 + 코드 상황판·발바닥 단추
    - 미리보기: ?night=1 / ?night=0 (밤·낮 고정), ?demo=1 (데모), ?status=파일.json (같은 사이트의 시험용 JSON) */
 import { isNight, now } from '../js/time.js';
 import { makeBoard } from './board.js';
+import { makeFamily } from './family.js';
 import { STR, agoText, daysAgo, pages } from './screens.js';
 import { readStatus } from './status.js';
 
@@ -118,6 +120,9 @@ function build(cfg) {
     glow.append(place(el('i', 'glow lamp'), l));
   sc.append(glow);
 
+  // 식구 (밤 그림 위 — 밤은 기지 1 그대로)
+  const fam = makeFamily(sc, cfg, { RM, lang: LANG });
+
   // 상황판 (불빛이라 밤 색조 위)
   const board = place(el('button', 'board'), B.rect);
   board.type = 'button';
@@ -144,7 +149,13 @@ function build(cfg) {
   body.append(band);
 
   /* ── 화면 돌리기 */
-  let all = [], at = 0, timer = 0, counted = false, data = null, demo = true;
+  let all = [], at = 0, timer = 0, counted = false, data = null, demo = true, scene = 0, gotFirst = null;
+  const firstData = new Promise(r => (gotFirst = r));
+  // 식구에게 지금 상태: 데모면 데모 쪽 하나, 아니면 받은 그대로
+  const showFamily = () => {
+    const S = demo && data.scenes && data.scenes.length ? data.scenes : null;
+    fam.set(S ? S[scene % S.length] : data, demo);
+  };
   const render = () => {
     const pg = all[at % all.length];
     if (!pg)
@@ -156,6 +167,10 @@ function build(cfg) {
     clearTimeout(timer);
     at = (at + 1) % Math.max(1, all.length);
     render();
+    if (demo && data) {
+      scene++;
+      showFamily();
+    }
     timer = setTimeout(next, B.screenSec * 1000);
   };
   board.addEventListener('click', () => {
@@ -182,6 +197,9 @@ function build(cfg) {
     demo = got.demo;
     all = pages(data, LANG, B.rows, B.digits);
     setBand();
+    if (first || !demo)
+      showFamily();
+    gotFirst();
     if (first) {
       at = 0;
       render();
@@ -247,15 +265,25 @@ function build(cfg) {
 
   body.append(view);
   scale = fit();
-  // 들어오면 쥐구멍 입구 → 왕좌 스르륵 (만지면 멈춤, 동작 줄이기면 바로 왕좌)
+  // 들어오면 쥐구멍 입구 → 스르륵 (만지면 멈춤, 동작 줄이기면 바로). 멈추는 곳: 강고양이 씨가 타자 중이면 책상, 아니면 왕좌
+  // 상태를 받을 때까지 조금(최대 1.5초) 기다린다
   if (view.classList.contains('pan')) {
     const V = cfg.view;
-    if (RM)
-      view.scrollLeft = scrollAt(V.focus);
-    else {
-      view.scrollLeft = scrollAt(V.start);
-      panWait = setTimeout(() => panTo(V.focus, V.panMs), 400);
-    }
+    const focus = () => fam.typing() && V.desk ? V.desk : V.focus;
+    view.scrollLeft = scrollAt(RM ? V.focus : V.start);
+    let touched = false;
+    const touch = () => (touched = true);
+    for (const ev of ['pointerdown', 'touchstart', 'wheel', 'keydown'])
+      addEventListener(ev, touch, { once: true, passive: true });
+    const go = () => {
+      if (touched)
+        return;
+      if (RM)
+        view.scrollLeft = scrollAt(focus());
+      else
+        panWait = setTimeout(() => panTo(focus(), V.panMs), 400);
+    };
+    Promise.race([firstData, new Promise(r => setTimeout(r, 1500))]).then(go);
   }
 }
 

@@ -1,6 +1,6 @@
 # 에셋: 쥐구멍 기지 2a — 쥐야쥐 왕 · 강고양이 씨 두루마리 · 보물상자 (BASE_FAMILY_A_ART)
 
-> 상태: **8장으로 줄임 (2026-11-08, 주인 결정 — 그림 요청 한 번 8장 한도).** 질문 자세는 있는 `web/f/cat_lookup_1~3`, 두루마리 2장은 코드로. 티켓 `tasks/base-2a-family.md`.
+> 상태: **그림 8장 받음·그림 검수 통과·다듬기 끝 (2026-11-08, `tools/base_family_art.py` → `web/base/fam/`).** 8장으로 줄임(주인 결정 — 그림 요청 한 번 8장 한도). 질문 자세는 있는 `web/f/cat_lookup_1~3`, 두루마리 2장은 코드로. 티켓 `tasks/base-2a-family.md`.
 > 넣을 곳: 기지 홀 `/base/` (`web/base/`). 기지 바탕(`web/base/bg.webp`) 위에 코드가 얹는다. 자리·배율은 `web/base/scene.json`.
 
 ## 1. 한 줄 요약

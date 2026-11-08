@@ -10,6 +10,7 @@ export const STR = {
   board: { ko: '상황판 — 누르면 다음 화면', en: 'Status board — tap for next screen' },
   practice: { ko: '연습 화면', en: 'Practice board' },
   last: { ko: '마지막 소식: ', en: 'Last update: ' },
+  vent: { ko: { hmm: '음…', look: '어디 보자…', good: '음… 좋아' }, en: { hmm: 'Hmm…', look: 'Let’s see…', good: 'Hmm… good' } }, // 만득 씨 환기구 말풍선 (family.js)
   screens: {
     ko: { now: '지금', week: '이번 주', total: '누적 기록', recent: '최근 끝낸 일' },
     en: { now: 'NOW', week: 'THIS WEEK', total: 'ALL-TIME', recent: 'RECENTLY DONE' },
