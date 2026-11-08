@@ -17,7 +17,7 @@ import { drawManduk, startVisit, updateManduk, visitTick } from './manduk.js';
 import { mouseTick, resetMouseTimer } from './mouse.js';
 import { O, OBJ, P, S, depthOf, objView, present } from './objects.js';
 import { loadScene } from './scene.js';
-import { drawBookTag, drawBooks, initShelf } from './shelf.js';
+import { drawBookTag, drawBooks, initShelf, shelfUI } from './shelf.js';
 import { Snd } from './sound.js';
 import { drawActor, drawBubble, drawCaptions } from './sprites.js';
 import { H, W, cam, camIntro, ctx, cv, fit, roomDark, updateCam, view } from './stage.js';
@@ -31,11 +31,11 @@ import { loadPrograms, tvOn, tvTick } from './tv.js';
 import { loadWindows } from './weather.js';
 import { tvBig } from './tv-guide.js';
 import { drawTVNight, drawTvBuf, tvBuf } from './tv-screen.js';
-import { devOpen, initUI } from './ui.js';
+import { devOpen, initUI, toStage } from './ui.js';
 import { pick, rnd } from './util.js';
-import { applyDom, tr } from './i18n.js';
+import { LANG, applyDom, tr } from './i18n.js';
 import { drawOddBook, drawOddGlow, initInstall } from './install.js';
-import { baseReturn, drawKey, initSortie, readBaseBack } from './sortie.js'; // 쥐구멍 기지 출동·귀환 (tasks/base-3-sortie.md)
+import { baseReturn, drawKey, drawKeyTag, initSortie, readBaseBack } from './sortie.js'; // 쥐구멍 기지 출동·귀환 (tasks/base-3-sortie.md)
 import { after, caption, cat, mouse, say, tickTimers, world } from './world.js';
 /* ───────── 상태 표시 ───────── */
 // 시간 단위 → 'H:MM' (미리보기 한 줄)
@@ -273,6 +273,7 @@ function render(d, real) {
     });
   draw('자막', () => drawCaptions(real));
   draw('책 이름표', () => drawBookTag());
+  draw('기지 열쇠 이름표', () => drawKeyTag());
   draw('점프 어둠', () => drawJumpFade(real, W, H));
   if (world.boomDraw) // 미리보기 "일부러 오류": 그리기 도중 save만 하고 끊긴 경우
     draw('일부러 오류 (그리기)', () => {
@@ -341,7 +342,7 @@ export function start() {
     settleCat(d);
     if (!birthdayMode) // 좁은 화면: 문에서 강고양이 씨까지 스르륵 (만화방에서 돌아올 때도 문으로 들어오니 같다). 생일 링크는 파티 카메라가 먼저 (tasks/room-pan.md)
       camIntro();
-    initSortie({ O, ctx, cv, cam, view, W: () => W, H: () => H, birthdayMode: () => birthdayMode });
+    initSortie({ O, ctx, cv, cam, view, W: () => W, H: () => H, birthdayMode: () => birthdayMode, shelfUI, toStage, lang: () => LANG });
     if (readBaseBack()) // 쥐구멍 기지에서 돌아옴: 어둠에서 스르륵 (sortie.js)
       baseReturn();
     else if (cameBack()) // 만화방에서 돌아옴: 방이 뜬 뒤 딸랑 + 문 + 강고양이 씨 반응 (frontdoor.js, cat.js)

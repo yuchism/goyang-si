@@ -4,12 +4,22 @@
    - 귀환(/?from=base): 거실이 어둠에서 스르륵 밝아짐
    - 동작 줄이기: 깜박임 없이 왕관만 잠깐 → 넘어감 */
 import { isHalloween, now } from './time.js';
-import { RM, store } from './util.js';
+import { HAND, RM, store } from './util.js';
 import { world } from './world.js';
 
 // 방 쪽 도구는 main.js가 넣어 준다(initSortie) — 이 파일이 방 모듈을 가져오면 엉킨 덩어리가 커진다 (tasks/structure-guard.md)
 let D = null;
-export const initSortie = deps => { D = deps; };
+export const initSortie = deps => {
+  D = deps;
+  D.cv.addEventListener('pointermove', e => { // 책장 이름표(shelf.js) 뒤에 붙어서, 열쇠 위면 "쥐구멍 기지"로 바꿔 보인다
+    if (e.pointerType === 'touch') return;
+    hot = keyAt(...D.toStage(e));
+    if (hot) {
+      D.shelfUI.hover = null;
+      D.cv.style.cursor = 'pointer';
+    }
+  });
+};
 
 const BASE = '/base/';
 const KEY_BOOK = 'green';
@@ -38,17 +48,59 @@ export function keyAt(x, y) {
   const rad = Math.max(14, 22 / (D.view.s || 1)); // 화면에서 44px 이상
   return Math.hypot(x - p[0], y - p[1]) <= rad;
 }
+const TAG = { ko: '쥐구멍 기지', en: 'Mousehole Base' };
+let hot = false; // 넓은 화면: 열쇠 위에 마우스
+const PAWS = [[20, 27, 9.5, 8, 0], [9, 15.5, 3.6, 4.6, -22], [16, 9.5, 3.8, 4.9, -7], [24, 9.5, 3.8, 4.9, 7], [31, 15.5, 3.6, 4.6, 22]]; // spine-marks.js paw와 같은 모양
+// 열쇠: 초록 책 발바닥을 금빛으로 + 가끔(6초에 한 번) 작은 별이 반짝. 눈 밝은 사람만 찾게 — 늘 번쩍이지 않는다
 export function drawKey() {
   const p = keyOn() && keyPaw();
   if (!p) return;
-  const first = (store.get(SEEN, 0) || 0) < BRIGHT_FIRST;
-  const a = (first ? 0.55 : 0.32) * (RM ? 1 : 0.7 + 0.3 * Math.sin(T() * 2.2));
-  D.ctx.globalCompositeOperation = 'lighter';
-  const g = D.ctx.createRadialGradient(p[0], p[1], 1, p[0], p[1], 15);
-  g.addColorStop(0, `rgba(255,236,170,${a})`);
-  g.addColorStop(1, 'rgba(255,236,170,0)');
-  D.ctx.fillStyle = g;
-  D.ctx.fillRect(p[0] - 16, p[1] - 16, 32, 32);
+  const c = D.ctx, b = D.O.bookshelf.books.find(x => x.id === KEY_BOOK), pa = ((b.deco && b.deco.paw) || [0, 0, 0])[2] || 0;
+  const first = (store.get(SEEN, 0) || 0) < BRIGHT_FIRST, sz = Math.min(b.w * 0.62, 16);
+  c.save();
+  c.translate(p[0], p[1]);
+  c.rotate(((b.rot || 0) + pa) * RAD);
+  c.scale(sz / 40, sz / 40);
+  c.translate(-20, -20);
+  c.fillStyle = '#f0c040';
+  c.globalAlpha = first || hot ? 0.95 : 0.8;
+  for (const [ex, ey, rx, ry, r] of PAWS) {
+    c.beginPath();
+    c.ellipse(ex, ey, rx, ry, r * RAD, 0, 7);
+    c.fill();
+  }
+  c.restore();
+  const ph = RM ? 1 : (T() % (first ? 3 : 6)) / 0.7; // 별: 0~1 사이에만
+  if (ph < 1) {
+    const k = Math.sin(ph * Math.PI), x = p[0] + 7, y = p[1] - 9, r = 6 * k;
+    c.save();
+    c.fillStyle = `rgba(255,248,210,${0.95 * k})`;
+    c.beginPath();
+    c.moveTo(x, y - r); c.quadraticCurveTo(x, y, x + r, y); c.quadraticCurveTo(x, y, x, y + r); c.quadraticCurveTo(x, y, x - r, y); c.quadraticCurveTo(x, y, x, y - r);
+    c.fill();
+    c.restore();
+  }
+}
+export function drawKeyTag() { // 이름표는 책장 이름표처럼 맨 위에 (main.js 책 이름표 다음)
+  const p = keyOn() && keyPaw(), c = D && D.ctx;
+  if (!p) return;
+  if (hot && D.O.bookshelf.area) { // 이름표 (책장 이름표와 같은 자리·모양)
+    const a = D.O.bookshelf.area, t = TAG[D.lang()] || TAG.en, tx = a[0] + a[2] + 8, ty = p[1];
+    c.save();
+    c.font = '700 24px ' + HAND;
+    const tw = c.measureText(t).width + 24;
+    c.fillStyle = 'rgba(247,236,214,.96)';
+    c.strokeStyle = '#2b1d16';
+    c.lineWidth = 2.5;
+    c.beginPath();
+    c.roundRect(tx, ty - 18, tw, 36, 8);
+    c.fill();
+    c.stroke();
+    c.fillStyle = '#2b1d16';
+    c.textBaseline = 'middle';
+    c.fillText(t, tx + 12, ty + 1);
+    c.restore();
+  }
 }
 
 /* ───────── 출동 ───────── */
