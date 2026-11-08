@@ -42,10 +42,12 @@ export function poses(d) {
 }
 
 /* ───────── 바뀐 것 (지난번 본 것 → 지금) ───────── */
+// 확정 뒤 흐름 단계(ready부터 deploy까지). 질문·막힘·한도 대기는 흐름이 아니라 세지 않음
+const AFTER = new Set(['ready', 'relay', 'implement', 'checks', 'image', 'image_check', 'review', 'human_review', 'deploy']);
 const snap = d => ({
   done: d.stats.done, rejected: d.stats.rejected,
   approval: d.tasks.filter(t => t.stage === 'approval').length,
-  after: d.tasks.filter(t => t.stage !== 'approval').length, // ready·그 뒤 단계
+  after: d.tasks.filter(t => AFTER.has(t.stage)).length,
 });
 const grew = (a, b) => typeof a === 'number' && typeof b === 'number' && b > a;
 export function changes(prev, d) {
@@ -177,7 +179,7 @@ export function makeFamily(sc, cfg, { RM, lang }) {
     }
 
   /* ── 지금 상태 */
-  let P = null, over = null, t0 = performance.now(), catSince = t0, ventAt = 0, ready = false, prev = null;
+  let P = null, over = null, t0 = performance.now(), catSince = t0, ventAt = -Infinity, ready = false, prev = null;
   const busyQ = [];
   let running = false;
 
@@ -403,7 +405,7 @@ export function makeFamily(sc, cfg, { RM, lang }) {
       if (!P || p.cat !== P.cat)
         catSince = performance.now();
       if (!P || p.vent !== P.vent)
-        ventAt = 0;
+        ventAt = -Infinity; // 들어오자마자 한 번, 그 뒤 ventEvery마다
       P = p;
       const before = demo ? prev : recall();
       const s = snap(d);
