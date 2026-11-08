@@ -2,11 +2,12 @@
    - 모양(v1): { v, day, factory{blocked,limit}, roles{implement,review,image}, tasks[{stage,round?,title}], recent[{title,day}], stats{…} }
      (하네스 goyang-office src/office/public-status.ts)
    - 크기 상한(maxBytes), v가 1이 아니거나 모양이 다르면 버린다. 모르는 열쇠·모르는 stage는 무시. 글자는 잘라서 돌려주고, 화면은 textContent로만 쓴다
+   - 데모(demo.json)에는 식구 연출용 쪽(scenes)이 더 있다 — 데모일 때만 읽는다
    - 마지막으로 정상 받은 것은 기기에만 기억(localStorage). 못 받으면 기억한 것 → 그것도 없으면 데모(demo.json, "연습 화면") */
 export const STAGES = ['approval', 'ready', 'relay', 'implement', 'checks', 'image', 'image_check', 'review', 'question', 'human_review', 'deploy', 'blocked', 'limit'];
 export const STATS = ['done', 'week', 'month', 'noBlockDays', 'deploys', 'images', 'redraws', 'firstPassPct', 'relayAvg', 'rejected', 'avgDays'];
 const ROLES = ['implement', 'review', 'image'];
-const MAX = { tasks: 20, recent: 5, title: 24 }; // 하네스는 tasks 12개까지 — 넉넉히 받되 상한은 둔다 (데모는 단계 13개)
+const MAX = { tasks: 20, recent: 5, title: 24, scenes: 20 }; // 하네스는 tasks 12개까지 — 넉넉히 받되 상한은 둔다 (데모는 단계 13개)
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const KEY = 'goyang.base.status';
 
@@ -80,8 +81,17 @@ async function readCapped(r, maxBytes) {
   return new TextDecoder().decode(all);
 }
 
-// 주소에서 읽기: 크기 상한을 넘거나 JSON이 아니거나 모양이 다르면 null
-async function load(url, maxBytes) {
+// 데모 쪽(demo.json scenes): 데모 바탕에 한 쪽씩 덮어 쓴 상태 — 상황판을 넘길 때마다 식구 연출이 바뀐다(family.js). 쪽마다 tasks는 꼭
+function scenes(raw) {
+  if (!Array.isArray(raw.scenes))
+    return [];
+  return raw.scenes.slice(0, MAX.scenes)
+    .map(s => isObj(s) ? clean({ v: 1, day: raw.day, recent: raw.recent, roles: {}, ...s, stats: { ...raw.stats, ...(isObj(s.stats) ? s.stats : {}) } }) : null)
+    .filter(Boolean);
+}
+
+// 주소에서 읽기: 크기 상한을 넘거나 JSON이 아니거나 모양이 다르면 null. demo면 데모 쪽(scenes)도
+async function load(url, maxBytes, demo) {
   try {
     const r = await fetch(url, { cache: 'no-store', credentials: 'omit' });
     if (!r.ok)
@@ -92,7 +102,10 @@ async function load(url, maxBytes) {
     const text = await readCapped(r, maxBytes);
     if (text === null || !text.trim())
       return null;
-    return clean(JSON.parse(text));
+    const raw = JSON.parse(text), got = clean(raw);
+    if (got && demo)
+      got.scenes = scenes(raw);
+    return got;
   }
   catch (e) {
     return null;
@@ -127,6 +140,6 @@ export async function readStatus(cfg, base, force) {
   const kept = !force && recall();
   if (kept)
     return { data: kept, demo: false };
-  const demo = await load(new URL(cfg.demo, base).href, cfg.maxBytes);
+  const demo = await load(new URL(cfg.demo, base).href, cfg.maxBytes, true);
   return { data: demo, demo: true };
 }

@@ -90,6 +90,65 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 .fr.head .fl { color: var(--gold); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
+/* 식구 넷 (family.js, tasks/base-2a-family.md). 밤에도 같은 연출 — 그림만 살짝 어둡게. 두루마리·경광등·쾅·빈자리 표시·말풍선은 코드 */
+.fam { left: 0; top: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; --ink: #1d1612; }
+.fam > * { position: absolute; }
+.fam [hidden] { display: none !important; }
+.fs.gone { visibility: hidden; }
+.fs.flip { transform: scaleX(-1); }
+.fs { transition: filter 2s ease; }
+.is-night .fs { filter: brightness(.86); }
+.king.lean { transform: rotate(-5deg); } /* 환기구 쪽 귀 기울임 */
+.king.doze { animation: doze 3.6s ease-in-out infinite; }
+@keyframes doze { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.5px); } }
+
+/* 두루마리: 크림 종이 + 갈색 심 두 개 + 빨간 끈. 선은 거실 손그림처럼 살짝 두껍게 */
+.scroll { transform: translate(-50%, -50%); border: 2.5px solid var(--ink); background: #ede1ca; }
+.scroll.rolled { width: var(--roll-w, 30px); height: var(--roll-h, 11px); border-radius: 6px;
+  background: linear-gradient(90deg, transparent 44%, #c8432b 44% 56%, transparent 56%), linear-gradient(#f6eddb, #ede1ca 55%, #d9c9a8); }
+.scroll.rolled::before, .scroll.rolled::after { content: ""; position: absolute; top: 50%; width: 5px; height: calc(100% + 6px); transform: translateY(-50%); background: #6b4423; border: 2px solid var(--ink); border-radius: 3px; }
+.scroll.rolled::before { left: -6px; }
+.scroll.rolled::after { right: -6px; }
+.scroll.open { width: var(--open-w, 62px); height: var(--open-h, 42px); border-radius: 2px; background: #ede1ca no-repeat; z-index: 1; }
+.scroll.open::before, .scroll.open::after { content: ""; position: absolute; left: -6px; right: -6px; height: 6px; background: #6b4423; border: 2px solid var(--ink); border-radius: 4px; }
+.scroll.open::before { top: -7px; }
+.scroll.open::after { bottom: -7px; }
+.scroll.open.sealed { background-image: linear-gradient(#c8432b, #c8432b); background-size: 24% 30%; background-position: 82% 78%; } /* 옥새 자국 */
+.scroll.toss { z-index: 1; }
+
+/* 옥새 쾅: 도장 둘레로 짧은 선 */
+.bang { width: 34px; height: 22px; transform: translate(-50%, -60%); background: repeating-conic-gradient(from -90deg at 50% 100%, var(--ink) 0 5deg, transparent 5deg 30deg);
+  -webkit-mask: radial-gradient(farthest-side at 50% 100%, transparent 55%, #000 56% 98%, transparent 99%); mask: radial-gradient(farthest-side at 50% 100%, transparent 55%, #000 56% 98%, transparent 99%);
+  animation: bang .5s ease-out both; }
+@keyframes bang { from { transform: translate(-50%, -60%) scale(.5); opacity: 0; } 40% { opacity: 1; } to { transform: translate(-50%, -60%) scale(1.15); opacity: 1; } }
+
+/* 경광등: 상황판 위 왕관 옆, 노란 빛이 돎 */
+.mark { display: block; }
+.beacon { width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50% 50% 3px 3px; background: radial-gradient(circle at 40% 35%, #fff6b8, #ffd23a 55%, #e0a400); border: 2.5px solid var(--ink); z-index: 4; }
+.beacon::before { content: ""; position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%;
+  background: conic-gradient(#ffe36a99 0 26deg, transparent 26deg 180deg, #ffe36a99 180deg 206deg, transparent 206deg);
+  -webkit-mask: radial-gradient(circle, #000 10%, transparent 70%); mask: radial-gradient(circle, #000 10%, transparent 70%); animation: spin 1.6s linear infinite; }
+.beacon::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; box-shadow: 0 0 14px 6px #ffd23a88; }
+@keyframes spin { to { transform: rotate(1turn); } }
+
+/* 비어 있는 자리 (2b 식구 자리): 검수 의자 위 돋보기 반짝 · 이젤 위 붓 자국 */
+.loupe { width: 16px; height: 16px; margin: -8px 0 0 -8px; border: 3px solid var(--ink); border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffffffcc, #bfe6f2aa 60%); }
+.loupe::after { content: ""; position: absolute; left: 11px; top: 11px; width: 10px; height: 4px; background: #8a5a2c; border: 2px solid var(--ink); border-radius: 2px; transform: rotate(45deg); transform-origin: 0 50%; }
+.loupe::before { content: ""; position: absolute; left: -9px; top: -11px; width: 9px; height: 9px; background: #fff7c2;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: twinkle 2.4s ease-in-out infinite; }
+@keyframes twinkle { 0%, 60%, 100% { opacity: 0; transform: scale(.4); } 75% { opacity: 1; transform: scale(1.1); } }
+.brush { width: 46px; height: 9px; margin: -5px 0 0 -23px; border-radius: 6px 10px 4px 12px; background: linear-gradient(90deg, #e86a5c, #f0a640 50%, #5aa6d8); transform: rotate(-14deg); transform-origin: 0 50%; animation: stroke 3s ease-in-out infinite; }
+@keyframes stroke { 0% { clip-path: inset(0 100% 0 0); } 45%, 85% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 0); opacity: 0; } }
+
+/* 만득 씨 말풍선: 거실 말풍선과 같은 모양(크림 바탕 · 먹선 · 둥근 모서리), 환기구 아래라 꼬리가 위로 */
+.say { margin: 0; transform: translateX(-50%); height: 46px; padding: 0 14px; border: 3.5px solid var(--ink); border-radius: 20px; background: #fffaf0; color: var(--ink);
+  font: 700 24px/39px var(--font-hand); white-space: nowrap; z-index: 5; }
+.say::before, .say::after { content: ""; position: absolute; left: 50%; width: 0; height: 0; border: solid transparent; }
+.say::before { top: -16px; margin-left: -9px; border-width: 0 9px 13px; border-bottom-color: var(--ink); }
+.say::after { top: -10px; margin-left: -7px; border-width: 0 7px 10px; border-bottom-color: #fffaf0; }
+.say.in { animation: say 3.2s ease both; }
+@keyframes say { from { opacity: 0; transform: translate(-50%, 4px); } 10%, 85% { opacity: 1; transform: translate(-50%, 0); } to { opacity: 0; } }
+
 /* 발바닥 판: 그림 위에 투명한 단추 (그림이 없으면 코드 판) */
 .paw { z-index: 3; display: block; border-radius: 50%; }
 .paw:hover, .paw:focus-visible { box-shadow: 0 0 0 5px #ffe9a8aa, 0 0 26px 8px #ffd77a88; outline: none; }
@@ -106,6 +165,9 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 .btn { font: 700 20px/1 var(--font-hand); color: var(--ink); border: 2px solid var(--ink); border-radius: 8px; padding: 10px 16px; text-decoration: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .night, .glows { transition: none; }
+  .night, .glows, .fs { transition: none; }
+  .king.doze, .beacon::before, .loupe::before, .brush, .bang { animation: none; }
+  .say.in { animation: none; }
+  .loupe::before { opacity: 1; }
   .fl.go .ft, .fl.go .fb { animation: none; display: none; }
 }
