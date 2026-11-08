@@ -232,7 +232,8 @@ export function makeFamily(sc, cfg, { RM, lang }) {
   const boss = { awake: true, since: 0 };
   const kingIdle = now => idlePick(now, 30000, KING_IDLE, 1);
   // 왕이 보고 있나: 쉬는 중엔 왕이 깨어 있으면, 일이 있을 땐 가끔(20초 칸 둘 중 하나, 그 칸 앞 5초) 둘러볼 때
-  const glancing = now => !P.idle && !over && P.king !== 'chin' && idlePick(now, 20000, [0, 1], 2) && now % 20000 < 5000;
+  const glancing = now => !over && P.king !== 'chin' && idlePick(now, 20000, [0, 1], 2) && now % 20000 < 5000
+    && (!P.idle || kingIdle(now) === 'sit'); // 쉬는 중엔 깨어 앉아 있을 때만
   const watchBoss = now => {
     const awake = P.idle ? kingIdle(now) !== 'doze' : !!glancing(now);
     if (awake !== boss.awake)
@@ -274,7 +275,7 @@ export function makeFamily(sc, cfg, { RM, lang }) {
     // 쥐야쥐 왕
     if (F.king) {
       const look = !!glancing(now);
-      draw(king, kingName(), F.king, -1);
+      draw(king, kingName(), F.king, look ? 1 : -1); // 둘러볼 땐 오른쪽으로 몸을 돌림
       king.n.classList.toggle('glance', look && !RM); // 둘러볼 때: 살짝 기울고 머리 위에 👀 (그림이 거의 정면이라 뒤집기로는 티가 안 남)
       eyes.hidden = !look;
       if (look) {
