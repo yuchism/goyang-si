@@ -97,7 +97,7 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 .fam > * { position: absolute; }
 .fam [hidden] { display: none !important; }
 .fs.gone { visibility: hidden; }
-.fs.flip { transform: scaleX(-1); }
+.fs.flip { scale: -1 1; } /* 좌우 뒤집기는 scale로 — lean·doze·jolt가 transform/translate를 써도 지워지지 않게 */
 .fs { transition: filter 2s ease; }
 .king.glance { rotate: 6deg; transition: rotate .25s ease; } /* 눈치: 왕이 둘러봄 */
 .fs.jolt { animation: jolt .45s ease-out; } /* 눈치: 자다가 화들짝 (tasks/base-4-idle.md) */
