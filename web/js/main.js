@@ -14,13 +14,13 @@ import { resetActor, resetDuet } from './recover.js';
 import { duetTick } from './duet.js';
 import { drawCup, drawObj, drawProp, drawRoom, drawSunbeam } from './draw.js';
 import { drawManduk, startVisit, updateManduk, visitTick } from './manduk.js';
-import { mouseTick, resetMouseTimer } from './mouse.js';
-import { OBJ, P, S, depthOf, objView, present } from './objects.js';
+import { MOUSE_RUN, mouseHide, mouseTick, resetMouseTimer } from './mouse.js';
+import { O, OBJ, P, S, depthOf, objView, present } from './objects.js';
 import { loadScene } from './scene.js';
 import { drawBookTag, drawBooks, initShelf } from './shelf.js';
 import { Snd } from './sound.js';
 import { drawActor, drawBubble, drawCaptions } from './sprites.js';
-import { H, W, cam, camIntro, ctx, fit, roomDark, updateCam, view } from './stage.js';
+import { H, W, cam, camIntro, ctx, cv, fit, roomDark, updateCam, view } from './stage.js';
 import { windowLight } from './win.js';
 import { bub, fn, go, hold, ownLayer, run, tickActor } from './steps.js';
 import { advanceClock, calDay, sceneryAt, sunTimes, yearPos, inWindow, lampShouldBeOn, mandukAsleep, mandukHome, markClock, moonName, moonPhase, now, passedEvents, rainNow, resetClock, routineOf, season, snowing, speed, timeInfo } from './time.js';
@@ -35,6 +35,7 @@ import { devOpen, initUI } from './ui.js';
 import { pick, rnd } from './util.js';
 import { applyDom, tr } from './i18n.js';
 import { drawOddBook, drawOddGlow, initInstall } from './install.js';
+import { baseReturn, drawKey, drawSortie, initSortie, readBaseBack, withSuck } from './sortie.js'; // 쥐구멍 기지 출동·귀환 (tasks/base-3-sortie.md)
 import { after, caption, cat, mouse, say, tickTimers, world } from './world.js';
 /* ───────── 상태 표시 ───────── */
 // 시간 단위 → 'H:MM' (미리보기 한 줄)
@@ -201,11 +202,12 @@ function render(d, real) {
   // 그리기 칸마다 칸막이 (guard.js guardDraw: 항상 save/restore, 실패한 것만 안 그려진다)
   draw('방', () => drawRoom(d));
   draw('책장', () => drawBooks(real));
+  draw('기지 열쇠', () => drawKey());
   draw('이상한 책', () => drawOddBook(real));
   draw('햇빛 조각', () => drawSunbeam(d));
   draw('생일 쥐야쥐', () => drawPartyMouse());
   // 소품과 캐릭터를 바닥에 닿는 위치 순서로 그린다 (뒤에 있으면 가려짐)
-  const L = cut('바닥 순서', () => OBJ.filter(o => o.layer === 'floor' && present(o)).map(o => [depthOf(objView(o)), () => drawObj(o, d), '물건 ' + o.id])) || [];
+  const L = cut('바닥 순서', () => OBJ.filter(o => o.layer === 'floor' && present(o)).map(o => [depthOf(objView(o)), () => withSuck(o.id, () => drawObj(o, d)), '물건 ' + o.id])) || [];
   if (birthdayMode)
     L.push([CAKE.depth, () => {
         drawProp('birthday_cake', CAKE.x, CAKE.y, CAKE.w);
@@ -213,7 +215,7 @@ function render(d, real) {
       }, '케이크']);
   const c = world.cup;
   if (ownLayer(cat))
-    L.push([cat.inBox ? P.box.y : cat.y, () => drawActor(cat), '강고양이 씨 그리기', cat]);
+    L.push([cat.inBox ? P.box.y : cat.y, () => withSuck('cat', () => drawActor(cat)), '강고양이 씨 그리기', cat]);
   if (ownLayer(mouse))
     L.push([mouse.y, () => drawActor(mouse), '쥐야쥐 그리기', mouse]);
   if (world.party)
@@ -255,6 +257,7 @@ function render(d, real) {
   }
   draw('정각 손님 짠', () => drawChimePuffs());
   draw('만득 씨 그리기', () => drawManduk());
+  draw('기지 왕관', () => drawSortie());
   draw('말풍선', () => {
     drawBubble(cat);
     drawBubble(mouse);
@@ -339,7 +342,10 @@ export function start() {
     settleCat(d);
     if (!birthdayMode) // 좁은 화면: 문에서 강고양이 씨까지 스르륵 (만화방에서 돌아올 때도 문으로 들어오니 같다). 생일 링크는 파티 카메라가 먼저 (tasks/room-pan.md)
       camIntro();
-    if (cameBack()) // 만화방에서 돌아옴: 방이 뜬 뒤 딸랑 + 문 + 강고양이 씨 반응 (frontdoor.js, cat.js)
+    initSortie({ O, S, ctx, cv, cam, view, W: () => W, H: () => H, birthdayMode: () => birthdayMode, run, go, hold, fn, MOUSE_RUN, mouseHide });
+    if (readBaseBack()) // 쥐구멍 기지에서 돌아옴: 쥐야쥐 → 강고양이 씨 순으로 쥐구멍에서 (sortie.js)
+      after(baseReturn, 0.8);
+    else if (cameBack()) // 만화방에서 돌아옴: 방이 뜬 뒤 딸랑 + 문 + 강고양이 씨 반응 (frontdoor.js, cat.js)
       after(() => {
         ringDoor();
         welcomeB();

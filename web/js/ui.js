@@ -7,6 +7,7 @@ import { mouseHide, spawnMouse } from './mouse.js';
 import { O, OBJ, P, objView, present, zOf } from './objects.js';
 import { eventsDev } from './events.js';
 import { bookAt, closeShelf, onShelf, openShelf, shelfUI } from './shelf.js';
+import { sortieTap } from './sortie.js';
 import { Snd } from './sound.js';
 import { DEPTH, H, W, cam, camAuto, canLook, cv, fit, lookBy, lookDragPx, lookRelease, lookStart, lookTouch, view } from './stage.js';
 import { boxToday, holidayOverride, mandukAsleep, mandukHome, now, rainNow, resetSim, seasonOverride, setOverride, setSimMs, setSpeed } from './time.js';
@@ -216,6 +217,7 @@ async function wakeLock() {
 }
 // 방을 눌렀다 뗌(탭): 쥐야쥐 → 고양이 → 어항 → 이상한 책 → 책장 → 물건 → 현관문. 놀이(레이저·실뭉치)는 누르는 순간 따로 본다
 function tapAt(x, y, wasMap) {
+  if (sortieTap(x, y)) return; // 쥐구멍 기지 열쇠·출동 중 (sortie.js)
   if (hitActor(mouse, x, y)) {
     say(mouse, '‼️', 1.5);
     mouseHide(true);
