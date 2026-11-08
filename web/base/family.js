@@ -169,10 +169,7 @@ export function makeFamily(sc, cfg, { RM, lang }) {
   // 금붕생이: 어항 뒤판 · 금붕어 · 앞판, 옆에 보물상자
   const bowlB = sprite(layer, 'bowl'), fish = sprite(layer, 'fish'), bowlF = sprite(layer, 'bowl'), chest = sprite(layer, 'chest');
   // 쥐야쥐 왕 (+ 손에 든 두루마리)
-  const king = sprite(layer, 'king'), held = el('i', 'scroll rolled'), eyes = el('i', 'eyes');
-  eyes.textContent = '👀';
-  eyes.hidden = true;
-  layer.append(eyes);
+  const king = sprite(layer, 'king'), held = el('i', 'scroll rolled');
   held.hidden = true;
   layer.append(held);
   // 강고양이 씨
@@ -276,12 +273,7 @@ export function makeFamily(sc, cfg, { RM, lang }) {
     if (F.king) {
       const look = !!glancing(now);
       draw(king, kingName(), F.king, look ? 1 : -1); // 둘러볼 땐 오른쪽으로 몸을 돌림
-      king.n.classList.toggle('glance', look && !RM); // 둘러볼 때: 살짝 기울고 머리 위에 👀 (그림이 거의 정면이라 뒤집기로는 티가 안 남)
-      eyes.hidden = !look;
-      if (look) {
-        const [x, y] = kingPt('king-sit', [128, 40]);
-        Object.assign(eyes.style, { left: x + 'px', top: y + 'px' });
-      }
+      king.n.classList.toggle('glance', look && !RM); // 둘러볼 때 살짝 기울기
       king.n.classList.toggle('lean', !over && P.king === 'listen');
       king.n.classList.toggle('doze', !over && P.king === 'doze' && !RM);
       putHeld();
