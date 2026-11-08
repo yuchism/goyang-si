@@ -23,6 +23,9 @@ const CAT = {
   groom: { f: rng('cat_groom', 4), ms: 320, loop: 1, face: 1 },
 };
 const IDLE = [['loaf', 24000], ['sleep', 24000], ['groom', 7000]]; // 일이 없을 때 천천히 번갈아
+// 쉬는 자세 고르기: ms마다 한 칸, 칸마다 표에서 하나 (같은 시각이면 늘 같음)
+export const idlePick = (now, ms, list, salt = 0) => list[(Math.floor(now / ms) * 2654435761 + salt * 97) % 4294967296 % list.length];
+const KING_IDLE = ['doze', 'doze', 'sit', 'doze', 'chin', 'sit'];
 const KING = { sit: 'king-sit', chin: 'king-chin', doze: 'king-doze', seal: 'king-seal', cheer: 'king-cheer' };
 
 /* ───────── 상태 → 자세 ───────── */
@@ -40,6 +43,7 @@ export function poses(d) {
     review: busy('review') || has(d, 'review') || has(d, 'image_check'), // 2b 검은 고양이 자리 — 지금은 돋보기 반짝
     easel: busy('image') || has(d, 'image'), // 2b 붓 고양이 자리 — 지금은 붓 자국
     ...crewPoses(d),
+    idle: !d.tasks.length && !d.factory.blocked && !d.factory.limit, // 쉬는 중: 자세를 천천히 바꿈 (tasks/base-4-idle.md)
   };
 }
 
@@ -208,7 +212,7 @@ export function makeFamily(sc, cfg, { RM, lang }) {
     return c.loop ? c.f[i % c.f.length] : c.f[Math.min(i, c.f.length - 1)];
   };
 
-  const kingName = () => 'fam:' + KING[over || (P.king === 'listen' || P.king === 'hold' ? 'sit' : P.king)];
+  const kingName = () => 'fam:' + KING[over || (P.king === 'listen' || P.king === 'hold' ? 'sit' : P.idle ? idlePick(performance.now(), 30000, KING_IDLE, 1) : P.king)];
   const putHeld = () => {
     const show = !over && P.king === 'hold' && F.paws && F.king;
     held.hidden = !show;
@@ -261,7 +265,7 @@ export function makeFamily(sc, cfg, { RM, lang }) {
     }
     // 까치: 배포 대기면 횃대에서 기다림(앉기 · 가끔 쪼기). 날아가는 중이면 그쪽이 그린다
     if (F.magpie && !bird.flying) {
-      if (P.magpie) {
+      if (P.magpie || (P.idle && idlePick(now, 40000, [0, 1, 0, 0], 3))) { // 쉬는 중엔 가끔 들렀다 감
         const peck = !RM && (now - t0) % 5200 > 4500;
         const name = 'fx/magpie_' + (peck ? 'peck' : 'sit'), m = RMETA[name];
         prop(bird, ROOM_R + name + '.webp', F.magpie.at, F.magpie.w * (m ? m[0] : 1) / 194, m);

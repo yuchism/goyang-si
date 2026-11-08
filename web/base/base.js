@@ -9,6 +9,7 @@
 import { isNight, now } from '../js/time.js';
 import { makeBoard } from './board.js';
 import { makeFamily } from './family.js';
+import { makeReplay } from './replay.js';
 import { STR, agoText, daysAgo, pages } from './screens.js';
 import { readStatus } from './status.js';
 
@@ -147,6 +148,7 @@ function build(cfg) {
   const band = el('p', 'band');
   band.setAttribute('aria-live', 'polite');
   body.append(band);
+  const replay = makeReplay(fam, { lang: LANG, el, body }); // 쉬는 동안 지난 일 다시 보기 (tasks/base-4-idle.md)
 
   /* ── 화면 돌리기 */
   let all = [], at = 0, timer = 0, counted = false, data = null, demo = true, scene = 0, gotFirst = null;
@@ -154,7 +156,7 @@ function build(cfg) {
   // 식구에게 지금 상태: 데모면 데모 쪽 하나, 아니면 받은 그대로
   const showFamily = () => {
     const S = demo && data.scenes && data.scenes.length ? data.scenes : null;
-    fam.set(S ? S[scene % S.length] : data, demo);
+    replay.set(S ? S[scene % S.length] : data, demo);
   };
   const render = () => {
     const pg = all[at % all.length];
@@ -167,7 +169,7 @@ function build(cfg) {
     clearTimeout(timer);
     at = (at + 1) % Math.max(1, all.length);
     render();
-    if (demo && data) {
+    if (demo && data && !replay.busy()) { // 다시 보는 동안은 데모 쪽을 넘기지 않음
       scene++;
       showFamily();
     }

@@ -21,6 +21,7 @@ export const STR = {
   },
   round: { ko: '왕복 ', en: 'Relay ' },
   secret: { ko: '비밀 작업 🐾', en: 'Secret work 🐾' },
+  replay: { ko: '📼 다시 보기', en: '📼 Replay' }, // 쉬는 동안 지난 일 다시 보기 (replay.js)
   idle: { ko: '모두 쉬는 중 🐾', en: 'All quiet 🐾' },
   none: { ko: '아직 없음', en: 'None yet' },
   week: {

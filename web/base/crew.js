@@ -5,6 +5,8 @@
    - 밤엔 검은 고양이에 옅은 테두리 빛(base.css .fs.blackcat) — 어두운 바탕에 묻히지 않게 */
 
 const has = (d, st) => d.tasks.some(t => t.stage === st);
+const BLACK_IDLE = ['doze', 'doze', 'loupe', 'doze'], BRUSH_IDLE = ['doze', 'paint', 'doze', 'doze', 'paint'];
+const pick = (now, ms, list, salt) => list[(Math.floor(now / ms) * 2654435761 + salt * 97) % 4294967296 % list.length]; // family.js idlePick과 같은 식
 
 /* 상태 → 자세. 그림 검수도 검은 고양이(STATUS_JSON: roles.review) */
 export function crewPoses(d) {
@@ -32,9 +34,9 @@ export function makeCrew({ F, sprite, draw, RM }) {
     frame(P, now) {
       const line = P.line && F.line ? F.line : null;
       if (black)
-        draw(black, 'fam:black-' + (line ? 'doze' : P.black), line ? line[1] : F.black, line ? LINE_FACE : BLACK_FACE);
+        draw(black, 'fam:black-' + (line ? 'doze' : P.idle ? pick(now, 25000, BLACK_IDLE, 5) : P.black), line ? line[1] : F.black, line ? LINE_FACE : BLACK_FACE);
       if (brush) {
-        const pose = line ? 'doze' : now < sighUntil ? 'sigh' : P.brush;
+        const pose = line ? 'doze' : now < sighUntil ? 'sigh' : P.idle ? pick(now, 35000, BRUSH_IDLE, 7) : P.brush;
         draw(brush, 'fam:brush-' + pose, line ? line[2] : F.brush, line ? LINE_FACE : BRUSH_FACE);
         brush.n.classList.toggle('stroke', !RM && pose === 'paint');
       }
