@@ -22,7 +22,7 @@ const CAT = {
   loaf: { f: rng('cat_loaf', 2), ms: 1600, loop: 1, face: 1 },
   groom: { f: rng('cat_groom', 4), ms: 320, loop: 1, face: 1 },
 };
-const IDLE = [['loaf', 24000], ['sleep', 24000], ['sit', 9000]]; // 일이 없을 때 천천히 번갈아 (그루밍은 뺌 — 기지에선 안 예쁨, 주인 2026-11-08)
+const IDLE = [['loaf', 24000], ['sleep', 24000], ['sit', 9000], ['groom', 7000]]; // 일이 없을 때 천천히 번갈아
 // 쉬는 자세 고르기: ms마다 한 칸, 칸마다 표에서 하나 (같은 시각이면 늘 같음)
 export const idlePick = (now, ms, list, salt = 0) => list[(Math.floor(now / ms) * 2654435761 + salt * 97) % 4294967296 % list.length];
 const KING_IDLE = ['doze', 'doze', 'sit', 'doze', 'chin', 'sit'];
