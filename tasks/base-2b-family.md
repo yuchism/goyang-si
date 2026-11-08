@@ -1,5 +1,5 @@
 # 쥐구멍 기지 2b: 식구 둘 더 — 검은 고양이(검수 의자) · 붓 고양이(이젤) + 한도 대기 줄
-- status: brief
+- status: implemented
 - mode: needs-review
 - office: ready
 - brief: assets/briefs/BASE_FAMILY_B_ART.md
@@ -51,3 +51,10 @@
 
 ## 메모
 - 2026-11-08 지시서 작성(Claude). 토큰 아끼려고 그림·구현은 주인이 손으로. `#25`(2a)를 합친 뒤 시작.
+- 2026-11-08 구현(Claude, 손으로 굴림). 그림 6장은 주인이 ChatGPT로·다듬기까지. 코드는 `web/base/crew.js`(새 파일 — family.js가 이미 400줄이 넘어 2b는 따로), family.js는 자세·바뀐 것·그리기에 한 줄씩 끼움.
+  - 검은 고양이: relay → 두루마리 읽기 > review 당번·review·image_check → 돋보기 > 졸기. 붓 고양이: image 당번·image → 붓질(살짝 흔들림) > 졸기. 다시 그리기(지난번 image_check → 지금 image 늘어남)면 한숨 1.8초 뒤 붓질.
+  - 한도 대기: `fam.line` 세 자리(보물상자 오른쪽 앞 바닥 — 왼쪽은 어항 자리)에 강고양이·검은 고양이·붓 고양이가 왼쪽(상자 쪽) 보고 졸기.
+  - 크기는 `fam.art` 다섯째 값(검은 고양이 0.55 · 붓 고양이 0.45), 자리는 `fam.black`·`fam.brush`. 밤엔 검은 고양이에 옅은 테두리 빛(`.fs.blackcat`).
+  - 2a 빈자리 표시(돋보기 반짝·붓 자국)는 식구 자리가 있으면 안 씀. 데모 14쪽(그림 검수·다시 그리기 2쪽 더함).
+  - 클라우드 브라우저로 데모를 띄워 낮·밤·한도 대기 줄을 봄. 폰 화면·움직임은 사람 확인에서.
+

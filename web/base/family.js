@@ -6,6 +6,7 @@
    - 자리·크기는 scene.json fam 한 곳. 자리가 없으면 그 식구만 안 나온다. 그림을 못 받으면 그 그림만 안 보인다
    - 동작 줄이기: 프레임 넘김·움직임 없이 자세만 바뀜 */
 import { STR } from './screens.js';
+import { crewPoses, crewSnap, redrawn, makeCrew } from './crew.js'; // 2b 검은 고양이·붓 고양이
 
 const SEEN = 'goyang.base.seen';
 const ROOM_F = '../f/', ROOM_R = '../r/', FAM = 'fam/';
@@ -38,6 +39,7 @@ export function poses(d) {
     magpie: has(d, 'deploy'),
     review: busy('review') || has(d, 'review') || has(d, 'image_check'), // 2b 검은 고양이 자리 — 지금은 돋보기 반짝
     easel: busy('image') || has(d, 'image'), // 2b 붓 고양이 자리 — 지금은 붓 자국
+    ...crewPoses(d),
   };
 }
 
@@ -48,6 +50,7 @@ const snap = d => ({
   done: d.stats.done, rejected: d.stats.rejected,
   approval: d.tasks.filter(t => t.stage === 'approval').length,
   after: d.tasks.filter(t => AFTER.has(t.stage)).length,
+  ...crewSnap(d),
 });
 const grew = (a, b) => typeof a === 'number' && typeof b === 'number' && b > a;
 export function changes(prev, d) {
@@ -60,6 +63,8 @@ export function changes(prev, d) {
     out.push('toss');
   if (grew(prev.done, s.done))
     out.push('cheer');
+  if (redrawn(prev, s))
+    out.push('sigh');
   return out;
 }
 const recall = () => {
@@ -153,7 +158,8 @@ export function makeFamily(sc, cfg, { RM, lang }) {
     layer.append(n);
     return at ? n : null;
   };
-  const review = mark('loupe', F.review), easel = mark('brush', F.easel);
+  const review = F.black ? null : mark('loupe', F.review), easel = F.brush ? null : mark('brush', F.easel); // 식구가 오면 빈자리 표시는 안 씀
+  const crew = makeCrew({ F, sprite: cls => sprite(layer, cls), draw, RM });
   // 경광등: 상황판 위 왕관 옆
   const beacon = mark('beacon', F.beacon);
   // 금붕생이: 어항 뒤판 · 금붕어 · 앞판, 옆에 보물상자
@@ -229,8 +235,10 @@ export function makeFamily(sc, cfg, { RM, lang }) {
     // 강고양이
     if (F.cat) {
       const c = CAT[catPose(now)];
-      draw(cat, catFrame(c, now), F.cat, c.face);
+      const line = P.line && F.line; // 한도 대기: 보물상자 옆 줄 맨 앞에서 졸기
+      draw(cat, catFrame(c, now), line ? F.line[0] : F.cat, line ? -1 : c.face);
     }
+    crew.frame(P, now);
     // 쥐야쥐 왕
     if (F.king) {
       draw(king, kingName(), F.king, -1);
@@ -299,6 +307,11 @@ export function makeFamily(sc, cfg, { RM, lang }) {
     return [F.king[0] + (pt[0] - a[2]) * s, F.king[1] + (pt[1] - a[3]) * s];
   };
   const ACT = {
+    async sigh() { // 다시 그리기: 붓 고양이 한숨 한 번
+      crew.sigh(1800);
+      frame();
+      await wait(1800);
+    },
     async cheer() {
       over = 'cheer';
       frame();
@@ -392,7 +405,7 @@ export function makeFamily(sc, cfg, { RM, lang }) {
     ready = true;
     for (const c of Object.values(CAT))
       c.f.forEach(n => art(n) && preload(src(n)));
-    for (const k of Object.values(KING))
+    for (const k of [...Object.values(KING), ...crew.names])
       preload(src('fam:' + k));
     frame();
   });

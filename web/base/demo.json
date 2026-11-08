@@ -29,16 +29,18 @@
   "_scenes": "식구 연출 데모 (tasks/base-2a-family.md). 상황판은 위 상태 그대로(단계 13개 모두), 식구는 상황판을 넘길 때마다 아래 한 쪽씩(status.js scenes → family.js). 쪽마다 tasks는 꼭, stats는 위에 덮어 씀. 숫자가 늘면 한 번씩: 완료 → 왕 한 팔 번쩍·까치 날아감 / 확정 대기 → 시작 전 → 옥새 쾅 / 반려 → 두루마리 던짐",
   "scenes": [
     { "_": "타자", "roles": { "implement": "busy" }, "tasks": [{ "stage": "implement", "title": "만화방 신간 코너" }], "stats": { "done": 42, "rejected": 4 } },
-    { "_": "지시서 왕복 — 강고양이 두루마리 내밂, 검수 차례(돋보기)", "roles": { "review": "busy" }, "tasks": [{ "stage": "relay", "round": "2/3", "title": "쥐구멍 기지 1" }], "stats": { "done": 42, "rejected": 4 } },
+    { "_": "지시서 왕복 — 강고양이 두루마리 내밂, 검은 고양이가 펼쳐 읽음", "roles": { "review": "busy" }, "tasks": [{ "stage": "relay", "round": "2/3", "title": "쥐구멍 기지 1" }], "stats": { "done": 42, "rejected": 4 } },
     { "_": "질문 — 강고양이가 환기구를 올려다봄", "tasks": [{ "stage": "question", "title": null }], "stats": { "done": 42, "rejected": 4 } },
     { "_": "확정 대기 — 왕이 말린 두루마리를 들고, 만득 씨 '음…'", "tasks": [{ "stage": "approval", "title": "까치 둥지 고치기" }], "stats": { "done": 42, "rejected": 4 } },
     { "_": "시작 전 — 옥새 쾅 + 펼친 두루마리, 강고양이 꼬리 탁탁", "tasks": [{ "stage": "ready", "title": "까치 둥지 고치기" }], "stats": { "done": 42, "rejected": 4 } },
-    { "_": "그림 — 붓 고양이 차례(이젤 붓 자국)", "roles": { "image": "busy" }, "tasks": [{ "stage": "image", "title": "왕좌 쿠션 그림" }], "stats": { "done": 42, "rejected": 4 } },
+    { "_": "그림 — 붓 고양이 붓질", "roles": { "image": "busy" }, "tasks": [{ "stage": "image", "title": "왕좌 쿠션 그림" }], "stats": { "done": 42, "rejected": 4 } },
+    { "_": "그림 검수 — 검은 고양이 돋보기, 붓 고양이 졸기", "roles": { "review": "busy" }, "tasks": [{ "stage": "image_check", "title": "왕좌 쿠션 그림" }], "stats": { "done": 42, "rejected": 4 } },
+    { "_": "다시 그리기 — 붓 고양이 한숨 한 번 뒤 다시 붓질", "roles": { "image": "busy" }, "tasks": [{ "stage": "image", "title": "왕좌 쿠션 그림" }], "stats": { "done": 42, "rejected": 4 } },
     { "_": "사람 검수 — 왕 귀 기울임, 만득 씨 '어디 보자…'", "tasks": [{ "stage": "human_review", "title": "고양.방송 새 편성" }], "stats": { "done": 42, "rejected": 4 } },
     { "_": "반려 — 왕이 두루마리를 던짐, 강고양이 다시 타자", "roles": { "implement": "busy" }, "tasks": [{ "stage": "implement", "title": "고양.방송 새 편성" }], "stats": { "done": 42, "rejected": 5 } },
     { "_": "배포 대기 — 까치가 횃대에서 기다림", "tasks": [{ "stage": "deploy", "title": "머그잔 김 모락모락" }], "stats": { "done": 42, "rejected": 5 } },
     { "_": "끝 — 왕 한 팔 번쩍, 까치 날아감. 일이 없어 왕 꾸벅", "tasks": [], "stats": { "done": 43, "rejected": 5 } },
     { "_": "막힘 — 왕 턱 괴기 + 경광등", "factory": { "blocked": true }, "tasks": [{ "stage": "blocked", "title": "치즈 창고 정리" }], "stats": { "done": 43, "rejected": 5 } },
-    { "_": "한도 대기 — 상자 닫힘, 금붕생이 한숨, 강고양이 졸기", "factory": { "limit": true }, "tasks": [{ "stage": "limit", "title": null }], "stats": { "done": 43, "rejected": 5 } }
+    { "_": "한도 대기 — 상자 닫힘, 금붕생이 한숨, 강고양이·검은 고양이·붓 고양이가 상자 옆에 줄 서서 꾸벅", "factory": { "limit": true }, "tasks": [{ "stage": "limit", "title": null }], "stats": { "done": 43, "rejected": 5 } }
   ]
 }

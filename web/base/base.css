@@ -98,6 +98,9 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 .fs.flip { transform: scaleX(-1); }
 .fs { transition: filter 2s ease; }
 .is-night .fs { filter: brightness(.86); }
+.is-night .fs.blackcat { filter: brightness(.95) drop-shadow(0 0 1.5px #ffe9b8b0) drop-shadow(0 0 5px #ffd27a55); } /* 2b: 밤에 검은 고양이가 묻히지 않게 */
+.fs.painter.stroke { animation: paint 1.6s ease-in-out infinite; } /* 붓질: 살짝 앞뒤로 */
+@keyframes paint { 0%, 100% { translate: 0 0; } 50% { translate: -1.5px -1px; } }
 .king.lean { transform: rotate(-5deg); } /* 환기구 쪽 귀 기울임 */
 .king.doze { animation: doze 3.6s ease-in-out infinite; }
 @keyframes doze { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.5px); } }
@@ -166,7 +169,7 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 
 @media (prefers-reduced-motion: reduce) {
   .night, .glows, .fs { transition: none; }
-  .king.doze, .beacon::before, .loupe::before, .brush, .bang { animation: none; }
+  .king.doze, .beacon::before, .loupe::before, .brush, .bang, .fs.painter.stroke { animation: none; }
   .say.in { animation: none; }
   .loupe::before { opacity: 1; }
   .fl.go .ft, .fl.go .fb { animation: none; display: none; }
