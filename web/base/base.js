@@ -105,23 +105,27 @@ function build(cfg) {
     n.onerror = () => n.remove();
     return n;
   };
-  const dim = shade('dim');
-  const holes = (cfg.chandeliers || []).map(([x, y, r]) => `radial-gradient(circle ${r}px at ${x}px ${y}px, #000 30%, transparent 100%)`).join(', ');
-  if (holes) {
-    dim.style.webkitMaskImage = holes;
-    dim.style.maskImage = holes;
-    night.append(shade('nt'), dim);
-  } else
-    night.append(shade('nt'));
+  // 밤에도 불 켠 사무실: 밤 그림은 천창(skylight [x, y, 가로 반지름, 세로 반지름])과 그 아래 빛줄기 자리에만 보인다
+  const nt = shade('nt'), K = cfg.skylight;
+  if (K) {
+    const m = `radial-gradient(ellipse ${K[2]}px ${K[3]}px at ${K[0]}px ${K[1]}px, #000 80%, transparent 100%), radial-gradient(ellipse ${K[2] * 1.4}px ${K[3] * 9}px at ${K[0] + K[2] * 0.3}px ${K[1] + K[3] * 7}px, rgba(0,0,0,.6) 0%, transparent 100%)`;
+    nt.style.webkitMaskImage = m;
+    nt.style.maskImage = m;
+  }
+  night.append(nt);
   sc.append(night);
   const glow = el('div', 'glows');
   if (cfg.crt)
     glow.append(place(el('i', 'glow crt'), cfg.crt));
   for (const l of cfg.lamps || [])
     glow.append(place(el('i', 'glow lamp'), l));
+  for (const [x, y, r] of cfg.chandeliers || []) // 밤엔 샹들리에가 조금 더 따뜻하게 (야근)
+    glow.append(place(el('i', 'glow chand'), [x - r, y - r, r * 2, r * 2]));
+  if (cfg.skylight) // 천창 달
+    glow.append(place(el('i', 'glow moon'), [cfg.skylight[0] - cfg.skylight[2] * 0.45, cfg.skylight[1] - 14, 28, 28]));
   sc.append(glow);
 
-  // 식구 (밤 그림 위 — 밤은 기지 1 그대로)
+  // 식구 (밤에도 밝은 사무실 그대로)
   const fam = makeFamily(sc, cfg, { RM, lang: LANG });
 
   // 상황판 (불빛이라 밤 색조 위)

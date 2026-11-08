@@ -5,8 +5,9 @@
    - 밤엔 검은 고양이에 옅은 테두리 빛(base.css .fs.blackcat) — 어두운 바탕에 묻히지 않게 */
 
 const has = (d, st) => d.tasks.some(t => t.stage === st);
-const BLACK_IDLE = ['doze', 'doze', 'loupe', 'doze'], BRUSH_IDLE = ['doze', 'paint', 'doze', 'doze', 'paint'];
-const pick = (now, ms, list, salt) => list[(Math.floor(now / ms) * 2654435761 + salt * 97) % 4294967296 % list.length]; // family.js idlePick과 같은 식
+// 눈치 (tasks/base-4-idle.md): 쉬는 중엔 왕(family.js boss)이 깨면 일하는 척, 졸면 꾸벅. [깨고 나서 몇 ms 뒤 일하는 척, 왕이 졸고 몇 ms 뒤 꾸벅]
+const WATCH = { black: [450, 4000], brush: [900, 8000] };
+const WORK = { black: 'loupe', brush: 'paint' };
 
 /* 상태 → 자세. 그림 검수도 검은 고양이(STATUS_JSON: roles.review) */
 export function crewPoses(d) {
@@ -31,12 +32,20 @@ export function makeCrew({ F, sprite, draw, RM }) {
   const brush = F.brush ? sprite('painter') : null;
   let sighUntil = 0;
   return {
-    frame(P, now) {
+    frame(P, now, boss, jolt) {
       const line = P.line && F.line ? F.line : null;
-      if (black)
-        draw(black, 'fam:black-' + (line ? 'doze' : P.idle ? pick(now, 25000, BLACK_IDLE, 5) : P.black), line ? line[1] : F.black, line ? LINE_FACE : BLACK_FACE);
+      const sly = k => { // 쉬는 중 눈치 자세
+        const t = now - boss.since, [up, down] = WATCH[k];
+        return (boss.awake ? t > up : t < down) ? WORK[k] : 'doze';
+      };
+      if (black) {
+        const pose = line ? 'doze' : P.idle ? sly('black') : P.black;
+        draw(black, 'fam:black-' + pose, line ? line[1] : F.black, line ? LINE_FACE : BLACK_FACE);
+        jolt(black, 'black', pose !== 'doze');
+      }
       if (brush) {
-        const pose = line ? 'doze' : now < sighUntil ? 'sigh' : P.idle ? pick(now, 35000, BRUSH_IDLE, 7) : P.brush;
+        const pose = line ? 'doze' : now < sighUntil ? 'sigh' : P.idle ? sly('brush') : P.brush;
+        jolt(brush, 'brush', pose !== 'doze');
         draw(brush, 'fam:brush-' + pose, line ? line[2] : F.brush, line ? LINE_FACE : BRUSH_FACE);
         brush.n.classList.toggle('stroke', !RM && pose === 'paint');
       }

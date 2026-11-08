@@ -43,7 +43,9 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
    색 덮개(배경색 + mix-blend)는 삼성 인터넷 다크 모드가 덮개 색을 바꿔 칠해서 쓰지 않는다 — 필터·가림막은 바꿔 칠하지 않는다 */
 .night, .glows { left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity 2s ease; }
 .night img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
-.night .dim { filter: brightness(.55); } /* 밤 그림(bg-night.webp) 위 샹들리에 둘레만 더 어둡게 — 밝기만, 색은 안 돌림 */
+/* 밤에도 기지는 불 켠 사무실(주인 2026-11-08): 밤 그림은 천창·천창 빛줄기 자리에만(가림막), 샹들리에는 밤에 조금 더 따뜻하게 */
+.glow.chand { border-radius: 50%; background: radial-gradient(circle, #ffc46a66 0%, transparent 70%); }
+.glow.moon { border-radius: 50%; background: radial-gradient(circle, #f4f1d8 0 30%, #f4f1d855 45%, transparent 70%); mix-blend-mode: normal; }
 .nobg .night { display: none; }
 .glows { mix-blend-mode: screen; }
 .glow { position: absolute; border-radius: 10px; }
@@ -97,8 +99,8 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 .fs.gone { visibility: hidden; }
 .fs.flip { transform: scaleX(-1); }
 .fs { transition: filter 2s ease; }
-.is-night .fs { filter: brightness(.86); }
-.is-night .fs.blackcat { filter: brightness(.95) drop-shadow(0 0 1.5px #ffe9b8b0) drop-shadow(0 0 5px #ffd27a55); } /* 2b: 밤에 검은 고양이가 묻히지 않게 */
+.fs.jolt { animation: jolt .45s ease-out; } /* 눈치: 자다가 화들짝 (tasks/base-4-idle.md) */
+@keyframes jolt { 0%, 100% { translate: 0 0; } 30% { translate: 0 -7px; } }
 .fs.painter.stroke { animation: paint 1.6s ease-in-out infinite; } /* 붓질: 살짝 앞뒤로 */
 @keyframes paint { 0%, 100% { translate: 0 0; } 50% { translate: -1.5px -1px; } }
 .king.lean { transform: rotate(-5deg); } /* 환기구 쪽 귀 기울임 */

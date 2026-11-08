@@ -188,6 +188,17 @@ export function makeFamily(sc, cfg, { RM, lang }) {
       layer.style.setProperty(`--${k}-h`, h + 'px');
     }
 
+  // 화들짝: 자다가 깬 순간 작게 튀어 오름 (동작 줄이기면 없음)
+  const woke = {};
+  const jolt = (sp, key, awake) => {
+    if (woke[key] === false && awake && !RM) {
+      sp.n.classList.remove('jolt');
+      void sp.n.offsetWidth;
+      sp.n.classList.add('jolt');
+    }
+    woke[key] = awake;
+  };
+
   /* ── 지금 상태 */
   let P = null, over = null, t0 = performance.now(), catSince = t0, ventAt = -Infinity, ready = false, prev = null;
   const busyQ = [];
@@ -196,6 +207,8 @@ export function makeFamily(sc, cfg, { RM, lang }) {
   const catPose = now => {
     if (P.cat !== 'idle')
       return P.cat;
+    if (boss.awake && now - boss.since > 200 && now - boss.since < 20000) // 왕이 깼다: 자던 강고양이 씨도 식빵으로 고쳐 앉음
+      return 'loaf';
     const all = IDLE.reduce((s, x) => s + x[1], 0);
     let t = (now - catSince) % all;
     for (const [k, ms] of IDLE) {
@@ -212,7 +225,15 @@ export function makeFamily(sc, cfg, { RM, lang }) {
     return c.loop ? c.f[i % c.f.length] : c.f[Math.min(i, c.f.length - 1)];
   };
 
-  const kingName = () => 'fam:' + KING[over || (P.king === 'listen' || P.king === 'hold' ? 'sit' : P.idle ? idlePick(performance.now(), 30000, KING_IDLE, 1) : P.king)];
+  // 눈치: 쉬는 중엔 왕이 기준 — 왕이 깨면 다들 화들짝 일하는 척, 왕이 졸면 하나둘 늦게 꾸벅 (crew.js 눈치 표)
+  const boss = { awake: true, since: 0 };
+  const kingIdle = now => idlePick(now, 30000, KING_IDLE, 1);
+  const watchBoss = now => {
+    const awake = !P.idle || kingIdle(now) !== 'doze';
+    if (awake !== boss.awake)
+      Object.assign(boss, { awake, since: now });
+  };
+  const kingName = () => 'fam:' + KING[over || (P.king === 'listen' || P.king === 'hold' ? 'sit' : P.idle ? kingIdle(performance.now()) : P.king)];
   const putHeld = () => {
     const show = !over && P.king === 'hold' && F.paws && F.king;
     held.hidden = !show;
@@ -236,13 +257,15 @@ export function makeFamily(sc, cfg, { RM, lang }) {
     if (!P || !ready)
       return;
     const now = performance.now();
+    watchBoss(now);
+    jolt(cat, 'cat', catPose(now) !== 'sleep');
     // 강고양이
     if (F.cat) {
       const c = CAT[catPose(now)];
       const line = P.line && F.line; // 한도 대기: 보물상자 옆 줄 맨 앞에서 졸기
       draw(cat, catFrame(c, now), line ? F.line[0] : F.cat, line ? -1 : c.face);
     }
-    crew.frame(P, now);
+    crew.frame(P, now, boss, jolt);
     // 쥐야쥐 왕
     if (F.king) {
       draw(king, kingName(), F.king, -1);
