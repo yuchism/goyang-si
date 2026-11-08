@@ -39,12 +39,12 @@ export function makeCrew({ F, sprite, draw, RM }) {
         return (boss.awake ? t > up : t < down) ? WORK[k] : 'doze';
       };
       if (black) {
-        const pose = line ? 'doze' : P.idle ? sly('black') : P.black;
+        const pose = line ? 'doze' : P.black === 'doze' ? sly('black') : P.black; // 제 차례가 아니면 눈치
         draw(black, 'fam:black-' + pose, line ? line[1] : F.black, line ? LINE_FACE : BLACK_FACE);
         jolt(black, 'black', pose !== 'doze');
       }
       if (brush) {
-        const pose = line ? 'doze' : now < sighUntil ? 'sigh' : P.idle ? sly('brush') : P.brush;
+        const pose = line ? 'doze' : now < sighUntil ? 'sigh' : P.brush === 'doze' ? sly('brush') : P.brush;
         jolt(brush, 'brush', pose !== 'doze');
         draw(brush, 'fam:brush-' + pose, line ? line[2] : F.brush, line ? LINE_FACE : BRUSH_FACE);
         brush.n.classList.toggle('stroke', !RM && pose === 'paint');
