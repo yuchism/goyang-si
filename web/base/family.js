@@ -169,7 +169,10 @@ export function makeFamily(sc, cfg, { RM, lang }) {
   // 금붕생이: 어항 뒤판 · 금붕어 · 앞판, 옆에 보물상자
   const bowlB = sprite(layer, 'bowl'), fish = sprite(layer, 'fish'), bowlF = sprite(layer, 'bowl'), chest = sprite(layer, 'chest');
   // 쥐야쥐 왕 (+ 손에 든 두루마리)
-  const king = sprite(layer, 'king'), held = el('i', 'scroll rolled');
+  const king = sprite(layer, 'king'), held = el('i', 'scroll rolled'), eyes = el('i', 'eyes');
+  eyes.textContent = '👀';
+  eyes.hidden = true;
+  layer.append(eyes);
   held.hidden = true;
   layer.append(held);
   // 강고양이 씨
@@ -228,8 +231,8 @@ export function makeFamily(sc, cfg, { RM, lang }) {
   // 눈치: 쉬는 중엔 왕이 기준 — 왕이 깨면 다들 화들짝 일하는 척, 왕이 졸면 하나둘 늦게 꾸벅 (crew.js 눈치 표)
   const boss = { awake: true, since: 0 };
   const kingIdle = now => idlePick(now, 30000, KING_IDLE, 1);
-  // 왕이 보고 있나: 쉬는 중엔 왕이 깨어 있으면, 일이 있을 땐 가끔(20초 칸 셋 중 하나) 고개를 돌려 둘러볼 때
-  const glancing = now => !P.idle && !over && P.king !== 'chin' && idlePick(now, 20000, [0, 0, 1], 2);
+  // 왕이 보고 있나: 쉬는 중엔 왕이 깨어 있으면, 일이 있을 땐 가끔(20초 칸 둘 중 하나, 그 칸 앞 5초) 둘러볼 때
+  const glancing = now => !P.idle && !over && P.king !== 'chin' && idlePick(now, 20000, [0, 1], 2) && now % 20000 < 5000;
   const watchBoss = now => {
     const awake = P.idle ? kingIdle(now) !== 'doze' : !!glancing(now);
     if (awake !== boss.awake)
@@ -270,7 +273,14 @@ export function makeFamily(sc, cfg, { RM, lang }) {
     crew.frame(P, now, boss, jolt);
     // 쥐야쥐 왕
     if (F.king) {
-      draw(king, kingName(), F.king, glancing(now) ? 1 : -1); // 둘러볼 땐 반대쪽으로 고개
+      const look = !!glancing(now);
+      draw(king, kingName(), F.king, -1);
+      king.n.classList.toggle('glance', look && !RM); // 둘러볼 때: 살짝 기울고 머리 위에 👀 (그림이 거의 정면이라 뒤집기로는 티가 안 남)
+      eyes.hidden = !look;
+      if (look) {
+        const [x, y] = kingPt('king-sit', [128, 40]);
+        Object.assign(eyes.style, { left: x + 'px', top: y + 'px' });
+      }
       king.n.classList.toggle('lean', !over && P.king === 'listen');
       king.n.classList.toggle('doze', !over && P.king === 'doze' && !RM);
       putHeld();

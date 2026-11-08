@@ -99,6 +99,10 @@ body.base { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highl
 .fs.gone { visibility: hidden; }
 .fs.flip { transform: scaleX(-1); }
 .fs { transition: filter 2s ease; }
+.king.glance { rotate: 6deg; transition: rotate .25s ease; } /* 눈치: 왕이 둘러봄 */
+.fam .eyes { position: absolute; transform: translate(-50%, -100%); font-size: 22px; line-height: 1; font-style: normal; pointer-events: none; animation: pop .3s ease-out; }
+.fam .eyes[hidden] { display: none; }
+@keyframes pop { from { scale: .3; opacity: 0; } to { scale: 1; opacity: 1; } }
 .fs.jolt { animation: jolt .45s ease-out; } /* 눈치: 자다가 화들짝 (tasks/base-4-idle.md) */
 @keyframes jolt { 0%, 100% { translate: 0 0; } 30% { translate: 0 -7px; } }
 .fs.painter.stroke { animation: paint 1.6s ease-in-out infinite; } /* 붓질: 살짝 앞뒤로 */
