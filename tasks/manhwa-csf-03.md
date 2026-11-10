@@ -1,5 +1,5 @@
 # 쫄깃 소넷맛 치킨 3화 「2번」 — 장 그림 10장 → 회차
-- status: implemented
+- status: brief
 - mode: needs-review
 - office: ready
 - brief: assets/briefs/csf/03-brief.md
@@ -40,4 +40,3 @@
 
 ## 메모
 - 2026-11-10 지시서 작성(Claude, 주인과 회의). 하네스 만화 시험 1번 — 볼 것: 앞 장을 참고로 못 넘기는데도 얼굴이 버티는지, 글자 정확도, 10장(8+2) 나눠 그리기.
-- 2026-11-10 그림 10장 들어옴(그림 검수 통과). 주인 지적 H1(08장 컷2 목이 너무 돌아감) → 08장만 다시 그림, 2회차 검수 통과. 회차 3화 만듦(`s5mmh`, 공개 2026-11-20, 「2번」), 바깥 여백·테두리는 build_manhwa.py가 잘라냄. 검수 기록: `reviews/manhwa-csf-03.md`.
