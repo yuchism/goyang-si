@@ -210,7 +210,7 @@
     img.alt = '';
     img.loading = 'lazy';
     img.decoding = 'async';
-    img.src = WORK_DIR + ep.slug + '/thumb.webp?v=' + ep.v;
+    img.src = WORK_DIR + ep.slug + '/thumb.webp?v=' + ep.v + (ep.cv || ''); // cv: 회차 표지로 만든 썸네일
     th.append(img);
     const t = el('span', 'mh-card-t');
     if (kicker)

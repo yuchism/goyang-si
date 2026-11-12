@@ -10,6 +10,8 @@
       - 다시 돌리면 그림만 다시 만든다(이름은 그대로). --open·--title을 주면 그 칸도 바꾼다
       - 회차마다 썸네일 thumb.webp(첫 조각 위쪽을 잘라 작게)도 만든다 — 목록 카드·회차 끝 다음 화 카드
       - 회차 HTML(index.html, 공유 미리보기 og.jpg)과 목록 web/manhwa/csf/index.html도 같이 만든다
+      - 회차 표지: assets/manhwa/csf/covers/3.png(회차 번호, 글자 없는 한 장면)가 있으면 그 회차의 썸네일 thumb.webp·공유 미리보기 og.jpg를
+        첫 장 대신 표지에서 만든다(얼굴이 있는 위쪽 1/3 둘레를 잘라). 번호 없이 돌려도(HTML만) 표지가 있는 회차는 다시 만든다
       - 표지: assets/manhwa/csf/cover.png(또는 .jpg)가 있으면 목록 표지 cover.webp·목록 공유 미리보기 og.jpg로 쓴다.
         없으면 1화 첫 장(첫 조각 위쪽)
       - 원고 첫 장의 표지 제목은 맨 위 1/10 밖에 둔다 (뷰어는 위쪽 막대 밑에서 원고를 시작하지만, 썸네일·미리보기가 위쪽을 자른다)
@@ -176,6 +178,7 @@ def build_images(work, ep):
         shutil.rmtree(tmp, ignore_errors=True)
     ep['heights'] = heights
     ep['v'] = v
+    ep.pop('cv', None)  # 썸네일이 첫 장으로 돌아감 — 표지가 있으면 build_ep_cover가 다시
 
 
 def convert(files, out):
@@ -210,6 +213,44 @@ def convert(files, out):
     fit_top(pieces[0], OG_W, OG_H).save(out / 'og.jpg', 'JPEG', quality=86, optimize=True)
     fit_top(pieces[0], THUMB_W, THUMB_H).save(out / 'thumb.webp', 'WEBP', quality=82, method=6)
     return [p.height for p in pieces], sha.hexdigest()[:8]
+
+
+def ep_cover_source(work, no):
+    d = paths(work)[0] / 'covers'
+    for ext in SRC_EXT:
+        f = d / (str(no) + ext)
+        if f.exists():
+            return f
+    return None
+
+
+def fit_at(im, w, h, fy):
+    """w×h를 꽉 채우게 키우고, 세로는 fy(0~1) 자리를 가운데로 잘라 낸다 (회차 표지 — 얼굴이 위쪽에)"""
+    s = max(w / im.width, h / im.height)
+    im = im.resize((max(w, round(im.width * s)), max(h, round(im.height * s))), Image.LANCZOS)
+    x = (im.width - w) // 2
+    y = min(max(0, round(im.height * fy) - h // 2), im.height - h)
+    return im.crop((x, y, x + w, y + h))
+
+
+def build_ep_cover(work, ep):
+    """회차 표지(covers/<번호>.png)가 있으면 그 회차의 thumb.webp·og.jpg를 표지로. 없으면 그대로(첫 장)"""
+    src = ep_cover_source(work, ep['no'])
+    out = paths(work)[1] / ep['slug']
+    if src is None or not out.is_dir():
+        return
+    try:
+        with Image.open(src) as im:
+            im.load()
+            im = flat(im)
+    except (OSError, Image.DecompressionBombError) as err:
+        sys.exit(f'✗ {src.name}: 그림을 열 수 없습니다 ({err})')
+    fit_at(im, OG_W, OG_H, 0.32).save(out / 'og.jpg', 'JPEG', quality=86, optimize=True)
+    buf = io.BytesIO()
+    fit_at(im, THUMB_W, THUMB_H, 0.35).save(buf, 'WEBP', quality=82, method=6)
+    (out / 'thumb.webp').write_bytes(buf.getvalue())
+    ep['cv'] = hashlib.sha1(buf.getvalue()).hexdigest()[:8]
+    print(f'  {ep["no"]}화 표지: covers/{src.name} → thumb.webp·og.jpg')
 
 
 def cover_source(work):
@@ -422,6 +463,8 @@ def main():
         return check(a.work)
     data = load_json(a.work)
     if a.no is None:
+        for x in data['episodes']:
+            build_ep_cover(a.work, x)
         build_cover(a.work, data)
         save_json(a.work, data)
         write_html(a.work, data)
@@ -448,6 +491,7 @@ def main():
             ep['title'] = a.title
         print(f'{a.no}화 그림을 다시 만듦: 이름 {ep["slug"]}, 공개일 {ep["open"]}')
     build_images(a.work, ep)
+    build_ep_cover(a.work, ep)
     build_cover(a.work, data, a.no)
     save_json(a.work, data)
     write_html(a.work, data)
