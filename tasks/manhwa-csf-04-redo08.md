@@ -1,7 +1,7 @@
 # 쫄깃 소넷맛 치킨 4화 — 08장만 다시 그림 (컷3 빈 태블릿)
 - status: brief
 - mode: needs-review
-- office: ready
+- office: done
 - brief: assets/briefs/csf/04-brief.md (08장)
 - assets: assets/manhwa/csf/4/08.png (새로, git 무시)
 - 출처: 4화(#32) 사람 검수를 통과시킨 뒤 주인 지적(2026-11-13) — 사람 검수 실패가 더는 안 먹어서 후속 티켓으로(헤드쿼터 `OFFICE_MANHWA_PLAN` 3-11)
@@ -36,3 +36,4 @@
 
 ## 메모
 - 2026-11-13 지시서 작성(Claude, 주인과 회의). 4화(#32)는 이미 합침. 이 티켓이 끝나면 주 폴더에서 `python3 tools/build_manhwa.py csf 4 --open 2026-11-27 --title "아저씨의 이중생활"`로 회차를 다시 만들고 주소(`9nrjz`)가 그대로인지 확인.
+- 2026-11-13 새 08장(#34) 그림 검수는 통과했지만 쓰지 않음: 재킷이 반팔처럼 바뀌고 메뉴판 시안이 빈 종이, 컷2에 홀·팻말 없음 — 다른 13장과 어긋남. **먼저 그림(#32의 08장) 유지(주인 결정).** 이슈는 끝내기 없이 닫음, 브랜치 `office/sandbox-53`은 합치지 않음, 회차 `9nrjz`는 그대로.
