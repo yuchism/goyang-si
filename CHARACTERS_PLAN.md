@@ -51,7 +51,7 @@ birthday.js ──▶ guests.js ──┐
 | (새) `ready(g)` | 그림을 다 받았나 (`guests.js`·`chime.js`가 같이) |
 
 ### 3-2. `guests.js` — 생일 파티 손님만
-남는 것: 등장 시각 표, 인원·확률, 이름 소환(`SUMMON`·`nameKey` — 생일자 이름이 필요하므로 여기), `pickGuests`, `guestsStart`·`guestsCue`·`guestsTick`·`guestsLeave`·`guestLayers`, 생일 링크 그림 받기(`guestLoads` → 3-4).
+남는 것: 총출동 등장 시각 표(`CROWD_CUES`), 외계인 확률(`RARE_CHANCE`), 가족 이름 표(`ALLSTAR`·`nameKey` — 생일자 이름이 필요하므로 여기), `pickCrowd`, `guestsStart`·`guestsCue`·`guestsTick`·`guestsLeave`·`guestLayers`, 생일 링크 그림 받기(`guestLoads` → 3-4). (2026-11-14 평소 파티도 총출동으로 바뀌어 `pickGuests`·인원 표는 없어짐)
 `characters.js`만 보고 캐릭터를 쓴다.
 
 ### 3-3. `chime.js` — 정각 종만
@@ -83,6 +83,8 @@ birthday.js ──▶ guests.js ──┐
 - 순환 import 없음 (AGENTS.md 6장: 모듈 맨 위에서 다른 모듈 값을 바로 쓰지 않는다)
 
 ## 7. 버그 수정 (리팩터 뒤, 따로 커밋 — 동작이 바뀜)
+
+> **2026-11-14: 7-1·7-2는 없어짐.** 평소 파티도 총출동(인원 뽑기 없음)으로 바뀌어서 (`BIRTHDAY_ALLSTAR_PLAN.md` 9장). 아래는 기록으로 남긴다.
 
 ### 7-1. 파티 손님이 3명만 올 때가 있다
 - **지금:** 인원은 4~5명이어야 하는데, 자리 규칙 때문에 빠진 손님의 자리를 아무도 채우지 않는다. 할로윈 기간 약 1.5%, 평소 약 0.4%의 파티가 3명(2026-10-27, 파티 뽑기 3,000번씩).

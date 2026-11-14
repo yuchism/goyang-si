@@ -30,44 +30,32 @@ export const GUESTS = [
   // glow: 할로윈 자정 어둠 속에서 눈·입(밝은 노랑 픽셀)이 빛난다 (chime.js, glow.js)
   { id: 'witch', size: 0.95, foot: 547, h: 377, halloween: true, glow: true },
   { id: 'pumpkinhead', size: 1.00, foot: 545, h: 374, halloween: true, glow: true },
-  // 주인장 손님 (assets/birthday/family-guests/): 외계인보다 더 드물게 (OWNER_CHANCE)
+  // 주인장 손님 (assets/birthday/family-guests/): 가족 이름 파티 앞줄에만 (ALLSTAR)
   { id: 'mandeuk', size: 1.10, foot: 544, h: 536, owner: true },
   { id: 'family-01', size: 1.10, foot: 546, h: 542, owner: true },
   { id: 'family-02', size: 1.10, foot: 546, h: 539, owner: true },
   { id: 'family-03', size: 1.10, foot: 546, h: 519, owner: true },
 ];
-// 손님 종류: 어디에 나오나는 이 둘로만 정한다 (파티 pickGuests, 정각 chime.js). 순서는 GUESTS 표 순서 그대로
-//   common: 파티·정각 / rare(외계인): 파티 드물게·할로윈 자정 / owner(주인장 닮은): 파티 아주 드물게 / halloween: 할로윈 파티·할로윈 자정
+// 손님 종류: 어디에 나오나는 이 둘로만 정한다 (파티 pickCrowd, 정각 chime.js). 순서는 GUESTS 표 순서 그대로
+//   common: 파티(늘)·정각 / rare(외계인): 평소 파티 가끔·가족 이름 파티 늘·할로윈 자정 / owner(주인장 닮은): 가족 이름 파티 앞줄 / halloween: 할로윈 기간 파티(늘)·할로윈 자정
 export const kindOf = g => g.owner ? 'owner' : g.rare ? 'rare' : g.halloween ? 'halloween' : 'common';
 export const guestsOf = (...kinds) => GUESTS.filter(g => kinds.includes(kindOf(g)));
 export const CELL_W = 420; // 시트 한 칸 폭 (px)
 export const guestSrc = id => 'sheet/guest-' + id + '-dance-v1.webp';
 const CAT_DANCE_H = 200; // 강고양이 씨 춤 그림의 키(발~모자, 깊이 1일 때 방 px). sprites.js drawCat: 213 × 681/724
-// 나오는 때: 몇 번째 소절(노래의 phrases) + 몇 박 뒤(beat), 또는 그 소절 길이의 몇 분의 몇 뒤(part). 4명이면 넷째 줄(3소절 중간)을 뺀다
-export const GUEST_CUES = [
-  { phrase: 0, beat: 0 }, // 1소절 시작
-  { phrase: 1, beat: 0 }, // 2소절 시작
-  { phrase: 2, beat: 0 }, // 3소절 시작 ("사랑하는 ○○의", 클라이맥스)
-  { phrase: 2, part: 0.5 }, // 3소절 중간 (5명일 때만). 소절 길이의 절반 — 만든 소리 7박이든 녹음 12박이든 가운데 (BIRTHDAY_SONG_PLAN.md 4장)
-  { phrase: 3, beat: 0 }, // 4소절 시작 (늦게 온 손님)
-];
-export const GUEST_CUES_RATIO = [0, 0.2, 0.4, 0.55, 0.7]; // 소리가 꺼져 노래 박자가 없을 때: 춤 길이 비율
-export const COUNT = [4, 5]; // 인원 (둘 중 하나, 반반)
-export const RARE_CHANCE = 0.1; // 희귀 손님(외계인)이 한 자리를 차지할 확률
-export const HALLOWEEN_CHANCE = 0.5; // 할로윈 기간 파티에 할로윈 손님이 오는 확률
-export const HALLOWEEN_BOTH = 0.1; // 그때 둘 다 오는 확률
+export const RARE_CHANCE = 0.1; // 평소 파티에 외계인이 끼어드는 확률 (가족 이름 파티엔 늘, BIRTHDAY_ALLSTAR_PLAN.md 9장)
 // 이 손님 그림을 받을까 (assets.js): 할로윈 손님은 할로윈 기간에만
 export const guestLoads = g => !g.halloween || isHalloween(now());
-export const OWNER_CHANCE = 0.1; // 주인장을 닮은 손님 넷 중 하나가 한 자리를 차지할 확률 (외계인과 같은 정도, 2026-10-22 4% → 10%)
-// 총출동 (BIRTHDAY_ALLSTAR_PLAN.md): 생일자 이름(띄어쓰기 뺌)이 이 표에 있으면 파티마다 손님이 전부 나온다.
-// front: 강고양이 씨 양옆 앞줄에 서는 주인장 손님 셋. 나머지(보통 손님 전부 + 외계인, 할로윈 기간엔 마녀·호박머리)는 그 뒤 장면 party.crowd 자리에.
+// 총출동 (BIRTHDAY_ALLSTAR_PLAN.md): 모든 생일 파티에 손님이 다 같이 온다(9장, 2026-11-14 — 예전 4~5명 뽑기는 없앰).
+// 가족 이름 표: 생일자 이름(띄어쓰기 뺌)이 여기 있으면 front의 주인장 손님 셋이 강고양이 씨 양옆 앞줄에 서고 외계인도 늘 온다.
+// 아니면 앞줄도 보통 손님이 채우고 외계인은 가끔(RARE_CHANCE). 자리는 장면 party.crowd.
 // 이름을 코드에 그대로 적지 않으려고 이름의 해시(nameKey)로 적는다. 새로 넣으려면 개발자 도구에서 __nameKey('이름')
 // (예전 "이름 소환"(첫 파티에 주인장 셋만, BIRTHDAY_GUESTS_PLAN.md 19장)은 두 이름이 모두 총출동으로 옮겨 가서 없앴다, 2026-10-28)
 export const ALLSTAR = {
   659352347: { front: ['mandeuk', 'family-01', 'family-02'] }, // 주인장 3번 빼고
   1639570168: { front: ['mandeuk', 'family-02', 'family-03'] }, // 주인장 1번 빼고
 };
-// 총출동 등장 시각: 몇 번째 소절 + 몇 박 뒤. 앞줄은 1소절에 한 박씩, 동물은 2·3소절에 무리로(waves), 외계인·할로윈 손님은 4소절에
+// 등장 시각: 몇 번째 소절 + 몇 박 뒤. 앞줄(front 자리)은 1소절에 한 박씩, 동물은 2·3소절에 무리로(waves), 외계인·할로윈 손님은 4소절에
 export const CROWD_CUES = {
   front: { phrase: 0, beat: 0, step: 1 },
   waves: [{ phrase: 1, beats: [0, 2, 4] }, { phrase: 2, beats: [0, 2.5, 4.5] }],
@@ -86,12 +74,11 @@ export function nameKey(name) {
 if (typeof window !== 'undefined')
   window.__nameKey = nameKey;
 export const WRONG_WAY_CHANCE = 0.3; // 한 명이 혼자 반대 방향으로 출 확률
-const BIG = 1.1; // 큰 손님(뒷줄 안 섬)
+const BIG = 1.1; // 큰 손님(맨 뒷줄 back 자리를 먼저)
 export const SMALL = 0.8; // 작은 손님(강고양이 씨 옆 자리 등 small 자리에 섬. 파티·정각 같이)
 const POP_SEC = 0.15, PUFF_SEC = 0.55;
 
 /* ───────── 뽑기 ───────── */
-let lastKey = '';
 const ready = g => imageReady(IMG['f_guest_' + g.id]);
 function shuffle(a) {
   for (let i = a.length - 1; i > 0; i--) {
@@ -100,61 +87,21 @@ function shuffle(a) {
   }
   return a;
 }
-// 손님을 뽑고 자리를 정한다. 그림이 아직 없는 손님은 뽑지 않는다(그린 애부터 나온다)
-function pickGuests() {
-  const spots = (PL('party.guests') || {}).spots || [];
-  const hw = isHalloween(now()) ? guestsOf('halloween').filter(ready) : [];
-  const common = guestsOf('common').filter(ready), rare = guestsOf('rare').filter(ready), owners = guestsOf('owner').filter(ready);
-  if (!spots.length || !common.length)
-    return [];
-  let chosen = [], special = [];
-  for (let tries = 0; tries < 6; tries++) {
-    const n = Math.min(Math.random() < 0.5 ? COUNT[0] : COUNT[1], spots.length);
-    special = []; // 특별 손님은 각각 한 자리씩 차지한다 (둘 다 나올 수도 있다)
-    if (owners.length && Math.random() < OWNER_CHANCE)
-      special.push(owners[Math.floor(Math.random() * owners.length)]);
-    if (rare.length && Math.random() < RARE_CHANCE)
-      special.push(rare[Math.floor(Math.random() * rare.length)]);
-    if (hw.length && Math.random() < HALLOWEEN_CHANCE)
-      special.push(...shuffle(hw.slice()).slice(0, Math.random() < HALLOWEEN_BOTH ? 2 : 1));
-    chosen = [...special, ...shuffle(common.slice()).slice(0, Math.max(1, n - special.length))];
-    const key = chosen.map(g => g.id).sort().join();
-    if (key !== lastKey || tries === 5) {
-      lastKey = key;
-      break;
-    }
-  }
-  // 자리: 큰 손님부터. 작은 손님 자리(small)는 size ≤ SMALL만, 뒷줄(back)엔 큰 손님(≥ BIG)이 안 선다. 맞는 자리가 없으면 그 손님은 빠진다
-  const free = spots.slice(), out = [];
-  // 특별 손님(주인장·외계인·할로윈)이 먼저 자리를 잡는다 (큰 손님이 많아 앞줄이 모자라도 빠지지 않게)
-  for (const g of chosen.slice().sort((a, b) => (special.includes(b) - special.includes(a)) || b.size - a.size)) {
-    const ok = free.filter(s => (!s.small || g.size <= SMALL) && (!s.back || g.size < BIG));
-    // 작은 손님은 작은 손님 자리를 먼저 (거기 설 수 있는 애가 적으므로)
-    const pool = g.size <= SMALL && ok.some(s => s.small) ? ok.filter(s => s.small) : ok;
-    if (!pool.length)
-      continue;
-    const s = pool[Math.floor(Math.random() * pool.length)];
-    free.splice(free.indexOf(s), 1);
-    out.push({ g, x: s.x, y: s.y, flip: false, at: 0, shown: false, gone: false, t0: 0 });
-  }
-  shuffle(out); // 나오는 순서
-  if (out.length && Math.random() < WRONG_WAY_CHANCE)
-    out[Math.floor(Math.random() * out.length)].flip = true;
-  return out;
-}
-
-/* ───────── 총출동 (BIRTHDAY_ALLSTAR_PLAN.md) ───────── */
+/* ───────── 뽑기: 총출동 (BIRTHDAY_ALLSTAR_PLAN.md) ───────── */
 // 노래 시각: 소절·박 → 노래 시작 기준 초. 소리가 꺼져 박자가 없으면 노래 표의 비율로 춤 길이에 맞춘다
 const SONG_BEATS = BDAY_SONG.notes.reduce((a, n) => a + n[1], 0);
 function cueAt(s, phrase, beat) {
   const ph = s.phrases || BDAY_SONG.phrases, b = ph[Math.min(phrase, ph.length - 1)] + beat;
   return s.phrases ? b * s.beat : b / SONG_BEATS * s.sec;
 }
-// 손님 전부를 장면 party.crowd 자리에. 자리 표시: front(앞줄 주인장 전용) · small(SMALL 이하) · back(큰 손님 먼저). 맞는 자리가 없으면 빠진다
+// 손님 전부를 장면 party.crowd 자리에. 그림이 아직 없는 손님은 빠진다(그린 애부터 나온다).
+// 자리 표시: front(앞줄 — 가족 이름이면 주인장 전용, 아니면 누구나) · small(SMALL 이하) · back(큰 손님 먼저). 맞는 자리가 없으면 빠진다
+// A: 가족 이름 표의 줄(ALLSTAR) 또는 null(평소 파티)
 function pickCrowd(A, s) {
   const spots = (PL('party.crowd') || {}).spots || [];
-  const front = A.front.map(id => GUESTS.find(g => g.id === id)).filter(g => g && ready(g));
-  const rest = [...guestsOf('common'), ...guestsOf('rare'), ...(isHalloween(now()) ? guestsOf('halloween') : [])].filter(ready);
+  const front = A ? A.front.map(id => GUESTS.find(g => g.id === id)).filter(g => g && ready(g)) : [];
+  const alien = A || Math.random() < RARE_CHANCE ? guestsOf('rare') : [];
+  const rest = [...guestsOf('common'), ...alien, ...(isHalloween(now()) ? guestsOf('halloween') : [])].filter(ready);
   const free = spots.slice(), out = [];
   const take = (g, pool) => {
     if (!pool.length)
@@ -165,7 +112,7 @@ function pickCrowd(A, s) {
     out.push(q);
     return q;
   };
-  // 앞줄: 주인장 셋, 1소절에 한 박씩
+  // 앞줄: 가족 이름이면 주인장 셋, 1소절에 한 박씩
   front.forEach((g, i) => {
     const q = take(g, free.filter(sp => sp.front));
     if (q)
@@ -176,14 +123,17 @@ function pickCrowd(A, s) {
   const order = shuffle(rest.slice()).sort((a, b) => (big(b) - big(a)) || (small(b) - small(a)));
   const placed = [];
   for (const g of order) {
-    const ok = free.filter(sp => !sp.front && (!sp.small || small(g)));
+    const ok = free.filter(sp => (!A || !sp.front) && (!sp.small || small(g))); // 평소 파티면 앞줄도 보통 자리
     const want = big(g) ? ok.filter(sp => sp.back) : small(g) ? ok.filter(sp => sp.small) : ok.filter(sp => !sp.back && !sp.small);
     const q = take(g, want.length ? want : ok);
     if (q)
       placed.push(q);
   }
-  // 등장 시각: 외계인·할로윈 손님은 4소절, 동물은 2·3소절에 무리로 나눠서
-  const lastOnes = placed.filter(q => kindOf(q.g) !== 'common'), animals = shuffle(placed.filter(q => kindOf(q.g) === 'common'));
+  // 등장 시각: 외계인·할로윈 손님은 4소절, 앞줄 자리에 선 동물은 1소절에 한 박씩(평소 파티), 나머지 동물은 2·3소절에 무리로 나눠서
+  const onFront = q => !A && spots.some(sp => sp.front && sp.x === q.x && sp.y === q.y);
+  const lastOnes = placed.filter(q => kindOf(q.g) !== 'common');
+  placed.filter(q => kindOf(q.g) === 'common' && onFront(q)).forEach((q, i) => q.at = cueAt(s, CROWD_CUES.front.phrase, CROWD_CUES.front.beat + i * CROWD_CUES.front.step));
+  const animals = shuffle(placed.filter(q => kindOf(q.g) === 'common' && !onFront(q)));
   lastOnes.forEach(q => q.at = cueAt(s, CROWD_CUES.last.phrase, CROWD_CUES.last.beat));
   const slots = CROWD_CUES.waves.flatMap(w => w.beats.map(b => [w.phrase, b]));
   animals.forEach((q, i) => {
@@ -194,7 +144,7 @@ function pickCrowd(A, s) {
     pick(out).flip = true;
   return out;
 }
-export const allstarName = () => ALLSTAR[nameKey(birthdayName)] || null; // 지금 생일 링크가 총출동 이름인가
+export const allstarName = () => ALLSTAR[nameKey(birthdayName)] || null; // 지금 생일 링크가 가족 이름인가
 
 /* ───────── 진행 (birthday.js가 부른다) ───────── */
 // 파티 시작
@@ -205,24 +155,7 @@ export function guestsStart(p) {
 // 노래를 틀었을 때(춤 시작): 손님을 뽑고 나오는 시각(노래 시작 기준 초)을 정한다.
 // 뽑기를 춤 시작까지 미루는 것은, 고양이가 걸어가는 동안 손님 그림(나중 묶음)을 받을 시간을 벌기 위해
 export function guestsCue(p) {
-  const A = allstarName();
-  if (A) { // 총출동: 자리·등장 시각을 pickCrowd가 정한다
-    p.guests = RM || world.manduk ? [] : pickCrowd(A, p.song);
-    return;
-  }
-  p.guests = RM || world.manduk ? [] : pickGuests();
-  const s = p.song, list = p.guests;
-  const cues = list.length >= 5 ? GUEST_CUES : GUEST_CUES.filter((c, i) => i !== 3);
-  const ratio = list.length >= 5 ? GUEST_CUES_RATIO : GUEST_CUES_RATIO.filter((c, i) => i !== 3);
-  list.forEach((q, i) => {
-    if (s.phrases) {
-      const c = cues[Math.min(i, cues.length - 1)], ph = s.phrases, k = Math.min(c.phrase, ph.length - 1);
-      const len = (k + 1 < ph.length ? ph[k + 1] : s.sec / s.beat) - ph[k]; // 소절 길이(박). 마지막 소절은 노래 끝까지
-      q.at = (ph[k] + (c.part != null ? c.part * len : c.beat)) * s.beat;
-    }
-    else
-      q.at = ratio[Math.min(i, ratio.length - 1)] * s.sec;
-  });
+  p.guests = RM || world.manduk ? [] : pickCrowd(allstarName(), p.song); // 자리·등장 시각을 pickCrowd가 정한다
 }
 // "짠" 연기 하나를 p.puffs에 (p: 파티 또는 정각 종 — p.t가 시계)
 export function puff(q, p, quiet = false) {
@@ -237,7 +170,7 @@ export function guestsLeave(p) {
   for (const q of p.guests || [])
     if (q.shown && !q.gone) {
       q.gone = true;
-      puff(q, p, ++pops > CROWD_POPS); // 총출동이면 소리는 몇 개만
+      puff(q, p, ++pops > CROWD_POPS); // 다 같이 사라지니 소리는 몇 개만
     }
     else
       q.gone = true;
