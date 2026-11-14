@@ -100,5 +100,5 @@
 - `guests.js`: `guestsCue`는 늘 `pickCrowd(allstarName(), song)`. 평소 파티면 앞줄(front) 자리도 보통 자리로 쓰고, 거기 선 동물은 1소절에 한 박씩 나온다. `pickGuests`·`COUNT`·`OWNER_CHANCE`·`GUEST_CUES`·`GUEST_CUES_RATIO`·`lastKey`·`HALLOWEEN_CHANCE`·`HALLOWEEN_BOTH` 없앰. 장면 `party.guests` 지움(OBJECTS.md 다시 만듦), CODE.md `guests.js` 줄 고침.
 - 파티 뽑기 2,000번씩: 평소 이름·11월 11명(외계인 낀 파티 10%), 평소 이름·할로윈 기간 13명(마녀·호박머리 늘, 외계인 10%), 가족 이름 15명(주인장 셋·외계인 늘). 평소 이름 파티에 주인장 0번, 자리 겹침 0번.
 - 화면 점검 `party` 장면: 일부러 바뀜(4~5명 → 손님 전부). 주인 승인 (2026-11-14)
-- `check_structure`·`check_time`·`check_scene` 통과. `check_behave --quick`은 둘째 장면에서 "페이지 이동"으로 멈춘다 — 이 변경 전 코드로도 똑같이 멈춤(무작위 누르기가 페이지를 넘기는 링크를 누르는 것으로 보임 — 주인 짐작: 고양이 기지로 가는 출동. 이번 변경과 무관). 첫 장면은 통과
+- `check_structure`·`check_time`·`check_scene` 통과. `check_behave --quick`은 둘째 장면에서 "페이지 이동"으로 멈춘다 — 이 변경 전 코드로도 똑같이 멈춤(무작위 누르기가 페이지를 넘기는 링크를 누르는 것으로 보임 — 주인 짐작: 고양이 기지로 가는 출동. 이번 변경과 무관). 첫 장면은 통과. → 검사 도구에서 막음(tasks/check-behave-no-leave.md), 다시 돌려 장면 10개 모두 통과 (2026-11-15)
 

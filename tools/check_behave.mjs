@@ -201,7 +201,8 @@ const PLAN = QUICK ? { days: 1, hours: 1, acts: 15, actSteps: 240 } : { days: 3,
 
 async function runOne(browser, base, sc, tz, lang, seed) {
   const tag = `${sc.n} (${tz.split('/')[1]}·${lang}, 시드 ${seed})`;
-  const ctx = await browser.newContext({ viewport: { width: 1300, height: 900 }, timezoneId: tz, locale: lang === 'en' ? 'en-AU' : 'ko-KR' });
+  // serviceWorkers: 'block' — 서비스 워커(sw.js)가 받은 요청은 page.route를 거치지 않아 아래 페이지 이동 막기가 안 듣는다 (tasks/check-behave-no-leave.md)
+  const ctx = await browser.newContext({ viewport: { width: 1300, height: 900 }, timezoneId: tz, locale: lang === 'en' ? 'en-AU' : 'ko-KR', serviceWorkers: 'block' });
   const p = await ctx.newPage(), errs = [], tagsSeen = new Set();
   p.on('pageerror', e => errs.push('PAGEERR ' + e.message));
   p.on('console', m => {
@@ -217,8 +218,20 @@ async function runOne(browser, base, sc, tz, lang, seed) {
       const [status, contentType, body] = answer(new URL(r.request().url()).pathname);
       return r.fulfill({ status, contentType, body });
     });
+  // 첫 페이지를 연 뒤로는 다른 페이지로 넘어가지 않게: 무작위 누르기가 책장 책·현관·출동(고양이 기지)처럼 페이지를 넘기는 것을 누르면
+  // 그 이동에 204(내용 없음)로 답한다 — 브라우저는 지금 페이지에 머문다 (tasks/check-behave-no-leave.md). 사이트 코드는 그대로
+  let opened = false, leaves = 0;
+  await p.route('**/*', r => {
+    const q = r.request();
+    if (opened && q.isNavigationRequest() && q.frame() === p.mainFrame()) {
+      leaves++;
+      return r.fulfill({ status: 204, body: '' });
+    }
+    return r.fallback();
+  });
   await p.addInitScript(INIT(localMs(tz, ...sc.d), seed));
   await p.goto(`${base}/index.html?dev=1${sc.q || ''}`);
+  opened = true;
   for (let i = 0; i < 150 && !(await p.evaluate(() => !!(window.__ready && window.__ready() && window.__goyang))); i++)
     await new Promise(r => setTimeout(r, 200));
   // 그림을 다 받은 뒤 시작 (받는 속도에 따라 결과가 달라지지 않게)
@@ -345,7 +358,7 @@ async function runOne(browser, base, sc, tz, lang, seed) {
   }
   await ctx.close();
   const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => `${k || '(없음)'} ${v}`).join(' · ');
-  console.log(`${bad ? '✗' : '✓'} ${tag}: ${PLAN.days}일 빨리 감기 · ${PLAN.hours}시간 60배 · 무작위 ${PLAN.acts}번 — ${bad ? `문제 ${bad}건` : '오류 0'}, 이름표 ${tagsSeen.size}가지 (${top})`);
+  console.log(`${bad ? '✗' : '✓'} ${tag}: ${PLAN.days}일 빨리 감기 · ${PLAN.hours}시간 60배 · 무작위 ${PLAN.acts}번 — ${bad ? `문제 ${bad}건` : '오류 0'}, 이름표 ${tagsSeen.size}가지 (${top})${leaves ? ` · 페이지 이동 막음 ${leaves}번` : ''}`);
 }
 
 (async () => {
