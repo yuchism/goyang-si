@@ -121,5 +121,10 @@
   "fx/magpie_fly": [189, 176],
   "fx/pigeon_fly": [131, 118],
   "fx/blackcat_walk_3": [247, 203],
-  "fx/blackcat_walk_4": [247, 203]
+  "fx/blackcat_walk_4": [247, 203],
+  "chest_closed": [512, 512],
+  "chest_open": [512, 512],
+  "chest_peek": [512, 512],
+  "fbv_back": [1536, 1536],
+  "fbv_front": [1536, 1536]
 }
