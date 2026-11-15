@@ -121,5 +121,9 @@
   "fx/magpie_fly": [189, 176],
   "fx/pigeon_fly": [131, 118],
   "fx/blackcat_walk_3": [247, 203],
-  "fx/blackcat_walk_4": [247, 203]
+  "fx/blackcat_walk_4": [247, 203],
+  "cat_glass_blink": [1536, 1536],
+  "cat_glass_look": [1536, 1536],
+  "cat_glass_nose": [1536, 1536],
+  "cat_glass_paw": [1536, 1536]
 }
