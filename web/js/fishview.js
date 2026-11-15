@@ -10,7 +10,7 @@ import { calDay, isNight, now } from './time.js';
 import { RM, clamp, esc, gcEvent, hash, lerp, rnd } from './util.js';
 import { cat, world } from './world.js';
 
-let D = null; // { O, ROOM, img, imageReady, fish } — fish: plays.js의 어항 놀이 물건 (press·debug.fishState·debug.tapBowl)
+let D = null; // { O, ROOM, img, imageReady, fish } — fish: plays.js의 어항 놀이 물건 (debug.fishState)
 const el = document.getElementById('fbv');
 
 /* ───── 자리 (크게 보기 그림 픽셀). 그림을 바꾸면 여기만 다시 잰다 ───── */
@@ -29,10 +29,11 @@ const CHEST = { x: 985, y: GY, mouth: [760, 1050] }; // 상자 바닥 가운데,
 const BED = [600, GY - 70]; // 자는 금붕생이 (fish_sleep_1 배 아래 = 그림 256,318)
 const SPOTS = [[450, 1100], [610, 1085], [768, 1120], [870, 1060]]; // 살림 앞에 머무는 자리
 const WEEDS = [[392, 360, 0], [432, 300, 1.7], [1138, 330, 3.1], [1178, 260, 4.4]]; // 물풀 [x, 키, 위상]
+const SWIM_MAX = 260; // 화면에 그리는 금붕생이가 따라가는 최대 속도(픽셀/초) — 상자 쪽 당김·살림 앞 머물기가 켜지고 꺼질 때 순간이동하지 않게
 const REFLECT = { a: 0.55, tint: 'rgba(140,200,244,.38)', y: -30, wob: 8 }; // 비침: 불투명도·물빛·위치·일렁임 (사람 검수에서 조정)
 
 /* ───── 상태 ───── */
-const S = { open: false, openAt: 0, t: 0, sleepK: 0, visit: null, visitT: rnd(12, 25), visitK: 0, ref: null, refK: 0, blinkT: 2, blink: 0, pawT: rnd(15, 30), paw: 0, zz: [] };
+const S = { open: false, openAt: 0, t: 0, dx: null, dy: null, vx: 0, sleepK: 0, visit: null, visitT: rnd(12, 25), visitK: 0, ref: null, refK: 0, blinkT: 2, blink: 0, pawT: rnd(15, 30), paw: 0, zz: [] };
 let cv = null, cx = null, side = 0;
 const tinted = {}; // 비침 그림에 물빛을 입힌 캔버스 (그림마다 한 번)
 
@@ -49,8 +50,6 @@ export const initFishView = deps => {
       return;
     if (e.target === el || e.target.closest('.x'))
       closeFishView();
-    else if (e.target === cv) // 어항 안을 누르면 금붕생이가 다시 뻐끔
-      tapFish();
   });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && S.open)
@@ -60,23 +59,24 @@ export const initFishView = deps => {
   window.addEventListener('resize', () => S.open && fit());
   const a = document.getElementById('aBowl'); // 화면 읽기 버튼
   if (a)
-    a.onclick = () => openFishView() || tapFish();
+    a.onclick = () => openFishView();
 };
 function label() {
   el.setAttribute('aria-label', tr('fbvDlg'));
   el.querySelector('.x').setAttribute('aria-label', tr('fbvClose'));
 }
 const fishState = () => D && D.fish && D.fish.debug && D.fish.debug.fishState();
-const tapFish = () => D && D.fish && D.fish.debug && D.fish.debug.tapBowl();
 const im = k => D.img(k);
 const ok = k => D.imageReady(im(k));
 // 열 수 있나: 장면에 어항이 있고 뒤판·앞판·헤엄 그림을 받았을 때
 export const fishViewReady = () => !!(D && el && D.O.fishbowl && D.ROOM.fishbowl_back && ['fbv_back', 'fbv_front', 'fbv_fish_swim_1'].every(ok));
 export const fishViewOpen = () => S.open;
 
-// 방에서 어항을 누름 (ui.js tapAt). 열었으면 true — 못 열면 놀이(fish.js press)가 지금처럼 뻐끔만
+// 방에서 어항을 누름 (ui.js tapAt). 열었으면 true — 못 열면 놀이(fish.js press)가 지금처럼 뻐끔만.
+// 크게 보기에서는 뻐끔(정면 뽀뽀 얼굴)을 하지 않는다 — 헤엄치던 금붕생이가 튀어 보여서 (주인 2026-11-16)
 export function fishViewTap(x, y) {
-  if (!fishViewReady() || !D.fish.press(x, y, 'after')) // press가 어항 위인지 보고 뻐끔(tapBowl)까지 한다
+  const b = fishViewReady() && bowlBox();
+  if (!b || x < b.x0 || x > b.x0 + b.w || y < b.y0 || y > b.y0 + b.h)
     return false;
   show();
   return true;
@@ -84,14 +84,13 @@ export function fishViewTap(x, y) {
 export function openFishView() {
   if (!fishViewReady())
     return false;
-  tapFish();
   show();
   return true;
 }
 function show() {
   if (S.open)
     return;
-  Object.assign(S, { open: true, openAt: performance.now(), t: 0, visit: null, lastVisit: null, visitK: 0, refK: 0, ref: null, zz: [] });
+  Object.assign(S, { open: true, openAt: performance.now(), t: 0, dx: null, dy: null, vx: 0, visit: null, lastVisit: null, visitK: 0, refK: 0, ref: null, zz: [] });
   const f = fishState();
   S.sleepK = f && sleepy(f.F) ? 1 : 0;
   el.hidden = false;
@@ -139,6 +138,7 @@ export function fishViewTick(real) {
   if (!st || !b)
     return;
   S.t += real;
+  S.dt = real;
   const F = st.F;
   // 밤 잠: 천천히 바뀐다
   S.sleepK = clamp(S.sleepK + (sleepy(F) ? 1 : -1) * real / 0.9, 0, 1);
@@ -156,8 +156,6 @@ export function fishViewTick(real) {
       S.visitT = rnd(15, 30);
     }
   }
-  if (S.visitK > 0 && !S.visit && !free)
-    S.visitK = clamp(S.visitK - real / 0.6, 0, 1);
   catGlass(real, b);
   S.zz = S.zz.filter(z => (z.t += real) < 2.4);
   if (S.sleepK > 0.9 && Math.random() < real / 1.4)
@@ -286,17 +284,38 @@ function fish(F, b) {
   let k = frameOf(F);
   if (!ok(k))
     k = 'fbv_fish_swim_1';
-  const m = im(k), [x, y] = fishPos(F, b), bob = RM ? 0 : Math.sin(F.ph * 2.2) * 8;
+  const m = im(k), [x, y] = follow(fishPos(F, b)), bob = RM ? 0 : Math.sin(F.ph * 2.2) * 8;
+  const face = Math.abs(S.vx) > 40 && S.lag > 4 ? Math.sign(S.vx) : F.face; // 따라잡는 중이면 가는 쪽을 본다
   const w = m.width * FISH_K, h = m.height * FISH_K;
   cx.save();
   cx.globalAlpha = a;
   cx.translate(x, y + bob);
-  if (F.face > 0 && k !== 'fbv_fish_hello_1')
+  if (face > 0 && k !== 'fbv_fish_hello_1')
     cx.scale(-1, 1);
   cx.drawImage(m, -w / 2, -h / 2, w, h);
   cx.restore();
   if (F.mode === 'carry' && F.help === 'weed')
-    weed(x + F.face * w * 0.45, y + bob, 2.6);
+    weed(x + face * w * 0.45, y + bob, 2.6);
+}
+// 그리는 자리가 목표(방 자리 + 꾸밈)를 최대 속도로 따라간다
+function follow([tx, ty]) {
+  const real = S.dt || 0;
+  if (S.dx == null || RM && S.lag > 200) {
+    [S.dx, S.dy] = [tx, ty];
+    S.lag = 0;
+    return [tx, ty];
+  }
+  const ex = tx - S.dx, ey = ty - S.dy, d = Math.hypot(ex, ey), st = Math.min(d, SWIM_MAX * real);
+  const ox = S.dx;
+  if (d > 0.01) {
+    S.dx += ex / d * st;
+    S.dy += ey / d * st;
+  }
+  S.vx = real > 0 ? (S.dx - ox) / real : 0;
+  S.lag = d - st;
+  S.fx = S.dx;
+  S.fy = S.dy; // 점검용 (fishViewDebug)
+  return [S.dx, S.dy];
 }
 // 조개 침대에서 쉬는 금붕생이와 작은 거품
 function sleeper() {
