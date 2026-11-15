@@ -40,8 +40,18 @@
 - 트리 앞에 손잡이 오르골을 든 펠리컨(크기는 2장 캐릭터 크기 규칙). 펠리컨을 탭하면 **다음 노래**로 바뀐다. 순서: 노래 1 → 노래 2 → … → **안 나옴** → 노래 1 …
 - 처음 들어오면 **안 나옴**에서 시작 (브라우저가 첫 탭 전엔 소리를 막기도 함). 첫 탭에 노래 1
 - 노래 중: 손잡이를 천천히 돌린다(프레임 그림). 안 나옴: 손잡이를 놓고 조는 모습
-- 소리는 크지 않게, 오르골·실로폰 같은 맑고 나지막한 음색
-- 노래는 **저작권이 끝난 캐럴만** (예: 징글벨, 고요한 밤, 기쁘다 구주 오셨네, We Wish You a Merry Christmas, 오 탄넨바움). 곡 목록·몇 곡인지는 정할 때
+- 소리는 **크지 않게**(볼륨을 낮게 시작). 곡 분위기는 곡마다 다르다 — 오르골은 "노래 바꾸는 상자"
+- 노래는 **Pixabay 무료 음악 5곡** (Pixabay Content License, 출처 표기 의무 없음. 회의 2026-11-15). 순서:
+  1. Christmas Music — Tatamusic, 2:18 (<https://pixabay.com/music/christmas-christmas-christmas-music-627995/>)
+  2. Christmas — Tunetank, 1:43 (<https://pixabay.com/music/christmas-christmas-347469/>)
+  3. That Christmas — Looptape, 1:08 (<https://pixabay.com/music/christmas-that-christmas-176114/>)
+  4. The First Noel — Clavier-Music, 2:27 (<https://pixabay.com/music/christmas-the-first-noel-beautiful-christmas-piano-280754/>)
+  5. Silent Night — MarloweMusic, 3:24 (<https://pixabay.com/music/ambient-silent-night-582888/>)
+  6. **안 나옴** → 다시 1
+- 한 곡이 끝나면 **같은 곡을 다시**. 바꾸는 건 탭으로만
+- 파일: 원본은 `goyang/xmas-carols/`(저장소 밖) → 2차 티켓에서 `assets/sound/carols/`(git 무시)로 옮기고, 웹용은 약 96kbps로 다시 인코딩해 `web/sound/carol-1-v1.mp3` … `carol-5-v1.mp3`. 오르골을 처음 누를 때 받는다(시작 묶음에 넣지 않음)
+- `ASSET_LICENSE.md` Third-party sounds에 다섯 곡 표(파일 / 원곡 링크 / 작가)는 파일이 들어가는 2차 티켓에서
+- 주의: 1·2·4·5번은 Pixabay에 **Content ID 등록**. 광장 화면을 녹화해 영상으로 올릴 땐 소리를 뺀다
 - 페이지를 나갔다 오면 다시 안 나옴부터 (기억하지 않음) — 제안
 
 ### 3-2. 낮·밤
@@ -97,7 +107,5 @@
 
 ## 8. 열린 질문
 
-- 캐럴 몇 곡·어떤 곡
-- 녹음으로 할지, 코드로 연주할지. 오르골 음색은 코드로도 꽤 비슷하게 낼 수 있어서 생일 노래 때와는 사정이 달라요
 - 내년부터 크리스마스 광장 기간: 12-01 ~ 12-31로 고정할지, 11월 말부터 열지
 - 방문자가 크리스마스 광장 시작을 알 수 있게 할지 (예: 12월 방 창밖·약도 지도책 책등에 작은 표시)
