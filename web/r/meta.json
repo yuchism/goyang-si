@@ -135,5 +135,9 @@
   "fish_sleep_1": [512, 512],
   "home_bed": [512, 512],
   "home_chair": [512, 512],
-  "home_sign": [512, 512]
+  "home_sign": [512, 512],
+  "cat_glass_blink": [1536, 1536],
+  "cat_glass_look": [1536, 1536],
+  "cat_glass_nose": [1536, 1536],
+  "cat_glass_paw": [1536, 1536]
 }
