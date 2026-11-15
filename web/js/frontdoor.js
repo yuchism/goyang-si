@@ -14,6 +14,8 @@ import { RM, esc, gcEvent } from './util.js';
 import { after, caption, world } from './world.js';
 
 const mapEl = document.getElementById('mapp');
+const GHOST_MS = 500; // 약도를 펼친 뒤 이 시간 안의 click은 연 손가락의 것 (폰)
+let openedAt = 0;
 const AJAR_SEC = 0.25; // 문이 살짝 열리고 닫히는 시간
 const BELL_WAIT = 12; // 돌아온 딸랑을 소리가 열릴 때까지 기다리는 시간(초). 그보다 늦은 첫 터치에는 울리지 않는다
 let cfg = null, via = 'map', back = false, bellAt = 0; // bellAt: 아직 못 울린 돌아옴 딸랑을 미룬 때(performance.now). 0이면 없음
@@ -68,6 +70,7 @@ export function openMap(map, from, by = 'map') {
   if (by === 'map')
     world.doorTo = 1;
   mapEl.hidden = false;
+  openedAt = performance.now();
   const box = render(map), r = box.getBoundingClientRect();
   if (from)
     box.style.transformOrigin = `${Math.round(from[0] - r.left)}px ${Math.round(from[1] - r.top)}px`;
@@ -137,6 +140,11 @@ export function initFrontDoor() {
     return;
   // 바깥(어두운 둘레)·닫기 → 접기. 가게 → 통계를 보내고 조금 있다가 떠난다
   mapEl.addEventListener('click', e => {
+    // 폰: 문을 누른 손가락의 뒤늦은 click이 막 펼친 약도의 가게 위에 떨어지면 바로 그 가게로 가 버린다 — 펼친 직후의 click은 버림
+    if (performance.now() - openedAt < GHOST_MS) {
+      e.preventDefault();
+      return;
+    }
     const a = e.target.closest('a');
     if (a) {
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.button)
