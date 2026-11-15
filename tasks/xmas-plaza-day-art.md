@@ -1,7 +1,7 @@
 # 크리스마스 광장 그림 2: 광장 풍경화 낮
 - status: implemented
 - mode: needs-review
-- office: ready
+- office: done (헤드쿼터 #43, 2026-11-15)
 - brief: assets/briefs/XMAS_PLAZA_ART.md 9장
 - assets: assets/plaza/xmas-day-source-v1.png (git 무시) · web/plaza/xmas-day.webp
 - 출처: 회의 2026-11-15 크리스마스 광장 낮·밤 — `XMAS_PLAZA_PLAN.md` 3-2
