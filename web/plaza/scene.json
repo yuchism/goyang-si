@@ -32,6 +32,9 @@
     "_": "점등식(해 질 녘, 열어 둔 채 밤이 될 때): sec초 동안 트리 전구 아래 → 위(0 ~ tree) → 별(~ star) → 전구 줄 별 쪽부터(~ 1). fade: 전구 하나가 켜지는 초. offSec: 해 뜰 녘 거꾸로 꺼지는 초",
     "sec": 24, "tree": 0.7, "star": 0.78, "fade": 0.6, "offSec": 10
   },
+  "weather": { "_": "눈 일정 (XMAS_PLAZA_PLAN.md 3-4): 하루를 block분 칸으로 나눠 칸마다 share 확률로 눈(날짜 씨앗, 누구에게나 같음). 칸 경계 fade분 동안 넘어감. xmasNights 'M-D' 밤(nightOf)은 늘 눈. haze·hazeColor: 눈 올 때 하늘 흐림. nightDark: 방 어둠(darkness)이 이 값이면 별이 다 뜸", "block": 30, "share": 0.5, "fade": 3, "xmasNights": ["12-24", "12-25"], "haze": 0.18, "hazeColor": "#8f9bb8", "nightDark": 0.62 },
+  "stars": { "_": "하늘 별(코드): n개, y top~bottom(건물·트리 위 하늘, 아래쪽은 그림에 가려짐), r 반지름 [작은, 큰], big 큰 별 비율(빛무리 + 밝을 때 작은 십자), a 밝기 [최소, 최대], sp 반짝 빠르기 rad/초 [최소, 최대]", "n": 150, "top": 6, "bottom": 640, "r": [0.7, 2.0], "big": 0.1, "a": [0.45, 1], "sp": [2.5, 7] },
+  "shoot": { "_": "별똥별: every초 칸마다 chance 확률로 하나(칸 안 시작은 고정 난수), sec초 동안 len px 꼬리. 맑은 밤에만. ?shoot=1이면 devEvery초마다", "every": 120, "chance": 0.6, "sec": 1.1, "len": 170, "devEvery": 5 },
   "snow": {
     "_": "내리는 눈 두 겹: n송이, r 반지름 [최소, 최대], fall 떨어지는 빠르기 px/초 [최소, 최대], sway 좌우 흔들림 px, a 불투명도",
     "back": { "n": 110, "r": [1.2, 2.4], "fall": [18, 34], "sway": 10, "a": 0.55 },

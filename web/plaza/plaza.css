@@ -37,3 +37,6 @@ body.plaza { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-high
 
 .msg { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-size: 40px; }
 .btn { font: 700 20px/1 var(--font-hand); color: var(--ink); border: 2px solid var(--ink); border-radius: 8px; padding: 10px 16px; text-decoration: none; }
+
+/* 하늘 별 겹: 그림 폭에 맞추고 높이는 캔버스 비율대로(하늘 부분만) */
+.pc > .stars { height: auto; }
