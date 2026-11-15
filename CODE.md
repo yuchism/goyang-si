@@ -23,6 +23,7 @@ web/                      ← GitHub Pages로 배포되는 폴더 (이 안만 �
   r/tv/schedule.json      ← 고양.방송 방송국 틀: 편성 칸·기간(이름 참조, 날짜는 js/calendar.js)·마감 뉴스·낮잠 정파·개편(3개월마다). TV_SCHEDULE_PLAN.md, TIME_BASE_PLAN.md 8-1
   sheet/                  ← meta.json 밖의 큰 시트 (생일 춤·케이크·깜짝 손님 guest-*-dance-v1, webp). build_meta.py 검사 밖. LOAD_PLAN.md 5장. 손님 시트는 make_guests.py가 만든다
   js/                     ← 코드 (JS 모듈)
+  plaza/                  ← 크리스마스 광장 /plaza/ (방과 따로, 기지처럼). index.html·plaza.js·plaza.css·scene.json(자리·숫자: 트리 전구·전구 줄·별·눈·김·점등식·캐릭터 크기 charScale·depth — 사람이 고치는 곳)·xmas-day/night.webp. 겹: 하늘(time.js skyAt) → 불꽃 자리 → 낮·밤 그림(darkness(d, true)로 섞기) → 반짝임 캔버스. 밤이 되는 순간(isNight) 점등식. 미리보기(dev 기기만) ?night=1|0·?t=HH:MM·?speed=·?probe=1. tasks/xmas-plaza-code.md
   manhwa/                 ← 만화방 (방과 따로, 방 시작 묶음에 안 섞임). tasks/manhwa-viewer.md
     index.html·shop.js·shop.css ← 만화방 안 /manhwa/ (약도·책장 만화책의 목적지): 낮엔 계산대에서 조는 사장님, 밤엔 운동. 관람금지 책장(코드)·99세 버튼·신간 코너·출입문. 시간은 js/time.js, 발자국은 js/catbook.js만 빌린다. ?dev=1 시각 옮기기·그날 밤 편성. tasks/manhwa-3-shop.md
     shop-plan.js          ← 밤 운동 편성 (하룻밤을 씨앗으로 40~60분마다, 앞과 다른 기구. 화면 없이 계산만 — 노드에서도 불러짐)
@@ -57,6 +58,8 @@ tools/
   make_mountains.py       ← 창밖 산 그림(assets/scenery/ 먼 산 mountain-far-*-v2.png, 가까운 산 mountain-near-*-v3.png. 판은 `VER`) → r/scenery/*.webp (여름 알파로 통일, 1200×550). `--show` → assets/references/mountain-check-v1.png. WINDOW_PLAN_3.md 6장
   build_manhwa.py         ← 만화방 회차 도구: `python3 tools/build_manhwa.py csf 3 [--open YYYY-MM-DD] [--title 제목]` 원고(assets/manhwa/csf/3/01.png…, git 무시) → 위아래 고른 줄(바깥 여백·테두리) 자르기·폭 1080·최대 약 2000px 조각 → web/manhwa/csf/<이름>/, episodes.json·HTML·og.jpg·thumb.webp. 표지는 assets/manhwa/csf/cover.png(없으면 1화 첫 장). 원고 규격(표지 제목은 맨 위 1/10 밖에)은 assets/briefs/manhwa-manuscript.md. 작품만 주면 HTML만 다시, `--check`는 맞는지만. tasks/manhwa-viewer.md
   map_windows.py          ← 건너편 아파트 밤 그림에서 창 사각형을 찾아 r/apt_windows.json (창 불빛). --show로 확인 그림
+  plaza_points.py         ← 광장 밤 그림에서 트리 전구 자리·전구 줄 길을 찾아 JSON 출력 → web/plaza/scene.json에 붙임. --show로 확인 그림(assets/references/)
+  check_plaza.mjs         ← 광장 페이지 맨손 검사(브라우저 없이 가짜 DOM으로 plaza.js를 30초 돌려 오류·NaN·잘못된 색). `node tools/check_plaza.mjs '?dev=1&night=1&probe=1' [--rm]`
 make_objects_doc.py       ← scenes/room/objects.json → OBJECTS.md
 ```
 
