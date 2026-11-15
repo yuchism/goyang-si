@@ -1,8 +1,8 @@
 # 어항 크게 보기 그림: 금붕생이네 집 (어항·보물상자 / 살림 / 고양이 비침)
-- status: brief
+- status: done
 - mode: needs-review
 - relay: brief
-- office: ready
+- office: done (헤드쿼터 #38·#39·#40, 2026-11-15)
 - brief: assets/briefs/FISHBOWL_VIEW_SPRITE_PLAN.md (회의에서 씀 — 왕복으로 다듬기)
 - assets: assets/sprites/*-v1.png (git 무시, 로컬) · web/r/fbv_*.webp · web/r/chest_*.webp · web/r/home_*.webp · web/r/fish_sleep_1.webp · web/r/cat_glass_*.webp
 - 출처: 회의 2026-11-15 어항 크게 보기 — `FISHBOWL_VIEW_PLAN.md`
@@ -56,3 +56,4 @@
 
 ## 메모
 - 2026-11-15 티켓 작성(Claude, 회의). 지시서는 회의에서 먼저 씀. 주인 요청으로 `- office: ready`(2026-11-15).
+- 2026-11-15 세 티켓 사람 검수 통과, `main`에 합침(501c81e). 지시서 장 번호는 합치며 4~8장으로 정리.
