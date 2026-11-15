@@ -76,7 +76,13 @@ const canvas = (cls, W, H) => {
   return c;
 };
 const clamp01 = v => Math.max(0, Math.min(1, v));
-const rnd = (s, i) => hash(s + ':' + i); // 0~1, 날짜와 상관없는 고정 난수 (전구마다 박자)
+// 0~1, 날짜와 상관없는 고정 난수 (전구마다 박자). FNV(hash)는 짧은 글자를 연달아 넣으면 값이 몰려서 마지막에 murmur3 fmix32로 한 번 더 섞는다
+const rnd = (s, i) => {
+  let h = hash(s + ':' + i) * 4294967295 >>> 0;
+  h = Math.imul(h ^ h >>> 16, 0x85ebca6b);
+  h = Math.imul(h ^ h >>> 13, 0xc2b2ae35);
+  return ((h ^ h >>> 16) >>> 0) / 4294967296;
+};
 // 미리 구운 불빛 한 알 (색마다 한 장, 그릴 때 globalAlpha만)
 const glowSprite = (col, r) => {
   const c = canvas('', r * 2, r * 2), g = c.getContext('2d'), gr = g.createRadialGradient(r, r, 0, r, r, r);
@@ -159,7 +165,7 @@ function build(cfg) {
   const T = cfg.tree, S = cfg.strings, C = cfg.ceremony;
   const treeSpr = T.colors.map(c => glowSprite(c, T.r * 2));
   const strSpr = S.colors.map(c => glowSprite(c, S.r * 2));
-  const starSpr = glowSprite('#fff2b0', T.star[2]);
+  const ST8 = T.starGlow, starSpr = glowSprite('#fff2b0', T.star[2]), haloSpr = glowSprite(ST8.haloColor, T.star[2] * ST8.halo);
   // 점등 차례(0~1): 트리는 아래 → 위(목록 순서), 별, 전구 줄은 별 쪽 → 바깥
   const tree = T.lights.map(([x, y], i) => ({ x, y, on: (i / T.lights.length) * C.tree, spr: treeSpr[i % treeSpr.length],
     sp: 1.2 + rnd('tsp', i) * 2.2, ph: rnd('tph', i) * 7 }));
@@ -215,6 +221,12 @@ function build(cfg) {
     // 꼭대기 별빛: 낮엔 약하게(dayK), 점등식에선 트리 다음
     const [sx, sy, sr] = T.star, sk = T.dayK + (1 - T.dayK) * onK(C.tree, C.star - C.tree);
     const pulse = RM ? 1 : 0.85 + 0.15 * Math.sin(t * 1.3);
+    // 별 뒤 따뜻한 금빛 빛무리 (금색 별에 묻히지 않게 크게, haloN겹 겹쳐 밝게)
+    const hr = sr * ST8.halo;
+    for (let i = 0; i < ST8.haloN; i++) {
+      g.globalAlpha = Math.min(1, sk * pulse * ST8.haloA);
+      g.drawImage(haloSpr, sx - hr, sy - hr, hr * 2, hr * 2);
+    }
     g.globalAlpha = sk * pulse;
     g.drawImage(starSpr, sx - sr * 2, sy - sr * 2, sr * 4, sr * 4);
     g.save();
@@ -224,24 +236,47 @@ function build(cfg) {
     g.lineCap = 'round';
     for (let i = 0; i < 8; i++) {
       g.rotate(Math.PI / 4);
-      g.globalAlpha = sk * (i % 2 ? 0.35 : 0.6) * (RM ? 1 : 0.7 + 0.3 * Math.sin(t * 2 + i));
-      g.lineWidth = i % 2 ? 1.5 : 2.5;
+      g.globalAlpha = sk * (i % 2 ? 0.45 : 0.75) * (RM ? 1 : 0.7 + 0.3 * Math.sin(t * 2 + i));
+      g.lineWidth = ST8.rayW * (i % 2 ? 0.6 : 1);
       g.beginPath();
       g.moveTo(sr * 0.55, 0);
-      g.lineTo(sr * (i % 2 ? 1.4 : 2.1), 0);
+      g.lineTo(sr * ST8.ray * (i % 2 ? 0.65 : 1), 0);
       g.stroke();
     }
     g.restore();
+    // 가끔(flashEvery초 칸마다 한 번, 칸 안 시작은 고정 난수) 반짝 빛나는 십자 섬광
+    if (!RM) {
+      const slot = Math.floor(t / ST8.flashEvery), p = (t - slot * ST8.flashEvery - rnd('flash', slot) * ST8.flashEvery * 0.7) / ST8.flashSec;
+      if (p >= 0 && p <= 1) {
+        const k = sk * Math.sin(Math.PI * p), len = sr * ST8.flashLen * (0.6 + 0.4 * Math.sin(Math.PI * p));
+        g.globalAlpha = Math.min(1, k * 1.4);
+        g.drawImage(starSpr, sx - sr * 2.5, sy - sr * 2.5, sr * 5, sr * 5);
+        for (const [dx, dy] of [[1, 0], [0, 1]]) {
+          const gr = g.createLinearGradient(sx - dx * len, sy - dy * len, sx + dx * len, sy + dy * len);
+          gr.addColorStop(0, '#fff6c800');
+          gr.addColorStop(0.5, '#ffffff');
+          gr.addColorStop(1, '#fff6c800');
+          g.strokeStyle = gr;
+          g.globalAlpha = k;
+          g.lineWidth = ST8.rayW * 1.6;
+          g.beginPath();
+          g.moveTo(sx - dx * len, sy - dy * len);
+          g.lineTo(sx + dx * len, sy + dy * len);
+          g.stroke();
+        }
+      }
+    }
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
   };
 
-  /* ── 눈 두 겹 (동작 줄이기면 없음) */
+  /* ── 눈 두 겹 (동작 줄이기면 없음). 처음 자리는 화면을 n칸(가로 cols × 세로 rows)으로 나눠 칸마다 한 송이 + 칸 안 흔들기라 고르게 퍼진다 */
   const flakes = RM ? [] : ['back', 'front'].flatMap(layer => {
-    const F = cfg.snow[layer];
-    return Array.from({ length: F.n }, (_, i) => {
+    const F = cfg.snow[layer], cols = Math.max(1, Math.round(Math.sqrt(F.n * W / H))), rows = Math.ceil(F.n / cols);
+    const cells = Array.from({ length: cols * rows }, (_, c) => c).sort((a, b) => rnd(layer + 'c', a) - rnd(layer + 'c', b)).slice(0, F.n);
+    return cells.map((c, i) => {
       const q = j => rnd(layer + j, i);
-      return { F, x: q(1) * W, y: q(2) * H, r: F.r[0] + q(3) * (F.r[1] - F.r[0]), v: F.fall[0] + q(4) * (F.fall[1] - F.fall[0]), sp: 0.4 + q(5) * 0.8, ph: q(6) * 7 };
+      return { F, x: (c % cols + q(1)) * W / cols, y: (Math.floor(c / cols) + q(2)) * H / rows, r: F.r[0] + q(3) * (F.r[1] - F.r[0]), v: F.fall[0] + q(4) * (F.fall[1] - F.fall[0]), sp: 0.4 + q(5) * 0.8, ph: q(6) * 7 };
     });
   });
   const drawSnow = (t, dt) => {
@@ -249,7 +284,7 @@ function build(cfg) {
     for (const f of flakes) {
       f.y += f.v * dt;
       if (f.y > H + 6) {
-        f.y = -6;
+        f.y = -6 - Math.random() * H * 0.15; // 다시 뿌릴 때 시작 높이도 흩어 줄지어 내리지 않게
         f.x = Math.random() * W;
       }
       const x = (f.x + Math.sin(t * f.sp + f.ph) * f.F.sway + W) % W;
