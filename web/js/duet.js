@@ -6,7 +6,7 @@ import { A, P, PATH, S, aPt, ay } from './objects.js';
 import { bub, faceTo, fn, follow, go, hold, inSpot, run, until } from './steps.js';
 import { boxToday, now } from './time.js';
 import { walkX, walkY } from './stage.js';
-import { clamp, pick, rnd } from './util.js';
+import { pick, rnd } from './util.js';
 import { after, cat, mouse, say, world } from './world.js';
 /* ───── 둘이 함께 ───── */
 export const mouseFree = () => !mouse.hidden && !mouse.peek && mouse.state !== 'flee' && !world.manduk;

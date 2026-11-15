@@ -1,7 +1,5 @@
 /* 무대: 캔버스, 화면 맞추기, 카메라, 깊이(앞뒤) 비율 */
-import { P } from './objects.js';
-import { shelfUI } from './shelf.js';
-import { HOLE } from './sprites.js';
+import { HOLE, P } from './objects.js';
 import { RM, clamp } from './util.js';
 import { cat, mouse, world } from './world.js';
 /* ───────── 무대 ───────── */
@@ -117,8 +115,11 @@ export function fit() {
 }
 export const cam = { x: 0 };
 // 큰 일: 둘러보던 손님도 바로 데려가는 곳 (tasks/room-pan.md). 없으면 null
+// 책장이 펼쳐져 있나: shelf.js가 initShelf에서 잇는다 (stage.js가 위층을 가져오지 않게. tasks/structure-floor-untangle.md)
+let shelfOpen = () => false;
+export const watchShelf = fn => { shelfOpen = fn; };
 function bigTarget() {
-  if (shelfUI.open || shelfUI.oddOpen || shelfUI.book) // 책장 목록·이상한 책·책 창(설명책·고양이책·설정책)이 펼쳐져 있으면 책장을 본다
+  if (shelfOpen()) // 책장 목록·이상한 책·책 창(설명책·고양이책·설정책)이 펼쳐져 있으면 책장을 본다
     return CAM.shelf;
   if (world.manduk && world.manduk.phase !== 'steps')
     return CAM.door;

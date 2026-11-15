@@ -133,7 +133,9 @@ cd ~/Documents/ChatGPT/고양시/web && python3 -m http.server
 | `halloween.js` | 할로윈(10/24 ~ 10/31 밤이 끝날 때, `calendar.js`): 호박 불빛, 창밖 박쥐, 고양이 마녀와 박쥐 수행단, 커튼 유령 그림자와 강고양이 씨 반응. 마녀·박쥐·유령은 파일 끝의 사건 물건으로 `events.js` 목록에 실린다. HALLOWEEN_PLAN.md 참고. 마녀가 나가 있나 `witchOut()` |
 | `halloween-extra.js` | 할로윈 덧붙이: 산 너머 마녀의 집(`towerEvent`, window.json `witchTower`, 낮엔 연무색·밤엔 촛불 창), 구석 거미줄(`webEvent`, objects.json `halloween.web`), 천장 거미(`spiderEvent`, `halloween.spider`). tasks/halloween-witch-tower.md · halloween-room-extras.md |
 | `i18n.js` | 말: 화면 글자 한국어·영어 표 `STR`, `tr('키')`, 언어 고르기·저장·전환(`setLang`). 새 글자는 여기 한 곳에. ENGLISH_PLAN.md 참고 |
-| `util.js` | 난수·범위·해시, localStorage, 손글씨 글꼴, 색 섞기, `$`. 장면을 읽은 뒤 할 일 `onScene(fn)`: 장면 값으로 모듈 안 숫자를 채울 때 쓴다(쳇바퀴·케이크). 모듈 맨 위에서 장면 값을 바로 쓰지 않는다(아직 안 읽었음). 가져오는 것이 없는 이 파일에 두어 모듈 순서와 상관없다 |
+| `util.js` | 난수·범위·해시, localStorage, 손글씨 글꼴, 색 섞기, `$`. 장면을 읽은 뒤 할 일 `onScene(fn)`: 장면 값으로 모듈 안 숫자를 채울 때 쓴다(쳇바퀴·케이크). 모듈 맨 위에서 장면 값을 바로 쓰지 않는다(아직 안 읽었음). 가져오는 것이 없는 이 파일에 두어 모듈 순서와 상관없다 · 화면 언어 고르기 `pickLang`(방·기지·광장·만화방 같은 규칙), 통계 `gcEvent` |
+| `query.js` | 페이지 주소의 `?` 뒤: `pageParams`, `birthdayMode`. 가져오는 것 없음 — 바닥 파일(assets·objects)이 위층(birthday.js) 없이 읽게. `birthday.js`가 다시 내보낸다 (tasks/structure-floor-untangle.md) |
+| `page-kit.js` | 페이지 도구: `el`·`place`·`fitStage`(폰은 높이 맞춤+가로 둘러보기)·`freshVisit`·`countThenGo`/`leaveOnClick`(통계 보내고 0.18초 뒤 떠남). 기지·광장·만화방과 방의 책장·약도가 같이 쓴다. 가져오는 것 없음 (tasks/subpage-shared-helpers.md) |
 | `debug.js` | 점검용으로 `window.__goyang`에 행동 함수들을 내보낸다 |
 
 ### 약속

@@ -7,6 +7,8 @@
    - 자리·숫자는 scene.json (바탕 그림 픽셀). 그림을 못 받으면 바위색 바탕 + 코드 상황판·발바닥 단추
    - 미리보기: ?night=1 / ?night=0 (밤·낮 고정), ?demo=1 (데모), ?status=파일.json (같은 사이트의 시험용 JSON) */
 import { isNight, now } from '../js/time.js';
+import { gcEvent, pickLang } from '../js/util.js';
+import { el, fitStage, freshVisit, place } from '../js/page-kit.js';
 import { makeBoard } from './board.js';
 import { makeFamily } from './family.js';
 import { makeReplay } from './replay.js';
@@ -19,55 +21,11 @@ const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const Q = new URL(location.href).searchParams;
 const FORCE_NIGHT = Q.get('night') === '1' ? true : Q.get('night') === '0' ? false : null;
 
-/* ───────── 글자 (만화방과 같은 규칙: 저장한 언어 → 브라우저 언어) ───────── */
-const LANG = (() => {
-  let saved = null;
-  try {
-    saved = JSON.parse(localStorage.getItem('goyang.lang'));
-  }
-  catch (e) { }
-  if (saved === 'ko' || saved === 'en')
-    return saved;
-  const ls = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
-  return ls.some(l => /^ko\b/i.test(l || '')) ? 'ko' : 'en';
-})();
+/* ───────── 글자 (방과 같은 규칙: 저장한 언어 → 브라우저 언어, util.js pickLang) ───────── */
+const LANG = pickLang();
 const tr = k => STR[k][LANG];
 
-/* ───────── 통계 (GoatCounter goyangsi): 기지 방문 · 상황판 눌러 넘김(방문당 한 번) ───────── */
-const gcEvent = (path, title) => {
-  let tries = 0;
-  const send = () => {
-    const gc = window.goatcounter;
-    if (gc && gc.count) {
-      try {
-        gc.count({ path, title, event: true });
-      }
-      catch (e) { }
-      return;
-    }
-    if (++tries <= 40)
-      setTimeout(send, 500);
-  };
-  send();
-};
-const freshVisit = () => {
-  const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
-  return !nav || nav.type === 'navigate';
-};
-
-/* ───────── 도우미 ───────── */
-const el = (tag, cls, text) => {
-  const n = document.createElement(tag);
-  if (cls)
-    n.className = cls;
-  if (text != null)
-    n.textContent = text;
-  return n;
-};
-const place = (n, [x, y, w, h]) => {
-  Object.assign(n.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
-  return n;
-};
+// 통계: util.js gcEvent — 기지 방문 · 상황판 눌러 넘김(방문당 한 번)
 
 /* ───────── 장면 ───────── */
 function build(cfg) {
@@ -228,16 +186,7 @@ function build(cfg) {
   setInterval(tint, 30000);
 
   /* ── 폰: 화면 높이에 맞추고 가로로 둘러보기 / 데스크톱: 전체 */
-  const fit = () => {
-    const vw = innerWidth, vh = innerHeight;
-    const wide = vw / vh >= W / H * 0.8;
-    const k = wide ? Math.min(vw / W, vh / H) : vh / H;
-    sc.style.transform = `scale(${k})`;
-    stage.style.width = Math.round(W * k) + 'px';
-    stage.style.height = Math.round(H * k) + 'px';
-    view.classList.toggle('pan', !wide);
-    return k;
-  };
+  const fit = () => fitStage(W, H, sc, stage, view);
   let scale = 1, panFrame = 0, panWait = 0;
   const stopPan = () => {
     clearTimeout(panWait);

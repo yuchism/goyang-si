@@ -10,7 +10,7 @@ import { DEPTH, ctx, walkY } from './stage.js';
 import { bub, faceTo, fn, go, hold, run } from './steps.js';
 import { now } from './time.js';
 import { gateMark, gateOk } from './gate.js';
-import { RM, clamp, lerp, rnd } from './util.js';
+import { RM, lerp, rnd } from './util.js';
 import { cat, mouse, say, world } from './world.js';
 
 // 고양이 낚시 그림의 낚싯대 끝 (프레임 픽셀, 그림 왼쪽 위 기준). 그림을 바꾸면 여기만 다시 잰다

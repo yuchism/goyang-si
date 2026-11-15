@@ -3,6 +3,7 @@
    그림: web/sheet/guest-<이름>-dance-v1.webp (tools/make_guests.py가 만든다. 칸 폭 CELL_W, 네 칸 ①②③④ = 강고양이 씨 춤과 같은 동작) */
 import { IMG, imageReady } from './assets.js';
 import { birthdayName } from './birthday.js';
+import { birthdayMode } from './query.js';
 import { PL } from './objects.js';
 import { BDAY_SONG, Snd } from './sound.js';
 import { DEPTH, ctx } from './stage.js';
@@ -46,6 +47,14 @@ const CAT_DANCE_H = 200; // 강고양이 씨 춤 그림의 키(발~모자, 깊�
 export const RARE_CHANCE = 0.1; // 평소 파티에 외계인이 끼어드는 확률 (가족 이름 파티엔 늘, BIRTHDAY_ALLSTAR_PLAN.md 9장)
 // 이 손님 그림을 받을까 (assets.js): 할로윈 손님은 할로윈 기간에만
 export const guestLoads = g => !g.halloween || isHalloween(now());
+// 받을 손님 춤 시트 {키: 경로} (main.js가 assets.js loadMeta에 넘긴다): 생일 링크로 들어왔을 때만(나중 묶음). 생일이 아닌 방문엔 안 받는다 (BIRTHDAY_GUESTS_PLAN.md 5장)
+// 할로윈 손님은 페이지를 열 때 할로윈 기간일 때만 (HOURLY_CHIME_PLAN.md 6-1)
+export function guestSheets() {
+  const out = {};
+  if (birthdayMode)
+    GUESTS.filter(guestLoads).forEach(g => out['f_guest_' + g.id] = guestSrc(g.id));
+  return out;
+}
 // 총출동 (BIRTHDAY_ALLSTAR_PLAN.md): 모든 생일 파티에 손님이 다 같이 온다(9장, 2026-11-14 — 예전 4~5명 뽑기는 없앰).
 // 가족 이름 표: 생일자 이름(띄어쓰기 뺌)이 여기 있으면 front의 주인장 손님 셋이 강고양이 씨 양옆 앞줄에 서고 외계인도 늘 온다.
 // 아니면 앞줄도 보통 손님이 채우고 외계인은 가끔(RARE_CHANCE). 자리는 장면 party.crowd.

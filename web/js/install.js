@@ -27,7 +27,12 @@ const ANDROID = /Android/i.test(UA);
 const IN_APP = /KAKAOTALK|Instagram|FBAN|FBAV|FB_IAB|FBIOS|Line\/|NAVER\(inapp|DaumApps|Twitter|Snapchat|everytimeApp|BAND\/|; wv\)/i.test(UA);
 
 let deferred = null; // 안드로이드 크롬 등이 주는 설치 신호
-export const odd = { show: !STANDALONE, gone: 0, open: false, lift: 0, sway: 0, swayV: 0, nextSwish: rnd(6, 14), spark: -1, nextSpark: rnd(4, 9), motes: [] };
+// 처음 기다림은 main.js가 rollOdd로 뽑는다 (모듈 맨 위에서 무작위를 뽑으면 모듈 읽는 순서에 따라 값이 달라진다)
+export const rollOdd = () => {
+  odd.nextSwish = rnd(6, 14);
+  odd.nextSpark = rnd(4, 9);
+};
+export const odd = { show: !STANDALONE, gone: 0, open: false, lift: 0, sway: 0, swayV: 0, nextSwish: 0, spark: -1, nextSpark: 0, motes: [] };
 
 /* ───────── 이상한 책: 자리와 모양 ─────────
    그림(256×640)의 책은 x 38~218, y 120~640. 방에서 폭 42가 되게 줄이고,

@@ -4,7 +4,7 @@ import { A, O, OBJ, S, ax, ay, has, present } from './objects.js';
 import { bub, faceTo, fn, go, hold, run } from './steps.js';
 import { inBeam, isWeekend, mandukAsleep, mandukHome, rainNow, sunbeam, wx } from './time.js';
 import { walkX, walkY } from './stage.js';
-import { clamp, pick, rnd } from './util.js';
+import { pick, rnd } from './util.js';
 import { after, cat, mouse, say, world } from './world.js';
 import { mouseCrumbB } from './fish.js';
 /* ───────── 쥐야쥐의 뇌 ───────── */

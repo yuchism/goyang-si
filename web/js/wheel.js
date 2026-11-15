@@ -12,7 +12,7 @@ import { DEPTH, W as STAGE_W, ctx } from './stage.js';
 import { SPOTS, bub, fn, go, hold, run, stepToward } from './steps.js';
 import { now } from './time.js';
 import { gateMark, gateOk } from './gate.js';
-import { RM, clamp, lerp, onScene, rnd } from './util.js';
+import { RM, lerp, onScene, rnd } from './util.js';
 import { caption, cat, mouse, say, world } from './world.js';
 
 // 쳇바퀴 그림 안의 자리 (그림 폭·높이에 대한 비율). 그림을 바꾸면 여기만 다시 잰다

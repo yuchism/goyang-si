@@ -3,7 +3,7 @@
    - tr('키', {이름: 값}): 지금 언어의 글자. 목록(배열)은 그대로 돌려준다. {name} 같은 자리는 vars로 채운다
    - HTML 글자는 data-i18n(글자), data-i18n-html(태그 포함), data-i18n-aria(접근성 라벨)로 표시해 두면 setLang이 채운다
    - 새 글자는 아래 STR 표 한 곳에만 넣는다 (책장 책 제목·설명은 objects.json의 책마다 en) */
-import { setHandFont, store } from './util.js';
+import { pickLang, setHandFont, store } from './util.js';
 export const STR = {
   /* ── 페이지 ── */
   title: { ko: '고양.시', en: 'goyang.si' },
@@ -425,13 +425,6 @@ export const STR = {
   reqLinkLabel: { ko: '생일 링크', en: 'Birthday link' },
   reqShareTitle: { ko: '강고양이 씨가 생일 파티를 준비했어요 🎂', en: 'Kitty Kang is throwing you a birthday party 🎂' },
   reqShareText: { ko: '{name}님, 생일 축하해요! 🎂', en: 'Happy birthday, {name}! 🎂' },
-};
-const pickLang = () => {
-  const saved = store.get('lang', null);
-  if (saved === 'ko' || saved === 'en')
-    return saved;
-  const ls = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || '']);
-  return ls.some(l => /^ko\b/i.test(l || '')) ? 'ko' : 'en';
 };
 export let LANG = pickLang();
 export function tr(key, vars) {

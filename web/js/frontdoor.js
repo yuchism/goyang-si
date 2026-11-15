@@ -12,6 +12,7 @@ import { Snd } from './sound.js';
 import { holidayOverride, inPeriod, isNight, now } from './time.js';
 import { RM, esc, gcEvent } from './util.js';
 import { after, caption, world } from './world.js';
+import { countThenGo } from './page-kit.js';
 
 const mapEl = document.getElementById('mapp');
 const GHOST_MS = 500; // 약도를 펼친 뒤 이 시간 안의 click은 연 손가락의 것 (폰)
@@ -150,9 +151,10 @@ export function initFrontDoor() {
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.button)
         return;
       e.preventDefault();
-      if (a.dataset.gc)
-        gcEvent(a.dataset.gc, '약도에서 가게로: ' + a.dataset.gc);
-      setTimeout(() => { location.href = a.href; }, 180);
+      countThenGo(a, () => {
+        if (a.dataset.gc)
+          gcEvent(a.dataset.gc, '약도에서 가게로: ' + a.dataset.gc);
+      });
       return;
     }
     if (e.target === mapEl || e.target.closest('.x'))

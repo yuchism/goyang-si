@@ -3,13 +3,14 @@ import { imageReady, img } from './assets.js';
 import { tObj, tr } from './i18n.js';
 import { rr } from './draw.js';
 import { O } from './objects.js';
-import { H, W, cam, ctx, cv, view } from './stage.js';
+import { H, W, cam, ctx, cv, view, watchShelf } from './stage.js';
 import { closeBook, isPageBook, noteEl, openBook, scrEl, toStage } from './ui.js';
 import { HAND, RM, esc, gcEvent, onScene } from './util.js';
 import { cat, say, world } from './world.js';
 import { oddAt, oddVisible, openOdd } from './install.js';
 import { MARKS } from './spine-marks.js';
 import { openMap } from './frontdoor.js';
+import { countThenGo } from './page-kit.js';
 /* ───────── 책장 메뉴 ─────────
   objects.json의 bookshelf.books 한 권이 메뉴 하나.
   큰 화면: 책에 올리면 살짝 빠지고 이름표, 누르면 그 책이 펼쳐진 목록.
@@ -383,6 +384,7 @@ export function closeShelf() {
 }
 // 책장 메뉴 연결
 export function initShelf() {
+  watchShelf(() => !!(shelfUI.open || shelfUI.oddOpen || shelfUI.book)); // 펼쳐져 있으면 카메라가 책장을 본다 (stage.js)
   shelfEl.addEventListener('click', e => {
     if (e.target.closest('.x')) {
       closeShelf();
@@ -392,8 +394,7 @@ export function initShelf() {
     const op = e.target.closest('a.open'), ob = op && BOOKS().find(b => b.id === shelfUI.pull);
     if (ob && ob.gc && !op.target && !(e.metaKey || e.ctrlKey || e.shiftKey || e.button)) {
       e.preventDefault();
-      gcEvent(ob.gc, '책장 책: ' + ob.gc);
-      setTimeout(() => { location.href = op.href; }, 180);
+      countThenGo(op, () => gcEvent(ob.gc, '책장 책: ' + ob.gc));
       return;
     }
     const sp = e.target.closest('.spine');

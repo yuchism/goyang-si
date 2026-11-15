@@ -8,7 +8,8 @@
    - 동작 줄이기: 깜빡임·물결·넘어가기 없이 정지, 눈·별똥별·불꽃 없음, 별은 멈춘 점
    - 미리보기(dev에서만 — ?dev=1, 또는 방 미리보기 도구를 켠 기기): ?night=1|0 (밤·낮 고정), ?t=HH:MM (그 시각으로), ?speed=60 (시계 빨리), ?probe=1, ?snow=1|0 (눈 고정), ?shoot=1 (별똥별 자주), ?fw=1|eve (불꽃 지금 · 크리스마스 크게) */
 import { advanceClock, atHour, darkness, inPeriod, isNight, nightOf, now, setSimMs, setSpeed, skyAt } from '../js/time.js';
-import { hash, store } from '../js/util.js';
+import { gcEvent, hash, pickLang, store } from '../js/util.js';
+import { el, fitStage, freshVisit } from '../js/page-kit.js';
 import { makeFw, rgba } from '../js/fw-core.js';
 
 const body = document.body;
@@ -35,46 +36,11 @@ const STR = {
   home: { ko: '고양.시 거실로', en: 'Back to the living room' },
   scene: { ko: '크리스마스 광장 풍경: 가운데 거대 트리, 왼쪽 회전목마와 붕어빵 노점, 오른쪽 스케이트장과 눈사람', en: 'Christmas plaza: a giant tree in the middle, a carousel and a fish-bread stall on the left, a skating rink and a snowman on the right' },
 };
-const LANG = (() => {
-  const saved = store.get('lang', null);
-  if (saved === 'ko' || saved === 'en')
-    return saved;
-  const ls = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
-  return ls.some(l => /^ko\b/i.test(l || '')) ? 'ko' : 'en';
-})();
+const LANG = pickLang(); // 방과 같은 규칙 (util.js)
 const tr = k => STR[k][LANG];
-
-/* ───────── 통계 (GoatCounter goyangsi): 광장 방문 ───────── */
-const gcEvent = (path, title) => {
-  let tries = 0;
-  const send = () => {
-    const gc = window.goatcounter;
-    if (gc && gc.count) {
-      try {
-        gc.count({ path, title, event: true });
-      }
-      catch (e) { }
-      return;
-    }
-    if (++tries <= 40)
-      setTimeout(send, 500);
-  };
-  send();
-};
-const freshVisit = () => {
-  const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
-  return !nav || nav.type === 'navigate';
-};
+// 통계: util.js gcEvent — 광장 방문
 
 /* ───────── 도우미 ───────── */
-const el = (tag, cls, text) => {
-  const n = document.createElement(tag);
-  if (cls)
-    n.className = cls;
-  if (text != null)
-    n.textContent = text;
-  return n;
-};
 const canvas = (cls, W, H) => {
   const c = el('canvas', cls);
   c.width = W;
@@ -538,16 +504,7 @@ function build(cfg) {
   body.append(exit);
 
   /* ── 폰: 화면 높이에 맞추고 가로로 둘러보기 / 데스크톱: 전체 (기지와 같은 방식) */
-  const fit = () => {
-    const vw = innerWidth, vh = innerHeight;
-    const wide = vw / vh >= W / H * 0.8;
-    const k = wide ? Math.min(vw / W, vh / H) : vh / H;
-    sc.style.transform = `scale(${k})`;
-    stage.style.width = Math.round(W * k) + 'px';
-    stage.style.height = Math.round(H * k) + 'px';
-    view.classList.toggle('pan', !wide);
-    return k;
-  };
+  const fit = () => fitStage(W, H, sc, stage, view);
   const center = k => (view.scrollLeft = Math.max(0, cfg.view.focus * k - view.clientWidth / 2));
   addEventListener('resize', () => center(fit()));
   body.append(view);

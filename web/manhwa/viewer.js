@@ -54,7 +54,7 @@
     }
     catch (e) { }
   };
-  // 고양.시 i18n.js pickLang과 같은 규칙
+  // 고양.시 util.js pickLang과 같은 규칙 (이 파일은 모듈이 아니라 따로 적음)
   const LANG = (() => {
     const saved = lsGet('lang', null);
     if (saved === 'ko' || saved === 'en')

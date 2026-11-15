@@ -1,14 +1,15 @@
 /* 사물: objects.json을 읽어 위치·상태·자리·소켓·깊이를 알려준다 */
 import { imageReady, img } from './assets.js';
-import { birthdayMode } from './birthday.js';
+import { birthdayMode } from './query.js';
 import { boxOpen, boxToday, holiday, isHalloween, now, pumpkinLit, season } from './time.js';
 import { cat, mouse, world } from './world.js';
-import { fishRodOut } from './fish.js';
-import { rnd, runSceneHooks } from './util.js';
+import { onScene, rnd, runSceneHooks } from './util.js';
 import { WIN } from './win.js';
 export let OBJ = [];
 export const O = {};
 export const P = {}; // P: 위치 바로가기 (objects.json에서 만들어짐)
+export const HOLE = {}; // 배경 쥐구멍 입구: 장면의 hole.mouth (cx, bottom, w, h)
+onScene(() => Object.assign(HOLE, O.hole.mouth));
 const AREAS = {}, PATHS = {}, PLACES = {};
 
 export function initObjects(data) {
@@ -49,8 +50,10 @@ const STATE = {
   laptop: () => (world.laptop || cat.typing || world.party || mouse.state === 'laptop' && !mouse.hidden) ? 'on' : 'off',
   box: () => cat.inBox ? 'occupied' : boxOpen(now()) ? 'open' : 'closed',
   pumpkin: () => pumpkinLit(now()) ? 'lit' : 'off',
-  rod: () => fishRodOut() ? 'out' : 'wall'
+  rod: () => 'wall' // 낚시하는 동안 'out' — fish.js 상태를 main.js가 objState로 잇는다
 };
+// 위층 파일이 가진 상태를 사물 상태로 잇는다 (objects.js가 위층을 가져오지 않게. tasks/structure-floor-untangle.md)
+export const objState = (id, fn) => { STATE[id] = fn; };
 // 상태가 반영된 모습 (states의 값이 기본값을 덮어씀)
 export function objView(o) {
   const st = STATE[o.id] ? STATE[o.id]() : null, ov = st && o.states && o.states[st];

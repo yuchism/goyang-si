@@ -7,8 +7,9 @@
    - 그림은 서비스 워커 시작 묶음에 넣지 않는다(sw.js 만화방 칸 — 본 것만 담김)
    - ?dev=1: 시각 옮기기 + 그날 밤 편성 */
 import { atHour, clockText, isNight, nightOf, now, setSimMs } from '../js/time.js';
-import { hash } from '../js/util.js';
-import { tr as sharedTr } from '../js/i18n.js';
+import { gcEvent as sharedGc, hash } from '../js/util.js';
+import { LANG, tr as sharedTr } from '../js/i18n.js';
+import { el, fitStage, freshVisit, leaveOnClick, place } from '../js/page-kit.js'; // place: 바탕 픽셀 자리 [x, y, w, h] → 절대 위치
 import { pawsHTML } from '../js/catbook.js';
 import { MOVE_SEC, gymAt, moving, nightPlan } from './shop-plan.js';
 
@@ -51,65 +52,16 @@ const STR = {
   dNext: { ko: '다음 바뀜', en: 'Next change' },
   exName: { ko: { treadmill: '러닝머신', dumbbell: '아령', bar: '철봉', mat: '요가 매트' }, en: { treadmill: 'Treadmill', dumbbell: 'Dumbbell', bar: 'Pull-up bar', mat: 'Yoga mat' } },
 };
-const lsGet = (k, d) => {
-  try {
-    const v = localStorage.getItem('goyang.' + k);
-    return v == null ? d : JSON.parse(v);
-  }
-  catch (e) {
-    return d;
-  }
-};
-const LANG = (() => {
-  const saved = lsGet('lang', null);
-  if (saved === 'ko' || saved === 'en')
-    return saved;
-  const ls = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
-  return ls.some(l => /^ko\b/i.test(l || '')) ? 'ko' : 'en';
-})();
+// 언어는 방과 하나 (i18n.js LANG — 저장한 언어 → 브라우저 언어)
 const L = v => v[LANG];
 const tr = key => L(STR[key]);
 
-/* ───────── 통계 (GoatCounter goyangsi, viewer.js와 같은 방식) ───────── */
-const gcEvent = (path, title) => {
-  let tries = 0;
-  const send = () => {
-    const gc = window.goatcounter;
-    if (gc && gc.count) {
-      try {
-        gc.count({ path: 'manhwa/shop/' + path, title: title || path, event: true });
-      }
-      catch (e) { }
-      return;
-    }
-    if (++tries <= 40)
-      setTimeout(send, 500);
-  };
-  send();
-};
+/* ───────── 통계 (GoatCounter goyangsi, util.js gcEvent): 경로 앞에 manhwa/shop/, 제목이 없으면 경로 ───────── */
+const gcEvent = (path, title) => sharedGc('manhwa/shop/' + path, title || path);
 // 이벤트를 보낸 뒤 조금 있다가 떠난다
-const leaveWith = (a, path, title) => a.addEventListener('click', ev => {
-  if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button)
-    return;
-  ev.preventDefault();
-  gcEvent(path, title);
-  setTimeout(() => { location.href = a.href; }, 180);
-});
-// 새로 고침·뒤로 가기는 세지 않는다
-const freshVisit = () => {
-  const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
-  return !nav || nav.type === 'navigate';
-};
+const leaveWith = (a, path, title) => leaveOnClick(a, () => gcEvent(path, title));
 
 /* ───────── 도우미 ───────── */
-const el = (tag, cls, text) => {
-  const n = document.createElement(tag);
-  if (cls)
-    n.className = cls;
-  if (text != null)
-    n.textContent = text;
-  return n;
-};
 const img = (src, cls) => {
   const im = el('img', cls);
   im.alt = '';
@@ -117,11 +69,6 @@ const img = (src, cls) => {
   im.draggable = false;
   im.src = src;
   return im;
-};
-// 바탕 픽셀 자리 [x, y, w, h] → 절대 위치
-const place = (n, [x, y, w, h]) => {
-  Object.assign(n.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
-  return n;
 };
 function makeSign(tag, cls, spec, text) {
   const n = place(el(tag, 'painted-sign ' + cls), spec.rect);
@@ -506,16 +453,7 @@ function build(cfg) {
   };
 
   /* ── 폰: 화면 높이에 맞추고 가로로 둘러보기 / 데스크톱: 전체가 보이게 */
-  const fit = () => {
-    const vw = innerWidth, vh = innerHeight;
-    const wide = vw / vh >= W / H * 0.8;
-    const k = wide ? Math.min(vw / W, vh / H) : vh / H;
-    sc.style.transform = `scale(${k})`;
-    stage.style.width = Math.round(W * k) + 'px';
-    stage.style.height = Math.round(H * k) + 'px';
-    view.classList.toggle('pan', !wide);
-    return k;
-  };
+  const fit = () => fitStage(W, H, sc, stage, view);
   let scale = 1, panFrame = 0;
   const stopPan = () => {
     cancelAnimationFrame(panFrame);

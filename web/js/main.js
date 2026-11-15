@@ -1,21 +1,23 @@
 /* 시작점: 하루 일정, 매 프레임 진행(frame)과 그리기(render), 처음 시작 */
-import { play } from './anim.js';
+import { play, setClipFn } from './anim.js';
 import { drawPumpkinGlow, pumpkinNight } from './halloween.js';
 import { eventsRoom, eventsShadow, eventsTick, trafficLine } from './events.js';
 import { ROOM, SRC, imageReady, img, loadImages, loadMeta, onWarm } from './assets.js';
 import { CAKE, bannerText, birthdayMode, danceCell, drawCakeGlow, drawDisco, drawDiscoLights, drawPartyLights, drawPartyMouse, tickParty } from './birthday.js';
-import { drawPuffs, guestLayers } from './guests.js';
+import { drawPuffs, guestLayers, guestSheets } from './guests.js';
 import { chimeLayers, chimeTick, drawChimeGlow, drawChimePuffs } from './chime.js';
 import { calmDown, catBrain, cupTick, sunbeamTick, welcomeB } from './cat.js';
 import { cameBack, doorTick, initFrontDoor, ringDoor } from './frontdoor.js';
 import { exposeDebug } from './debug.js';
+import { fishRodOut } from './fish.js';
+import { tvWatchFrame } from './tv-cat.js';
 import { ERRORS, guard, guardDraw, reportError } from './guard.js';
 import { resetActor, resetDuet } from './recover.js';
 import { duetTick } from './duet.js';
 import { drawCup, drawObj, drawProp, drawRoom, drawSunbeam } from './draw.js';
 import { drawManduk, startVisit, updateManduk, visitTick } from './manduk.js';
 import { mouseTick, resetMouseTimer } from './mouse.js';
-import { O, OBJ, P, S, depthOf, objView, present } from './objects.js';
+import { O, OBJ, P, S, depthOf, objState, objView, present } from './objects.js';
 import { loadScene } from './scene.js';
 import { drawBookTag, drawBooks, initShelf, shelfUI } from './shelf.js';
 import { Snd } from './sound.js';
@@ -27,7 +29,7 @@ import { advanceClock, calDay, sceneryAt, sunTimes, yearPos, inWindow, lampShoul
 import { drawJumpFade, initJump, jumpTick, newDay, settleCat } from './jump.js';
 import { frameTick } from './frame.js';
 import { plays, playsLayers, playsLight, playsOverlay, playsTick } from './plays.js';
-import { fishViewTick, initFishView } from './fishview.js'; // 어항 크게 보기 (tasks/fishbowl-view-1.md)
+import { fishViewTick, initFishView, rollFishView } from './fishview.js'; // 어항 크게 보기 (tasks/fishbowl-view-1.md)
 import { loadPrograms, tvOn, tvTick } from './tv.js';
 import { loadWindows } from './weather.js';
 import { tvBig } from './tv-guide.js';
@@ -35,9 +37,9 @@ import { drawTVNight, drawTvBuf, tvBuf } from './tv-screen.js';
 import { devOpen, initUI, toStage } from './ui.js';
 import { pick, rnd } from './util.js';
 import { LANG, applyDom, tr } from './i18n.js';
-import { drawOddBook, drawOddGlow, initInstall } from './install.js';
+import { drawOddBook, drawOddGlow, initInstall, rollOdd } from './install.js';
 import { baseReturn, drawKey, drawKeyTag, initSortie, readBaseBack } from './sortie.js'; // 쥐구멍 기지 출동·귀환 (tasks/base-3-sortie.md)
-import { after, caption, cat, mouse, say, tickTimers, world } from './world.js';
+import { after, caption, cat, mouse, tickTimers, world } from './world.js';
 /* ───────── 상태 표시 ───────── */
 // 시간 단위 → 'H:MM' (미리보기 한 줄)
 const clockOf = h => {
@@ -95,6 +97,9 @@ const EVENT = {
 };
 /* ───────── 메인 루프 ───────── */
 let ambT = 0;
+// 맨 처음 무작위는 이 순서 그대로: 이상한 책 → 어항 보기 → 쥐야쥐 (예전엔 앞의 둘을 그 파일 맨 위에서 뽑았다. 모듈 읽는 순서와 상관없게 여기서. 화면 점검 재현)
+rollOdd();
+rollFishView();
 resetMouseTimer(); // 쥐야쥐 첫 등장 확인까지 (mouse.js). 예전 자리 그대로 여기서 정한다
 // 오류 칸막이 (STABILITY_PLAN.md 3장, guard.js): 어떤 칸에서 오류가 나도 다음 장면은 돈다. 부르는 순서·횟수는 그대로
 const cut = (name, fn, recover) => guard(name, fn, recover);
@@ -315,6 +320,9 @@ function boom() {
 if (devErrs)
   document.getElementById('dBoom').onclick = boom;
 /* ───────── 시작 ───────── */
+// 바닥 파일(objects·anim)이 위층 상태를 보게 잇는다 (tasks/structure-floor-untangle.md)
+objState('rod', () => fishRodOut() ? 'out' : 'wall'); // 낚시하는 동안 벽의 낚싯대를 숨긴다
+setClipFn('tvwatch', () => tvWatchFrame()); // 스포츠처럼 고개 따라가기 (tv-cat.js)
 applyDom();
 bannerText();
 initShelf();
@@ -326,14 +334,14 @@ exposeDebug();
 // 장면(사물 목록)과 그림 정보를 읽은 뒤 그림을 불러오고 시작
 // 모두 끝난 뒤에 판단한다 (STABILITY_PLAN.md 6장). 장면·그림 목록(meta.json)이 없으면 방을 열 수 없으니 안내를 띄운다.
 // TV 표·창밖 불빛(loadPrograms·loadWindows)은 스스로 실패를 삼키고, 없어도 방은 연다
-Promise.allSettled([loadScene(), loadMeta(), loadPrograms(), loadWindows()]).then(([scene, meta]) => {
+Promise.allSettled([loadScene(), loadMeta(guestSheets), loadPrograms(), loadWindows()]).then(([scene, meta]) => {
   const bad = [['장면', scene], ['그림 목록(meta.json)', meta]].filter(([, r]) => r.status === 'rejected');
   if (bad.length) {
     bad.forEach(([what, r]) => console.error(`고양.시를 여는 데 필요한 ${what}을 읽지 못했어요`, r.reason));
     startFailed();
     return;
   }
-  loadImages();
+  loadImages(start);
 });
 export function start() {
   try {

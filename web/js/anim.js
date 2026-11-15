@@ -1,5 +1,4 @@
 /* 동작 그림: 자세 전환, 동작 클립(play), 지금 보여줄 프레임 고르기 */
-import { tvWatchFrame } from './tv-cat.js';
 import { RM } from './util.js';
 import { world } from './world.js';
 /* ───────── 애니메이션 목록 ─────────
@@ -27,6 +26,8 @@ function seqFrame(name, t) {
 }
 // 동작 클립: 프레임 순서, 초당 장수, 반복 여부, 기본 자세
 const rng = (k, n) => Array.from({ length: n }, (_, i) => k + '_' + (i + 1));
+// 위층 파일이 프레임을 고르는 동작: fn(배우, 초) → 프레임 이름 (anim.js가 위층을 가져오지 않게. tasks/structure-floor-untangle.md)
+export const setClipFn = (name, fn) => { CLIP[name].fn = fn; };
 const CLIP = {
   run: { f: rng('run', 6), fps: 11, loop: 1 },
   paw: { f: rng('paw', 6), fps: 7, base: 'stand' },
@@ -44,7 +45,7 @@ const CLIP = {
   hatOn: { f: ['bday_hat_on_1', 'bday_hat_on_2', 'bday_hat_on_2'], fps: 3, base: 'stand' },
   tada: { f: ['bday_tada'], fps: 0.55, base: 'stand' }, bow: { f: ['bday_bow'], fps: 0.55, base: 'stand' },
   hatloaf: { f: ['bday_hat_loaf'], fps: 0.2, loop: 1, base: 'loaf' },
-  tvwatch: { f: ['tv_watch_back_1of2'], fps: 1, loop: 1, base: 'stand', fn: () => tvWatchFrame() },
+  tvwatch: { f: ['tv_watch_back_1of2'], fps: 1, loop: 1, base: 'stand' }, // 프레임 고르기 fn은 main.js가 tv-cat.js tvWatchFrame으로 잇는다 (setClipFn)
   tvtop: { f: ['tv_top_sleep_1of2', 'tv_top_sleep_2of2'], fps: 0.32, loop: 1, base: 'loaf' },
   tvpeek: { f: ['tv_behind_peek_1of2', 'tv_behind_peek_1of2', 'tv_behind_peek_2of2'], fps: 0.9, loop: 1, base: 'stand' },
   // 레이저 놀이 (laser.js). LASER_SPRITE_PLAN.md

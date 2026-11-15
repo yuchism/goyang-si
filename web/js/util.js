@@ -86,6 +86,14 @@ export function gcEvent(path, title) {
   };
   send();
 }
+// 화면 언어 고르기: 저장한 언어(goyang.lang) → 브라우저 언어. 방(i18n.js)·기지·광장·만화방이 같이 쓴다 (만화 뷰어 viewer.js는 의존성 없이 같은 규칙을 따로 적음)
+export const pickLang = () => {
+  const saved = store.get('lang', null);
+  if (saved === 'ko' || saved === 'en')
+    return saved;
+  const ls = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || '']);
+  return ls.some(l => /^ko\b/i.test(l || '')) ? 'ko' : 'en';
+};
 // 글자 수 자르기: 이모지가 반으로 잘리지 않게 코드 포인트 단위로
 export const cutChars = (s, n) => Array.from(String(s || '')).slice(0, n).join('');
 // 장면을 읽은 뒤 할 일 (장면 값으로 모듈 안 숫자를 채울 때). 모듈이 서로 부르는 순서와 상관없게 여기(가져오는 것 없음)에 둔다

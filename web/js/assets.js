@@ -6,9 +6,7 @@
    처음 열 때 (LOAD_PLAN.md): 그림을 두 묶음으로 나눈다. 시작 묶음(방이 열린 순간 보일 수 있는 것)만 기다렸다가 방을 열고,
    나머지(나중 묶음)는 열자마자 이어서 전부 받는다(오프라인에서도 다 있게). 다 받으면 assetsWarm()이 true.
    그 전에는 나중 묶음 그림을 쓰는 행동·사건·놀이를 고르지 않는다(cat.js catBrain, events.js canStart, gate.js gateOk 등) */
-import { start } from './main.js';
-import { birthdayMode } from './birthday.js';
-import { GUESTS, guestLoads, guestSrc } from './guests.js';
+import { birthdayMode } from './query.js';
 
 export const FRAMES = {};
 export const ROOM = {};
@@ -35,7 +33,8 @@ const getJSON = url => fetch(url, { cache: 'no-cache' }).then(r => {
   return r.json();
 });
 // meta.json 세 개를 읽고 불러올 그림 목록(SRC)을 만든다
-export async function loadMeta() {
+// extra: 목록 끝에 더할 그림 {키: 경로}를 돌려주는 함수 (생일 손님 춤 시트 — main.js가 guests.js guestSheets를 넘긴다)
+export async function loadMeta(extra) {
   const [f, r, tv] = await Promise.all([getJSON('f/meta.json'), getJSON('r/meta.json'), getJSON('r/tv/meta.json')]);
   Object.assign(FRAMES, f);
   Object.assign(ROOM, r);
@@ -45,8 +44,8 @@ export async function loadMeta() {
   const tvFiles = [tv.body.file, ...Object.values(tv.baseScreens).flat()]; // 시작 묶음의 TV 그림은 본체와 기본 화면만
   tvFiles.forEach(file => SRC['r_tv/' + file.replace(/\.webp$/, '')] = 'r/tv/' + file);
   Object.assign(SRC, EXTRA_SRC);
-  if (birthdayMode) // 생일 깜짝 손님 춤 시트: 생일 링크로 들어왔을 때만 받는다(나중 묶음). 생일이 아닌 방문엔 안 받는다 (BIRTHDAY_GUESTS_PLAN.md 5장)
-    GUESTS.filter(guestLoads).forEach(g => SRC['f_guest_' + g.id] = guestSrc(g.id)); // 할로윈 손님은 페이지를 열 때 할로윈 기간일 때만 (HOURLY_CHIME_PLAN.md 6-1)
+  if (extra)
+    Object.assign(SRC, extra());
 }
 
 /* ───────── 두 묶음 (LOAD_PLAN.md 3장) ─────────
@@ -107,8 +106,8 @@ function load(k, done, low) {
   im.src = SRC[k];
   IMG[k] = im;
 }
-// 시작 묶음을 모두 읽으면(실패한 것도 포함) 시작하고, 이어서 나중 묶음을 받는다
-export function loadImages() {
+// 시작 묶음을 모두 읽으면(실패한 것도 포함) 시작하고(start: main.js가 넘긴다), 이어서 나중 묶음을 받는다
+export function loadImages(start) {
   const names = Object.keys(SRC), first = names.filter(inStartSet), later = names.filter(k => !inStartSet(k));
   laterLeft = later.length; // 처음부터 lazyPending()에 센다 (점검 도구가 다 받을 때까지 기다리게)
   const loadLater = () => {

@@ -8,7 +8,7 @@ import { canStart, eventsApt, eventsSky, eventsSkyBack } from './events.js';
 import { assetsWarm, imageReady, img } from './assets.js';
 import { aptRect, sceneryPlates } from './scenery.js';
 import { drawPetals } from './birthday.js';
-import { A, P } from './objects.js';
+import { A } from './objects.js';
 import { ctx } from './stage.js';
 import { fn, hold, run, until } from './steps.js';
 import { MOON_SOUTH, butterflyTime, darkness, moonLift, sceneryAt, sunLift, holiday, isNight, momentNow, moonPhase, nightOf, rainNow, season, skyAt, sunUp, twilightGlow } from './time.js';

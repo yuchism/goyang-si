@@ -2,18 +2,18 @@
    깜짝 손님은 guests.js (BIRTHDAY_GUESTS_PLAN.md) */
 import { play } from './anim.js';
 import { FRAMES, IMG, imageReady, img } from './assets.js';
-import { A, O, PL, S, depthOf, objView, socketOf } from './objects.js';
+import { A, HOLE, O, PL, S, depthOf, objView, socketOf } from './objects.js';
 import { BDAY_SONG, Snd } from './sound.js';
 import { guestsCue, guestsLeave, guestsStart, guestsTick } from './guests.js';
 import { fireworksBirthday } from './fireworks.js';
-import { HOLE } from './sprites.js';
 import { H, W, ctx, redrawFront } from './stage.js';
 import { bub, dance, fn, go, hold, run } from './steps.js';
 import { $, INK, RM, clamp, cutChars, ease, gcEvent, hash, onScene, pick, rnd } from './util.js';
 import { tr } from './i18n.js';
 import { cat, mouse, say, world } from './world.js';
+import { birthdayMode, pageParams } from './query.js';
+export { birthdayMode, pageParams }; // 출처는 query.js. 다른 파일은 여기서 가져와도 같다
 export const DANCE_CELLS = [[54, 553], [599, 1085], [1098, 1591], [1710, 2122]]; // 춤 시트 4장의 가로 범위(px)
-export const pageParams = new URLSearchParams(location.search), birthdayMode = pageParams.has('birthday');
 export const birthdayName = cutChars((pageParams.get('birthday') || '').trim(), 24).trim();
 if (birthdayMode) {
   const banner = document.getElementById('birthday');

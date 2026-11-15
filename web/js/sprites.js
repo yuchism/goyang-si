@@ -3,10 +3,10 @@ import { catFrame, mouseFrame } from './anim.js';
 import { FRAMES, FSC, IMG, MSC, imageReady, img } from './assets.js';
 import { DANCE_CELLS, danceCell } from './birthday.js';
 import { inked, rr } from './draw.js';
-import { O, P } from './objects.js';
+import { HOLE, P } from './objects.js';
 import { DEPTH, H, W, cam, ctx, view } from './stage.js';
 import { actorLift, hasShadow } from './steps.js';
-import { HAND, INK, RM, clamp, onScene } from './util.js';
+import { HAND, INK, RM, clamp } from './util.js';
 import { cat, world } from './world.js';
 import { isHalloween, now } from './time.js';
 // 나중 묶음을 다 받기 전에 아직 없는 프레임이 불리면 (LOAD_PLAN.md 4-3): 그 배우가 마지막으로 실제로 그린 프레임을 그 자리에 그린다.
@@ -67,8 +67,6 @@ function drawCat(a) {
     drawFrame(fr, a.x, a.y - lift, a.face, sc, br, a);
 }
 // 빼꼼: 그림 속 구멍을 배경의 쥐구멍에 맞추고, 쥐구멍 모양으로 잘라서 그린다
-export const HOLE = {}; // 배경 쥐구멍 입구: 장면의 hole.mouth (cx, bottom, w, h)
-onScene(() => Object.assign(HOLE, O.hole.mouth));
 export const PEEK_HOLE = { x0: 62, x1: 157, bottom: 93 }; // 빼꼼 그림 안의 구멍 (그림 기준)
 function drawPeek() {
   const im = IMG.f_mouse_peek_1;

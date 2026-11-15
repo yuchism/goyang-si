@@ -10,7 +10,7 @@ import { DEPTH, ctx, walkX, walkY } from './stage.js';
 import { bub, fn, go, hold, routeTo, run, stepToward } from './steps.js';
 import { now } from './time.js';
 import { gateMark, gateOk } from './gate.js';
-import { RM, clamp, rnd } from './util.js';
+import { RM, rnd } from './util.js';
 import { after, cat, mouse, say, world } from './world.js';
 
 const R = 22; // 방에서 실뭉치 반지름

@@ -7,7 +7,7 @@
    이 파일은 덩어리 밖 모듈만 가져온다(구조 검사). 방 쪽 도구는 main.js가 넣어 준다(initFishView) */
 import { tr } from './i18n.js';
 import { calDay, isNight, now } from './time.js';
-import { RM, clamp, esc, gcEvent, hash, lerp, rnd } from './util.js';
+import { RM, clamp, gcEvent, hash, lerp, rnd } from './util.js';
 import { cat, world } from './world.js';
 
 let D = null; // { O, ROOM, img, imageReady, fish } — fish: plays.js의 어항 놀이 물건 (debug.fishState)
@@ -33,7 +33,12 @@ const SWIM_MAX = 260; // 화면에 그리는 금붕생이가 따라가는 최대
 const REFLECT = { a: 0.55, tint: 'rgba(140,200,244,.38)', y: -30, wob: 8 }; // 비침: 불투명도·물빛·위치·일렁임 (사람 검수에서 조정)
 
 /* ───── 상태 ───── */
-const S = { open: false, openAt: 0, t: 0, dx: null, dy: null, vx: 0, sleepK: 0, visit: null, visitT: rnd(12, 25), visitK: 0, ref: null, refK: 0, blinkT: 2, blink: 0, pawT: rnd(15, 30), paw: 0, zz: [] };
+// 처음 기다림은 main.js가 뽑는다 (rollFishView — 모듈 읽는 순서와 상관없게)
+export const rollFishView = () => {
+  S.visitT = rnd(12, 25);
+  S.pawT = rnd(15, 30);
+};
+const S = { open: false, openAt: 0, t: 0, dx: null, dy: null, vx: 0, sleepK: 0, visit: null, visitT: 0, visitK: 0, ref: null, refK: 0, blinkT: 2, blink: 0, pawT: 0, paw: 0, zz: [] };
 let cv = null, cx = null, side = 0;
 const tinted = {}; // 비침 그림에 물빛을 입힌 캔버스 (그림마다 한 번)
 
