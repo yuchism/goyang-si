@@ -2,7 +2,7 @@
 import { play } from './anim.js';
 import { drawPumpkinGlow, pumpkinNight } from './halloween.js';
 import { eventsRoom, eventsShadow, eventsTick, trafficLine } from './events.js';
-import { SRC, loadImages, loadMeta, onWarm } from './assets.js';
+import { ROOM, SRC, imageReady, img, loadImages, loadMeta, onWarm } from './assets.js';
 import { CAKE, bannerText, birthdayMode, danceCell, drawCakeGlow, drawDisco, drawDiscoLights, drawPartyLights, drawPartyMouse, tickParty } from './birthday.js';
 import { drawPuffs, guestLayers } from './guests.js';
 import { chimeLayers, chimeTick, drawChimeGlow, drawChimePuffs } from './chime.js';
@@ -26,7 +26,8 @@ import { bub, fn, go, hold, ownLayer, run, tickActor } from './steps.js';
 import { advanceClock, calDay, sceneryAt, sunTimes, yearPos, inWindow, lampShouldBeOn, mandukAsleep, mandukHome, markClock, moonName, moonPhase, now, passedEvents, rainNow, resetClock, routineOf, season, snowing, speed, timeInfo } from './time.js';
 import { drawJumpFade, initJump, jumpTick, newDay, settleCat } from './jump.js';
 import { frameTick } from './frame.js';
-import { playsLayers, playsLight, playsOverlay, playsTick } from './plays.js';
+import { plays, playsLayers, playsLight, playsOverlay, playsTick } from './plays.js';
+import { fishViewTick, initFishView } from './fishview.js'; // 어항 크게 보기 (tasks/fishbowl-view-1.md)
 import { loadPrograms, tvOn, tvTick } from './tv.js';
 import { loadWindows } from './weather.js';
 import { tvBig } from './tv-guide.js';
@@ -167,6 +168,7 @@ function step(tNow) {
   }
   cut('짜증 회복', () => calmDown(real)); // 건드림 짜증 회복
   playsTick(dt, real); // 놀이: 레이저·어항·실뭉치·쳇바퀴 (plays.js, 놀이마다 칸막이)
+  cut('어항 크게 보기', () => fishViewTick(real)); // 열려 있을 때만 그린다 (fishview.js)
   render(d, real);
   cut('상태 줄', () => statusLine(d));
 }
@@ -343,6 +345,7 @@ export function start() {
     if (!birthdayMode) // 좁은 화면: 문에서 강고양이 씨까지 스르륵 (만화방에서 돌아올 때도 문으로 들어오니 같다). 생일 링크는 파티 카메라가 먼저 (tasks/room-pan.md)
       camIntro();
     initSortie({ O, ctx, cv, cam, view, W: () => W, H: () => H, birthdayMode: () => birthdayMode, shelfUI, toStage, lang: () => LANG });
+    initFishView({ O, ROOM, img, imageReady, fish: plays().find(p => p.id === 'fish') });
     if (readBaseBack()) // 쥐구멍 기지에서 돌아옴: 어둠에서 스르륵 (sortie.js)
       baseReturn();
     else if (cameBack()) // 만화방에서 돌아옴: 방이 뜬 뒤 딸랑 + 문 + 강고양이 씨 반응 (frontdoor.js, cat.js)

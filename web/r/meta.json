@@ -139,5 +139,6 @@
   "cat_glass_blink": [1536, 1536],
   "cat_glass_look": [1536, 1536],
   "cat_glass_nose": [1536, 1536],
-  "cat_glass_paw": [1536, 1536]
+  "cat_glass_paw": [1536, 1536],
+  "fbv_boong": [256, 148]
 }

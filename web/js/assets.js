@@ -57,8 +57,8 @@ export async function loadMeta() {
    - 생일 그림(춤 시트·케이크·cat_bday_*·mouse_bday_*): 생일 링크로 들어왔을 때만 시작 묶음 (파티를 누르면 바로 나와야 하므로)
    - 생일 깜짝 손님 시트(f_guest_*): 생일 링크로 들어왔을 때만 받고, 나중 묶음 */
 const START_CAT = /^(loaf|sleep|sit|roll|belly|bsleep|groom|window|startle|sulk|run|lookup)_\d$|^(stand|stretch|yawn)$|^walk_(contact|pass_after)_/;
-// 방 그림 중 나중 묶음: 하늘·이벤트(선풍기·창밖 새 빼고), 액자 사진, 아파트 창 마스크, 어항 물고기의 다른 자세·붕어빵·낚싯대, 실뭉치, 쳇바퀴
-const LATER_ROOM = /^fx\/(?!fan_|bird_)|^frame_family_|_mask$|^fish_(?!swim_)|^(boong|rod|yarn|yarn_2|wheel_back|wheel_front)$/;
+// 방 그림 중 나중 묶음: 하늘·이벤트(선풍기·창밖 새 빼고), 액자 사진, 아파트 창 마스크, 어항 물고기의 다른 자세·붕어빵·낚싯대, 어항 크게 보기(fbv_·상자·살림·비침), 실뭉치, 쳇바퀴
+const LATER_ROOM = /^fx\/(?!fan_|bird_)|^frame_family_|_mask$|^fish_(?!swim_)|^(fbv_|chest_|home_|cat_glass_)|^(boong|rod|yarn|yarn_2|wheel_back|wheel_front)$/;
 const BDAY = /^f_(cat|mouse)_bday_|^f_birthday_dance$|^r_birthday_cake$/;
 export function inStartSet(k) {
   if (k.startsWith('f_guest_')) // 손님은 춤이 시작된 뒤에야 나오므로 나중 묶음으로 (그때까지 못 받은 손님은 그 파티에 안 나온다)

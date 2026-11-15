@@ -8,6 +8,7 @@ import { O, OBJ, P, objView, present, zOf } from './objects.js';
 import { eventsDev } from './events.js';
 import { bookAt, closeShelf, onShelf, openShelf, shelfUI } from './shelf.js';
 import { sortieTap } from './sortie.js';
+import { fishViewTap } from './fishview.js';
 import { Snd } from './sound.js';
 import { DEPTH, H, W, cam, camAuto, canLook, cv, fit, lookBy, lookDragPx, lookRelease, lookStart, lookTouch, view } from './stage.js';
 import { boxToday, holidayOverride, mandukAsleep, mandukHome, now, rainNow, resetSim, seasonOverride, setOverride, setSimMs, setSpeed } from './time.js';
@@ -227,7 +228,7 @@ function tapAt(x, y, wasMap) {
     petCat();
     return;
   }
-  if (playsPress(x, y, 'after')) // 어항처럼 코드로 그리는 놀이 물건 (아래 일반 판정 대신)
+  if (fishViewTap(x, y) || playsPress(x, y, 'after')) // 어항은 크게 보기(fishview.js, 그림이 없으면 뻐끔만), 코드로 그리는 놀이 물건 (아래 일반 판정 대신)
     return;
   if (oddAt(x, y)) {
     openOdd();
