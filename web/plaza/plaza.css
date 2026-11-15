@@ -1,0 +1,39 @@
+/* 크리스마스 광장 (tasks/xmas-plaza-code.md, plaza.js). 장면은 그림 픽셀 크기(.pc)로 그리고 화면에 맞게 통째로 줄인다.
+   폰(세로)은 높이에 맞추고 가로로 둘러보기, 데스크톱은 전체가 보이게(남는 곳은 밤하늘색) — 기지(base.css)와 같은 방식 */
+:root {
+  --bg: #0d1530;
+  --ink: #f6eed6;
+  --font-hand: "Gaegu", "Nanum Pen Script", "Apple SD Gothic Neo", cursive;
+  --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  color-scheme: dark;
+}
+/* 삼성 인터넷 다크 모드가 다시 칠하지 않게 같은 색을 다크 질의 안에도 (base.css와 같은 까닭) */
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0d1530; --ink: #f6eed6; color-scheme: dark; }
+}
+html[lang="en"] { --font-hand: "Patrick Hand", "Gaegu", cursive; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body.plaza { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-highlight-color: transparent; }
+
+.pv { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.pv.pan { justify-content: flex-start; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.pv.pan::-webkit-scrollbar { display: none; }
+.ps { position: relative; flex: none; overflow: hidden; }
+.pc { position: absolute; left: 0; top: 0; transform-origin: 0 0; overflow: hidden; user-select: none; -webkit-user-select: none; }
+.pc > * { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+.pc img { display: block; }
+/* 겹: 하늘 → 불꽃 → 낮 그림 → 밤 그림(섞기 opacity, plaza.js) → 반짝임 */
+.pic.night { opacity: 0; }
+.pc.nopic .pic { display: none; }
+
+/* 시험 캐릭터 (?probe=1) */
+.pc > .probe { width: auto; height: auto; }
+.pc > .probe-tag { width: auto; height: auto; transform: translateX(-50%); padding: 0 6px; border-radius: 6px; background: rgba(13, 21, 48, .8); color: #fff; font: 700 16px/1.4 var(--font-body); white-space: nowrap; }
+
+/* 나가기: 거실로 */
+.exit { position: fixed; z-index: 10; left: calc(10px + env(safe-area-inset-left)); top: calc(10px + env(safe-area-inset-top)); padding: 6px 14px; border-radius: 999px; background: rgba(13, 21, 48, .72); color: var(--ink); font: 700 18px/1.3 var(--font-hand); text-decoration: none; }
+.exit:hover, .exit:focus-visible { background: rgba(13, 21, 48, .92); outline: 2px solid #ffe27a; outline-offset: 2px; }
+
+.msg { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-size: 40px; }
+.btn { font: 700 20px/1 var(--font-hand); color: var(--ink); border: 2px solid var(--ink); border-radius: 8px; padding: 10px 16px; text-decoration: none; }

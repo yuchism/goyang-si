@@ -609,7 +609,7 @@ export function skyAt(d) {
   }
   return ['#0d1530', '#1b2546'];
 }
-export function darkness(d) {
+export function darkness(d, dry = false) {
   const [r, s] = sunTimes(d), h = hourOf(d);
   let k;
   if (h < r - 0.5 || h > s + 1)
@@ -620,9 +620,9 @@ export function darkness(d) {
     k = lerp(0, 0.62, clamp((h - (s - 0.8)) / 1.8, 0, 1));
   else
     k = 0;
-  if (rainNow(d))
+  if (!dry && rainNow(d))
     k = Math.max(k, 0.18);
-  return k;
+  return dry ? k / 0.62 : k; // dry: 비 빼고 0(낮)~1(밤) — 광장 낮·밤 그림 섞기 (XMAS_PLAZA_PLAN.md 3-2)
 }
 /* ───────── 달 모양 (MOON_PLAN.md) ───────── */
 // 기준 삭(새 달) 2000-01-06 18:14 UTC, 삭망월 29.530588853일. 오차 반나절 안팎
