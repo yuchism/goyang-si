@@ -307,13 +307,14 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
       this.prepRec('song', { birthday: BDAY_SONG.file });
   },
   // 정각 종: 소리가 켜져 있으면 plan(chimePlan)대로 울리고 { t0: 시작한 오디오 시각, stop() }. 꺼져 있으면 false. 멀리서 들리게 고음을 깎는다
-  chime(plan, quiet) {
+  // k: 크기 배율 (방 1. 크리스마스 광장은 더 멀게, XMAS_PLAZA_PLAN.md 3-6)
+  chime(plan, quiet, k = 1) {
     if (!this.on || !this.ac)
       return false;
     const ac = this.ac, t0 = ac.currentTime + 0.05, c = CHIME, out = ac.createGain(), lp = ac.createBiquadFilter();
     lp.type = 'lowpass';
     lp.frequency.value = c.far;
-    out.gain.value = quiet ? c.volQuiet : c.vol;
+    out.gain.value = (quiet ? c.volQuiet : c.vol) * k;
     lp.connect(out);
     out.connect(this.master);
     const bell = (t, m, ring, v) => { // 종 배음 몇 개 + 긴 여운
@@ -339,7 +340,7 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
         rec = ac.createGain();
         fl.type = 'lowpass';
         fl.frequency.value = c.fileFar;
-        rec.gain.value = (quiet ? c.volQuiet : c.vol) * c.fileVol;
+        rec.gain.value = (quiet ? c.volQuiet : c.vol) * c.fileVol * k;
         rec.connect(fl);
         fl.connect(this.master);
       }

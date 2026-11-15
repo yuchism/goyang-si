@@ -6,11 +6,12 @@
    - 하늘 별·눈 일정·별똥별(플랜 3-4, tasks/xmas-plaza-sky.md): 눈은 날짜로 정한 칸(누구에게나 같음)마다 오거나 그치고, 그친 밤엔 하늘 별이 반짝, 가끔 별똥별. 12/24·25 밤은 늘 눈
    - 불꽃(플랜 3-3, 「광장 불꽃」): 그날 밤 첫 방문에 몇 분, 12/24·25 밤은 크게(별·트리 모양). 방 불꽃과 같은 그리기(js/fw-core.js), 하늘 겹과 그림 사이
    - 동작 줄이기: 깜빡임·물결·넘어가기 없이 정지, 눈·별똥별·불꽃 없음, 별은 멈춘 점
-   - 미리보기(dev에서만 — ?dev=1, 또는 방 미리보기 도구를 켠 기기): ?night=1|0 (밤·낮 고정), ?t=HH:MM (그 시각으로), ?speed=60 (시계 빨리), ?probe=1, ?snow=1|0 (눈 고정), ?shoot=1 (별똥별 자주), ?fw=1|eve (불꽃 지금 · 크리스마스 크게) */
-import { advanceClock, atHour, darkness, inPeriod, isNight, nightOf, now, setSimMs, setSpeed, skyAt } from '../js/time.js';
+   - 미리보기(dev에서만 — ?dev=1, 또는 방 미리보기 도구를 켠 기기): ?night=1|0 (밤·낮 고정), ?t=HH:MM (그 시각으로), ?speed=60 (시계 빨리), ?probe=1, ?snow=1|0 (눈 고정), ?shoot=1 (별똥별 자주), ?fw=1|eve (불꽃 지금 · 크리스마스 크게), ?chime=1 (첫 탭 뒤 정각 종 한 번) */
+import { advanceClock, atHour, darkness, inPeriod, isNight, nightDark, nightOf, now, setSimMs, setSpeed, skyAt, strikesOf } from '../js/time.js';
 import { gcEvent, hash, pickLang, store } from '../js/util.js';
 import { el, fitStage, freshVisit } from '../js/page-kit.js';
 import { makeFw, rgba } from '../js/fw-core.js';
+import { CHIME, Snd, chimePlan } from '../js/sound.js';
 
 const body = document.body;
 const HOME = '/?from=plaza';
@@ -28,6 +29,7 @@ const FORCE_NIGHT = !DEV ? null : Q.get('night') === '1' ? true : Q.get('night')
 const PROBE = DEV && Q.get('probe') === '1';
 const FORCE_SNOW = !DEV ? null : Q.get('snow') === '1' ? 1 : Q.get('snow') === '0' ? 0 : null;
 const SHOOT_DEV = DEV && Q.get('shoot') === '1';
+const CHIME_DEV = DEV && Q.get('chime') === '1';
 const FW_DEV = !DEV ? null : Q.get('fw') === 'eve' ? 'xmas' : Q.get('fw') === '1' ? 'night' : null;
 
 /* ───────── 글자 (기지·만화방과 같은 규칙: 저장한 언어 → 브라우저 언어) ───────── */
@@ -463,7 +465,37 @@ function build(cfg) {
     drawSky(d, mix);
     setNight(n);
     maybeShow(d, n);
+    chimeTick(d);
   };
+
+  /* ── 정각 종 (플랜 3-6): 방과 같은 녹음 차임(sound.js CHIME·chimePlan)을 더 멀게(scene.json chime.k). 밤(불 끈 뒤 nightDark)엔 작게.
+     소리는 거실 설정(store 'sound', 기본 켬)을 따르고, 브라우저가 첫 탭 전엔 막으므로 첫 탭에 연다. 페이지를 연 뒤 처음 맞는 정각부터 */
+  let hourKey = null;
+  const chimeTick = d => {
+    const k = Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 3600000);
+    if (hourKey === null)
+      hourKey = k;
+    if (k !== hourKey) {
+      hourKey = k;
+      if (d.getMinutes() < 1)
+        Snd.chime(chimePlan(strikesOf(d)), nightDark(d), cfg.chime.k);
+    }
+  };
+  const UNLOCK = ['pointerdown', 'touchend', 'keydown'];
+  const unlock = () => {
+    if (!store.get('sound', true))
+      return;
+    if (!Snd.on)
+      Snd.toggle();
+    else if (Snd.ac && Snd.ac.state !== 'running')
+      Snd.ac.resume();
+    Snd.prepRec('chime', Object.fromEntries(Object.entries(CHIME.files).map(([k, u]) => [k, '../' + u]))); // 광장은 한 폴더 아래
+    if (CHIME_DEV)
+      setTimeout(() => Snd.chime(chimePlan(strikesOf(now())), nightDark(now()), cfg.chime.k), 1500);
+    if (Snd.ac && Snd.ac.state === 'running')
+      UNLOCK.forEach(t => document.removeEventListener(t, unlock, true));
+  };
+  UNLOCK.forEach(t => document.addEventListener(t, unlock, true));
 
   /* ── 매 장면 */
   let lastT = performance.now() / 1000, nextTick = 0;
