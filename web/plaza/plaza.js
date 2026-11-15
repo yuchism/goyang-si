@@ -12,9 +12,14 @@ const body = document.body;
 const HOME = '/?from=plaza';
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const Q = new URL(location.href).searchParams;
+// 방 미리보기 도구와 같은 기록 (ui.js): ?dev=1로 켜고 기억, ?dev=0으로 끈다
 if (Q.get('dev') === '1')
-  store.set('devTools', true); // 방 미리보기 도구와 같은 기록 (ui.js)
-const DEV = store.get('devTools', false) || Q.get('dev') === '1';
+  store.set('devTools', true);
+else if (Q.get('dev') === '0') {
+  store.set('devTools', false);
+  store.set('dev', false);
+}
+const DEV = Q.get('dev') === '1' || (Q.get('dev') !== '0' && store.get('devTools', false));
 const FORCE_NIGHT = !DEV ? null : Q.get('night') === '1' ? true : Q.get('night') === '0' ? false : null;
 const PROBE = DEV && Q.get('probe') === '1';
 
