@@ -4,10 +4,12 @@
    - 낮·밤(플랜 3-2): 방과 같은 해 기준. 그림은 방 어둠(darkness, 비 빼고)만큼 밤 그림을 겹침. 밤이 되는 순간(isNight) 점등식, 동틀 녘 거꾸로 꺼짐
    - 자리·숫자는 scene.json (그림 픽셀). 캐릭터 크기 char(charScale·depth), ?probe=1 시험 캐릭터
    - 하늘 별·눈 일정·별똥별(플랜 3-4, tasks/xmas-plaza-sky.md): 눈은 날짜로 정한 칸(누구에게나 같음)마다 오거나 그치고, 그친 밤엔 하늘 별이 반짝, 가끔 별똥별. 12/24·25 밤은 늘 눈
-   - 동작 줄이기: 깜빡임·물결·넘어가기 없이 정지, 눈·별똥별 없음, 별은 멈춘 점
-   - 미리보기(dev에서만 — ?dev=1, 또는 방 미리보기 도구를 켠 기기): ?night=1|0 (밤·낮 고정), ?t=HH:MM (그 시각으로), ?speed=60 (시계 빨리), ?probe=1, ?snow=1|0 (눈 고정), ?shoot=1 (별똥별 자주) */
-import { advanceClock, atHour, darkness, isNight, nightOf, now, setSimMs, setSpeed, skyAt } from '../js/time.js';
+   - 불꽃(플랜 3-3, 「광장 불꽃」): 그날 밤 첫 방문에 몇 분, 12/24·25 밤은 크게(별·트리 모양). 방 불꽃과 같은 그리기(js/fw-core.js), 하늘 겹과 그림 사이
+   - 동작 줄이기: 깜빡임·물결·넘어가기 없이 정지, 눈·별똥별·불꽃 없음, 별은 멈춘 점
+   - 미리보기(dev에서만 — ?dev=1, 또는 방 미리보기 도구를 켠 기기): ?night=1|0 (밤·낮 고정), ?t=HH:MM (그 시각으로), ?speed=60 (시계 빨리), ?probe=1, ?snow=1|0 (눈 고정), ?shoot=1 (별똥별 자주), ?fw=1|eve (불꽃 지금 · 크리스마스 크게) */
+import { advanceClock, atHour, darkness, inPeriod, isNight, nightOf, now, setSimMs, setSpeed, skyAt } from '../js/time.js';
 import { hash, store } from '../js/util.js';
+import { makeFw, rgba } from '../js/fw-core.js';
 
 const body = document.body;
 const HOME = '/?from=plaza';
@@ -25,6 +27,7 @@ const FORCE_NIGHT = !DEV ? null : Q.get('night') === '1' ? true : Q.get('night')
 const PROBE = DEV && Q.get('probe') === '1';
 const FORCE_SNOW = !DEV ? null : Q.get('snow') === '1' ? 1 : Q.get('snow') === '0' ? 0 : null;
 const SHOOT_DEV = DEV && Q.get('shoot') === '1';
+const FW_DEV = !DEV ? null : Q.get('fw') === 'eve' ? 'xmas' : Q.get('fw') === '1' ? 'night' : null;
 
 /* ───────── 글자 (기지·만화방과 같은 규칙: 저장한 언어 → 브라우저 언어) ───────── */
 const STR = {
@@ -159,8 +162,8 @@ function build(cfg) {
   };
   // 1-2. 하늘 별·별똥별·눈 올 때 흐림 (코드, 하늘 바로 위 — 그림이 투명한 하늘 자리에만 보인다)
   const SK = cfg.stars, stars = canvas('stars', W, SK.bottom), sg = stars.getContext('2d');
-  // 2. 불꽃 자리 (광장 불꽃 티켓에서 이 겹에 그린다)
-  const fw = el('div', 'fw');
+  // 2. 불꽃 (하늘 다음, 그림 전 — 트리·건물·전구 줄 뒤에서 터진다)
+  const fw = canvas('fw', W, H), fg = fw.getContext('2d');
   // 3. 광장 그림: 낮 위에 밤을 겹친다. 낮 그림이 없으면 밤 그림으로 대신
   const pic = (cls, src) => {
     const n = el('img', 'pic ' + cls);
@@ -412,6 +415,73 @@ function build(cfg) {
     g.globalAlpha = 1;
   };
 
+  /* ── 불꽃 (플랜 3-3): 한 공연 = 씨앗(id)으로 정해지는 한 발 한 발의 목록, 그리기는 "시작부터 지난 초"의 함수(방 불꽃과 같음).
+     숫자는 scene.json fireworks. Z 좌표(방 창 안과 같은 모양)를 k배로 키워 광장 하늘에 얹는다 */
+  const FC = cfg.fireworks, FZ = makeFw(FC);
+  let show = null;
+  const startShow = kind => {
+    const id = 'plaza:' + kind + ':' + Date.now(), big = kind === 'xmas', out = [];
+    const dur = (big ? FC.xmasMin : FC.nightMin) * 60000;
+    FZ.rhythm(id, out, 0, dur, big ? FC.xmas : FC.night);
+    FZ.escorts(id, out);
+    out.sort((p, q) => p.at - q.at);
+    show = { t0: performance.now() / 1000 + FC.delay, list: out, end: (out[out.length - 1].at / 1000) + 8 };
+  };
+  const xmasNight = nk => cfg.weather.xmasNights.some(md => nk.endsWith('-' + md));
+  const maybeShow = (d, n) => { // 그날 밤 첫 방문(기기 기록 nightOf). 점등식이 끝난 뒤
+    if (RM || show || !n || lit < 1)
+      return;
+    const nk = nightOf(d);
+    if (!nk || store.get('plazaFw', null) === nk)
+      return;
+    store.set('plazaFw', nk);
+    startShow(xmasNight(nk) ? 'xmas' : 'night');
+  };
+  const drawFw = t => {
+    if (!show)
+      return;
+    fg.setTransform(1, 0, 0, 1, 0, 0);
+    fg.clearRect(0, 0, W, H);
+    const el = t - show.t0;
+    if (el > show.end) {
+      show = null;
+      return;
+    }
+    const vis = 0.55 + 0.45 * starK;
+    fg.setTransform(FC.k, 0, 0, FC.k, FC.ox, FC.oy);
+    fg.globalCompositeOperation = 'lighter';
+    let lv = 0, col = [255, 230, 200];
+    for (const s8 of show.list) {
+      const t0 = s8.at / 1000;
+      if (t0 > el)
+        break;
+      const tau = el - t0 - s8.rise;
+      if (tau < -s8.rise || tau > s8.life + 0.2)
+        continue;
+      if (tau < 0)
+        FZ.drawRise(fg, 0, 0, s8, 1 + tau / s8.rise, vis);
+      else {
+        FZ.drawShell(fg, 0, 0, s8, tau, vis);
+        if (tau < 0.6) {
+          const v = (1 - tau / 0.6) ** 2 * (s8.big ? 1 : 0.45);
+          if (v > lv * 0.6)
+            col = s8.col;
+          lv += v;
+        }
+      }
+    }
+    // 터질 때 하늘이 은은하게 밝아짐
+    fg.setTransform(1, 0, 0, 1, 0, 0);
+    fg.globalCompositeOperation = 'source-over';
+    if (lv > 0.01) {
+      fg.globalAlpha = 1;
+      fg.fillStyle = rgba(col, Math.min(1, lv) * FC.skyFlash);
+      fg.fillRect(0, 0, W, FC.skyH);
+    }
+  };
+  if (FW_DEV && !RM)
+    startShow(FW_DEV);
+
   /* ── 시험 캐릭터 (?probe=1): 방 스프라이트 하나를 두 자리에 — 방 앞쪽 크기 × charScale × depth(y) */
   if (PROBE)
     probe(sc, cfg.char);
@@ -426,6 +496,7 @@ function build(cfg) {
     snowTo = FORCE_SNOW ?? snowAt(d, cfg.weather);
     drawSky(d, mix);
     setNight(n);
+    maybeShow(d, n);
   };
 
   /* ── 매 장면 */
@@ -446,6 +517,7 @@ function build(cfg) {
     starK += (starTo - starK) * ease;
     snowK += (snowTo - snowK) * ease;
     drawStars(t);
+    drawFw(t);
     g.clearRect(0, 0, W, H);
     drawLights(t);
     drawSteam(t);
@@ -512,7 +584,10 @@ if (DEV) {
   if (+Q.get('speed') > 0)
     setSpeed(+Q.get('speed'));
 }
-fetch('scene.json', { cache: 'no-cache' })
+// 기간 밖(달력 xmasPlaza, 「약도 연결과 기간」)이면 거실로. 미리보기(dev)에선 그대로 보여 준다
+if (!DEV && !inPeriod('xmasPlaza', now()))
+  location.replace(HOME);
+else fetch('scene.json', { cache: 'no-cache' })
   .then(r => r.ok ? r.json() : Promise.reject(r.status))
   .then(cfg => {
     build(cfg);

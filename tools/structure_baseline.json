@@ -1,7 +1,6 @@
 {
   "maxLines": 500,
   "bigFiles": {
-    "fireworks.js": 584,
     "fish.js": 576,
     "seasons.js": 573,
     "time.js": 930,
