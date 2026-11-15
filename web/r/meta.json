@@ -126,5 +126,14 @@
   "chest_open": [512, 512],
   "chest_peek": [512, 512],
   "fbv_back": [1536, 1536],
-  "fbv_front": [1536, 1536]
+  "fbv_front": [1536, 1536],
+  "fbv_fish_carry_1": [278, 165],
+  "fbv_fish_hello_1": [248, 206],
+  "fbv_fish_sigh_1": [248, 185],
+  "fbv_fish_swim_1": [256, 162],
+  "fbv_fish_swim_2": [257, 183],
+  "fish_sleep_1": [512, 512],
+  "home_bed": [512, 512],
+  "home_chair": [512, 512],
+  "home_sign": [512, 512]
 }
