@@ -1,5 +1,5 @@
 # 크리스마스 광장 그림 2: 광장 풍경화 낮
-- status: brief
+- status: implemented
 - mode: needs-review
 - office: ready
 - brief: assets/briefs/XMAS_PLAZA_ART.md 9장
@@ -32,3 +32,8 @@
 - 2026-11-15 지시서 작성(Claude, 회의). 주인 확인 뒤 `- office: ready`(2026-11-15).
 - (사람) 항목은 사람 검수에서 주인이 본다(구현 중에 묻지 않고, 검수자도 막는 이유로 쓰지 않음).
 - 2026-11-15 구현 시작(Claude): 지시서 9장대로 그림 일꾼에게 낮 그림 요청 — 밤 그림 `web/plaza/xmas-night.webp`를 본으로 빛만 낮으로, 원본 `assets/plaza/xmas-day-source-v1.png`.
+- 2026-11-15 그림 들어옴·다듬음(Claude): 원본 `assets/plaza/xmas-day-source-v1.png`(1575×998, 밤과 같은 비율 1.578, 하늘은 이미 투명) → `tools/make_plaza_day.py`로 `web/plaza/xmas-day.webp`(1561×989, 알파, `WEBP quality=86 method=6`).
+  - 크기: 알파를 곱한 채(RGBa) `LANCZOS`로 1561×989로 줄임(자르기 없음). 밤 그림과 먹색 외곽선 겹침을 ±8px로 밀어 보니 (0,0)이 가장 잘 맞음 — 옮기지 않음.
+  - 하늘: 원본 하늘도 투명했지만 윤곽이 밤과 약 0.4% 달라서 **알파는 밤 그림 것을 그대로 씀**(두 장 알파가 바이트까지 같음).
+  - 가장자리: 낮 원본 알파 250 미만인 곳(전선·지붕·트리 가장자리의 옅은 색 잔여, 밤엔 있고 낮엔 빈 곳) 약 2.4만 px는 둘레의 불투명한 낮 색으로 채운 뒤 밤 알파를 씌움. 남색·하늘색 바탕에 겹쳐 밝은 테두리 없음 확인.
+  - 비교 그림: `python3 tools/make_plaza_day.py --gif assets/plaza/_daynight.gif` — 같은 하늘색 바탕에 낮·밤 0.7초씩 번갈아(원본 폴더라 git 무시, 커밋 안 함). 전선은 낮 원본에서 1px쯤 위아래로 다르게 그려진 곳이 있으나 윤곽은 밤 알파라 같음.
