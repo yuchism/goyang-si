@@ -166,11 +166,6 @@ function build(cfg) {
   const treeSpr = T.colors.map(c => glowSprite(c, T.r * 2));
   const strSpr = S.colors.map(c => glowSprite(c, S.r * 2));
   const ST8 = T.starGlow, starSpr = glowSprite('#fff2b0', T.star[2]), haloSpr = glowSprite(ST8.haloColor, T.star[2] * ST8.halo);
-  // 빛살마다 깜빡임 박자(rayHz[0~1] 초당 번, 길이·밝기 따로), ✦ 반짝이 조각 목록과 다음 조각 시각
-  const hz = (k, i) => 2 * Math.PI * (ST8.rayHz[0] + rnd(k, i) * (ST8.rayHz[1] - ST8.rayHz[0]));
-  const rays = [...Array(8)].map((_, i) => ({ w: hz('rw', i), w2: hz('rw2', i), ph: rnd('rph', i) * 7, ph2: rnd('rph2', i) * 7 }));
-  const sparks = [];
-  let sparkAt = 0;
   // 점등 차례(0~1): 트리는 아래 → 위(목록 순서), 별, 전구 줄은 별 쪽 → 바깥
   const tree = T.lights.map(([x, y], i) => ({ x, y, on: (i / T.lights.length) * C.tree, spr: treeSpr[i % treeSpr.length],
     sp: 1.2 + rnd('tsp', i) * 2.2, ph: rnd('tph', i) * 7 }));
@@ -234,53 +229,24 @@ function build(cfg) {
     }
     g.globalAlpha = sk * pulse;
     g.drawImage(starSpr, sx - sr * 2, sy - sr * 2, sr * 4, sr * 4);
-    // 빛살: 돌리지 않고, 빛살마다 제 박자(rayHz초당)로 길이·밝기가 따로 깜빡임
     g.save();
     g.translate(sx, sy);
+    g.rotate(RM ? 0 : t * 0.15);
     g.strokeStyle = '#fff6c8';
     g.lineCap = 'round';
     for (let i = 0; i < 8; i++) {
       g.rotate(Math.PI / 4);
-      const R = rays[i], f = RM ? 1 : 0.5 + 0.5 * Math.sin(t * R.w + R.ph), f2 = RM ? 1 : 0.5 + 0.5 * Math.sin(t * R.w2 + R.ph2);
-      g.globalAlpha = sk * (i % 2 ? 0.45 : 0.75) * (RM ? 1 : 0.35 + 0.65 * f2);
+      g.globalAlpha = sk * (i % 2 ? 0.45 : 0.75) * (RM ? 1 : 0.7 + 0.3 * Math.sin(t * 2 + i));
       g.lineWidth = ST8.rayW * (i % 2 ? 0.6 : 1);
       g.beginPath();
       g.moveTo(sr * 0.55, 0);
-      g.lineTo(sr * ST8.ray * (i % 2 ? 0.65 : 1) * (RM ? 1 : 0.55 + 0.45 * f), 0);
+      g.lineTo(sr * ST8.ray * (i % 2 ? 0.65 : 1), 0);
       g.stroke();
     }
     g.restore();
-    // 별 둘레 ✦ 반짝이 조각: spark[0~1]초마다 하나씩 톡 생겼다 sparkSec[0~1]초 만에 사라짐 (별 반지름 sparkR배 안 무작위)
+    // 가끔(flashEvery초 칸마다 한 번, 칸 안 시작은 고정 난수) 반짝 빛나는 십자 섬광
     if (!RM) {
-      if (t < sparkAt - 2)
-        sparks.length = 0, sparkAt = t;
-      while (t >= sparkAt) {
-        const a = Math.random() * Math.PI * 2, d = sr * (ST8.sparkR[0] + Math.random() * (ST8.sparkR[1] - ST8.sparkR[0]));
-        sparks.push({ x: sx + Math.cos(a) * d, y: sy + Math.sin(a) * d, t0: sparkAt, dur: ST8.sparkSec[0] + Math.random() * (ST8.sparkSec[1] - ST8.sparkSec[0]),
-          s: sr * ST8.sparkSize * (0.7 + Math.random() * 0.6) });
-        sparkAt += ST8.spark[0] + Math.random() * (ST8.spark[1] - ST8.spark[0]);
-      }
-      for (let i = sparks.length - 1; i >= 0; i--) {
-        const P = sparks[i], p = (t - P.t0) / P.dur;
-        if (p > 1) {
-          sparks.splice(i, 1);
-          continue;
-        }
-        const k = Math.sin(Math.PI * p), s = P.s * (0.4 + 0.6 * k);
-        g.globalAlpha = sk * k;
-        g.fillStyle = '#fffbe0';
-        g.beginPath();
-        g.moveTo(P.x, P.y - s);
-        g.quadraticCurveTo(P.x, P.y, P.x + s * 0.6, P.y);
-        g.quadraticCurveTo(P.x, P.y, P.x, P.y + s);
-        g.quadraticCurveTo(P.x, P.y, P.x - s * 0.6, P.y);
-        g.quadraticCurveTo(P.x, P.y, P.x, P.y - s);
-        g.fill();
-      }
-    }
-    // flashEvery초 칸마다 한 번(칸 안 시작은 flashJitter초 안 고정 난수 → 3~4초 간격) flashSec초 동안 십자 섬광
-    if (!RM) {
-      const slot = Math.floor(t / ST8.flashEvery), p = (t - slot * ST8.flashEvery - rnd('flash', slot) * ST8.flashJitter) / ST8.flashSec;
+      const slot = Math.floor(t / ST8.flashEvery), p = (t - slot * ST8.flashEvery - rnd('flash', slot) * ST8.flashEvery * 0.7) / ST8.flashSec;
       if (p >= 0 && p <= 1) {
         const k = sk * Math.sin(Math.PI * p), len = sr * ST8.flashLen * (0.6 + 0.4 * Math.sin(Math.PI * p));
         g.globalAlpha = Math.min(1, k * 1.4);
