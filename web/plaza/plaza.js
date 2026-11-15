@@ -224,7 +224,7 @@ function build(cfg) {
       let b = RM ? 0.8 : 0.55 + 0.45 * Math.sin(t * L.sp + L.ph);
       if (wy !== null)
         b = Math.max(b, 1.3 * Math.max(0, 1 - Math.abs(L.y - wy) / cfg.wave.band));
-      g.globalAlpha = Math.min(1, k * (T.a ?? 1) * (1 - (T.flicker ?? 0.65) + (T.flicker ?? 0.65) * b)); // 세기 a · 깜빡임 깊이 flicker (scene.json)
+      g.globalAlpha = Math.min(1, k * (0.35 + 0.65 * b));
       const s = T.r * 2 * (0.75 + 0.35 * Math.min(1, b));
       g.drawImage(L.spr, L.x - s, L.y - s, s * 2, s * 2);
     }
@@ -233,7 +233,7 @@ function build(cfg) {
       if (k <= 0)
         continue;
       const b = RM ? 0.8 : 0.6 + 0.4 * Math.sin(t * B.sp + B.ph);
-      g.globalAlpha = Math.min(1, k * (S.a ?? 1) * (1 - (S.flicker ?? 0.6) + (S.flicker ?? 0.6) * b));
+      g.globalAlpha = k * (0.4 + 0.6 * b);
       const s = S.r * 2;
       g.drawImage(B.spr, B.x - s, B.y - s, s * 2, s * 2);
     }
