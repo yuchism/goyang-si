@@ -2,14 +2,14 @@
 - status: brief
 - mode: needs-review
 - office: ready
-- brief: assets/briefs/XMAS_PLAZA_ART.md 6장
+- brief: assets/briefs/XMAS_PLAZA_ART.md 9장
 - assets: assets/plaza/xmas-day-source-v1.png (git 무시) · web/plaza/xmas-day.webp
 - 출처: 회의 2026-11-15 크리스마스 광장 낮·밤 — `XMAS_PLAZA_PLAN.md` 3-2
 
 ## 범위
 - **그림만.** 광장 페이지·낮밤 넘어가기·점등식·불꽃 코드는 다음 티켓.
 - **`tasks/xmas-plaza-art.md`(#36, 밤 그림)이 `main`에 합쳐진 뒤에 시작한다** — 하늘을 잘라낸 `web/plaza/xmas-night.webp`가 이 그림의 기준이다.
-- 낮 광장 1장: 밤 그림을 복사해 **빛만 낮으로** 바꾼다(창 불 끔, 맑은 겨울 낮 색). 자리·크기·외곽선은 그대로, 하늘은 투명. 자세한 것은 지시서 6장.
+- 낮 광장 1장: 밤 그림을 복사해 **빛만 낮으로** 바꾼다(창 불 끔, 맑은 겨울 낮 색). 자리·크기·외곽선은 그대로, 하늘은 투명. 자세한 것은 지시서 9장.
 - 그림 속 글자 없음(AGENTS.md 6장).
 
 ## 요구사항
