@@ -1,6 +1,6 @@
 # 크리스마스 광장 플랜
 
-> 상태: **문서 확정 (2026-11-15, 낮·밤·불꽃 더함).** 밤 그림 #36 검수 중(하늘 잘라내기), 낮 그림 티켓 `tasks/xmas-plaza-day-art.md`. 다음: 페이지 코드 티켓.
+> 상태: **1차 구현 끝 (2026-11-15)** — 광장 페이지(#45)·하늘 별·눈 일정(`tasks/xmas-plaza-sky.md`)·불꽃(#46)·약도 연결과 기간(#47). 남은 것: (사람) 확인 몇 줄(`tasks/xmas-plaza-code.md`·`xmas-plaza-sky.md`), 배포. 다음: 2차 펠리컨 오르골(3-1).
 > 관련 문서: `MANHWA_MAP_ART.md`(동네 약도·빈 터), `TIME_BASE_PLAN.md`(달력 `calendar.js`), `BOOKSHELF_PLAN.md`(지도책)
 
 ## 1. 한 줄 요약
