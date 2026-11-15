@@ -6,7 +6,9 @@
   뒤판: 원 안 알파는 끝까지 255(원본은 252~254), 원 밖 옅은 알파는 지운다
   앞판: 옅은 알파 잔여(반사광·수면선 둘레의 흐린 번짐)를 지운다
 - 보물상자 3장: 몸통 폭 280 · 바닥 가운데 (256, 460)에 맞춘다(배율은 그림마다 몸통 폭으로).
-  아래 몸통(맨 아래 판자 줄 아래)은 닫힘 그림을 세 장에 같게 붙인다 — 바꿔 끼울 때 튀지 않게
+  몸통(윗띠 위 테두리 y 314 아래)은 세 장 모두 같은 공통 몸통 = 닫힘 그림에서 걸쇠를 지운 것(5장 '픽셀까지 같게').
+  상태마다 다른 것만 그 위에 얹는다: 뚜껑(y 314 위)과, 몸통 위로 내려온 뚜껑 걸쇠·붕어빵·꼬리
+  (y 314 위의 밝은 칠에서 이어져 내려온 칠 + 그 테두리). 열림 그림의 몸통 걸쇠는 쓰지 않는다(걸쇠는 뚜껑 것)
   python3 tools/fishbowl_view_art.py [--check]   (--check: assets/sprites/_check/에 겹쳐 본 그림)"""
 import sys
 from pathlib import Path
@@ -19,7 +21,11 @@ FAINT = 60  # 이보다 옅은 알파는 잔여로 보고 지운다
 FULL = 200  # 이보다 진한 알파는 불투명으로
 BOWL, R, C = 1536, 740, 768  # 캔버스 · 바깥 테두리 반지름 · 원 가운데
 CHEST, BODY_W, FOOT = 512, 280, (256, 460)
-SEAM = 42  # 몸통 바닥에서 이만큼(512 기준) 위 줄부터 아래를 닫힘 그림으로 같게
+TOP = 314  # 몸통 윗띠 위 테두리(512 기준). 이 줄부터 아래는 공통 몸통
+CLASP = (220, 292, 320, 391)  # 닫힘 그림의 걸쇠 x0, x1, y0, y1 — 공통 몸통에선 옆 판자로 메운다
+OUTLINE = 6  # 테두리 두께 한도(512 기준)
+HANG = 4  # 칠이 TOP 아래로 이만큼 넘게 내려와야 띠 위로 걸친 것(peek 뚜껑 걸쇠)으로 본다
+FILL = 50  # 걸쇠 자리를 메울 때 걸쇠 왼쪽 이만큼 폭을 거울처럼 되풀이
 
 
 def load(name):
@@ -81,8 +87,9 @@ def disc(r, size=BOWL):
     return m.resize((size, size), Image.LANCZOS)
 
 
-def save(im, name):
-    im.save(OUT / f'{name}.webp', 'WEBP', quality=88, method=6)
+def save(im, name, lossless=False):
+    """lossless: 보물상자 — 손실 압축이면 공통 몸통이 장마다 조금씩 달라진다"""
+    im.save(OUT / f'{name}.webp', 'WEBP', **({'lossless': True} if lossless else {'quality': 88}), method=6)
     print(f'{name}.webp {im.size[0]}×{im.size[1]} 그림 둘레 {im.getchannel("A").getbbox()}')
 
 
@@ -157,6 +164,77 @@ def chest_marks(im):
     return xs[0], xs[-1] + 1, bottom + 1
 
 
+def bright(p):
+    return p[3] > 128 and sum(p[:3]) >= 200
+
+
+def common_body(closed):
+    """닫힘 그림의 y TOP 아래에서 걸쇠를 지운 몸통 (판자·띠는 가로로 같으니 걸쇠 왼쪽을 거울처럼 되풀이해 메운다)"""
+    body = Image.new('RGBA', closed.size, (0, 0, 0, 0))
+    body.paste(closed.crop((0, TOP, CHEST, CHEST)), (0, TOP))
+    x0, x1, y0, y1 = CLASP
+    bp = body.load()
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            t = (x - x0) % (2 * FILL)
+            bp[x, y] = bp[x0 - 1 - t if t < FILL else x0 - 2 * FILL + t, y]
+    return body
+
+
+def lid_part(im, body):
+    """상태 그림에서 뚜껑 쪽만: y TOP 위 전부 + 그 위 밝은 칠에서 이어져 TOP 아래로 내려온 칠(걸쇠·붕어빵)과 그 테두리"""
+    px = im.load()
+    m = Image.new('L', im.size, 0)
+    mp = m.load()
+    for y in range(TOP):
+        for x in range(CHEST):
+            mp[x, y] = 255
+    deep = set()  # 띠 위로 걸쳐 HANG 넘게 내려온 덩어리(peek 뚜껑 걸쇠)의 칠
+    for seed in [(x, TOP) for x in range(CHEST) if bright(px[x, TOP]) and bright(px[x, TOP - 1])]:
+        todo, part = [seed], []
+        while todo:
+            x, y = todo.pop()
+            if mp[x, y] or y < TOP or y > TOP + 20 or not bright(px[x, y]):
+                continue
+            mp[x, y] = 255
+            part.append((x, y))
+            todo += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+        if part and max(y for _, y in part) >= TOP + HANG:
+            deep.update(part)
+    edge = m.copy()  # 내려온 칠 둘레의 진한 테두리: 칠 끝에서 아래·옆으로 이어진 진한 줄이 OUTLINE 안에서 끝나면 그 줄까지
+    ep, bp = edge.load(), body.load()
+    dark = lambda x, y: 0 <= x < CHEST and px[x, y][3] > 128 and not bright(px[x, y])
+    for y in range(TOP, TOP + 21):
+        for x in range(CHEST):
+            if not mp[x, y]:
+                continue
+            for dx, dy in ((0, 1), (1, 0), (-1, 0)):
+                run = []
+                u, v = x + dx, y + dy
+                while dark(u, v) and len(run) <= OUTLINE:
+                    run.append((u, v))
+                    u, v = u + dx, v + dy
+                if len(run) > OUTLINE:  # 더 길면 그 그림 몸통의 띠·걸쇠 테두리라 공통 몸통 것을 둔다
+                    continue
+                if dy and (x, y) not in deep:  # 띠 위 테두리에 얹혔을 뿐인 칠(붕어빵 배)은 공통 몸통 테두리 안까지만
+                    run = [q for q in run if not bright(bp[q])]
+                for q in run:
+                    ep[q] = 255
+    out = Image.new('RGBA', im.size, (0, 0, 0, 0))
+    out.paste(im, (0, 0), edge)
+    return out
+
+
+def on_body(im, body, clasp=False):
+    """공통 몸통 위에 뚜껑 쪽을 얹는다. clasp: 닫힘 — 뚜껑 걸쇠가 몸통 윗띠에 채워져 있다(뚜껑과 테두리로 떨어져 있어 따로 얹음)"""
+    out = body.copy()
+    out.alpha_composite(lid_part(im, body))
+    if clasp:
+        x0, x1, y0, y1 = CLASP
+        out.paste(im.crop((x0, y0, x1, y1)), (x0, y0))
+    return out
+
+
 def chests():
     done = {}
     for n in ('closed', 'peek', 'open'):
@@ -166,15 +244,12 @@ def chests():
         k = BODY_W / (r - l)
         print(f'  chest-{n}: 몸통 x {l}~{r} 바닥 {b} → 배율 {k:.4f}')
         done[n] = place(im, (CHEST, CHEST), k, ((l + r) / 2, b), FOOT)
-    seam = FOOT[1] - SEAM
-    low = done['closed'].crop((0, seam, CHEST, CHEST))
-    for n in ('peek', 'open'):
-        im = done[n]
-        im.paste(Image.new('RGBA', low.size, (0, 0, 0, 0)), (0, seam))
-        im.alpha_composite(low, (0, seam))
+    body = common_body(done['closed'])
+    for n in ('closed', 'peek', 'open'):
+        done[n] = on_body(done[n], body, n == 'closed')
     for n, im in done.items():
         im.putalpha(tidy(im.getchannel('A')))
-        save(im, f'chest_{n}')
+        save(im, f'chest_{n}', lossless=True)
     return done
 
 
@@ -195,7 +270,7 @@ def check(b, c):
         sheet.alpha_composite(c[n], (CHEST * i, 0))
         g = ImageDraw.Draw(sheet)
         g.rectangle((CHEST * i + 116, 300, CHEST * i + 396, 460), outline=(255, 0, 0, 255))
-        g.line((CHEST * i, 460 - SEAM, CHEST * (i + 1), 460 - SEAM), fill=(255, 0, 255, 255))
+        g.line((CHEST * i, TOP, CHEST * (i + 1), TOP), fill=(255, 0, 255, 255))
     sheet.save(d / 'chest_sheet.png')
     print(f'겹쳐 보기: {d}')
 
