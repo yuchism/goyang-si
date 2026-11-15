@@ -263,8 +263,8 @@ function build(cfg) {
       g.stroke();
     }
     g.restore();
-    // 가끔(flashEvery초 칸마다 한 번, 칸 안 시작은 고정 난수) 반짝 빛나는 십자 섬광
-    if (!RM) {
+    // 가끔(flashEvery초 칸마다 한 번, 칸 안 시작은 고정 난수) 반짝 빛나는 십자 섬광. flashEvery 0이면 끔
+    if (!RM && ST8.flashEvery > 0) {
       const slot = Math.floor(t / ST8.flashEvery), p = (t - slot * ST8.flashEvery - rnd('flash', slot) * ST8.flashEvery * 0.7) / ST8.flashSec;
       if (p >= 0 && p <= 1) {
         const k = sk * Math.sin(Math.PI * p), len = sr * ST8.flashLen * (0.6 + 0.4 * Math.sin(Math.PI * p));
