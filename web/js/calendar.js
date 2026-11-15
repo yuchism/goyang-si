@@ -9,6 +9,7 @@ export const CAL = {
     halloween:     { from: '10-24', to: '10-31', through: 'night' }, // 10/24 ~ 10/31 밤이 끝날 때(11/1 동틀 녘)
     christmas:     { from: '12-14', to: '12-26' },                   // 크리스마스 시즌: 방의 트리, 창밖 산타
     christmasDays: { from: '12-24', to: '12-25' },                   // 이브·당일: TV 크리스마스 특집
+    xmasPlaza:     { from: '11-15', to: '12-31' },                   // 크리스마스 광장 (XMAS_PLAZA_PLAN.md 5장): 약도의 광장이 트리 광장, 밖엔 공터. 올해는 배포일이 곧 공개일
     newyearsEve:   { date: '12-31' },
     newyear:       { date: '01-01' },
     catDay:        { date: '09-09' },

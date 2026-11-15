@@ -3,12 +3,13 @@
    - 약도 자리·가게 목록: objects.json door.map (없으면 문은 눌러도 아무 일 없음). 좌표는 약도 그림 픽셀(size) 기준. 그림 규격 MANHWA_MAP_ART.md
    - 책장 지도책(shelf.js)도 같은 약도를 펼친다. 연 길(via: map 문 · shelf 지도책)이 가게 주소 ?via=와 통계 이름 앞에 붙는다
    - 약도 그림은 시작 묶음에 넣지 않는다(0008) — 처음 펼칠 때 받는다. 못 받으면 종이색 판 + 이름표만
-   - 가게 그림: 방 시계가 밤(time.js isNight)이면 night, 아니면 day
+   - 가게 그림: 방 시계가 밤(time.js isNight)이면 night, 아니면 day. 계절 가게(period, 크리스마스 광장)는 달력 기간 안이면 on 그림·누름, 밖이면 off 그림·offName·안 눌림.
+     미리보기 「크리스마스」(holidayOverride christmas)를 켜면 기간 안으로 친다
    - 문틈 열림 정도는 world.doorAjar(0~1, 그리기는 draw.js drawDoor). 만득 씨가 오면 약도는 바로 접힌다
    이 파일은 덩어리 밖 모듈만 가져온다(구조 검사). 문 자리·카메라는 ui.js가 넘겨준다 */
 import { tr } from './i18n.js';
 import { Snd } from './sound.js';
-import { isNight, now } from './time.js';
+import { holidayOverride, inPeriod, isNight, now } from './time.js';
 import { RM, esc, gcEvent } from './util.js';
 import { after, caption, world } from './world.js';
 
@@ -35,7 +36,15 @@ function render(map) {
   const s = map.size, night = isNight(now());
   const shops = (map.shops || []).map(sh => {
     const href = sh.href + (sh.href.includes('?') ? '&' : '?') + 'via=' + via;
-    const b = sh.box, src = night ? sh.night : sh.day, name = esc(tr(sh.name)), go = `href="${esc(href)}" data-gc="${esc(sh.gc ? via + '-' + sh.gc : '')}"`;
+    const open = !sh.period || inPeriod(sh.period, now()) || holidayOverride === 'christmas';
+    const b = sh.box;
+    if (!open) { // 계절 가게가 문 닫은 때: 그림과 이름표만 (누를 수 없음)
+      const src = sh.off;
+      return `<span class="shop" style="${at(b, s)};width:${pct(b[2], s)};height:${pct(b[3], s)}" aria-hidden="true">` +
+        (src ? `<img src="${esc(src)}" alt="" decoding="async" onerror="this.remove()">` : '') + '</span>' +
+        (sh.label ? `<span class="mlabel" style="${at(sh.label, s)}">${esc(tr(sh.offName || sh.name))}</span>` : '');
+    }
+    const src = sh.period ? sh.on : night ? sh.night : sh.day, name = esc(tr(sh.name)), go = `href="${esc(href)}" data-gc="${esc(sh.gc ? via + '-' + sh.gc : '')}"`;
     return `<a class="shop" ${go} style="${at(b, s)};width:${pct(b[2], s)};height:${pct(b[3], s)}" tabindex="-1" aria-hidden="true">` +
       (src ? `<img src="${esc(src)}" alt="" decoding="async" onerror="this.remove()">` : '') + '</a>' +
       (sh.label ? `<a class="mlabel" ${go} style="${at(sh.label, s)}">${name}</a>` : '');
