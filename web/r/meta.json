@@ -121,5 +121,9 @@
   "fx/magpie_fly": [189, 176],
   "fx/pigeon_fly": [131, 118],
   "fx/blackcat_walk_3": [247, 203],
-  "fx/blackcat_walk_4": [247, 203]
+  "fx/blackcat_walk_4": [247, 203],
+  "fish_sleep_1": [512, 512],
+  "home_bed": [512, 512],
+  "home_chair": [512, 512],
+  "home_sign": [512, 512]
 }
