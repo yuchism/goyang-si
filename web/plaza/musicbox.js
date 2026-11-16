@@ -88,7 +88,7 @@ export function makeMusicBox(cfg, { Snd, RM, label }) {
     g.ellipse(x - P.shadow[0] * pk, y, P.shadow[1] * pk, P.shadow[1] * pk * 0.16, 0, 0, 7);
     g.fill();
     g.restore();
-    if (dark > 0.01) {
+    if (dark > 0.01 && cfg.guests.nightShade) {
       if (!tmp)
         tmp = document.createElement('canvas');
       const tw = Math.ceil(dw), th = Math.ceil(dh);
@@ -99,7 +99,7 @@ export function makeMusicBox(cfg, { Snd, RM, label }) {
       tg.clearRect(0, 0, tw, th);
       tg.drawImage(sheet, fi * pcw, 0, pcw, pch, 0, 0, dw, dh);
       tg.globalCompositeOperation = 'source-atop';
-      tg.fillStyle = `rgba(16,22,52,${Math.min(1, dark) * (cfg.guests.nightShade || 0.22)})`; // 손님과 같은 밤 그늘
+      tg.fillStyle = `rgba(16,22,52,${Math.min(1, dark) * (cfg.guests.nightShade ?? 0.22)})`; // 손님과 같은 밤 그늘
       tg.fillRect(0, 0, tw, th);
       g.drawImage(tmp, px0, py0);
     }
