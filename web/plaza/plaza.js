@@ -6,7 +6,7 @@
    - 하늘 별·눈 일정·별똥별(플랜 3-4, tasks/xmas-plaza-sky.md): 눈은 날짜로 정한 칸(누구에게나 같음)마다 오거나 그치고, 그친 밤엔 하늘 별이 반짝, 가끔 별똥별. 12/24·25 밤은 늘 눈
    - 불꽃(플랜 3-3, 「광장 불꽃」): 그날 밤 첫 방문에 몇 분, 12/24·25 밤은 크게(별·트리 모양). 방 불꽃과 같은 그리기(js/fw-core.js), 하늘 겹과 그림 사이
    - 동작 줄이기: 깜빡임·물결·넘어가기 없이 정지, 눈·별똥별·불꽃 없음, 별은 멈춘 점
-   - 미리보기(dev에서만 — ?dev=1, 또는 방 미리보기 도구를 켠 기기): ?night=1|0 (밤·낮 고정), ?t=HH:MM (그 시각으로), ?speed=60 (시계 빨리), ?probe=1, ?snow=1|0 (눈 고정), ?shoot=1 (별똥별 자주), ?fw=1|eve (불꽃 지금 · 크리스마스 크게), ?chime=1 (첫 탭 뒤 정각 종 한 번), ?guests=숫자 (손님 수 고정), ?elf=1|slip (엘프 자주 · 늘 미끄덩), ?sleigh=1 (썰매 자주), ?cat=1 (강고양이 씨 바로·자주), ?skate=1 (스케이트 둘 다 늘) */
+   - 미리보기(dev에서만 — ?dev=1, 또는 방 미리보기 도구를 켠 기기): ?night=1|0 (밤·낮 고정), ?t=HH:MM (그 시각으로), ?speed=60 (시계 빨리), ?probe=1, ?snow=1|0 (눈 고정), ?shoot=1 (별똥별 자주), ?fw=1|eve (불꽃 지금 · 크리스마스 크게), ?chime=1 (첫 탭 뒤 정각 종 한 번), ?guests=숫자 (손님 수 고정), ?elf=1|slip (엘프 자주 · 늘 미끄덩), ?sleigh=1 (썰매 자주), ?cat=1 (강고양이 씨 바로·자주), ?skate=1 (스케이트 둘 다 늘), ?elfrun=1 (땅 위 엘프 자주) */
 import { advanceClock, atHour, darkness, inPeriod, isNight, nightDark, nightOf, now, setSimMs, setSpeed, skyAt, strikesOf } from '../js/time.js';
 import { gcEvent, hash, pickLang, store } from '../js/util.js';
 import { el, fitStage, freshVisit } from '../js/page-kit.js';
@@ -19,6 +19,7 @@ import { makeCatVisit } from './catvisit.js';
 import { makeVendor } from './vendor.js';
 import { makeRink } from './skate.js';
 import { makeCarousel } from './carousel.js';
+import { makeElfRun } from './elfrun.js';
 
 const body = document.body;
 const HOME = '/?from=plaza';
@@ -41,6 +42,7 @@ const ELF_DEV = !DEV ? null : Q.get('elf') === 'slip' ? 'slip' : Q.get('elf') ==
 const SLEIGH_DEV = DEV && Q.get('sleigh') === '1';
 const CAT_DEV = DEV && Q.get('cat') === '1';
 const SKATE_DEV = DEV && Q.get('skate') === '1';
+const ELFRUN_DEV = DEV && Q.get('elfrun') === '1';
 // 사계절 광장 미리보기 (PLAZA_SEASONS_PLAN.md 5장): ?event=xmas|none (크리스마스 소품·트리 전구·펠리컨·불꽃·엘프 켜고 끄기)
 const EVENT_DEV = !DEV ? null : Q.get('event') === 'none' ? false : Q.get('event') === 'xmas' ? true : null;
 const isXmas = d => EVENT_DEV !== null ? EVENT_DEV : inPeriod('xmasPlaza', d);
@@ -484,6 +486,8 @@ function build(cfg) {
   /* ── 소품 (PLAZA_SEASONS_PLAN.md 2장): 낮 그림 위에 밤 그림을 mix만큼 — 배경과 같은 낮·밤 넘어가기 */
   const PROPS = cfg.props.list.map(p => ({ ...p, im: ['day', 'night'].map(n => Object.assign(new Image(), { src: `props/${p.id}-${n}.webp?v=${cfg.v}` })) }));
   const carousel = makeCarousel(cfg, { RM });
+  const elfRun = makeElfRun(cfg, { RM, dev: ELFRUN_DEV }); // 땅 위 엘프: 트리 ↔ 회전목마 뒤
+  const elfWalk = makeElfRun(cfg, { RM, dev: ELFRUN_DEV, key: 'elfWalk' }); // 손님인 척 앞 길을 걷다 미끄덩
   const propOn = (p, xmas) => p.when === 'xmas' ? xmas : p.when === SEASON;
   const drawProp = p => {
     const [d, n] = p.im, [x, y] = p.at;
@@ -590,8 +594,13 @@ function build(cfg) {
     const dk = mix / 0.62;
     let gy = -Infinity;
     const layers = [[kitty.y(), () => kitty.draw(g)], [vendor.y, () => vendor.draw(g, t, now())], [rink.y, () => rink.draw(g, t, mix)]];
-    if (xmas)
+    if (xmas) {
       layers.push([cfg.music.at[1], () => mbox.draw(g, t, dk)]);
+      elfRun.update(t, dt, gXmas && gNight);
+      layers.push([elfRun.y, () => elfRun.draw(g, t)]);
+      elfWalk.update(t, dt, false);
+      layers.push([elfWalk.y, () => elfWalk.draw(g, t)]);
+    }
     for (const p of PROPS)
       if (propOn(p, xmas))
         layers.push([p.y, p.id === 'tree' ? () => { drawProp(p); drawLights(t); } : p.id === 'carousel' ? () => { if (!carousel.draw(g, t, mix)) drawProp(p); } : () => drawProp(p)]); // 트리 전구·별은 트리 바로 위, 회전목마는 돌아가는 것(그림이 없으면 멈춘 소품)

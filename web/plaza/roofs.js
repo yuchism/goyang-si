@@ -2,7 +2,7 @@
    - 하늘 겹(stars 캔버스 — 광장 그림 뒤)에 그린다 → 건물·트리가 저절로 가린다. 엘프는 지붕 능선 위로만 보이고 트리 뒤를 지나갈 땐 숨는다
    - 지붕 길: 밤 그림 알파에서 열마다 위에서 처음 두껍게(thick px) 불투명한 곳 = 능선(가는 전선은 건너뜀). 트리 쪽(skip)은 양끝을 이어 트리 뒤로
    - 엘프: 달리기 → (가끔) 멈춰 내려다보기 → 능선이 확 바뀌는 곳은 폴짝 → (가끔) 미끄덩·엉덩방아·털고 일어나기 → 반대편 화면 밖
-   - 언제: 밤(별이 뜬 만큼)에만. every초 칸마다 chance 확률로 한 번(칸 안 시작은 고정 난수). 12/24·25 밤은 xmas 숫자(더 자주, 가끔 둘)
+   - 언제: 밤(별이 뜬 만큼)엔 그림자, 낮엔 색 그대로(dayEvery) — 2026-11-16. every초 칸마다 chance 확률로 한 번(칸 안 시작은 고정 난수). 12/24·25 밤은 xmas 숫자(더 자주, 가끔 둘)
    - 썰매: 12/24 밤에만, 방 창밖 산타 그림(r/fx/santa_1·2)을 그림자로. 하늘 높이 천천히
    - 동작 줄이기: 없음. 미리보기(dev): ?elf=1(자주) ?elf=slip(늘 미끄덩) ?sleigh=1(자주) */
 const clamp01 = v => Math.max(0, Math.min(1, v));
@@ -103,9 +103,10 @@ export function makeRoofs(cfg, { nightImg, RM, rnd, dev }) {
   const update = (t, dt, nightK, xmasNight, eveNight) => {
     if (RM || !ridge)
       return;
-    // 등장: 밤에만
-    if (nightK > 0.6) {
-      const every = DEV_ELF ? E.devEvery : xmasNight ? E.xmasEvery : E.every, slot = Math.floor(t / every);
+    // 등장: 밤엔 그림자, 낮엔 색 그대로(2026-11-16) — 해 질 녘·새벽 반쯤일 땐 안 나옴
+    const isDay = nightK < 0.2;
+    if (nightK > 0.6 || isDay) {
+      const every = DEV_ELF ? E.devEvery : isDay ? E.dayEvery : xmasNight ? E.xmasEvery : E.every, slot = Math.floor(t / every);
       const at = slot * every + rnd('elf', slot) * every * 0.6;
       if (slot !== lastSlot && t >= at) {
         lastSlot = slot;
@@ -117,7 +118,7 @@ export function makeRoofs(cfg, { nightImg, RM, rnd, dev }) {
         }
       }
       // 썰매: 12/24 밤
-      if ((eveNight || DEV_SLEIGH) && !sleigh) {
+      if (!isDay && (eveNight || DEV_SLEIGH) && !sleigh) {
         const ev = DEV_SLEIGH ? S.devEvery : S.every, s2 = Math.floor(t / ev);
         if (s2 !== lastSleigh && t >= s2 * ev + rnd('sleigh', s2) * ev * 0.5) {
           lastSleigh = s2;
@@ -181,8 +182,9 @@ export function makeRoofs(cfg, { nightImg, RM, rnd, dev }) {
       sleigh = null;
   };
 
+  // vis: 밤 정도(별 세기) — 그만큼 그림자, 나머지는 색 그대로
   const draw = (g, t, vis) => {
-    if (RM || vis <= 0.01)
+    if (RM)
       return;
     if (sheet.complete && sheet.naturalWidth) {
       const cell = sheet.naturalHeight, k = E.scale;
@@ -191,10 +193,21 @@ export function makeRoofs(cfg, { nightImg, RM, rnd, dev }) {
           continue;
         const fi = e.jump ? 4 : e.phase === 'look' || e.phase === 'up' ? 5 : e.phase === 'slip' ? 6 : e.phase === 'sit' ? 7 : Math.floor((t - e.t0) * E.fps) % 4;
         const w = cell * k, foot = E.foot * k;
-        shadowDraw(g, sheet, fi * cell, 0, cell, cell, e.x - w / 2, e.y - foot + E.sink, w, w, e.dir < 0, vis);
+        const dx = e.x - w / 2, dy = e.y - foot + E.sink;
+        if (vis < 0.99) { // 낮: 색 그대로
+          g.save();
+          g.globalAlpha = 1 - vis;
+          g.translate(dx + (e.dir < 0 ? w : 0), dy);
+          if (e.dir < 0)
+            g.scale(-1, 1);
+          g.drawImage(sheet, fi * cell, 0, cell, cell, 0, 0, w, w);
+          g.restore();
+        }
+        if (vis > 0.01)
+          shadowDraw(g, sheet, fi * cell, 0, cell, cell, dx, dy, w, w, e.dir < 0, vis);
       }
     }
-    if (sleigh && santa[0].complete && santa[0].naturalWidth) {
+    if (vis > 0.01 && sleigh && santa[0].complete && santa[0].naturalWidth) {
       const p = (t - sleigh.t0) / S.sec, im = santa[Math.floor(t * 4) % 2], w = im.naturalWidth * S.scale, h = im.naturalHeight * S.scale;
       const x = sleigh.dir > 0 ? -w + (W + w * 2) * p : W + w - (W + w * 2) * p;
       const y = sleigh.y + Math.sin(t * 1.6) * 6;
