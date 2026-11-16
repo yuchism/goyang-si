@@ -16,6 +16,7 @@ import { makeGuests } from './guests.js';
 import { makeMusicBox } from './musicbox.js';
 import { makeRoofs } from './roofs.js';
 import { makeCatVisit } from './catvisit.js';
+import { makeVendor } from './vendor.js';
 
 const body = document.body;
 const HOME = '/?from=plaza';
@@ -45,6 +46,7 @@ const STR = {
   title: { ko: '크리스마스 광장', en: 'Christmas Plaza' },
   home: { ko: '고양.시 거실로', en: 'Back to the living room' },
   mbox: { ko: '오르골: 누르면 다음 캐럴', en: 'Music box: tap for the next carol' },
+  vendor: { ko: '붕어빵 사장님 금붕생이', en: 'Goldfish taiyaki vendor' },
   scene: { ko: '크리스마스 광장 풍경: 가운데 거대 트리, 왼쪽 회전목마와 붕어빵 노점, 오른쪽 스케이트장과 눈사람', en: 'Christmas plaza: a giant tree in the middle, a carousel and a fish-bread stall on the left, a skating rink and a snowman on the right' },
 };
 const LANG = pickLang(); // 방과 같은 규칙 (util.js)
@@ -471,6 +473,9 @@ function build(cfg) {
   /* ── 오르골 (플랜 3-1, musicbox.js): 펠리컨 오기 전 임시 상자 */
   const mbox = makeMusicBox(cfg, { Snd, RM, label: tr('mbox') });
   sc.append(mbox.btn);
+  /* ── 붕어빵 노점 사장님 (플랜 3-9, vendor.js): 금붕생이 붕어빵 화로 로봇 */
+  const vendor = makeVendor(cfg, { RM, label: tr('vendor'), hourOf: d => d.getHours() + d.getMinutes() / 60 });
+  sc.append(vendor.btn);
   /* ── 지붕 위 엘프·이브 썰매 그림자 (플랜 3-7, roofs.js): 하늘 겹(stars)에 — 그림이 가린다 */
   const roofs = makeRoofs(cfg, { nightImg: night, RM, rnd, dev: { elf: ELF_DEV, sleigh: SLEIGH_DEV } });
   let gEve = false;
@@ -556,7 +561,9 @@ function build(cfg) {
     kitty.draw(g);
     guests.draw(g, t, dk, Math.min(ky, my), my);
     mbox.draw(g, t, dk);
-    guests.draw(g, t, dk, my);
+    guests.draw(g, t, dk, my, vendor.y);
+    vendor.draw(g, t, now());
+    guests.draw(g, t, dk, Math.max(my, vendor.y));
     drawSteam(t);
     drawSnow(t, dt);
     if (!RM || lit !== litTo)
