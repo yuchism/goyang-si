@@ -11,7 +11,7 @@
     { "id": "gift-right", "at": [872, 760], "y": 852, "when": "xmas" },
     { "id": "gifts-left", "at": [505, 705], "y": 856, "when": "xmas" },
     { "id": "snowman", "at": [1350, 738], "y": 966, "when": "winter" },
-    { "id": "stall", "at": [200, 758], "y": 989, "when": "winter" }
+    { "id": "stall", "at": [200, 766], "y": 989, "when": "winter", "_": "다시 그린 노점은 바닥 끝이 그려져 있어 화면 아래로 8px 내림(아래가 비어 보여서) — 김 자리 steam.from도 같이" }
   ] },
   "view": { "_": "좁은 화면(높이에 맞추고 가로로 둘러보기)에서 처음 보이는 가운데 x", "focus": 780 },
   "sky": { "_": "하늘(코드): 방 창밖 하늘색(time.js skyAt) 위 → 아래, horizon: 아래 색이 닿는 y (건물 지붕 아래)", "horizon": 700 },
@@ -53,7 +53,7 @@
   },
   "steam": {
     "_": "붕어빵 노점 김: from 김이 나는 자리 [x, y](붕어빵 틀 셋 · 붕어빵 상자 — 금붕생이 로봇 굴뚝 김은 vendor.chimney로 따라감), every 초마다 한 줄기, life 초 동안 rise px 올라가며 퍼짐",
-    "from": [[302, 878], [347, 878], [391, 878], [462, 884]],
+    "from": [[302, 886], [347, 886], [391, 886], [462, 892]],
     "every": 0.7, "life": 3.2, "rise": 90, "r": [6, 22], "a": 0.32
   },
   "music": { "_": "오르골 (XMAS_PLAZA_PLAN.md 3-1, web/plaza/musicbox.js): 트리 화분 바로 앞, 선물 상자 둘 사이(2026-11-16 옮김 — 통행 방해 민원 ㅎㅎ). 누를 때마다 files 순서 → 안 나옴. at: 펠리컨 받침대 오른쪽 다리 바닥 [x, y](임시 상자일 땐 상자 바닥 가운데), size: 임시 상자 [폭, 높이], hitPad: 누르는 자리 여유, vol: 소리 크기(방 마스터 기준)", "at": [838, 848], "size": [50, 36], "hitPad": 6, "vol": 0.55, "pelican": { "_": "펠리컨 (web/plaza/pelican.webp, tools/make_plaza_pelican.py — 칸 500×500, 받침대 오른쪽 다리 바닥 anchor가 music.at에). scale: 칸 → 광장 px, fps: 손잡이 돌리기, hit: 누르는 자리(칸 안 [x0, y0, x1, y1]), shadow: [at에서 왼쪽으로 px, 반지름](칸 px), notes·zzz: 음표·졸음 z 자리(at 기준 칸 px)", "cell": [500, 500], "anchor": [430, 490], "scale": 0.28, "fps": 5, "hit": [60, 120, 490, 490], "shadow": [170, 190], "notes": [-80, -230], "zzz": [-230, -300] }, "files": ["sound/carol-1-v1.mp3", "sound/carol-2-v1.mp3", "sound/carol-3-v1.mp3", "sound/carol-4-v1.mp3", "sound/carol-5-v1.mp3"] },
