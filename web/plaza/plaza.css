@@ -40,3 +40,7 @@ body.plaza { overflow: hidden; font: 16px/1.5 var(--font-body); -webkit-tap-high
 
 /* 하늘 별 겹: 그림 폭에 맞추고 높이는 캔버스 비율대로(하늘 부분만) */
 .pc > .stars { height: auto; }
+
+/* 오르골 누르는 자리 (musicbox.js): 장면 좌표, 그림은 반짝임 캔버스에. 단추는 보이지 않게 */
+.pc > .mbox { width: auto; height: auto; pointer-events: auto; background: transparent; border: 0; padding: 0; margin: 0; cursor: pointer; border-radius: 12px; -webkit-tap-highlight-color: transparent; }
+.pc > .mbox:focus-visible { outline: 3px solid #ffe27a; outline-offset: 2px; }

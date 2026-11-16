@@ -44,19 +44,21 @@
 
 ### 3-1. 펠리컨 오르골 (2차)
 
+- **먼저 임시 오르골 상자 (회의 2026-11-16):** 펠리컨 그림이 오기 전까지 트리 앞 펠리컨 자리(`scene.json` `music.at`)에 코드로 그린 작은 오르골 상자. 누르면 다음 캐럴(뚜껑 열림·손잡이 돎·음표). 펠리컨이 오면 그리는 것만 바꾼다(`web/plaza/musicbox.js`). 녹음은 Web Audio로 통째로 받아 되풀이(서비스 워커와 range 요청이 다투지 않게).
+
 - 트리 앞에 손잡이 오르골을 든 펠리컨(크기는 2장 캐릭터 크기 규칙). 펠리컨을 탭하면 **다음 노래**로 바뀐다. 순서: 노래 1 → 노래 2 → … → **안 나옴** → 노래 1 …
 - 처음 들어오면 **안 나옴**에서 시작 (브라우저가 첫 탭 전엔 소리를 막기도 함). 첫 탭에 노래 1
 - 노래 중: 손잡이를 천천히 돌린다(프레임 그림). 안 나옴: 손잡이를 놓고 조는 모습
 - 소리는 **크지 않게**(볼륨을 낮게 시작). 곡 분위기는 곡마다 다르다 — 오르골은 "노래 바꾸는 상자"
-- 노래는 **Pixabay 무료 음악 5곡** (Pixabay Content License, 출처 표기 의무 없음. 회의 2026-11-15). 순서:
-  1. Christmas Music — Tatamusic, 2:18 (<https://pixabay.com/music/christmas-christmas-christmas-music-627995/>)
-  2. Christmas — Tunetank, 1:43 (<https://pixabay.com/music/christmas-christmas-347469/>)
-  3. That Christmas — Looptape, 1:08 (<https://pixabay.com/music/christmas-that-christmas-176114/>)
-  4. The First Noel — Clavier-Music, 2:27 (<https://pixabay.com/music/christmas-the-first-noel-beautiful-christmas-piano-280754/>)
-  5. Silent Night — MarloweMusic, 3:24 (<https://pixabay.com/music/ambient-silent-night-582888/>)
+- 노래는 **Pixabay 무료 음악 5곡** (Pixabay Content License, 출처 표기 의무 없음 — `ASSET_LICENSE.md`에 표). 순서(회의 2026-11-16: 가장 발랄한 That Christmas를 맨 앞으로):
+  1. That Christmas — Looptape, 1:08 (`web/sound/carol-1-v1.mp3`)
+  2. Christmas Music — Tatamusic, 2:18 (`carol-2`)
+  3. Christmas — Tunetank, 1:43 (`carol-3`)
+  4. The First Noel — Clavier-Music, 2:27 (`carol-4`)
+  5. Silent Night — MarloweMusic, 3:24 (`carol-5`)
   6. **안 나옴** → 다시 1
 - 한 곡이 끝나면 **같은 곡을 다시**. 바꾸는 건 탭으로만
-- 파일: 원본은 `goyang/xmas-carols/`(저장소 밖) → 2차 티켓에서 `assets/sound/carols/`(git 무시)로 옮기고, 웹용은 약 96kbps로 다시 인코딩해 `web/sound/carol-1-v1.mp3` … `carol-5-v1.mp3`. 오르골을 처음 누를 때 받는다(시작 묶음에 넣지 않음)
+- 파일: 원본은 `assets/sound/carols/`(git 무시), 웹용은 96kbps로 다시 인코딩한 `web/sound/carol-1-v1.mp3` … `carol-5-v1.mp3`(2026-11-16). 오르골을 누를 때 그 곡만 받는다(시작 묶음에 넣지 않음)
 - `ASSET_LICENSE.md` Third-party sounds에 다섯 곡 표(파일 / 원곡 링크 / 작가)는 파일이 들어가는 2차 티켓에서
 - 주의: 1·2·4·5번은 Pixabay에 **Content ID 등록**. 광장 화면을 녹화해 영상으로 올릴 땐 소리를 뺀다
 - 페이지를 나갔다 오면 다시 안 나옴부터 (기억하지 않음) — 제안

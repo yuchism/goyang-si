@@ -45,3 +45,18 @@ It is trimmed (from 10.1 s, 29.3 s long) for the birthday party in this site:
 | `birthday-ukulele-v1.mp3` | "Happy Ukulele Day" | ElevenLabs (Eleven Music) sample |
 
 It is included only as part of this website; it is not offered for reuse here.
+
+The Christmas plaza carols (music box, `XMAS_PLAZA_PLAN.md` 3-1) are music from
+Pixabay, used under the [Pixabay Content License](https://pixabay.com/service/terms/)
+and re-encoded (96 kbps) for this site:
+
+| File | Original | Author |
+|---|---|---|
+| `carol-1-v1.mp3` | ["That Christmas"](https://pixabay.com/music/christmas-that-christmas-176114/) | Looptape |
+| `carol-2-v1.mp3` | ["Christmas Christmas Music"](https://pixabay.com/music/christmas-christmas-christmas-music-627995/) | Tatamusic |
+| `carol-3-v1.mp3` | ["Christmas"](https://pixabay.com/music/christmas-christmas-347469/) | Tunetank |
+| `carol-4-v1.mp3` | ["The First Noel (Beautiful Christmas Piano)"](https://pixabay.com/music/christmas-the-first-noel-beautiful-christmas-piano-280754/) | Clavier-Music |
+| `carol-5-v1.mp3` | ["Silent Night"](https://pixabay.com/music/ambient-silent-night-582888/) | MarloweMusic |
+
+They are included only as part of this website. To use them elsewhere,
+download them from Pixabay under its own license.

@@ -6,12 +6,14 @@
    - 하늘 별·눈 일정·별똥별(플랜 3-4, tasks/xmas-plaza-sky.md): 눈은 날짜로 정한 칸(누구에게나 같음)마다 오거나 그치고, 그친 밤엔 하늘 별이 반짝, 가끔 별똥별. 12/24·25 밤은 늘 눈
    - 불꽃(플랜 3-3, 「광장 불꽃」): 그날 밤 첫 방문에 몇 분, 12/24·25 밤은 크게(별·트리 모양). 방 불꽃과 같은 그리기(js/fw-core.js), 하늘 겹과 그림 사이
    - 동작 줄이기: 깜빡임·물결·넘어가기 없이 정지, 눈·별똥별·불꽃 없음, 별은 멈춘 점
-   - 미리보기(dev에서만 — ?dev=1, 또는 방 미리보기 도구를 켠 기기): ?night=1|0 (밤·낮 고정), ?t=HH:MM (그 시각으로), ?speed=60 (시계 빨리), ?probe=1, ?snow=1|0 (눈 고정), ?shoot=1 (별똥별 자주), ?fw=1|eve (불꽃 지금 · 크리스마스 크게), ?chime=1 (첫 탭 뒤 정각 종 한 번) */
+   - 미리보기(dev에서만 — ?dev=1, 또는 방 미리보기 도구를 켠 기기): ?night=1|0 (밤·낮 고정), ?t=HH:MM (그 시각으로), ?speed=60 (시계 빨리), ?probe=1, ?snow=1|0 (눈 고정), ?shoot=1 (별똥별 자주), ?fw=1|eve (불꽃 지금 · 크리스마스 크게), ?chime=1 (첫 탭 뒤 정각 종 한 번), ?guests=숫자 (손님 수 고정) */
 import { advanceClock, atHour, darkness, inPeriod, isNight, nightDark, nightOf, now, setSimMs, setSpeed, skyAt, strikesOf } from '../js/time.js';
 import { gcEvent, hash, pickLang, store } from '../js/util.js';
 import { el, fitStage, freshVisit } from '../js/page-kit.js';
 import { makeFw, rgba } from '../js/fw-core.js';
 import { CHIME, Snd, chimePlan } from '../js/sound.js';
+import { makeGuests } from './guests.js';
+import { makeMusicBox } from './musicbox.js';
 
 const body = document.body;
 const HOME = '/?from=plaza';
@@ -30,12 +32,14 @@ const PROBE = DEV && Q.get('probe') === '1';
 const FORCE_SNOW = !DEV ? null : Q.get('snow') === '1' ? 1 : Q.get('snow') === '0' ? 0 : null;
 const SHOOT_DEV = DEV && Q.get('shoot') === '1';
 const CHIME_DEV = DEV && Q.get('chime') === '1';
+const GUESTS_DEV = DEV && Q.get('guests') != null ? Math.max(0, +Q.get('guests') || 0) : null;
 const FW_DEV = !DEV ? null : Q.get('fw') === 'eve' ? 'xmas' : Q.get('fw') === '1' ? 'night' : null;
 
 /* ───────── 글자 (기지·만화방과 같은 규칙: 저장한 언어 → 브라우저 언어) ───────── */
 const STR = {
   title: { ko: '크리스마스 광장', en: 'Christmas Plaza' },
   home: { ko: '고양.시 거실로', en: 'Back to the living room' },
+  mbox: { ko: '오르골: 누르면 다음 캐럴', en: 'Music box: tap for the next carol' },
   scene: { ko: '크리스마스 광장 풍경: 가운데 거대 트리, 왼쪽 회전목마와 붕어빵 노점, 오른쪽 스케이트장과 눈사람', en: 'Christmas plaza: a giant tree in the middle, a carousel and a fish-bread stall on the left, a skating rink and a snowman on the right' },
 };
 const LANG = pickLang(); // 방과 같은 규칙 (util.js)
@@ -450,6 +454,17 @@ function build(cfg) {
   if (FW_DEV && !RM)
     startShow(FW_DEV);
 
+  /* ── 광장 손님 (플랜 3-5, guests.js) */
+  const depthAt = y => {
+    const [y0, y1] = cfg.char.depth.y, [k0, k1] = cfg.char.depth.scale, p = clamp01((y - y0) / (y1 - y0));
+    return k0 + (k1 - k0) * p;
+  };
+  const guests = makeGuests(cfg, { rnd, RM, depthAt, hourOf: d => d.getHours() + d.getMinutes() / 60, force: GUESTS_DEV });
+  let gNight = false, gXmas = false;
+  /* ── 오르골 (플랜 3-1, musicbox.js): 펠리컨 오기 전 임시 상자 */
+  const mbox = makeMusicBox(cfg, { Snd, RM, label: tr('mbox') });
+  sc.append(mbox.btn);
+
   /* ── 시험 캐릭터 (?probe=1): 방 스프라이트 하나를 두 자리에 — 방 앞쪽 크기 × charScale × depth(y) */
   if (PROBE)
     probe(sc, cfg.char);
@@ -465,6 +480,8 @@ function build(cfg) {
     drawSky(d, mix);
     setNight(n);
     maybeShow(d, n);
+    gNight = !!n;
+    gXmas = !!nightOf(d) && xmasNight(nightOf(d));
     chimeTick(d);
   };
 
@@ -518,6 +535,9 @@ function build(cfg) {
     drawFw(t);
     g.clearRect(0, 0, W, H);
     drawLights(t);
+    guests.update(t, dt, now(), gNight, gXmas);
+    guests.draw(g, t, mix / 0.62);
+    mbox.draw(g, t, mix / 0.62);
     drawSteam(t);
     drawSnow(t, dt);
     if (!RM || lit !== litTo)
