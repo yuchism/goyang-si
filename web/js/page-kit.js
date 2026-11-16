@@ -44,3 +44,37 @@ export const fitStage = (W, H, sc, stage, view) => {
   view.classList.toggle('pan', !wide);
   return k;
 };
+
+// 「항상 켜 두기」(방 설정 책, localStorage goyang.awake — ui.js와 같은 값)를 방 밖 페이지도 따른다.
+// 켜져 있거나 전체 화면이면 화면 깨우기(Wake Lock)를 요청하고, 다른 앱에 다녀오면(풀려 있으니) 다시 요청. 설정을 바꾸는 곳은 방 설정 책 하나
+export const keepAwakeLikeRoom = () => {
+  if (!navigator.wakeLock)
+    return;
+  let wake = null, asking = false;
+  const want = () => {
+    try {
+      return JSON.parse(localStorage.getItem('goyang.awake') || 'false') === true || !!document.fullscreenElement;
+    }
+    catch (e) {
+      return !!document.fullscreenElement;
+    }
+  };
+  const ask = async () => {
+    if (document.visibilityState !== 'visible' || wake || asking || !want())
+      return;
+    asking = true;
+    try {
+      const w = await navigator.wakeLock.request('screen');
+      wake = w;
+      w.addEventListener('release', () => {
+        if (wake === w)
+          wake = null;
+      });
+    }
+    catch (e) { }
+    asking = false;
+  };
+  document.addEventListener('visibilitychange', ask);
+  document.addEventListener('fullscreenchange', ask);
+  ask();
+};

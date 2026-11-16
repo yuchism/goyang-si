@@ -15,6 +15,36 @@
   const ROOT = EP_PAGE ? '../../../' : '../../';
   const SHOP = ROOT + 'manhwa/?via=comic'; // 만화 목록·회차에서 돌아올 때는 입장 둘러보기를 생략한다
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // 「항상 켜 두기」(방 설정 책 goyang.awake)를 따름 — page-kit.js keepAwakeLikeRoom과 같은 것(이 파일은 모듈이 아니라 따로 적음)
+  if (navigator.wakeLock) {
+    let wake = null, asking = false;
+    const want = () => {
+      try {
+        return JSON.parse(localStorage.getItem('goyang.awake') || 'false') === true || !!document.fullscreenElement;
+      }
+      catch (e) {
+        return !!document.fullscreenElement;
+      }
+    };
+    const ask = async () => {
+      if (document.visibilityState !== 'visible' || wake || asking || !want())
+        return;
+      asking = true;
+      try {
+        const w = await navigator.wakeLock.request('screen');
+        wake = w;
+        w.addEventListener('release', () => {
+          if (wake === w)
+            wake = null;
+        });
+      }
+      catch (e) { }
+      asking = false;
+    };
+    document.addEventListener('visibilitychange', ask);
+    document.addEventListener('fullscreenchange', ask);
+    ask();
+  }
 
   /* ───────── 글자 ───────── */
   const STR = {

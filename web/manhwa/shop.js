@@ -9,9 +9,10 @@
 import { atHour, clockText, isNight, nightOf, now, setSimMs } from '../js/time.js';
 import { gcEvent as sharedGc, hash } from '../js/util.js';
 import { LANG, tr as sharedTr } from '../js/i18n.js';
-import { el, fitStage, freshVisit, leaveOnClick, place } from '../js/page-kit.js'; // place: 바탕 픽셀 자리 [x, y, w, h] → 절대 위치
+import { el, fitStage, freshVisit, keepAwakeLikeRoom, leaveOnClick, place } from '../js/page-kit.js'; // place: 바탕 픽셀 자리 [x, y, w, h] → 절대 위치
 import { pawsHTML } from '../js/catbook.js';
 import { MOVE_SEC, gymAt, moving, nightPlan } from './shop-plan.js';
+keepAwakeLikeRoom(); // 방 설정 「항상 켜 두기」를 따름
 
 const body = document.body;
 const DIR = 'shop/';

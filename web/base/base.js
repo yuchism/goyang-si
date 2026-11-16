@@ -8,12 +8,13 @@
    - 미리보기: ?night=1 / ?night=0 (밤·낮 고정), ?demo=1 (데모), ?status=파일.json (같은 사이트의 시험용 JSON) */
 import { isNight, now } from '../js/time.js';
 import { gcEvent, pickLang } from '../js/util.js';
-import { el, fitStage, freshVisit, place } from '../js/page-kit.js';
+import { el, fitStage, freshVisit, keepAwakeLikeRoom, place } from '../js/page-kit.js';
 import { makeBoard } from './board.js';
 import { makeFamily } from './family.js';
 import { makeReplay } from './replay.js';
 import { STR, agoText, daysAgo, pages } from './screens.js';
 import { readStatus } from './status.js';
+keepAwakeLikeRoom(); // 방 설정 「항상 켜 두기」를 따름
 
 const body = document.body;
 const HOME = '/?from=base';

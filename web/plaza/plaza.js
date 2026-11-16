@@ -9,7 +9,7 @@
    - 미리보기(dev에서만 — ?dev=1, 또는 방 미리보기 도구를 켠 기기): ?night=1|0 (밤·낮 고정), ?t=HH:MM (그 시각으로), ?speed=60 (시계 빨리), ?probe=1, ?snow=1|0 (눈 고정), ?shoot=1 (별똥별 자주), ?fw=1|eve (불꽃 지금 · 크리스마스 크게), ?chime=1 (첫 탭 뒤 정각 종 한 번), ?guests=숫자 (손님 수 고정), ?elf=1|slip (엘프 자주 · 늘 미끄덩), ?sleigh=1 (썰매 자주), ?cat=1 (강고양이 씨 바로·자주), ?skate=1 (스케이트 둘 다 늘), ?elfrun=1 (땅 위 엘프 자주), ?peek=1 (쥐야쥐 빼꼼 자주) */
 import { advanceClock, atHour, darkness, inPeriod, isNight, nightDark, nightOf, now, setSimMs, setSpeed, skyAt, strikesOf } from '../js/time.js';
 import { gcEvent, hash, pickLang, store } from '../js/util.js';
-import { el, fitStage, freshVisit } from '../js/page-kit.js';
+import { el, fitStage, freshVisit, keepAwakeLikeRoom } from '../js/page-kit.js';
 import { makeFw, rgba } from '../js/fw-core.js';
 import { CHIME, Snd, chimePlan } from '../js/sound.js';
 import { makeGuests } from './guests.js';
@@ -666,6 +666,7 @@ function probe(sc, CH) {
 
 /* ───────── 시작 ───────── */
 document.documentElement.lang = LANG;
+keepAwakeLikeRoom(); // 방 설정 「항상 켜 두기」를 따름
 if (DEV) {
   const tq = /^(\d{1,2}):(\d{2})$/.exec(Q.get('t') || '');
   if (tq)
