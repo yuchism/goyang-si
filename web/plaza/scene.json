@@ -1,7 +1,7 @@
 {
   "_": "크리스마스 광장 장면 설정 (tasks/xmas-plaza-code.md 「광장 페이지」, XMAS_PLAZA_PLAN.md). 좌표는 광장 그림 픽셀(size) 기준. 사람이 고치는 곳",
   "size": [1561, 989],
-  "v": 2,
+  "v": 3,
   "backdrop": { "_": "계절 배경 (PLAZA_SEASONS_PLAN.md 2장) — 소품 없는 빈 광장, 하늘 투명(tools/make_plaza_winter.py). 지금은 겨울 하나뿐", "winter": { "day": "winter-day.webp", "night": "winter-night.webp" } },
   "props": { "_": "소품 (PLAZA_SEASONS_PLAN.md 2장) — 크리스마스 그림에서 떼어 낸 것(tools/make_plaza_props.py 출력 자리). 그림 props/<id>-day·night.webp, at: 왼쪽 위 [x, y](광장 px), y: 손님·캐릭터와 앞뒤를 맞출 기준(발밑), when: 나오는 때 — xmas(달력 xmasPlaza) · winter(겨울 배경일 때). 트리 전구·꼭대기 별은 tree가 그려진 바로 뒤에", "list": [
     { "id": "lights", "at": [0, 65], "y": 300, "when": "xmas" },

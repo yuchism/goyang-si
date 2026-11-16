@@ -6,7 +6,7 @@
 (밤 크리스마스 그림은 낮과 구도가 같다 — 낮을 밤에서 만들었음)
 
 소품마다 상자(BOX)를 주고 그 안에서만 찾는다(빈 광장은 ChatGPT가 다시 그린 것이라 집 외곽선이 1~2px씩 달라 상자 밖은 잡음).
-상자 안: 차이(RGB 합 > DIFF) 또는 빈 광장에선 하늘인 곳 → 가는 잡음 걷기(열기 r=OPEN) → 막힌 구멍 메우기(HOLE — 통짜 물건은 다, 회전목마는 작은 것만)
+상자 안: 차이(RGB 합 > DIFF) 또는 빈 광장에선 하늘인 곳 → 가는 잡음 걷기(열기 r=OPEN) → 막힌 구멍 메우기(HOLE — 기본 다 메움)
 (통짜 물건은 막힌 구멍 다 메움, 회전목마만 작은 것만) → 테두리 한 칸 넓힘. 상자가 겹치면 ORDER 앞의 소품이 먼저 가져간다(앞에 있는 것 먼저).
 출력: 소품마다 잘라낸 그림(상자 크기) + scene.json에 옮길 자리 [x, y] 목록."""
 from pathlib import Path
@@ -16,7 +16,7 @@ import json
 
 ROOT = Path(__file__).resolve().parent.parent
 DIFF, OPEN = 90, 2
-HOLE = {'carousel': 3000}  # 구멍 메우기 한도: 회전목마는 기둥 사이로 뒤 건물이 보이게 작은 구멍만, 나머지(통짜 물건)는 다 메움
+HOLE = {}  # 구멍 메우기 한도(소품별, 없으면 다 메움). 회전목마도 다 메움(2026-11-16: 작은 구멍만 메웠더니 색이 비슷한 곳이 빠져 누덕누덕 — 기둥 사이는 원래 그림의 뒤 건물이 그대로 보임)
 # id: (x0, y0, x1, y1) — 광장 그림 px
 BOX = {
     'stall': (196, 755, 516, 989),
@@ -28,6 +28,10 @@ BOX = {
     'tree': (470, 20, 1070, 856),
     'lights': (0, 60, 1561, 330),
 }
+# 상자 안에서 더 좁히는 다각형(광장 px) — 노점 지붕이 회전목마 받침과 겹치는 곳: 노점 것은 지붕선 아래만
+POLY = {'stall': [(238, 755), (472, 755), (522, 806), (522, 989), (196, 989), (196, 810)]}
+# 소품별 차이 문턱 — 회전목마 크림색 처마가 뒤 집 벽 색과 비슷해서 기본(DIFF)으로는 테두리가 빠짐
+DIFF_OF = {'carousel': 40}
 ORDER = ['stall', 'gifts-left', 'gift-right', 'snowman', 'rink', 'carousel', 'tree', 'lights']
 
 
@@ -80,19 +84,29 @@ xd = np.array(Image.open(ROOT / 'web/plaza/xmas-day.webp').convert('RGBA'))
 xn = np.array(Image.open(ROOT / 'web/plaza/xmas-night.webp').convert('RGBA'))
 wd = np.array(Image.open(ROOT / 'web/plaza/winter-day.webp').convert('RGBA'))
 diff = np.abs(xd[..., :3].astype(int) - wd[..., :3].astype(int)).sum(2)
-raw = (xd[..., 3] > 40) & ((wd[..., 3] < 128) | (diff > DIFF))
-taken = np.zeros(raw.shape, bool)
+sky = wd[..., 3] < 128
+opaque = xd[..., 3] > 40
+taken = np.zeros(opaque.shape, bool)
 (ROOT / 'web/plaza/props').mkdir(exist_ok=True)
 places = {}
 for pid in ORDER:
     x0, y0, x1, y1 = BOX[pid]
-    m = raw[y0:y1, x0:x1].copy()
+    dth = DIFF_OF.get(pid, DIFF)
+    m = (opaque & (sky | (diff > dth)))[y0:y1, x0:x1].copy()
+    if pid in POLY:
+        from PIL import ImageDraw
+        pm = Image.new('L', (x1 - x0, y1 - y0), 0)
+        ImageDraw.Draw(pm).polygon([(px - x0, py - y0) for px, py in POLY[pid]], fill=255)
+        poly = np.array(pm) > 0
+        m &= poly
     if pid == 'lights':  # 전구 줄은 가늘어서 열기를 하면 끊김 — 빈 광장에서 하늘인 곳만(잡음 없음)
         m &= wd[y0:y1, x0:x1, 3] < 128
     else:
         m = shift_or(shift_and(m, OPEN), OPEN)  # 열기: 가는 집 외곽선 잡음 걷기
         m = fill_small_holes(m, HOLE.get(pid, 10 ** 9))
     m = shift_or(m, 1) & (xd[y0:y1, x0:x1, 3] > 0)
+    if pid in POLY:
+        m &= poly
     m &= ~taken[y0:y1, x0:x1]
     taken[y0:y1, x0:x1] |= m
     ys, xs = np.nonzero(m)
