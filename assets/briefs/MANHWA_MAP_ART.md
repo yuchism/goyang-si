@@ -89,7 +89,7 @@
 ## 6. 파일 이름·규격
 
 - 원본(그림 일꾼이 두는 곳, git 무시 — 커밋하지 않음):
-  - `assets/manhwa/map/map-base-source-v1.png` (1200×1200 이상, 1:1, 종이색 바탕)
+  - `assets/manhwa/map/map-base-source-v2.png` (1200×1200 이상, 1:1, 종이색 바탕 — v2 2026-11-17: 터·길을 둥글게 다시 그림, 자리는 v1 그대로)
   - `assets/manhwa/map/shop-day-source-v1.png` (512×512 이상, 1:1, 투명)
   - `assets/manhwa/map/shop-night-source-v1.png` (day와 **같은 크기**, 투명)
 - 웹(커밋): `web/r/map/map-base.webp`·`shop-day.webp`·`shop-night.webp`

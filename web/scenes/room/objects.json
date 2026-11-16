@@ -137,7 +137,7 @@
         ]
       },
       "map": {
-        "base": "r/map/map-base.webp",
+        "base": "r/map/map-base.webp?v=2",
         "size": 1200,
         "home": [330, 1092],
         "shops": [
