@@ -1,7 +1,6 @@
 /* 땅 위 엘프 — 크리스마스 트리 ↔ 회전목마 뒤를 뛰어다님 (회의 2026-11-16, 그림 web/plaza/elf.webp — 지붕 그림자와 같은 8칸, 여기선 색 그대로)
    - 광장 뒤쪽 바닥 길(path: y, x 범위)을 달린다. 길의 y가 트리·회전목마 소품의 앞뒤 기준보다 작아서 둘 뒤로 지나가면 가려진다
    - 한 번에 한 명(크리스마스 밤엔 가끔 둘), every초 칸마다 chance. 가다가 가끔 멈춰 두리번(⑤), 가끔 미끄덩(⑥ → ⑦ → ⑧)
-   - 같은 코드로 elfWalk(key): 앞 바닥 손님 길을 손님인 척 걷다 미끄덩
    - 크리스마스(xmasPlaza) 기간에만, 낮·밤 모두. 동작 줄이기: 없음. 미리보기 ?elfrun=1 */
 export function makeElfRun(cfg, { RM, dev, key = 'elfRun' }) {
   const E = cfg[key], R = cfg.elf;

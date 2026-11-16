@@ -487,7 +487,6 @@ function build(cfg) {
   const PROPS = cfg.props.list.map(p => ({ ...p, im: ['day', 'night'].map(n => Object.assign(new Image(), { src: `props/${p.id}-${n}.webp?v=${cfg.v}` })) }));
   const carousel = makeCarousel(cfg, { RM });
   const elfRun = makeElfRun(cfg, { RM, dev: ELFRUN_DEV }); // 땅 위 엘프: 트리 ↔ 회전목마 뒤
-  const elfWalk = makeElfRun(cfg, { RM, dev: ELFRUN_DEV, key: 'elfWalk' }); // 손님인 척 앞 길을 걷다 미끄덩
   const propOn = (p, xmas) => p.when === 'xmas' ? xmas : p.when === SEASON;
   const drawProp = p => {
     const [d, n] = p.im, [x, y] = p.at;
@@ -598,8 +597,6 @@ function build(cfg) {
       layers.push([cfg.music.at[1], () => mbox.draw(g, t, dk)]);
       elfRun.update(t, dt, gXmas && gNight);
       layers.push([elfRun.y, () => elfRun.draw(g, t)]);
-      elfWalk.update(t, dt, false);
-      layers.push([elfWalk.y, () => elfWalk.draw(g, t)]);
     }
     for (const p of PROPS)
       if (propOn(p, xmas))
