@@ -515,7 +515,69 @@ function build(cfg) {
   const elfRun = makeElfRun(cfg, { RM, dev: ELFRUN_DEV }); // 땅 위 엘프: 트리 ↔ 회전목마 뒤
   const peek = makePeek(cfg, { RM, dev: PEEK_DEV }); // 쥐야쥐: 눈사람 뒤에서 빼꼼
   const propOn = (p, xmas) => p.when === 'xmas' ? xmas : p.when === SEASON;
+  /* 눈사람을 누르면 (2026-11-17): 밑동을 축으로 뒤뚱뒤뚱(점점 잦아듦) + 머리·모자에서 눈가루가 폴폴. scene.json snowmanTap */
+  const SMT = cfg.snowmanTap;
+  let wobT = -1e9;
+  const puffs = [];
+  const wobble = (p, t) => {
+    const u = t - wobT;
+    if (RM || u < 0 || u > SMT.sec)
+      return 0;
+    return SMT.angle * Math.sin(u * SMT.hz * Math.PI * 2) * (1 - u / SMT.sec);
+  };
+  const tapSnowman = (x, y, t, xmas) => {
+    const p = PROPS.find(p => p.id === 'snowman' && propOn(p, xmas)), im = p && p.im[0];
+    if (RM || !p || !im.naturalWidth)
+      return false;
+    const [px, py] = p.at, w = im.naturalWidth, h = im.naturalHeight, m = SMT.inset;
+    if (x < px + w * m || x > px + w * (1 - m) || y < py + h * m * 0.5 || y > py + h)
+      return false;
+    wobT = t;
+    for (let i = 0; i < SMT.puffs; i++) {
+      const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.8, v = SMT.speed[0] + Math.random() * (SMT.speed[1] - SMT.speed[0]);
+      puffs.push({ x: px + w * (0.3 + Math.random() * 0.4), y: py + h * (0.08 + Math.random() * 0.3), vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+        r: 2 + Math.random() * 2.5, t0: t, life: SMT.life * (0.7 + Math.random() * 0.6) });
+    }
+    return true;
+  };
+  const drawPuffs = t => {
+    let last = t;
+    for (let i = puffs.length - 1; i >= 0; i--) {
+      const q = puffs[i], u = t - q.t0;
+      if (u > q.life) {
+        puffs.splice(i, 1);
+        continue;
+      }
+      last = q.t0;
+      const x = q.x + q.vx * u, y = q.y + q.vy * u + 0.5 * SMT.gravity * u * u;
+      g.globalAlpha = 0.9 * (1 - u / q.life);
+      g.fillStyle = '#ffffff';
+      g.beginPath();
+      g.arc(x, y, q.r, 0, 7);
+      g.fill();
+    }
+    g.globalAlpha = 1;
+  };
   const drawProp = p => {
+    if (p.id === 'snowman') {
+      const a = wobble(p, performance.now() / 1000), im = p.im[0];
+      if (a && im.naturalWidth) { // 밑동 가운데를 축으로 기울여 그림
+        const cx = p.at[0] + im.naturalWidth / 2, by = p.at[1] + im.naturalHeight;
+        g.save();
+        g.translate(cx, by);
+        g.rotate(a);
+        g.translate(-cx, -by);
+        drawPropAt(p);
+        g.restore();
+      }
+      else
+        drawPropAt(p);
+      drawPuffs(performance.now() / 1000);
+      return;
+    }
+    drawPropAt(p);
+  };
+  const drawPropAt = p => {
     const [d, n] = p.im, [x, y] = p.at;
     if (d.complete && d.naturalWidth && mix < 0.999)
       g.drawImage(d, x, y);
@@ -541,6 +603,10 @@ function build(cfg) {
     const r = sc.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height, t = performance.now() / 1000;
     if (elfRun.tapAt(x, y, t) || roofs.tapAt(x, y, t) || guests.tapAt(x, y, t))
       return;
+    if (tapSnowman(x, y, t, isXmas(now()))) {
+      peek.poke(t); // 눈사람 뒤 쥐야쥐가 퐁
+      return;
+    }
     if (isXmas(now()) && tapTree(x, y, t)) // 트리: 불빛 물결 + 별 번쩍, 트리 둘레 손님은 멈춰 올려다봄
       guests.lookUp(treeBox[0] - cfg.guests.lookNear, treeBox[2] + cfg.guests.lookNear, t);
   });
