@@ -2,6 +2,7 @@
 
 > 상태: **1단계 끝 (2026-11-16).** 겨울 빈 광장 배경(낮 `winter-day-source-v1`, 밤은 낮을 밤으로 바꾼 `winter-night-source-v2` — v1은 가운데가 숲이라 안 씀) → 하늘 자르기 `tools/make_plaza_winter.py` → 크리스마스 그림에서 소품 8개 떼어 내기 `tools/make_plaza_props.py`(전구 줄·회전목마·스케이트장·트리·선물 둘·눈사람·노점, 낮·밤) → 코드: 배경 + 소품을 손님과 y 순서로(`scene.json` `backdrop`·`props`), 크리스마스 것(소품·트리 전구·펠리컨·불꽃·엘프)은 `xmasPlaza` 기간에만. 미리보기 `?event=none`.
 > 2단계 끝 (2026-11-16): 회전목마·노점은 차이 뽑기가 누덕누덕해서 주인이 ChatGPT로 같은 크기로 다시 그림(`assets/plaza/props/*-source-v1.png`, 참고 자른 그림 `assets/plaza/prop-ref/`). **광장 1년 내내 열림** — 약도는 크리스마스 기간엔 트리 광장(`plaza-xmas`), 그 밖엔 회전목마·붕어빵 노점 광장(`plaza-winter`, `offOpen`).
+> 실험 (2026-11-16): **도는 회전목마** — 빈 회전목마 + 막대에 꽂힌 말 2칸(주인이 ChatGPT로, 낮만)으로 말 4마리를 코드로 돌림(`web/plaza/carousel.js`, `scene.json` `carousel`). 밤은 남색을 얹어 임시로 — 좋으면 밤 그림도 받는다.
 > 다음: 다른 계절 배경(봄·여름·가을)과 그 계절 소품, 계절이 바뀔 때 약도 그림.
 
 ## 1. 한 줄 요약

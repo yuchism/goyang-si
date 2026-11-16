@@ -18,6 +18,7 @@ import { makeRoofs } from './roofs.js';
 import { makeCatVisit } from './catvisit.js';
 import { makeVendor } from './vendor.js';
 import { makeRink } from './skate.js';
+import { makeCarousel } from './carousel.js';
 
 const body = document.body;
 const HOME = '/?from=plaza';
@@ -482,6 +483,7 @@ function build(cfg) {
   sc.append(mbox.btn);
   /* ── 소품 (PLAZA_SEASONS_PLAN.md 2장): 낮 그림 위에 밤 그림을 mix만큼 — 배경과 같은 낮·밤 넘어가기 */
   const PROPS = cfg.props.list.map(p => ({ ...p, im: ['day', 'night'].map(n => Object.assign(new Image(), { src: `props/${p.id}-${n}.webp?v=${cfg.v}` })) }));
+  const carousel = makeCarousel(cfg, { RM });
   const propOn = (p, xmas) => p.when === 'xmas' ? xmas : p.when === SEASON;
   const drawProp = p => {
     const [d, n] = p.im, [x, y] = p.at;
@@ -590,7 +592,7 @@ function build(cfg) {
       layers.push([cfg.music.at[1], () => mbox.draw(g, t, dk)]);
     for (const p of PROPS)
       if (propOn(p, xmas))
-        layers.push([p.y, p.id === 'tree' ? () => { drawProp(p); drawLights(t); } : () => drawProp(p)]); // 트리 전구·별은 트리 바로 위
+        layers.push([p.y, p.id === 'tree' ? () => { drawProp(p); drawLights(t); } : p.id === 'carousel' ? () => { if (!carousel.draw(g, t, mix)) drawProp(p); } : () => drawProp(p)]); // 트리 전구·별은 트리 바로 위, 회전목마는 돌아가는 것(그림이 없으면 멈춘 소품)
     for (const [ly, fn] of layers.sort((a, b) => a[0] - b[0])) {
       guests.draw(g, t, dk, gy, ly);
       fn();
