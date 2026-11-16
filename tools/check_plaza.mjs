@@ -37,11 +37,14 @@ const ctx2d = new Proxy({}, {
 });
 const mk = tag => {
   const n = { tag, className: '', style: {}, children: [], classList: { add() { }, toggle() { }, contains: () => false }, setAttribute() { },
-    append(...c) { n.children.push(...c); }, getContext: () => ctx2d, scrollLeft: 0, clientWidth: 400, scrollWidth: 2000 };
+    append(...c) { n.children.push(...c); }, getContext: () => ctx2d, scrollLeft: 0, clientWidth: 400, scrollWidth: 2000,
+    addEventListener() { }, removeAttribute() { } };
   return n;
 };
+// 그림 (손님·소품·펠리컨 …): 받기 전 상태로 — complete 거짓이라 그리기는 건너뜀
+globalThis.Image = class { constructor() { this.complete = false; this.naturalWidth = 0; } addEventListener() { } };
 globalThis.window = globalThis;
-globalThis.document = { body: mk('body'), documentElement: {}, createElement: mk, getElementById: () => null, fonts: { load: () => Promise.resolve() } };
+globalThis.document = { body: mk('body'), documentElement: {}, createElement: mk, getElementById: () => null, fonts: { load: () => Promise.resolve() }, addEventListener() { }, hidden: false };
 globalThis.matchMedia = () => ({ matches: process.argv.includes('--rm') });
 const ls = {};
 globalThis.localStorage = { getItem: k => ls[k] ?? null, setItem: (k, v) => (ls[k] = String(v)) };

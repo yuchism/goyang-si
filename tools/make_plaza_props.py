@@ -122,4 +122,21 @@ for pid in ORDER:
             Image.fromarray(c, 'RGBA').save(out, 'WEBP', quality=88, method=6, alpha_quality=100, exact=False)
     places[pid] = [int(x0 + bx0), int(y0 + by0), int(bx1 - bx0), int(by1 - by0)]
     print(f'{pid:11s} 자리 {places[pid][:2]} 크기 {places[pid][2:]}')
+# 다시 그려 받은 소품 (2026-11-16: 차이 뽑기로는 회전목마·노점이 누덕누덕 — 주인이 ChatGPT로 같은 크기로 다시, 배경 투명):
+# assets/plaza/props/<id>-day·night-source-v1.png 는 assets/plaza/prop-ref/<id>-*-ref.png(아래 REF 상자를 자른 것)와 같은 크기·자리
+REF = {'carousel': (30, 390), 'stall': (186, 745)}
+for pid, (rx, ry) in REF.items():
+    srcs = {n: ROOT / f'assets/plaza/props/{pid}-{n}-source-v1.png' for n in ('day', 'night')}
+    if not all(f.exists() for f in srcs.values()):
+        continue
+    ims = {n: np.array(Image.open(f).convert('RGBA')) for n, f in srcs.items()}
+    for n in ims:
+        ims[n][..., 3] = np.where(ims[n][..., 3] < 12, 0, ims[n][..., 3])
+    m = (ims['day'][..., 3] > 0) | (ims['night'][..., 3] > 0)
+    ys, xs = np.nonzero(m)
+    bx0, by0, bx1, by1 = xs.min(), ys.min(), xs.max() + 1, ys.max() + 1
+    for n, a in ims.items():
+        Image.fromarray(a[by0:by1, bx0:bx1], 'RGBA').save(ROOT / f'web/plaza/props/{pid}-{n}.webp', 'WEBP', quality=88, method=6, alpha_quality=100, exact=False)
+    places[pid] = [int(rx + bx0), int(ry + by0), int(bx1 - bx0), int(by1 - by0)]
+    print(f'{pid:11s} 다시 그린 것으로 — 자리 {places[pid][:2]} 크기 {places[pid][2:]}')
 print(json.dumps(places))

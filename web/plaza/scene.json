@@ -1,17 +1,17 @@
 {
   "_": "크리스마스 광장 장면 설정 (tasks/xmas-plaza-code.md 「광장 페이지」, XMAS_PLAZA_PLAN.md). 좌표는 광장 그림 픽셀(size) 기준. 사람이 고치는 곳",
   "size": [1561, 989],
-  "v": 3,
+  "v": 4,
   "backdrop": { "_": "계절 배경 (PLAZA_SEASONS_PLAN.md 2장) — 소품 없는 빈 광장, 하늘 투명(tools/make_plaza_winter.py). 지금은 겨울 하나뿐", "winter": { "day": "winter-day.webp", "night": "winter-night.webp" } },
-  "props": { "_": "소품 (PLAZA_SEASONS_PLAN.md 2장) — 크리스마스 그림에서 떼어 낸 것(tools/make_plaza_props.py 출력 자리). 그림 props/<id>-day·night.webp, at: 왼쪽 위 [x, y](광장 px), y: 손님·캐릭터와 앞뒤를 맞출 기준(발밑), when: 나오는 때 — xmas(달력 xmasPlaza) · winter(겨울 배경일 때). 트리 전구·꼭대기 별은 tree가 그려진 바로 뒤에", "list": [
+  "props": { "_": "소품 (PLAZA_SEASONS_PLAN.md 2장) — 크리스마스 그림에서 떼어 낸 것 — 회전목마·노점은 주인이 ChatGPT로 다시 그린 것(tools/make_plaza_props.py 출력 자리). 그림 props/<id>-day·night.webp, at: 왼쪽 위 [x, y](광장 px), y: 손님·캐릭터와 앞뒤를 맞출 기준(발밑), when: 나오는 때 — xmas(달력 xmasPlaza) · winter(겨울 배경일 때). 트리 전구·꼭대기 별은 tree가 그려진 바로 뒤에", "list": [
     { "id": "lights", "at": [0, 65], "y": 300, "when": "xmas" },
-    { "id": "carousel", "at": [40, 400], "y": 800, "when": "winter" },
+    { "id": "carousel", "at": [50, 402], "y": 800, "when": "winter" },
     { "id": "rink", "at": [995, 760], "y": 790, "when": "winter" },
     { "id": "tree", "at": [470, 31], "y": 845, "when": "xmas" },
     { "id": "gift-right", "at": [872, 760], "y": 852, "when": "xmas" },
     { "id": "gifts-left", "at": [505, 705], "y": 856, "when": "xmas" },
     { "id": "snowman", "at": [1350, 738], "y": 966, "when": "winter" },
-    { "id": "stall", "at": [196, 755], "y": 989, "when": "winter" }
+    { "id": "stall", "at": [200, 758], "y": 989, "when": "winter" }
   ] },
   "view": { "_": "좁은 화면(높이에 맞추고 가로로 둘러보기)에서 처음 보이는 가운데 x", "focus": 780 },
   "sky": { "_": "하늘(코드): 방 창밖 하늘색(time.js skyAt) 위 → 아래, horizon: 아래 색이 닿는 y (건물 지붕 아래)", "horizon": 700 },

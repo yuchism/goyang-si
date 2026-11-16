@@ -652,17 +652,16 @@ if (DEV) {
   if (+Q.get('speed') > 0)
     setSpeed(+Q.get('speed'));
 }
-// 기간 밖(달력 xmasPlaza, 「약도 연결과 기간」)이면 거실로. 미리보기(dev)에선 그대로 보여 준다
-if (!DEV && !inPeriod('xmasPlaza', now()))
-  location.replace(HOME);
-else fetch('scene.json', { cache: 'no-cache' })
+// 광장은 1년 내내 열림 (PLAZA_SEASONS_PLAN.md, 회의 2026-11-16) — 크리스마스 것만 달력 xmasPlaza 기간에
+fetch('scene.json', { cache: 'no-cache' })
   .then(r => r.ok ? r.json() : Promise.reject(r.status))
   .then(cfg => {
     build(cfg);
     if (freshVisit())
-      gcEvent('plaza-visit', '크리스마스 광장 방문');
+      gcEvent('plaza-visit', '광장 방문');
   })
-  .catch(() => {
+  .catch(e => {
+    console.warn('광장을 못 엶', e); // 검사 도구(tools/check_plaza.mjs)가 까닭을 보게
     const box = el('div', 'msg');
     const a = el('a', 'btn', tr('home'));
     a.href = HOME;
