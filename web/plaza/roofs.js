@@ -6,6 +6,8 @@
    - 썰매: 12/24 밤에만, 방 창밖 산타 그림(r/fx/santa_1·2)을 그림자로. 하늘 높이 천천히
    - 동작 줄이기: 없음. 미리보기(dev): ?elf=1(자주) ?elf=slip(늘 미끄덩) ?sleigh=1(자주) */
 const clamp01 = v => Math.max(0, Math.min(1, v));
+// 엘프 시트 칸(assets/briefs/XMAS_PLAZA_ELF_ART.md): ①~④ 달리기 · ⑤ 점프 · ⑥ 내려다보기 · ⑦ 미끄덩 · ⑧ 엉덩방아. 일어나기는 ⑧ → ⑥ → 달리기. 땅 위 엘프(elfrun.js)도 이것을 씀
+export const ELF_FRAMES = { jump: 4, look: 5, up: 5, slip: 6, sit: 7 };
 
 export function makeRoofs(cfg, { nightImg, RM, rnd, dev }) {
   const R = cfg.roofs, E = cfg.elf, S = cfg.sleigh, W = cfg.size[0];
@@ -191,7 +193,7 @@ export function makeRoofs(cfg, { nightImg, RM, rnd, dev }) {
       for (const e of elves) {
         if (t < e.t0 || e.y == null)
           continue;
-        const fi = e.jump ? 4 : e.phase === 'look' || e.phase === 'up' ? 5 : e.phase === 'slip' ? 6 : e.phase === 'sit' ? 7 : Math.floor((t - e.t0) * E.fps) % 4;
+        const fi = e.jump ? ELF_FRAMES.jump : ELF_FRAMES[e.phase] ?? Math.floor((t - e.t0) * E.fps) % 4;
         const w = cell * k, foot = E.foot * k;
         const dx = e.x - w / 2, dy = e.y - foot + E.sink;
         if (vis < 0.99) { // 낮: 색 그대로

@@ -2,6 +2,8 @@
    - 광장 뒤쪽 바닥 길(path: y, x 범위)을 달린다. 길의 y가 트리·회전목마 소품의 앞뒤 기준보다 작아서 둘 뒤로 지나가면 가려진다
    - 한 번에 한 명(크리스마스 밤엔 가끔 둘), every초 칸마다 chance. 가다가 가끔 멈춰 두리번(⑤), 가끔 미끄덩(⑥ → ⑦ → ⑧)
    - 크리스마스(xmasPlaza) 기간에만, 낮·밤 모두. 동작 줄이기: 없음. 미리보기 ?elfrun=1 */
+import { ELF_FRAMES } from './roofs.js';
+
 export function makeElfRun(cfg, { RM, dev, key = 'elfRun' }) {
   const E = cfg[key], R = cfg.elf;
   const sheet = Object.assign(new Image(), { src: `elf.webp?v=${cfg.v}` });
@@ -65,7 +67,7 @@ export function makeElfRun(cfg, { RM, dev, key = 'elfRun' }) {
     for (const e of list) {
       if (t < e.t0)
         continue;
-      const fi = e.phase === 'look' || e.phase === 'up' ? (e.phase === 'up' ? 7 : 4) : e.phase === 'slip' ? 5 : e.phase === 'sit' ? 6 : Math.floor((t - e.t0) * R.fps) % 4;
+      const fi = ELF_FRAMES[e.phase] ?? Math.floor((t - e.t0) * R.fps) % 4; // 칸 번호는 roofs.js와 같이 (2026-11-16: 한 칸씩 밀려 있던 것 고침)
       const hop = e.phase === 'run' ? Math.abs(Math.sin((t - e.t0) * R.fps * Math.PI / 2)) * E.hop : 0;
       const fade = Math.min(1, Math.min(e.x - (E.x[0] - 30), (E.x[1] + 30) - e.x) / 30); // 길 양끝에서 스르륵
       g.save();
