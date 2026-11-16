@@ -6,7 +6,7 @@
    - 하늘 별·눈 일정·별똥별(플랜 3-4, tasks/xmas-plaza-sky.md): 눈은 날짜로 정한 칸(누구에게나 같음)마다 오거나 그치고, 그친 밤엔 하늘 별이 반짝, 가끔 별똥별. 12/24·25 밤은 늘 눈
    - 불꽃(플랜 3-3, 「광장 불꽃」): 그날 밤 첫 방문에 몇 분, 12/24·25 밤은 크게(별·트리 모양). 방 불꽃과 같은 그리기(js/fw-core.js), 하늘 겹과 그림 사이
    - 동작 줄이기: 깜빡임·물결·넘어가기 없이 정지, 눈·별똥별·불꽃 없음, 별은 멈춘 점
-   - 미리보기(dev에서만 — ?dev=1, 또는 방 미리보기 도구를 켠 기기): ?night=1|0 (밤·낮 고정), ?t=HH:MM (그 시각으로), ?speed=60 (시계 빨리), ?probe=1, ?snow=1|0 (눈 고정), ?shoot=1 (별똥별 자주), ?fw=1|eve (불꽃 지금 · 크리스마스 크게), ?chime=1 (첫 탭 뒤 정각 종 한 번), ?guests=숫자 (손님 수 고정), ?elf=1|slip (엘프 자주 · 늘 미끄덩), ?sleigh=1 (썰매 자주), ?cat=1 (강고양이 씨 바로·자주) */
+   - 미리보기(dev에서만 — ?dev=1, 또는 방 미리보기 도구를 켠 기기): ?night=1|0 (밤·낮 고정), ?t=HH:MM (그 시각으로), ?speed=60 (시계 빨리), ?probe=1, ?snow=1|0 (눈 고정), ?shoot=1 (별똥별 자주), ?fw=1|eve (불꽃 지금 · 크리스마스 크게), ?chime=1 (첫 탭 뒤 정각 종 한 번), ?guests=숫자 (손님 수 고정), ?elf=1|slip (엘프 자주 · 늘 미끄덩), ?sleigh=1 (썰매 자주), ?cat=1 (강고양이 씨 바로·자주), ?skate=1 (스케이트 둘 다 늘) */
 import { advanceClock, atHour, darkness, inPeriod, isNight, nightDark, nightOf, now, setSimMs, setSpeed, skyAt, strikesOf } from '../js/time.js';
 import { gcEvent, hash, pickLang, store } from '../js/util.js';
 import { el, fitStage, freshVisit } from '../js/page-kit.js';
@@ -17,6 +17,7 @@ import { makeMusicBox } from './musicbox.js';
 import { makeRoofs } from './roofs.js';
 import { makeCatVisit } from './catvisit.js';
 import { makeVendor } from './vendor.js';
+import { makeRink } from './skate.js';
 
 const body = document.body;
 const HOME = '/?from=plaza';
@@ -38,6 +39,7 @@ const CHIME_DEV = DEV && Q.get('chime') === '1';
 const ELF_DEV = !DEV ? null : Q.get('elf') === 'slip' ? 'slip' : Q.get('elf') === '1' ? '1' : null;
 const SLEIGH_DEV = DEV && Q.get('sleigh') === '1';
 const CAT_DEV = DEV && Q.get('cat') === '1';
+const SKATE_DEV = DEV && Q.get('skate') === '1';
 const GUESTS_DEV = DEV && Q.get('guests') != null ? Math.max(0, +Q.get('guests') || 0) : null;
 const FW_DEV = !DEV ? null : Q.get('fw') === 'eve' ? 'xmas' : Q.get('fw') === '1' ? 'night' : null;
 
@@ -476,6 +478,8 @@ function build(cfg) {
   /* ── 붕어빵 노점 사장님 (플랜 3-9, vendor.js): 금붕생이 붕어빵 화로 로봇 */
   const vendor = makeVendor(cfg, { RM, label: tr('vendor'), hourOf: d => d.getHours() + d.getMinutes() / 60 });
   sc.append(vendor.btn);
+  /* ── 스케이트장 (플랜 3-10, skate.js): 비버·오리너구리, 앞 펜스 겹 */
+  const rink = makeRink(cfg, { rnd, RM, depthAt, hourOf: d => d.getHours() + d.getMinutes() / 60, dev: SKATE_DEV });
   /* ── 지붕 위 엘프·이브 썰매 그림자 (플랜 3-7, roofs.js): 하늘 겹(stars)에 — 그림이 가린다 */
   const roofs = makeRoofs(cfg, { nightImg: night, RM, rnd, dev: { elf: ELF_DEV, sleigh: SLEIGH_DEV } });
   let gEve = false;
@@ -556,9 +560,10 @@ function build(cfg) {
     guests.update(t, dt, now(), gNight, gXmas);
     // 안쪽(y 작은)부터 그림: 오르골·강고양이 씨·금붕생이 로봇을 y 순서로 세우고 그 사이사이에 손님 (겹칠 때 앞뒤가 맞게)
     kitty.update(t, dt);
+    rink.update(t, dt, now(), gXmas && gNight);
     const dk = mix / 0.62;
     let gy = -Infinity;
-    for (const [ly, fn] of [[cfg.music.at[1], () => mbox.draw(g, t, dk)], [kitty.y(), () => kitty.draw(g)], [vendor.y, () => vendor.draw(g, t, now())]].sort((a, b) => a[0] - b[0])) {
+    for (const [ly, fn] of [[cfg.music.at[1], () => mbox.draw(g, t, dk)], [kitty.y(), () => kitty.draw(g)], [vendor.y, () => vendor.draw(g, t, now())], [rink.y, () => rink.draw(g, t, mix)]].sort((a, b) => a[0] - b[0])) {
       guests.draw(g, t, dk, gy, ly);
       fn();
       gy = ly;
