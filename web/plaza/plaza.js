@@ -201,20 +201,40 @@ function build(cfg) {
     else
       litRate = 1 / (n ? C.sec : C.offSec);
   };
-  // 물결: 시각 칸(every초)마다 한 번, 칸 안 시작은 고정 난수
+  // 물결: 시각 칸(every초)마다 한 번, 칸 안 시작은 고정 난수. 트리를 누르면(tapTree) 바로 한 번 더 빠르게(tapSec) — 낮에도 물결 띠만큼 불이 켜지고, 꼭대기에 닿으면 별이 번쩍
+  let tapT = -1e9;
+  const waveRise = p => T.lights[0][1] + 40 - p * (T.lights[0][1] - T.star[1] + 80);
+  const tapWave = t => {
+    const p = (t - tapT) / cfg.wave.tapSec;
+    return p >= 0 && p <= 1 ? waveRise(p) : null;
+  };
   const waveY = t => {
+    const tw = tapWave(t);
+    if (tw !== null)
+      return tw;
     const W8 = cfg.wave, slot = Math.floor(t / W8.every), at = slot * W8.every + rnd('wave', slot) * W8.every * 0.8;
     const p = (t - at) / W8.sec;
     if (p < 0 || p > 1)
       return null;
-    return T.lights[0][1] + 40 - p * (T.lights[0][1] - T.star[1] + 80);
+    return waveRise(p);
+  };
+  // 트리 그림 안을 눌렀나 (전구 자리 둘레 + 별)
+  const lx = T.lights.map(l => l[0]), ly = T.lights.map(l => l[1]);
+  const treeBox = [Math.min(...lx) - 30, T.star[1] - T.star[2] * 2, Math.max(...lx) + 30, Math.max(...ly) + 40];
+  const tapTree = (x, y, t) => {
+    if (RM || x < treeBox[0] || x > treeBox[2] || y < treeBox[1] || y > treeBox[3] || t - tapT < cfg.wave.tapSec * 0.6)
+      return false;
+    tapT = t;
+    return true;
   };
   const onK = (on, fade) => clamp01((lit - on) / fade);
   const drawLights = t => {
     const fade = C.fade / C.sec, wy = RM ? null : waveY(t);
     g.globalCompositeOperation = 'lighter';
+    const tw = RM ? null : tapWave(t);
     for (const L of tree) {
-      const k = onK(L.on, fade);
+      const near = tw === null ? 0 : Math.max(0, 1 - Math.abs(L.y - tw) / cfg.wave.band);
+      const k = Math.max(onK(L.on, fade), near); // 누른 물결은 낮에도 켬
       if (k <= 0)
         continue;
       let b = RM ? 0.8 : 0.55 + 0.45 * Math.sin(t * L.sp + L.ph);
@@ -260,10 +280,13 @@ function build(cfg) {
     }
     g.restore();
     // 가끔(flashEvery초 칸마다 한 번, 칸 안 시작은 고정 난수) 반짝 빛나는 십자 섬광. flashEvery 0이면 끔
-    if (!RM && ST8.flashEvery > 0) {
-      const slot = Math.floor(t / ST8.flashEvery), p = (t - slot * ST8.flashEvery - rnd('flash', slot) * ST8.flashEvery * 0.7) / ST8.flashSec;
+    // 누른 물결이 꼭대기에 닿을 때(tapSec 끝 무렵)도 — 낮에도 보이게 세게
+    const tp = (t - tapT - cfg.wave.tapSec * 0.85) / ST8.tapFlashSec;
+    if (!RM && (ST8.flashEvery > 0 || (tp >= 0 && tp <= 1))) {
+      const slot = ST8.flashEvery > 0 ? Math.floor(t / ST8.flashEvery) : 0;
+      const tapping = tp >= 0 && tp <= 1, p = tapping ? tp : (t - slot * ST8.flashEvery - rnd('flash', slot) * ST8.flashEvery * 0.7) / ST8.flashSec;
       if (p >= 0 && p <= 1) {
-        const k = sk * Math.sin(Math.PI * p), len = sr * ST8.flashLen * (0.6 + 0.4 * Math.sin(Math.PI * p));
+        const k = (tapping ? Math.max(sk, ST8.tapFlashK) : sk) * Math.sin(Math.PI * p), len = sr * ST8.flashLen * (0.6 + 0.4 * Math.sin(Math.PI * p));
         g.globalAlpha = Math.min(1, k * 1.4);
         g.drawImage(starSpr, sx - sr * 2.5, sy - sr * 2.5, sr * 5, sr * 5);
         for (const [dx, dy] of [[1, 0], [0, 1]]) {
@@ -516,7 +539,10 @@ function build(cfg) {
     if (e.target.closest('button, .mbox'))
       return;
     const r = sc.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height, t = performance.now() / 1000;
-    elfRun.tapAt(x, y, t) || roofs.tapAt(x, y, t) || guests.tapAt(x, y, t);
+    if (elfRun.tapAt(x, y, t) || roofs.tapAt(x, y, t) || guests.tapAt(x, y, t))
+      return;
+    if (isXmas(now()) && tapTree(x, y, t)) // 트리: 불빛 물결 + 별 번쩍, 트리 둘레 손님은 멈춰 올려다봄
+      guests.lookUp(treeBox[0] - cfg.guests.lookNear, treeBox[2] + cfg.guests.lookNear, t);
   });
 
   /* ── 그리기 겹 등록 (PLAZA_REFACTOR_PLAN.md R4): { y(), on(ctx)?, update(t, dt, ctx)?, always?, draw(t, ctx) }

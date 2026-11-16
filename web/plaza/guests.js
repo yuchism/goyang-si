@@ -195,5 +195,11 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
     Object.assign(hit, { state: 'dance', dt0: t, until: t + G.danceSec });
     return true;
   };
-  return { update, draw, list, tapAt };
+  // 트리를 누르면 그 둘레(x0~x1) 걷던 손님이 멈춰 올려다본다(⑤). 원래 멈출 곳은 그대로
+  const lookUp = (x0, x1, t) => {
+    for (const q of list)
+      if (q.state === 'walk' && q.x > x0 && q.x < x1)
+        Object.assign(q, { state: 'look', until: t + G.lookTap[0] + Math.random() * (G.lookTap[1] - G.lookTap[0]) });
+  };
+  return { update, draw, list, tapAt, lookUp };
 }
