@@ -2,7 +2,7 @@
    - 왼쪽 붕어빵 노점 뒤(cat.fromX, 스르륵 나타남)에서 걸어 들어와 트리 앞 자리(cat.spot — 펠리컨 왼쪽)에 멈춤
      → 트리 올려다보기 → 앉기(가끔 하품·그루밍·식빵) → 일어나 왔던 길로 돌아가 노점 뒤로 사라짐
    - 그림: 방 프레임(../f/cat_*.webp, f/meta.json [폭, 높이, 기준점 x, y, (크기 보정)]). 방 그림은 왼쪽을 본다 → 오른쪽을 볼 땐 뒤집기
-   - 크기: 손님과 같은 캐릭터 크기 규칙 (roomPx × charScale × depth(y))
+   - 크기: 방 대비 cat.scale배(손님 charScale과 따로 — 손님 크기는 생일 그림 틀 기준이라 같은 숫자여도 강고양이 씨가 커 보임) × depth(y)
    - 언제: every초 칸마다 chance로 한 번(칸 안 시작은 고정 난수 — 같은 시각엔 누구에게나 같음). 낮·밤 모두
    - 동작 줄이기: 나들이 칸이면 트리 앞에 앉아 있는 모습만. 미리보기 ?cat=1: 바로, devEvery초마다 */
 const clamp01 = v => Math.max(0, Math.min(1, v));
@@ -80,7 +80,7 @@ export function makeCatVisit(cfg, { rnd, RM, depthAt, dev }) {
     const m = meta['cat_' + name], fr = im(name);
     if (!m || !fr.complete || !fr.naturalWidth)
       return;
-    const [fw, fh, ax, ay, fk = 1] = m, k = CH.roomPx * CH.charScale * depthAt(sy) * fk * C.size;
+    const [fw, fh, ax, ay, fk = 1] = m, k = CH.roomPx * C.scale * depthAt(sy) * fk;
     const x = cat.x, y = sy;
     g.save();
     if (cat.state === 'in' || cat.state === 'out')
