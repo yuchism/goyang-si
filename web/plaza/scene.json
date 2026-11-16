@@ -55,7 +55,7 @@
   "char": {
     "_": "캐릭터 크기 (XMAS_PLAZA_PLAN.md 2장). roomPx: 방 앞쪽(깊이 1)에서 프레임 1px → 방 배경 그림 px (assets.js FSC 0.42 × 1561/1200 stage). charScale: 방보다 작게(0.5). depth: y 두 지점의 배율(사이는 잇고 밖은 끝값) — 트리 앞 y 900에서 0.5배, 회전목마 근처 y 790에서 약 0.44배. probe: ?probe=1 시험 캐릭터 프레임과 세울 자리 [x, y].",
     "roomPx": 0.5464,
-    "charScale": 0.5,
+    "charScale": 0.6,
     "depth": { "y": [790, 900], "scale": [0.875, 1] },
     "probe": { "frame": "cat_stand", "at": [[790, 905], [150, 800]] }
   }
