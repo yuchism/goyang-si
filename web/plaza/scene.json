@@ -1,7 +1,7 @@
 {
   "_": "크리스마스 광장 장면 설정 (tasks/xmas-plaza-code.md 「광장 페이지」, XMAS_PLAZA_PLAN.md). 좌표는 광장 그림 픽셀(size) 기준. 사람이 고치는 곳",
   "size": [1561, 989],
-  "v": 11,
+  "v": 12,
   "carousel": { "_": "도는 회전목마 (web/plaza/carousel.js) — 그림이 있으면 소품 carousel 대신. at·size: 빈 회전목마 그림 자리·크기(원래 회전목마 참고 상자와 같음), empty·horse: 그림, horseCell: 말 시트 한 칸, horseScale: 말 배율, pole: 칸마다 막대 x(시트 px), poleBottom: 막대 아래끝 y(시트 px), sink: 막대를 받침 속으로 넣는 길이(시트 px — bob보다 커야 틈이 안 보임). ring: 말이 도는 타원(회전목마 칸 안 px), n: 말 수, speed: rad/초, bob: 오르내림 px, legFps: 다리 칸 넘김, depth: [뒤, 앞] 배율, roofCut: 이 y 위는 지붕(앞쪽 말 위에 다시 그림), rmAngle: 동작 줄이기 때 각도, night: 밤 그림이 없을 때 얹는 색 [r,g,b]·세기, nightSet: 밤 그림(막대 자리는 밤 시트 것)", "at": [30, 390], "size": [430, 425], "empty": "carousel-empty-day.webp", "horse": "carousel-horse-day.webp", "horseCell": [430, 425], "horseScale": 0.48, "pole": [218, 216], "poleBottom": 407, "sink": 24, "ring": { "center": [204, 345], "r": [118, 10] }, "n": 4, "speed": 0.38, "bob": 7, "legFps": 1.6, "depth": [0.9, 1], "roofCut": 214, "rmAngle": 0.6, "night": { "rgb": "16,22,58", "a": 0.32 }, "nightSet": { "empty": "carousel-empty-night.webp", "horse": "carousel-horse-night.webp", "pole": [218, 216], "poleBottom": 407 } },
   "backdrop": { "_": "계절 배경 (PLAZA_SEASONS_PLAN.md 2장) — 소품 없는 빈 광장, 하늘 투명(tools/make_plaza_winter.py). 지금은 겨울 하나뿐", "winter": { "day": "winter-day.webp", "night": "winter-night.webp" } },
   "props": { "_": "소품 (PLAZA_SEASONS_PLAN.md 2장) — 크리스마스 그림에서 떼어 낸 것 — 회전목마·노점은 주인이 ChatGPT로 다시 그린 것(tools/make_plaza_props.py 출력 자리). 그림 props/<id>-day·night.webp, at: 왼쪽 위 [x, y](광장 px), y: 손님·캐릭터와 앞뒤를 맞출 기준(발밑), when: 나오는 때 — xmas(달력 xmasPlaza) · winter(겨울 배경일 때). 트리 전구·꼭대기 별은 tree가 그려진 바로 뒤에", "list": [

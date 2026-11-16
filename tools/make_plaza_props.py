@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""사계절 광장 — 지금 크리스마스 광장 그림에서 소품을 떼어 낸다 (PLAZA_SEASONS_PLAN.md 4장).
+"""(전구 줄 lights는 이 뒤에 tools/make_plaza_wires.py로 전구 길에서 새로 그림)
+사계절 광장 — 지금 크리스마스 광장 그림에서 소품을 떼어 낸다 (PLAZA_SEASONS_PLAN.md 4장).
 
 크리스마스 그림(web/plaza/xmas-day·night.webp)과 겨울 빈 광장(web/plaza/winter-day·night.webp — tools/make_plaza_winter.py)의
 차이로 소품 모양(마스크)을 낮 그림에서 잡고, 같은 마스크로 낮·밤 크리스마스 그림을 잘라 web/plaza/props/<id>-day·night.webp로.
