@@ -40,6 +40,10 @@ const ELF_DEV = !DEV ? null : Q.get('elf') === 'slip' ? 'slip' : Q.get('elf') ==
 const SLEIGH_DEV = DEV && Q.get('sleigh') === '1';
 const CAT_DEV = DEV && Q.get('cat') === '1';
 const SKATE_DEV = DEV && Q.get('skate') === '1';
+// 사계절 광장 미리보기 (PLAZA_SEASONS_PLAN.md 5장): ?event=xmas|none (크리스마스 소품·트리 전구·펠리컨·불꽃·엘프 켜고 끄기)
+const EVENT_DEV = !DEV ? null : Q.get('event') === 'none' ? false : Q.get('event') === 'xmas' ? true : null;
+const isXmas = d => EVENT_DEV !== null ? EVENT_DEV : inPeriod('xmasPlaza', d);
+const SEASON = 'winter'; // 지금은 겨울 배경뿐 — 다른 계절 그림이 오면 달력으로
 const GUESTS_DEV = DEV && Q.get('guests') != null ? Math.max(0, +Q.get('guests') || 0) : null;
 const FW_DEV = !DEV ? null : Q.get('fw') === 'eve' ? 'xmas' : Q.get('fw') === '1' ? 'night' : null;
 
@@ -145,7 +149,7 @@ function build(cfg) {
   const SK = cfg.stars, stars = canvas('stars', W, SK.bottom), sg = stars.getContext('2d');
   // 2. 불꽃 (하늘 다음, 그림 전 — 트리·건물·전구 줄 뒤에서 터진다)
   const fw = canvas('fw', W, H), fg = fw.getContext('2d');
-  // 3. 광장 그림: 낮 위에 밤을 겹친다. 낮 그림이 없으면 밤 그림으로 대신
+  // 3. 계절 배경(빈 광장): 낮 위에 밤을 겹친다. 낮 그림이 없으면 밤 그림으로 대신. 소품은 fx 캔버스에 y 순서로(손님과 앞뒤)
   const pic = (cls, src) => {
     const n = el('img', 'pic ' + cls);
     n.alt = '';
@@ -154,7 +158,8 @@ function build(cfg) {
     n.src = src + '?v=' + cfg.v;
     return n;
   };
-  const day = pic('day', cfg.day), night = pic('night', cfg.night);
+  const BD = cfg.backdrop[SEASON];
+  const day = pic('day', BD.day), night = pic('night', BD.night);
   day.onerror = () => {
     day.onerror = null;
     day.src = night.src;
@@ -475,6 +480,19 @@ function build(cfg) {
   /* ── 오르골 (플랜 3-1, musicbox.js): 펠리컨 오기 전 임시 상자 */
   const mbox = makeMusicBox(cfg, { Snd, RM, label: tr('mbox') });
   sc.append(mbox.btn);
+  /* ── 소품 (PLAZA_SEASONS_PLAN.md 2장): 낮 그림 위에 밤 그림을 mix만큼 — 배경과 같은 낮·밤 넘어가기 */
+  const PROPS = cfg.props.list.map(p => ({ ...p, im: ['day', 'night'].map(n => Object.assign(new Image(), { src: `props/${p.id}-${n}.webp?v=${cfg.v}` })) }));
+  const propOn = (p, xmas) => p.when === 'xmas' ? xmas : p.when === SEASON;
+  const drawProp = p => {
+    const [d, n] = p.im, [x, y] = p.at;
+    if (d.complete && d.naturalWidth && mix < 0.999)
+      g.drawImage(d, x, y);
+    if (n.complete && n.naturalWidth && mix > 0.001) {
+      g.globalAlpha = Math.min(1, mix);
+      g.drawImage(n, x, y);
+      g.globalAlpha = 1;
+    }
+  };
   /* ── 붕어빵 노점 사장님 (플랜 3-9, vendor.js): 금붕생이 붕어빵 화로 로봇 */
   const vendor = makeVendor(cfg, { RM, label: tr('vendor'), hourOf: d => d.getHours() + d.getMinutes() / 60 });
   sc.append(vendor.btn);
@@ -498,7 +516,8 @@ function build(cfg) {
     snowTo = FORCE_SNOW ?? snowAt(d, cfg.weather);
     drawSky(d, mix);
     setNight(n);
-    maybeShow(d, n);
+    if (isXmas(d))
+      maybeShow(d, n);
     gNight = !!n;
     gXmas = !!nightOf(d) && xmasNight(nightOf(d));
     gEve = !!nightOf(d) && nightOf(d).endsWith('-12-24');
@@ -552,18 +571,27 @@ function build(cfg) {
     starK += (starTo - starK) * ease;
     snowK += (snowTo - snowK) * ease;
     drawStars(t);
-    roofs.update(t, dt, starK, gXmas, gEve);
-    roofs.draw(sg, t, starK);
+    const xmas = isXmas(now());
+    mbox.btn.hidden = !xmas;
+    if (xmas) {
+      roofs.update(t, dt, starK, gXmas, gEve);
+      roofs.draw(sg, t, starK);
+    }
     drawFw(t);
     g.clearRect(0, 0, W, H);
-    drawLights(t);
     guests.update(t, dt, now(), gNight, gXmas);
     // 안쪽(y 작은)부터 그림: 오르골·강고양이 씨·금붕생이 로봇을 y 순서로 세우고 그 사이사이에 손님 (겹칠 때 앞뒤가 맞게)
     kitty.update(t, dt);
     rink.update(t, dt, now(), gXmas && gNight);
     const dk = mix / 0.62;
     let gy = -Infinity;
-    for (const [ly, fn] of [[cfg.music.at[1], () => mbox.draw(g, t, dk)], [kitty.y(), () => kitty.draw(g)], [vendor.y, () => vendor.draw(g, t, now())], [rink.y, () => rink.draw(g, t, mix)]].sort((a, b) => a[0] - b[0])) {
+    const layers = [[kitty.y(), () => kitty.draw(g)], [vendor.y, () => vendor.draw(g, t, now())], [rink.y, () => rink.draw(g, t, mix)]];
+    if (xmas)
+      layers.push([cfg.music.at[1], () => mbox.draw(g, t, dk)]);
+    for (const p of PROPS)
+      if (propOn(p, xmas))
+        layers.push([p.y, p.id === 'tree' ? () => { drawProp(p); drawLights(t); } : () => drawProp(p)]); // 트리 전구·별은 트리 바로 위
+    for (const [ly, fn] of layers.sort((a, b) => a[0] - b[0])) {
       guests.draw(g, t, dk, gy, ly);
       fn();
       gy = ly;
