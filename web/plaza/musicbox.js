@@ -1,5 +1,6 @@
 /* 크리스마스 광장 오르골 (XMAS_PLAZA_PLAN.md 3-1): 트리 앞 펠리컨 자리의 작은 오르골 상자. 누를 때마다 다음 캐럴 → … → 안 나옴.
-   - 펠리컨 그림이 오기 전까지 상자를 코드로 그린다(scene.json music). 펠리컨이 오면 그리는 것만 바꾼다
+   - 펠리컨(web/plaza/pelican.webp, 주인이 ChatGPT로 그림 · tools/make_plaza_pelican.py): 노래 중 ①~④ 손잡이 돌리기, 꺼지면 ⑤ 졸기.
+     받침대 오른쪽 다리 바닥(pelican.anchor)이 music.at에 온다. 그림을 못 받으면 예전 임시 상자를 코드로 그린다
    - 소리: sound.js Snd(방과 같은 오디오)로 녹음을 통째로 받아 풀고(range 요청 없이 — 서비스 워커와 다투지 않게) 같은 곡을 되풀이
    - 누르는 것 자체가 소리를 켜겠다는 뜻이라, 소리가 꺼져 있어도 연다(거실 설정은 바꾸지 않음)
    - 페이지를 나갔다 오면 다시 「안 나옴」부터 (기억하지 않음). 동작 줄이기: 손잡이·음표 멈춤, 소리는 그대로 */
@@ -66,12 +67,76 @@ export function makeMusicBox(cfg, { Snd, RM, label }) {
   btn.className = 'mbox';
   btn.setAttribute('aria-label', label);
   const [x, y] = M.at, [bw, bh] = M.size, pad = M.hitPad;
-  Object.assign(btn.style, { left: x - bw / 2 - pad + 'px', top: y - bh - pad * 2 + 'px', width: bw + pad * 2 + 'px', height: bh + pad * 3 + 'px' });
+  const P = M.pelican, pk = P.scale, [pcw, pch] = P.cell, [pax, pay] = P.anchor;
+  const px0 = x - pax * pk, py0 = y - pay * pk; // 펠리컨 칸 왼쪽 위 (광장 px)
+  const [hx0, hy0, hx1, hy1] = P.hit; // 누르는 자리: 칸 안 [x0, y0, x1, y1]
+  Object.assign(btn.style, { left: px0 + hx0 * pk - pad + 'px', top: py0 + hy0 * pk - pad + 'px', width: (hx1 - hx0) * pk + pad * 2 + 'px', height: (hy1 - hy0) * pk + pad * 2 + 'px' });
+  const sheet = new Image();
+  sheet.src = `pelican.webp?v=${cfg.v}`;
+  let tmp = null;
   btn.addEventListener('click', tap);
 
-  // 상자 그리기 (펠리컨 오기 전 임시). dark: 밤 어둠 0~1
+  // 펠리컨 그리기. dark: 밤 어둠 0~1 (남색을 얹어 어둡게 — 광장 그림과 같이)
+  const drawPelican = (g, t, dark, on) => {
+    const fi = on ? (RM ? 1 : Math.floor((t - playT) * P.fps) % 4) : loading ? 0 : 4;
+    const dw = pcw * pk, dh = pch * pk;
+    // 그림자
+    g.save();
+    g.globalAlpha = 0.2;
+    g.fillStyle = '#1a1d2e';
+    g.beginPath();
+    g.ellipse(x - P.shadow[0] * pk, y, P.shadow[1] * pk, P.shadow[1] * pk * 0.16, 0, 0, 7);
+    g.fill();
+    g.restore();
+    if (dark > 0.01) {
+      if (!tmp)
+        tmp = document.createElement('canvas');
+      const tw = Math.ceil(dw), th = Math.ceil(dh);
+      if (tmp.width !== tw || tmp.height !== th)
+        Object.assign(tmp, { width: tw, height: th });
+      const tg = tmp.getContext('2d');
+      tg.globalCompositeOperation = 'source-over';
+      tg.clearRect(0, 0, tw, th);
+      tg.drawImage(sheet, fi * pcw, 0, pcw, pch, 0, 0, dw, dh);
+      tg.globalCompositeOperation = 'source-atop';
+      tg.fillStyle = `rgba(16,22,52,${Math.min(1, dark) * (cfg.guests.nightShade || 0.22)})`; // 손님과 같은 밤 그늘
+      tg.fillRect(0, 0, tw, th);
+      g.drawImage(tmp, px0, py0);
+    }
+    else
+      g.drawImage(sheet, fi * pcw, 0, pcw, pch, px0, py0, dw, dh);
+    // 음표: 오르골 위에서 (노래 중 셋, 받는 중 하나). 졸 땐 z (코드로)
+    const nx = x + P.notes[0] * pk, ny = y + P.notes[1] * pk;
+    if (RM)
+      return;
+    g.save();
+    if (on || loading) {
+      g.font = '700 16px serif';
+      g.fillStyle = '#fff6c8';
+      for (let k = 0; k < (loading ? 1 : 3); k++) {
+        const p = ((t * 0.45 + k / 3) % 1);
+        g.globalAlpha = Math.sin(Math.PI * p) * 0.9;
+        g.fillText(k % 2 ? '♫' : '♪', nx - 6 + Math.sin(p * 6 + k) * 8 + k * 6, ny - p * 46);
+      }
+    }
+    else {
+      const zx = x + P.zzz[0] * pk, zy = y + P.zzz[1] * pk;
+      g.font = '700 11px sans-serif';
+      g.fillStyle = '#eef2ff';
+      for (let k = 0; k < 2; k++) {
+        const p = ((t * 0.3 + k / 2) % 1);
+        g.globalAlpha = Math.sin(Math.PI * p) * 0.75;
+        g.fillText('z', zx + p * 10 + k * 3, zy - p * 22);
+      }
+    }
+    g.restore();
+  };
+
+  // 임시 상자 (펠리컨 그림을 못 받았을 때)
   const draw = (g, t, dark) => {
     const on = idx > 0 && !!src, w = bw, h = bh, x0 = x - w / 2, y0 = y - h;
+    if (sheet.complete && sheet.naturalWidth)
+      return drawPelican(g, t, dark, on);
     const shade = c => { // 밤: 남색 쪽으로 섞어 어둡게 (광장 그림과 같이)
       const v = parseInt(c.slice(1), 16), k = dark * 0.35, mixc = (a, b) => Math.round(a + (b - a) * k);
       return `rgb(${mixc(v >> 16, 16)},${mixc(v >> 8 & 255, 22)},${mixc(v & 255, 52)})`;
