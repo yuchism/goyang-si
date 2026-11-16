@@ -115,11 +115,11 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
   };
 
   // 밤엔 그림을 어둡게 (광장 그림이 밤 그림으로 넘어가는 만큼). 한 장 그릴 때마다 작은 캔버스에 칠해서
-  // front: undefined = 모두, false = y < splitY만(오르골 뒤), true = 나머지(오르골 앞)
-  const draw = (g, t, dark, splitY, front) => {
+  // lo ≤ y < hi 인 손님만 (오르골·강고양이 씨와 앞뒤를 맞추려고 나눠 그림). 빼면 모두
+  const draw = (g, t, dark, lo = -Infinity, hi = Infinity) => {
     const [cw, chh] = G.cell;
     for (const q of [...list].sort((a, b) => a.y - b.y)) {
-      if (front !== undefined && (q.y >= splitY) !== front)
+      if (q.y < lo || q.y >= hi)
         continue;
       const im = imgs[q.id];
       if (!ready(q.id))
