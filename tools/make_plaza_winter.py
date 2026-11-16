@@ -5,8 +5,7 @@
   낮 assets/plaza/winter-day-source-v1.png, 밤 assets/plaza/winter-night-source-v2.png(낮 그림을 밤으로 바꾼 것)
 → web/plaza/winter-day.webp · winter-night.webp
 
-하늘은 단색이 아니라 위아래로 조금 변한다(낮: 위가 더 짙은 하늘색). 맨 위 FIT_Y줄까지의 줄별 중앙값으로 줄마다 하늘색을
-직선으로 맞춰(아래로 늘려) 쓰고, 그 색과의 거리가 HI 미만인 픽셀 중 맨 윗줄에서 이어진 곳만 하늘로 본다(창문의 하늘색은
+하늘은 단색이 아니라 위아래로 변한다(낮: 지평선 쪽이 밝음). 줄마다 하늘색을 위에서부터 따라가며 정하고, 그 색과의 거리가 HI 미만인 픽셀 중 맨 윗줄에서 이어진 곳만 하늘로 본다(창문의 하늘색은
 안 빠지게). 거리 LO 이하는 투명, LO~HI는 부드럽게 — 반투명 가장자리는 하늘색을 빼서 앞 색만 남긴다."""
 from pathlib import Path
 from PIL import Image
@@ -14,19 +13,24 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = {'day': 'assets/plaza/winter-day-source-v1.png', 'night': 'assets/plaza/winter-night-source-v2.png'}
-FIT_Y, KEEP_Y = 280, 720
+KEEP_Y = 720
+TRACK, MIN_N = 18, 40  # 하늘색 따라가기: 윗줄 하늘색과 이만큼 가까운 픽셀이 MIN_N개 이상인 줄만 갱신
 TH = {'day': (10, 42), 'night': (5, 16)}  # LO, HI — 밤 하늘은 거의 검정이라 외곽선(진한 갈색)이 먹히지 않게 좁게
 
 
 def cut(path, out, LO, HI):
     im = np.array(Image.open(ROOT / path).convert('RGB')).astype(float)
     H, W, _ = im.shape
-    ys = np.arange(FIT_Y)
-    med = np.median(im[:FIT_Y], axis=1)  # 줄별 중앙값
+    # 줄마다 하늘색: 위에서부터 내려가며, 윗줄 하늘색과 가까운(TRACK 안) 픽셀들의 중앙값으로 따라감
+    # (낮 하늘은 지평선 가까이 갈수록 밝아짐 — 직선으로 맞추면 지붕 위에 옅은 하늘 테두리가 남아 밤에 비쳤음, 2026-11-16)
     sky = np.zeros((H, 3))
-    for c in range(3):
-        k, b = np.polyfit(ys, med[:, c], 1)
-        sky[:, c] = k * np.arange(H) + b
+    cur = np.median(im[:8].reshape(-1, 3), axis=0)
+    for y in range(H):
+        row = im[y]
+        near = np.sqrt(((row - cur) ** 2).sum(1)) < TRACK
+        if near.sum() >= MIN_N:
+            cur = np.median(row[near], axis=0)
+        sky[y] = cur
     d = np.sqrt(((im - sky[:, None, :]) ** 2).sum(2))
     cand = d < HI
     cand[KEEP_Y:] = False
