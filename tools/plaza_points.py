@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""크리스마스 광장 자리 찍기 (tasks/xmas-plaza-code.md 「광장 페이지」) — 밤 그림 web/plaza/xmas-night.webp에서
+"""크리스마스 광장 자리 찍기 (tasks/xmas-plaza-code.md 「광장 페이지」) — 밤 그림 tools/ref/xmas-night.webp에서
 트리 전구 자리와 전구 줄 길을 찾아 JSON으로 출력한다. 결과는 사람이 web/plaza/scene.json의 tree.lights·strings에 붙인다.
 
   python3 tools/plaza_points.py            # JSON 출력
@@ -17,7 +17,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / 'web/plaza/xmas-night.webp'
+SRC = ROOT / 'tools/ref/xmas-night.webp'
 STAR = (780, 100)            # 트리 꼭대기(별 아래끝) — 세모의 꼭짓점
 BOTTOM, HALF = 700, 300      # 잎 아래끝 y와 그때 반폭
 GAP, SAFE = 30, 3

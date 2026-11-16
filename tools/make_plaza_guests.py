@@ -87,7 +87,7 @@ def convert(name, target, lifts):
 def main():
     REVIEW.mkdir(parents=True, exist_ok=True)
     WEB.mkdir(parents=True, exist_ok=True)
-    plaza = Image.open(ROOT / 'web/plaza/xmas-night.webp').convert('RGBA')
+    plaza = Image.open(ROOT / 'tools/ref/xmas-night.webp').convert('RGBA')
     overview = Image.new('RGBA', plaza.size, '#18243b')
     overview.alpha_composite(plaza)
     metrics = {}

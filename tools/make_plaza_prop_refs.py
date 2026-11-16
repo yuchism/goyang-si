@@ -10,7 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 SPEC = json.loads((ROOT / 'tools/plaza_props.json').read_text())['props']
 BG = {'day': (120, 170, 230, 255), 'night': (13, 28, 73, 255)}
-SRC = {'day': 'web/plaza/xmas-day.webp', 'night': 'web/plaza/xmas-night.webp'}
+SRC = {'day': 'tools/ref/xmas-day.webp', 'night': 'tools/ref/xmas-night.webp'}
 ids = sys.argv[1:] or list(SPEC)
 (ROOT / 'assets/plaza/prop-ref').mkdir(parents=True, exist_ok=True)
 for n in ('day', 'night'):

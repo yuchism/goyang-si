@@ -1,8 +1,8 @@
 # 겨울 빈 광장 배경 그림 지시서 (PLAZA_SEASONS_PLAN.md 4장)
 
 ChatGPT(이미지 편집)에 **지금 광장 그림을 첨부**해서 받는다. 낮·밤 따로 두 번.
-- 낮: `web/plaza/xmas-day.webp` 첨부 → 받은 것 `assets/plaza/winter-day-source-v1.png`
-- 밤: `web/plaza/xmas-night.webp` 첨부(하늘이 투명하면 남색 배경을 깔아서 PNG로) → `assets/plaza/winter-night-source-v1.png`
+- 낮: `tools/ref/xmas-day.webp` 첨부 → 받은 것 `assets/plaza/winter-day-source-v1.png`
+- 밤: `tools/ref/xmas-night.webp` 첨부(하늘이 투명하면 남색 배경을 깔아서 PNG로) → `assets/plaza/winter-night-source-v1.png`
 
 ```text
 첨부한 그림을 그대로 두고, 아래 물건들만 깨끗이 지워 주세요. 지운 자리는 그 뒤에 있던 돌바닥·건물·눈으로 자연스럽게 채워 주세요.
