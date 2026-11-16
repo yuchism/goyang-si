@@ -20,6 +20,7 @@ GUESTS = {
     'sheep': (476, (0, 0, 0, 0, 0)),
     'dog': (504, (0, 0, 0, 0, 0)),
     'wombat': (392, (0, 0, 0, 0, 0)),
+    'wolf-sheep-disguise': (490, (0, 0, 0, 0, 0)),  # 양 탈을 쓴 늑대 (주인이 ChatGPT로 직접 그림, 2026-11-16)
 }
 
 
@@ -91,7 +92,7 @@ def main():
     overview.alpha_composite(plaza)
     metrics = {}
     # 검수 합성 전용 자리. 실제 장면 설정·동작에는 사용하지 않는다.
-    for (name, (height, lifts)), x in zip(GUESTS.items(), (150, 400, 650, 900, 1150, 1400)):
+    for (name, (height, lifts)), x in zip(GUESTS.items(), (130, 340, 550, 760, 970, 1180, 1390)):
         frames, metrics[name] = convert(name, height, lifts)
         frame = frames[0].resize((round(CELL * .42), round(HEIGHT * .42)), Image.Resampling.LANCZOS)
         overview.alpha_composite(frame, (round(x - CELL * .42 / 2), round(940 - FOOT * .42)))

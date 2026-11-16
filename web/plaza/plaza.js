@@ -536,8 +536,10 @@ function build(cfg) {
     g.clearRect(0, 0, W, H);
     drawLights(t);
     guests.update(t, dt, now(), gNight, gXmas);
-    guests.draw(g, t, mix / 0.62);
+    // 오르골보다 안쪽 손님 → 오르골 → 앞쪽 손님 (겹칠 때 앞뒤가 맞게)
+    guests.draw(g, t, mix / 0.62, cfg.music.at[1], false);
     mbox.draw(g, t, mix / 0.62);
+    guests.draw(g, t, mix / 0.62, cfg.music.at[1], true);
     drawSteam(t);
     drawSnow(t, dt);
     if (!RM || lit !== litTo)
