@@ -510,6 +510,14 @@ function build(cfg) {
   /* ── 지붕 위 엘프·이브 썰매 그림자 (XMAS_PLAZA_PLAN.md 3-5, roofs.js): 하늘 겹(stars)에 — 그림이 가린다 */
   const roofs = makeRoofs(cfg, { nightImg: night, RM, rnd, dev: { elf: ELF_DEV, sleigh: SLEIGH_DEV } });
   let gEve = false;
+  /* ── 눌러 보기 (2026-11-17): 달리던 엘프는 미끄덩(땅 → 지붕 순), 지나가던 손님은 잠깐 춤. 단추(오르골·회전목마·노점)는 단추가 먼저 받음.
+     click만 받아서 옆으로 밀어 보는(pan) 손짓에는 안 움직임 */
+  sc.addEventListener('click', e => {
+    if (e.target.closest('button, .mbox'))
+      return;
+    const r = sc.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height, t = performance.now() / 1000;
+    elfRun.tapAt(x, y, t) || roofs.tapAt(x, y, t) || guests.tapAt(x, y, t);
+  });
 
   /* ── 그리기 겹 등록 (PLAZA_REFACTOR_PLAN.md R4): { y(), on(ctx)?, update(t, dt, ctx)?, always?, draw(t, ctx) }
      ctx = { xmas, d(지금 시각), mix(밤 0~1), dk(손님 밤 그늘 세기), snowman(눈사람 있음) }. on이 거짓이면 안 그림(always면 update는 계속)

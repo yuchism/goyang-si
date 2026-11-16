@@ -3,7 +3,8 @@
    - 몇 명: 시간대마다 [적게, 많게](scene.json guests.count), 10분 칸마다 날짜 씨앗으로 그 사이 한 수. 12/24·25 밤은 북적
    - 크기: 캐릭터 크기 규칙(plaza.js char — 방보다 작게 + 원근 depth). 생일 시트 틀(강고양이 씨 560) 기준 키 → 광장 px
    - 그림이 아직 없는 손님은 나오지 않는다(그림이 들어오면 저절로). 밤엔 그림을 어둡게 덮는다(광장 그림과 같이)
-   - 동작 줄이기: 걷지 않고 멈출 곳에 서서 올려다보는 모습만 */
+   - 누르면(tapAt) 잠깐 춤추고(생일 춤 시트 web/sheet/guest-<id>-dance-v1.webp ①~④, danceSec초) 다시 걷는다 (2026-11-17)
+   - 동작 줄이기: 걷지 않고 멈출 곳에 서서 올려다보는 모습만 (춤도 없음) */
 import { tintAtop } from './plaza-kit.js';
 const clamp01 = v => Math.max(0, Math.min(1, v));
 
@@ -21,13 +22,13 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
     return imgs[id] = im;
   };
   // 그림마다 ⑤(서 있는 칸)의 실제 키·발끝을 잰다 — 칸 여백이 손님마다 달라도 키가 틀 표(G.tplH)대로 나오게
-  const measure = im => {
+  const measure = (im, cell = 4, [cw, chh] = G.cell) => {
     try {
-      const [cw, chh] = G.cell, c = document.createElement('canvas');
+      const c = document.createElement('canvas');
       c.width = cw;
       c.height = chh;
       const x = c.getContext('2d', { willReadFrequently: true });
-      x.drawImage(im, 4 * cw, 0, cw, chh, 0, 0, cw, chh);
+      x.drawImage(im, cell * cw, 0, cw, chh, 0, 0, cw, chh);
       const d = x.getImageData(0, 0, cw, chh).data;
       let top = chh, bot = -1;
       for (let y = 0; y < chh; y++)
@@ -44,12 +45,26 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
     catch (e) { }
   };
   G.ids.forEach(load);
+  // 춤 시트: 처음 누를 때 불러옴 (생일 손님 그림 — 칸 G.danceCell, ① 칸 키를 재서 걷는 그림과 같은 키로)
+  const dances = {};
+  const dance = id => {
+    if (dances[id])
+      return dances[id];
+    const im = new Image();
+    im.decoding = 'async';
+    im.src = `../sheet/guest-${id}-dance-v1.webp?v=${cfg.v}`;
+    im.onerror = () => { im.bad = true; };
+    im.onload = () => measure(im, 0, G.danceCell);
+    return dances[id] = im;
+  };
+  const danceReady = id => { const im = dances[id]; return im && !im.bad && im.complete && im.naturalWidth > 0 && im.visH; };
   const ready = id => { const im = imgs[id]; return im && !im.bad && im.complete && im.naturalWidth > 0; };
   const list = [];
   let nextAt = 0, tmp = null;
 
   // 앞쪽(깊이 1) 강고양이 씨 키(광장 px) = 방 프레임 키(catH) × roomPx × charScale. 손님 키 = 그 × 틀 키 ÷ 틀의 강고양이 씨 키(560)
   const catPx = CH.roomPx * CH.charScale * G.catH;
+  const wantOf = q => catPx * (G.tplH[q.id] || 480) / 560 * depthAt(q.y) * (G.size[q.id] || 1);
   const target = (d, night, xmas) => {
     if (force != null)
       return force;
@@ -95,6 +110,13 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
     }
     const W = cfg.size[0];
     for (const q of list) {
+      if (q.state === 'dance') {
+        if (t >= q.until) {
+          q.state = 'walk';
+          q.t0 = t;
+        }
+        continue;
+      }
       if (q.state === 'look') {
         if (t >= q.until)
           q.state = 'walk';
@@ -118,15 +140,17 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
   // 밤엔 그림을 어둡게 (광장 그림이 밤 그림으로 넘어가는 만큼). 한 장 그릴 때마다 작은 캔버스에 칠해서
   // lo ≤ y < hi 인 손님만 (오르골·강고양이 씨와 앞뒤를 맞추려고 나눠 그림). 빼면 모두
   const draw = (g, t, dark, lo = -Infinity, hi = Infinity) => {
-    const [cw, chh] = G.cell;
+    const chh = G.cell[1];
     for (const q of [...list].sort((a, b) => a.y - b.y)) {
       if (q.y < lo || q.y >= hi)
         continue;
-      const im = imgs[q.id];
       if (!ready(q.id))
         continue;
-      const fi = q.state === 'look' ? 4 : Math.floor((t - q.t0) * (q.hop ? G.hopFps : G.fps)) % 4;
-      const want = catPx * (G.tplH[q.id] || 480) / 560 * depthAt(q.y) * (G.size[q.id] || 1);
+      const dancing = q.state === 'dance' && danceReady(q.id);
+      const im = dancing ? dances[q.id] : imgs[q.id];
+      const cw = dancing ? G.danceCell[0] : G.cell[0];
+      const fi = dancing ? Math.floor((t - q.dt0) * G.danceFps) % 4 : q.state === 'look' || q.state === 'dance' ? 4 : Math.floor((t - q.t0) * (q.hop ? G.hopFps : G.fps)) % 4;
+      const want = wantOf(q);
       const k = want / (im.visH || chh * 0.62), foot = im.footY || G.foot;
       const w = cw * k, h = chh * k;
       // 왼쪽은 붕어빵 노점 뒤에서 나타나고 그리로 사라진다(노점 앞을 지나가면 노점 안에 선 것처럼 보여서): leftX 근처에서 흐려짐
@@ -138,7 +162,7 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
       g.ellipse(q.x, q.y, w * 0.28, w * 0.07, 0, 0, 7);
       g.fill();
       g.globalAlpha = 1;
-      if (!tmp)
+      if (!tmp || tmp.width < cw)
         tmp = Object.assign(document.createElement('canvas'), { width: cw, height: chh });
       const tg = tmp.getContext('2d');
       tg.clearRect(0, 0, cw, chh);
@@ -150,12 +174,26 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
       g.save();
       g.globalAlpha = fade;
       g.translate(q.x, q.y);
-      if (q.dir < 0)
+      if (q.dir < 0 && !dancing) // 춤 그림은 앞을 봄
         g.scale(-1, 1);
       g.drawImage(tmp, -w / 2, -foot * k, w, h);
       g.restore();
       g.globalAlpha = 1;
     }
   };
-  return { update, draw, list };
+  // 누른 자리의 손님(앞쪽 먼저)이 잠깐 춤. 맞았으면 true
+  const tapAt = (x, y, t) => {
+    if (RM)
+      return false;
+    const hit = [...list].sort((a, b) => b.y - a.y).find(q => {
+      const h = wantOf(q);
+      return q.state !== 'dance' && ready(q.id) && Math.abs(x - q.x) < h * 0.4 + 8 && y > q.y - h - 8 && y < q.y + 12;
+    });
+    if (!hit)
+      return false;
+    dance(hit.id);
+    Object.assign(hit, { state: 'dance', dt0: t, until: t + G.danceSec });
+    return true;
+  };
+  return { update, draw, list, tapAt };
 }

@@ -226,5 +226,14 @@ export function makeRoofs(cfg, { nightImg, RM, rnd, dev }) {
       g.restore();
     }
   };
-  return { update, draw };
+  // 누른 자리에서 지붕 위를 달리던 엘프가 미끄덩(폴짝 뛰는 중은 빼고). 맞았으면 true
+  const tapAt = (x, y, t) => {
+    const w = (sheet.naturalHeight || 256) * E.scale;
+    const e = elves.find(e => t >= e.t0 && e.y != null && e.phase === 'run' && !e.jump && Math.abs(x - e.x) < w * 0.35 + 10 && y > e.y - E.foot * E.scale * 0.85 - 10 && y < e.y + 12);
+    if (!e)
+      return false;
+    Object.assign(e, { phase: 'slip', until: t + E.slipSec, slipAt: null });
+    return true;
+  };
+  return { update, draw, tapAt };
 }

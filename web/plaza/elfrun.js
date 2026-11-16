@@ -1,6 +1,7 @@
 /* 땅 위 엘프 — 크리스마스 트리 ↔ 회전목마 뒤를 뛰어다님 (회의 2026-11-16, 그림 web/plaza/elf.webp — 지붕 그림자와 같은 8칸, 여기선 색 그대로)
    - 광장 뒤쪽 바닥 길(path: y, x 범위)을 달린다. 길의 y가 트리·회전목마 소품의 앞뒤 기준보다 작아서 둘 뒤로 지나가면 가려진다
    - 한 번에 한 명(크리스마스 밤엔 가끔 둘), every초 칸마다 chance. 가다가 가끔 멈춰 두리번(⑤), 가끔 미끄덩(⑥ → ⑦ → ⑧)
+   - 누르면(tapAt) 달리던 엘프가 그 자리에서 미끄덩 (2026-11-17)
    - 크리스마스(xmasPlaza) 기간에만, 낮·밤 모두. 동작 줄이기: 없음. 미리보기 ?elfrun=1 */
 import { ELF_FRAMES } from './roofs.js';
 
@@ -79,5 +80,14 @@ export function makeElfRun(cfg, { RM, dev, key = 'elfRun' }) {
       g.restore();
     }
   };
-  return { update, draw, y: E.y };
+  // 누른 자리에서 달리던 엘프가 미끄덩. 맞았으면 true
+  const tapAt = (x, y, t) => {
+    const w = (sheet.naturalHeight || 256) * E.scale;
+    const e = list.find(e => t >= e.t0 && e.phase === 'run' && Math.abs(x - e.x) < w * 0.35 + 10 && y > E.y - R.foot * E.scale * 0.85 - 10 && y < E.y + 12);
+    if (!e)
+      return false;
+    Object.assign(e, { phase: 'slip', until: t + R.slipSec, slipAt: null });
+    return true;
+  };
+  return { update, draw, tapAt, y: E.y };
 }
