@@ -59,6 +59,7 @@ const STR = {
   home: { ko: '고양.시 거실로', en: 'Back to the living room' },
   mbox: { ko: '오르골: 누르면 다음 캐럴', en: 'Music box: tap for the next carol' },
   vendor: { ko: '붕어빵 사장님 금붕생이', en: 'Goldfish taiyaki vendor' },
+  carousel: { ko: '회전목마: 누르면 노래와 함께 돌아요', en: 'Carousel: tap to play a tune and spin' },
   scene: { ko: '크리스마스 광장 풍경: 가운데 거대 트리, 왼쪽 회전목마와 붕어빵 노점, 오른쪽 스케이트장과 눈사람', en: 'Christmas plaza: a giant tree in the middle, a carousel and a fish-bread stall on the left, a skating rink and a snowman on the right' },
 };
 const LANG = pickLang(); // 방과 같은 규칙 (util.js)
@@ -485,7 +486,9 @@ function build(cfg) {
   sc.append(mbox.btn);
   /* ── 소품 (PLAZA_PLAN.md 2장): 낮 그림 위에 밤 그림을 mix만큼 — 배경과 같은 낮·밤 넘어가기 */
   const PROPS = cfg.props.list.map(p => ({ ...p, im: ['day', 'night'].map(n => Object.assign(new Image(), { src: `props/${p.id}-${n}.webp?v=${cfg.v}` })) }));
-  const carousel = makeCarousel(cfg, { RM });
+  // 회전목마는 오르골 노래가 나올 때만 돈다 — 펠리컨이든 회전목마든 누르면 같은 순서로 다음 노래
+  const carousel = makeCarousel(cfg, { RM, playing: () => mbox.playing(), onTap: () => mbox.tap(), label: tr('carousel') });
+  sc.append(carousel.btn);
   const elfRun = makeElfRun(cfg, { RM, dev: ELFRUN_DEV }); // 땅 위 엘프: 트리 ↔ 회전목마 뒤
   const peek = makePeek(cfg, { RM, dev: PEEK_DEV }); // 쥐야쥐: 눈사람 뒤에서 빼꼼
   const propOn = (p, xmas) => p.when === 'xmas' ? xmas : p.when === SEASON;

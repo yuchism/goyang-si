@@ -197,5 +197,6 @@ export function makeMusicBox(cfg, { Snd, RM, label }) {
     }
     g.restore();
   };
-  return { btn, draw, tap, state: () => idx };
+  // playing: 노래가 실제로 나오는 중 — 도는 회전목마도 이것을 본다(carousel.js). tap: 회전목마를 눌러도 같은 순서로 넘김
+  return { btn, draw, tap, state: () => idx, playing: () => idx > 0 && !!src };
 }
