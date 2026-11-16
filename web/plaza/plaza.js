@@ -554,16 +554,16 @@ function build(cfg) {
     g.clearRect(0, 0, W, H);
     drawLights(t);
     guests.update(t, dt, now(), gNight, gXmas);
-    // 안쪽(y 작은)부터: 손님 → 강고양이 씨 → 손님 → 오르골 → 앞쪽 손님 (겹칠 때 앞뒤가 맞게)
+    // 안쪽(y 작은)부터 그림: 오르골·강고양이 씨·금붕생이 로봇을 y 순서로 세우고 그 사이사이에 손님 (겹칠 때 앞뒤가 맞게)
     kitty.update(t, dt);
-    const ky = kitty.y(), my = cfg.music.at[1], dk = mix / 0.62;
-    guests.draw(g, t, dk, -Infinity, Math.min(ky, my));
-    kitty.draw(g);
-    guests.draw(g, t, dk, Math.min(ky, my), my);
-    mbox.draw(g, t, dk);
-    guests.draw(g, t, dk, my, vendor.y);
-    vendor.draw(g, t, now());
-    guests.draw(g, t, dk, Math.max(my, vendor.y));
+    const dk = mix / 0.62;
+    let gy = -Infinity;
+    for (const [ly, fn] of [[cfg.music.at[1], () => mbox.draw(g, t, dk)], [kitty.y(), () => kitty.draw(g)], [vendor.y, () => vendor.draw(g, t, now())]].sort((a, b) => a[0] - b[0])) {
+      guests.draw(g, t, dk, gy, ly);
+      fn();
+      gy = ly;
+    }
+    guests.draw(g, t, dk, gy);
     drawSteam(t);
     drawSnow(t, dt);
     if (!RM || lit !== litTo)
