@@ -375,7 +375,7 @@ function build(cfg) {
   const ST = cfg.steam;
   const drawSteam = t => {
     const n = Math.ceil(ST.life / ST.every);
-    for (const [i, [x0, y0]] of ST.from.entries()) {
+    for (const [i, [x0, y0]] of [...ST.from, vendor.chimney()].entries()) { // 마지막: 금붕생이 로봇 굴뚝(움직임)
       const tt = RM ? ST.life * 0.5 + i : t + i * 0.37;
       const first = Math.floor(tt / ST.every);
       for (let k = first - n; k <= first; k++) {

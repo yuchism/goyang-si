@@ -47,7 +47,7 @@ export function makeCatVisit(cfg, { rnd, RM, depthAt, dev }) {
         cat.state = 'stay';
         cat.si = 0;
         cat.sT = t;
-        cat.face = 1;
+        cat.face = C.face; // 트리 쪽을 봄
       }
       else if (cat.state === 'out' && cat.x <= C.fromX)
         cat = null;
