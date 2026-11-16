@@ -132,6 +132,54 @@ function foldedMap(c, x, y, s) {
   c.restore();
 }
 
+// 지도책 위로 삐죽 나온 접힌 약도 한 장 (2026-11-17: 책등 표시만으론 티가 안 나서). 책 위 끝(-h)에서 위로 ph만큼
+function mapPeek(c, w, h) {
+  const pw = w * 0.86, ph = Math.max(18, w * 0.85), l = w * 0.1, b = -h + 0.5, t = b - ph;
+  c.save();
+  c.translate(l + pw / 2, b);
+  c.rotate(0.12);
+  c.translate(-(l + pw / 2), -b);
+  c.lineJoin = 'round';
+  c.strokeStyle = INKC;
+  c.lineWidth = 1.3;
+  c.beginPath(); // 위 끝은 접힌 지그재그
+  c.moveTo(l, b);
+  c.lineTo(l, t + 3);
+  c.lineTo(l + pw / 3, t);
+  c.lineTo(l + pw * 2 / 3, t + 3);
+  c.lineTo(l + pw, t);
+  c.lineTo(l + pw, b);
+  c.closePath();
+  c.fillStyle = '#fff6e2';
+  c.fill();
+  c.stroke();
+  c.fillStyle = 'rgba(120,90,50,.16)'; // 가운데 접힌 면
+  c.fillRect(l + pw / 3, t + 2, pw / 3, ph);
+  c.strokeStyle = 'rgba(42,26,18,.45)';
+  c.lineWidth = 0.8;
+  c.beginPath();
+  c.moveTo(l + pw / 3, t);
+  c.lineTo(l + pw / 3, b);
+  c.moveTo(l + pw * 2 / 3, t + 3);
+  c.lineTo(l + pw * 2 / 3, b);
+  c.stroke();
+  c.fillStyle = '#8fbf6a'; // 초록 터 하나
+  c.fillRect(l + pw * 0.08, t + ph * 0.45, pw * 0.2, ph * 0.3);
+  c.setLineDash([1.5, 1.5]); // 길
+  c.strokeStyle = '#7a5a3a';
+  c.lineWidth = 1;
+  c.beginPath();
+  c.moveTo(l + pw * 0.2, b - 2);
+  c.quadraticCurveTo(l + pw * 0.5, t + ph * 0.35, l + pw * 0.8, t + ph * 0.5);
+  c.stroke();
+  c.setLineDash([]);
+  c.fillStyle = '#d0503f'; // 빨간 점
+  c.beginPath();
+  c.arc(l + pw * 0.8, t + ph * 0.48, 2.8, 0, 7);
+  c.fill();
+  c.restore();
+}
+
 export const MARKS = {
   face: (c, { w, h, deco: d }) => catFace(c, w / 2, -h + (d.label ? d.label[0] * h + d.label[1] / 2 + 1 : h * 0.35), Math.min(18, w * 0.62)),
   yarn: (c, { w, h }) => yarn(c, w / 2, -h * 0.55, Math.min(6.5, w * 0.24)),
@@ -140,5 +188,5 @@ export const MARKS = {
     paw(c, w * px, -h + h * py, Math.min(w * 0.62, 16), pa);
   },
   comic: (c, { w, h }) => comic(c, w / 2, -h * 0.5, Math.min(w * 0.36, 10)),
-  map: (c, { w, h }) => foldedMap(c, w / 2, -h * 0.5, Math.min(w * 0.7, 18)),
+  map: (c, { w, h }) => { mapPeek(c, w, h); foldedMap(c, w / 2, -h * 0.5, Math.min(w * 0.82, 24)); },
 };

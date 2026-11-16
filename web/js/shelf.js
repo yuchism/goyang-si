@@ -262,6 +262,7 @@ function paintBook(c, b) {
   c.stroke();
 }
 const PAD = 4; // 책 그림 둘레 여백 (테두리 선이 잘리지 않게)
+const TOP = b => (b.deco && b.deco.mark === 'map' ? 30 : 0); // 위 여백 더: 지도책은 약도 한 장이 위로 삐죽 (spine-marks.js mapPeek)
 function sheet(w, h, k, paint) {
   const c = document.createElement('canvas');
   c.width = Math.max(1, Math.ceil(w * k));
@@ -283,8 +284,8 @@ function buildCache() {
   });
   const books = {};
   for (const b of BOOKS())
-    books[b.id] = sheet(b.w + PAD * 2, b.h + PAD * 2, k, g => {
-      g.translate(PAD, b.h + PAD);
+    books[b.id] = sheet(b.w + PAD * 2, b.h + PAD * 2 + TOP(b), k, g => {
+      g.translate(PAD, b.h + PAD + TOP(b));
       paintBook(g, b);
     });
   return cache = { k, src, box, shelf, books };
@@ -307,7 +308,7 @@ export function drawBooks(dt) {
     if (im && imageReady(im))
       ctx.drawImage(im, 0, -b.h, b.w, b.h); // 손그림으로 바꿔 끼운 책
     else
-      ctx.drawImage(C.books[b.id], -PAD, -b.h - PAD, b.w + PAD * 2, b.h + PAD * 2);
+      ctx.drawImage(C.books[b.id], -PAD, -b.h - PAD - TOP(b), b.w + PAD * 2, b.h + PAD * 2 + TOP(b));
     ctx.restore();
   }
 }
