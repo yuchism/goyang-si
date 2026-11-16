@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""크리스마스 광장 스케이트장 앞 펜스 겹 (XMAS_PLAZA_PLAN.md 3-10).
+"""크리스마스 광장 스케이트장 앞 펜스 겹 (PLAZA_PLAN.md 4-7).
 스케이트장 소품(주인이 ChatGPT로 다시 그린 것, assets/plaza/props/rink-day·night-source-v1.png — tools/plaza_props.json rink 상자 자리)에서
 앞쪽 펜스만 잘라 web/plaza/rink-front-day·night.webp로. 스케이트 타는 손님을 스케이트장 위에 그린 뒤 이 겹을 얹으면 펜스 너머로 보인다.
 앞쪽 = 열마다 얼음(하늘색)의 위·아래 끝 가운데보다 아래에 있는 얼음 아닌 불투명 픽셀(펜스). 얼음이 없는 열(양끝 기둥)은 FRONT_END_Y 아래.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""크리스마스 광장 붕어빵 노점 사장님 — 금붕생이 붕어빵 화로 로봇 시트 정리 (XMAS_PLAZA_PLAN.md 3-9).
+"""크리스마스 광장 붕어빵 노점 사장님 — 금붕생이 붕어빵 화로 로봇 시트 정리 (PLAZA_PLAN.md 4-6).
 원본 assets/plaza/fish-vendor-source-v1.png (주인이 ChatGPT로 그림, 가로 5칸: ① 가게 보기 ② 붕어빵 집기 ③ 들어 보이기 ④ 한숨 ⑤ 졸기)
 → web/plaza/fishvendor.webp (CELL×5). 칸마다 화로 몸통 왼쪽 끝(BODY_Y 줄의 가장 왼쪽 불투명 x)과 바퀴 바닥(WHEEL_Y)이
 ANCHOR에 오게 맞춤 — 다섯 칸 몸통이 한자리, 움직이는 건 금붕생이·모자·팔뿐.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""광장 소품 그림 정리 (PLAZA_SEASONS_PLAN.md 4장, PLAZA_REFACTOR_PLAN.md R2).
+"""광장 소품 그림 정리 (PLAZA_PLAN.md 4장, PLAZA_REFACTOR_PLAN.md R2).
 주인이 ChatGPT로 다시 그린 소품(assets/plaza/props/<id>-day·night-source-v1.png, 참고 그림과 같은 크기 — 배경 투명)을
 보이는 곳만 남게 잘라 web/plaza/props/<id>-day·night.webp로, 자리(왼쪽 위)를 scene.json props.list의 at에 적는다.
 참고 상자·바로잡기는 tools/plaza_props.json 한 곳. 전구 줄(lights)은 tools/make_plaza_wires.py가 전구 길에서 그린다.

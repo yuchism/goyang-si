@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""사계절 광장 — 겨울 빈 광장 배경의 하늘을 투명하게 (PLAZA_SEASONS_PLAN.md 4장).
+"""사계절 광장 — 겨울 빈 광장 배경의 하늘을 투명하게 (PLAZA_PLAN.md 4장).
 
 원본(주인이 ChatGPT로, 크리스마스 그림에서 소품을 지운 것 — 크기·자리 그대로 1561×989):
   낮 assets/plaza/winter-day-source-v1.png, 밤 assets/plaza/winter-night-source-v2.png(낮 그림을 밤으로 바꾼 것)

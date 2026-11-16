@@ -622,7 +622,7 @@ export function darkness(d, dry = false) {
     k = 0;
   if (!dry && rainNow(d))
     k = Math.max(k, 0.18);
-  return dry ? k / 0.62 : k; // dry: 비 빼고 0(낮)~1(밤) — 광장 낮·밤 그림 섞기 (XMAS_PLAZA_PLAN.md 3-2)
+  return dry ? k / 0.62 : k; // dry: 비 빼고 0(낮)~1(밤) — 광장 낮·밤 그림 섞기 (PLAZA_PLAN.md 4-1)
 }
 /* ───────── 달 모양 (MOON_PLAN.md) ───────── */
 // 기준 삭(새 달) 2000-01-06 18:14 UTC, 삭망월 29.530588853일. 오차 반나절 안팎

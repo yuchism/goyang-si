@@ -1,4 +1,4 @@
-/* 크리스마스 광장 오르골 (XMAS_PLAZA_PLAN.md 3-1): 트리 앞 펠리컨 자리의 작은 오르골 상자. 누를 때마다 다음 캐럴 → … → 안 나옴.
+/* 크리스마스 광장 오르골 (XMAS_PLAZA_PLAN.md 3-2): 트리 앞 펠리컨 자리의 작은 오르골 상자. 누를 때마다 다음 캐럴 → … → 안 나옴.
    - 펠리컨(web/plaza/pelican.webp, 주인이 ChatGPT로 그림 · tools/make_plaza_pelican.py): 노래 중 ①~④ 손잡이 돌리기, 꺼지면 ⑤ 졸기.
      받침대 오른쪽 다리 바닥(pelican.anchor)이 music.at에 온다. 그림을 못 받으면 예전 임시 상자를 코드로 그린다
    - 소리: sound.js Snd(방과 같은 오디오)로 녹음을 통째로 받아 풀고(range 요청 없이 — 서비스 워커와 다투지 않게) 같은 곡을 되풀이

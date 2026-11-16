@@ -1,4 +1,4 @@
-/* 붕어빵 노점 사장님 — 금붕생이 붕어빵 화로 로봇 (XMAS_PLAZA_PLAN.md 3-9, 그림 web/plaza/fishvendor.webp · tools/make_plaza_fishvendor.py)
+/* 붕어빵 노점 사장님 — 금붕생이 붕어빵 화로 로봇 (PLAZA_PLAN.md 4-6, 그림 web/plaza/fishvendor.webp · tools/make_plaza_fishvendor.py)
    - 칸: ① 가게 보기 ② 붕어빵 집기 ③ 들어 보이기 ④ 한숨 ⑤ 졸기. 화로 몸통은 다섯 칸 한자리(anchor = 몸통 왼쪽 끝 · 바퀴 바닥 → vendor.at)
    - 평소 ①, 가끔(showEvery초쯤) ②→③ 붕어빵 자랑, 가끔(sighChance) ④ 한숨. 새벽(sleepHours) ⑤ 졸기
    - 노점 옆(roam[0])과 오르골 근처(roam[1]) 사이를 바퀴로 천천히 왔다 갔다(돌지 않고 굴러감), 멈춰서 wait초 쉬는 동안 자랑·한숨

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""크리스마스 광장 스케이트 손님 시트 정리 (XMAS_PLAZA_PLAN.md 3-10).
+"""크리스마스 광장 스케이트 손님 시트 정리 (PLAZA_PLAN.md 4-7).
 원본 assets/plaza/guests/<id>-skate-source-v1.png (주인이 ChatGPT로 그림, 가로 5칸: ① 밀기 왼발 ② 밀기 오른발 ③ 미끄러지기 ④ 빙글 ⑤ 엉덩방아,
 오른쪽을 봄) → web/plaza/guests/<id>-skate.webp (CELL×5). 칸마다 그림 덩어리의 바닥(스케이트 날)을 FOOT에, 가로 가운데를 칸 가운데에.
 ③(미끄러지기) 그림 키를 출력 — scene.json skate.visH로 옮겨 적는다."""

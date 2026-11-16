@@ -149,7 +149,7 @@
             "box": [637, 114, 486, 486], "label": [880, 628] }
         ]
       },
-      "note": "닫힌 문은 배경 그림의 것. 열릴 때만 door_open 그림. sayY: 만득 씨 말풍선 높이(문 왼쪽에 뜬다). map: 문을 누르면 펼쳐지는 동네 약도(frontdoor.js, MANHWA_MAP_ART.md) — 좌표는 약도 그림 픽셀(size) 기준. home = 「고양.시」 이름표 가운데, shops = 가게(day = 가게 그림 — 약도에선 늘 낮, box = 가게 그림 [왼쪽, 위, 폭, 높이], label = 이름표 가운데, name = i18n 키, href = 가게 주소(약도를 연 길이 ?via=map|shelf로 붙음), gc = 통계 이름(앞에 map-|shelf-가 붙음)). 계절 가게(period): 달력 기간 안이면 on 그림, 밖이면 off 그림 — offOpen이면 밖에서도 누름(광장: PLAZA_SEASONS_PLAN.md — 1년 내내 열림, 크리스마스 땐 트리 광장 그림·그 밖엔 붕어빵 노점 광장 그림), 아니면 offName 이름표·안 눌림(크리스마스 광장 XMAS_PLAZA_PLAN.md 4장: 2026-11-16 자리 바꿈 — 광장은 오른쪽 위 큰 터 0.95배, 만화방은 빈 터 A 0.68배). 가게가 생기면 shops에 한 줄. map이 없으면 문은 눌러도 아무 일 없음"
+      "note": "닫힌 문은 배경 그림의 것. 열릴 때만 door_open 그림. sayY: 만득 씨 말풍선 높이(문 왼쪽에 뜬다). map: 문을 누르면 펼쳐지는 동네 약도(frontdoor.js, MANHWA_MAP_ART.md) — 좌표는 약도 그림 픽셀(size) 기준. home = 「고양.시」 이름표 가운데, shops = 가게(day = 가게 그림 — 약도에선 늘 낮, box = 가게 그림 [왼쪽, 위, 폭, 높이], label = 이름표 가운데, name = i18n 키, href = 가게 주소(약도를 연 길이 ?via=map|shelf로 붙음), gc = 통계 이름(앞에 map-|shelf-가 붙음)). 계절 가게(period): 달력 기간 안이면 on 그림, 밖이면 off 그림 — offOpen이면 밖에서도 누름(광장: PLAZA_PLAN.md — 1년 내내 열림, 크리스마스 땐 트리 광장 그림·그 밖엔 붕어빵 노점 광장 그림), 아니면 offName 이름표·안 눌림(크리스마스 광장 PLAZA_PLAN.md 5장: 2026-11-16 자리 바꿈 — 광장은 오른쪽 위 큰 터 0.95배, 만화방은 빈 터 A 0.68배). 가게가 생기면 shops에 한 줄. map이 없으면 문은 눌러도 아무 일 없음"
     },
     {
       "id": "curtain_l",

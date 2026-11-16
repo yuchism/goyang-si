@@ -1,4 +1,4 @@
-/* 도는 회전목마 (PLAZA_SEASONS_PLAN.md — 소품을 부품으로 나눠 코드로 움직이기, 회의 2026-11-16)
+/* 도는 회전목마 (PLAZA_PLAN.md — 소품을 부품으로 나눠 코드로 움직이기, 회의 2026-11-16)
    그림(주인이 ChatGPT로, 낮·밤):
    - props/carousel-empty-day·night.webp: 말·막대를 뺀 회전목마(지붕·가운데 기둥·받침·바깥 기둥 둘). 원래 회전목마 그림과 같은 크기·자리(cfg.carousel.at)
    - props/carousel-horse-day·night.webp: 막대에 꽂힌 말 옆모습(왼쪽을 봄) 2칸(다리 바뀜). 밤 그림은 막대 자리가 조금 달라 pole·poleBottom을 따로

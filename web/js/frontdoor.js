@@ -3,7 +3,7 @@
    - 약도 자리·가게 목록: objects.json door.map (없으면 문은 눌러도 아무 일 없음). 좌표는 약도 그림 픽셀(size) 기준. 그림 규격 MANHWA_MAP_ART.md
    - 책장 지도책(shelf.js)도 같은 약도를 펼친다. 연 길(via: map 문 · shelf 지도책)이 가게 주소 ?via=와 통계 이름 앞에 붙는다
    - 약도 그림은 시작 묶음에 넣지 않는다(0008) — 처음 펼칠 때 받는다. 못 받으면 종이색 판 + 이름표만
-   - 가게 그림: 늘 day (만화방 밤 그림은 뺌, XMAS_PLAZA_PLAN.md 4장 회의 2026-11-16). 계절 가게(period)는 달력 기간 안이면 on 그림, 밖이면 off 그림 — offOpen이면 밖에서도 누름(광장, PLAZA_SEASONS_PLAN.md), 아니면 offName·안 눌림.
+   - 가게 그림: 늘 day (만화방 밤 그림은 뺌, PLAZA_PLAN.md 5장 회의 2026-11-16). 계절 가게(period)는 달력 기간 안이면 on 그림, 밖이면 off 그림 — offOpen이면 밖에서도 누름(광장, PLAZA_PLAN.md), 아니면 offName·안 눌림.
      미리보기 「크리스마스」(holidayOverride christmas)를 켜면 기간 안으로 친다
    - 문틈 열림 정도는 world.doorAjar(0~1, 그리기는 draw.js drawDoor). 만득 씨가 오면 약도는 바로 접힌다
    이 파일은 덩어리 밖 모듈만 가져온다(구조 검사). 문 자리·카메라는 ui.js가 넘겨준다 */

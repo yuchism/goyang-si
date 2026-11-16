@@ -1,10 +1,10 @@
-/* 크리스마스 광장 (tasks/xmas-plaza-code.md 「광장 페이지」, XMAS_PLAZA_PLAN.md 3장) — /plaza/. 기지처럼 따로 된 페이지. 방 코드는 시간(time.js)·도구(util.js)만 빌린다
+/* 고양시 광장 (PLAZA_PLAN.md, 크리스마스는 XMAS_PLAZA_PLAN.md · 처음 tasks/xmas-plaza-code.md) — /plaza/. 기지처럼 따로 된 페이지. 방 코드는 시간(time.js)·도구(util.js)만 빌린다
    - 겹(뒤 → 앞): 하늘(코드, 방 창밖 하늘색 skyAt) → [불꽃 자리, 다음 티켓] → 광장 그림(낮·밤 두 장, 하늘 투명) → 반짝임(코드)
    - 반짝임: 트리 전구(하나하나 따로 깜빡 + 가끔 아래 → 위 물결), 꼭대기 별빛, 전구 줄, 눈 두 겹, 붕어빵 노점 김
-   - 낮·밤(플랜 3-2): 방과 같은 해 기준. 그림은 방 어둠(darkness, 비 빼고)만큼 밤 그림을 겹침. 밤이 되는 순간(isNight) 점등식, 동틀 녘 거꾸로 꺼짐
+   - 낮·밤(PLAZA_PLAN.md 4-1): 방과 같은 해 기준. 그림은 방 어둠(darkness, 비 빼고)만큼 밤 그림을 겹침. 밤이 되는 순간(isNight) 점등식, 동틀 녘 거꾸로 꺼짐
    - 자리·숫자는 scene.json (그림 픽셀). 캐릭터 크기 char(charScale·depth), ?probe=1 시험 캐릭터
-   - 하늘 별·눈 일정·별똥별(플랜 3-4, tasks/xmas-plaza-sky.md): 눈은 날짜로 정한 칸(누구에게나 같음)마다 오거나 그치고, 그친 밤엔 하늘 별이 반짝, 가끔 별똥별. 12/24·25 밤은 늘 눈
-   - 불꽃(플랜 3-3, 「광장 불꽃」): 그날 밤 첫 방문에 몇 분, 12/24·25 밤은 크게(별·트리 모양). 방 불꽃과 같은 그리기(js/fw-core.js), 하늘 겹과 그림 사이
+   - 하늘 별·눈 일정·별똥별(PLAZA_PLAN.md 4-2, tasks/xmas-plaza-sky.md): 눈은 날짜로 정한 칸(누구에게나 같음)마다 오거나 그치고, 그친 밤엔 하늘 별이 반짝, 가끔 별똥별. 12/24·25 밤은 늘 눈
+   - 불꽃(XMAS_PLAZA_PLAN.md 3-3, 「광장 불꽃」): 그날 밤 첫 방문에 몇 분, 12/24·25 밤은 크게(별·트리 모양). 방 불꽃과 같은 그리기(js/fw-core.js), 하늘 겹과 그림 사이
    - 동작 줄이기: 깜빡임·물결·넘어가기 없이 정지, 눈·별똥별·불꽃 없음, 별은 멈춘 점
    - 미리보기(dev에서만 — ?dev=1, 또는 방 미리보기 도구를 켠 기기): ?night=1|0 (밤·낮 고정), ?t=HH:MM (그 시각으로), ?speed=60 (시계 빨리), ?probe=1, ?snow=1|0 (눈 고정), ?shoot=1 (별똥별 자주), ?fw=1|eve (불꽃 지금 · 크리스마스 크게), ?chime=1 (첫 탭 뒤 정각 종 한 번), ?guests=숫자 (손님 수 고정), ?elf=1|slip (엘프 자주 · 늘 미끄덩), ?sleigh=1 (썰매 자주), ?cat=1 (강고양이 씨 바로·자주), ?skate=1 (스케이트 둘 다 늘), ?elfrun=1 (땅 위 엘프 자주), ?peek=1 (쥐야쥐 빼꼼 자주) */
 import { advanceClock, atHour, darkness, inPeriod, isNight, nightDark, nightOf, now, setSimMs, setSpeed, skyAt, strikesOf } from '../js/time.js';
@@ -46,7 +46,7 @@ const CAT_DEV = DEV && Q.get('cat') === '1';
 const SKATE_DEV = DEV && Q.get('skate') === '1';
 const ELFRUN_DEV = DEV && Q.get('elfrun') === '1';
 const PEEK_DEV = DEV && Q.get('peek') === '1';
-// 사계절 광장 미리보기 (PLAZA_SEASONS_PLAN.md 5장): ?event=xmas|none (크리스마스 소품·트리 전구·펠리컨·불꽃·엘프 켜고 끄기)
+// 사계절 광장 미리보기 (PLAZA_PLAN.md 5장): ?event=xmas|none (크리스마스 소품·트리 전구·펠리컨·불꽃·엘프 켜고 끄기)
 const EVENT_DEV = !DEV ? null : Q.get('event') === 'none' ? false : Q.get('event') === 'xmas' ? true : null;
 const isXmas = d => EVENT_DEV !== null ? EVENT_DEV : inPeriod('xmasPlaza', d);
 const SEASON = 'winter'; // 지금은 겨울 배경뿐 — 다른 계절 그림이 오면 달력으로
@@ -80,7 +80,7 @@ const rnd = (s, i) => {
   h = Math.imul(h ^ h >>> 13, 0xc2b2ae35);
   return ((h ^ h >>> 16) >>> 0) / 4294967296;
 };
-// 눈 일정 (플랜 3-4): 하루를 block분 칸으로 나눠 칸마다 눈/맑음을 날짜 씨앗으로 정한다(share만큼 눈) → 누구에게나 같다.
+// 눈 일정 (PLAZA_PLAN.md 4-2): 하루를 block분 칸으로 나눠 칸마다 눈/맑음을 날짜 씨앗으로 정한다(share만큼 눈) → 누구에게나 같다.
 // 칸 경계 앞뒤 fade/2분 동안 천천히 넘어간다. 12/24·25 밤(nightOf)은 늘 눈. 돌려주는 값: 눈 세기 0~1
 function snowAt(d, Wc) {
   const nk = nightOf(d);
@@ -407,7 +407,7 @@ function build(cfg) {
     g.globalAlpha = 1;
   };
 
-  /* ── 불꽃 (플랜 3-3): 한 공연 = 씨앗(id)으로 정해지는 한 발 한 발의 목록, 그리기는 "시작부터 지난 초"의 함수(방 불꽃과 같음).
+  /* ── 불꽃 (XMAS_PLAZA_PLAN.md 3-3): 한 공연 = 씨앗(id)으로 정해지는 한 발 한 발의 목록, 그리기는 "시작부터 지난 초"의 함수(방 불꽃과 같음).
      숫자는 scene.json fireworks. Z 좌표(방 창 안과 같은 모양)를 k배로 키워 광장 하늘에 얹는다 */
   const FC = cfg.fireworks, FZ = makeFw(FC);
   let show = null;
@@ -474,16 +474,16 @@ function build(cfg) {
   if (FW_DEV && !RM)
     startShow(FW_DEV);
 
-  /* ── 광장 손님 (플랜 3-5, guests.js) */
+  /* ── 광장 손님 (PLAZA_PLAN.md 4-3, guests.js) */
   const depthAt = depthOf(cfg);
   const guests = makeGuests(cfg, { rnd, RM, depthAt, hourOf: d => d.getHours() + d.getMinutes() / 60, force: GUESTS_DEV });
   let gNight = false, gXmas = false;
-  /* ── 강고양이 씨 나들이 (플랜 3-8, catvisit.js): 방과 상관없이 가끔 트리 앞에 */
+  /* ── 강고양이 씨 나들이 (PLAZA_PLAN.md 4-5, catvisit.js): 방과 상관없이 가끔 트리 앞에 */
   const kitty = makeCatVisit(cfg, { rnd, RM, depthAt, dev: CAT_DEV });
-  /* ── 오르골 (플랜 3-1, musicbox.js): 펠리컨 오기 전 임시 상자 */
+  /* ── 오르골 (XMAS_PLAZA_PLAN.md 3-2, musicbox.js): 펠리컨 오기 전 임시 상자 */
   const mbox = makeMusicBox(cfg, { Snd, RM, label: tr('mbox') });
   sc.append(mbox.btn);
-  /* ── 소품 (PLAZA_SEASONS_PLAN.md 2장): 낮 그림 위에 밤 그림을 mix만큼 — 배경과 같은 낮·밤 넘어가기 */
+  /* ── 소품 (PLAZA_PLAN.md 2장): 낮 그림 위에 밤 그림을 mix만큼 — 배경과 같은 낮·밤 넘어가기 */
   const PROPS = cfg.props.list.map(p => ({ ...p, im: ['day', 'night'].map(n => Object.assign(new Image(), { src: `props/${p.id}-${n}.webp?v=${cfg.v}` })) }));
   const carousel = makeCarousel(cfg, { RM });
   const elfRun = makeElfRun(cfg, { RM, dev: ELFRUN_DEV }); // 땅 위 엘프: 트리 ↔ 회전목마 뒤
@@ -499,12 +499,12 @@ function build(cfg) {
       g.globalAlpha = 1;
     }
   };
-  /* ── 붕어빵 노점 사장님 (플랜 3-9, vendor.js): 금붕생이 붕어빵 화로 로봇 */
+  /* ── 붕어빵 노점 사장님 (PLAZA_PLAN.md 4-6, vendor.js): 금붕생이 붕어빵 화로 로봇 */
   const vendor = makeVendor(cfg, { RM, label: tr('vendor'), hourOf: d => d.getHours() + d.getMinutes() / 60 });
   sc.append(vendor.btn);
-  /* ── 스케이트장 (플랜 3-10, skate.js): 비버·오리너구리, 앞 펜스 겹 */
+  /* ── 스케이트장 (PLAZA_PLAN.md 4-7, skate.js): 비버·오리너구리, 앞 펜스 겹 */
   const rink = makeRink(cfg, { rnd, RM, depthAt, hourOf: d => d.getHours() + d.getMinutes() / 60, dev: SKATE_DEV });
-  /* ── 지붕 위 엘프·이브 썰매 그림자 (플랜 3-7, roofs.js): 하늘 겹(stars)에 — 그림이 가린다 */
+  /* ── 지붕 위 엘프·이브 썰매 그림자 (XMAS_PLAZA_PLAN.md 3-5, roofs.js): 하늘 겹(stars)에 — 그림이 가린다 */
   const roofs = makeRoofs(cfg, { nightImg: night, RM, rnd, dev: { elf: ELF_DEV, sleigh: SLEIGH_DEV } });
   let gEve = false;
 
@@ -549,7 +549,7 @@ function build(cfg) {
     chimeTick(d);
   };
 
-  /* ── 정각 종 (플랜 3-6): 방과 같은 녹음 차임(sound.js CHIME·chimePlan)을 더 멀게(scene.json chime.k). 밤(불 끈 뒤 nightDark)엔 작게.
+  /* ── 정각 종 (PLAZA_PLAN.md 4-4): 방과 같은 녹음 차임(sound.js CHIME·chimePlan)을 더 멀게(scene.json chime.k). 밤(불 끈 뒤 nightDark)엔 작게.
      소리는 거실 설정(store 'sound', 기본 켬)을 따르고, 브라우저가 첫 탭 전엔 막으므로 첫 탭에 연다. 페이지를 연 뒤 처음 맞는 정각부터 */
   let hourKey = null;
   const chimeTick = d => {
@@ -673,7 +673,7 @@ if (DEV) {
   if (+Q.get('speed') > 0)
     setSpeed(+Q.get('speed'));
 }
-// 광장은 1년 내내 열림 (PLAZA_SEASONS_PLAN.md, 회의 2026-11-16) — 크리스마스 것만 달력 xmasPlaza 기간에
+// 광장은 1년 내내 열림 (PLAZA_PLAN.md, 회의 2026-11-16) — 크리스마스 것만 달력 xmasPlaza 기간에
 fetch('scene.json', { cache: 'no-cache' })
   .then(r => r.ok ? r.json() : Promise.reject(r.status))
   .then(cfg => {

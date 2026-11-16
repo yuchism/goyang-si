@@ -307,7 +307,7 @@ export const Snd = { ac: null, on: false, master: null, rainG: null, roomG: null
       this.prepRec('song', { birthday: BDAY_SONG.file });
   },
   // 정각 종: 소리가 켜져 있으면 plan(chimePlan)대로 울리고 { t0: 시작한 오디오 시각, stop() }. 꺼져 있으면 false. 멀리서 들리게 고음을 깎는다
-  // k: 크기 배율 (방 1. 크리스마스 광장은 더 멀게, XMAS_PLAZA_PLAN.md 3-6)
+  // k: 크기 배율 (방 1. 크리스마스 광장은 더 멀게, PLAZA_PLAN.md 4-4)
   chime(plan, quiet, k = 1) {
     if (!this.on || !this.ac)
       return false;

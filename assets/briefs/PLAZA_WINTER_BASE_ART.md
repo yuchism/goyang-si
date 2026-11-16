@@ -1,4 +1,4 @@
-# 겨울 빈 광장 배경 그림 지시서 (PLAZA_SEASONS_PLAN.md 4장)
+# 겨울 빈 광장 배경 그림 지시서 (PLAZA_PLAN.md 4장)
 
 ChatGPT(이미지 편집)에 **지금 광장 그림을 첨부**해서 받는다. 낮·밤 따로 두 번.
 - 낮: `tools/ref/xmas-day.webp` 첨부 → 받은 것 `assets/plaza/winter-day-source-v1.png`
