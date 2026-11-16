@@ -125,7 +125,7 @@ for pid in ORDER:
     print(f'{pid:11s} 자리 {places[pid][:2]} 크기 {places[pid][2:]}')
 # 다시 그려 받은 소품 (2026-11-16: 차이 뽑기로는 회전목마·노점이 누덕누덕 — 주인이 ChatGPT로 같은 크기로 다시, 배경 투명):
 # assets/plaza/props/<id>-day·night-source-v1.png 는 assets/plaza/prop-ref/<id>-*-ref.png(아래 REF 상자를 자른 것)와 같은 크기·자리
-REF = {'carousel': (30, 390), 'stall': (186, 745), 'tree': (469, 20), 'gifts-left': (495, 695), 'gift-right': (862, 750)}  # tree: 참고 상자 (460, 20)에서 꼭대기 별을 맞추려 x +9
+REF = {'carousel': (30, 390), 'stall': (186, 745), 'tree': (469, 20), 'gifts-left': (495, 695), 'gift-right': (862, 750), 'snowman': (1340, 720), 'rink': (985, 750)}  # tree: 참고 상자 (460, 20)에서 꼭대기 별을 맞추려 x +9
 for pid, (rx, ry) in REF.items():
     srcs = {n: ROOT / f'assets/plaza/props/{pid}-{n}-source-v1.png' for n in ('day', 'night')}
     if not all(f.exists() for f in srcs.values()):
