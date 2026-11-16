@@ -61,7 +61,16 @@ globalThis.fetch = async u => {
 };
 const errors = [];
 process.on('uncaughtException', e => errors.push(e));
-await import(pathToFileURL(join(WEB, 'plaza/plaza.js')).href);
+process.on('unhandledRejection', e => errors.push(e));
+// 불러오기(문법 오류 등)가 실패하면 바로 실패로 — 예전엔 uncaughtException이 삼켜서 말없이 0으로 끝났다 (2026-11-17)
+try {
+  await import(pathToFileURL(join(WEB, 'plaza/plaza.js')).href);
+}
+catch (e) {
+  console.log('✗', e.stack || e);
+  console.log('광장 검사 실패 (불러오기)');
+  process.exit(1);
+}
 await new Promise(r => setTimeout(r, 50));
 let t = performance.now();
 for (let i = 0; i < 600; i++) {
