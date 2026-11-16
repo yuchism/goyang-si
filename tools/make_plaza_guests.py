@@ -9,7 +9,7 @@ import json
 from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
-REVIEW = ROOT / 'reviews/xmas-plaza-guest-art'
+REVIEW = ROOT / 'assets/plaza/guests/_review'  # 검수용 정렬 그림·gif·합성 (git 무시, 커밋하지 않음)
 WEB = ROOT / 'web/plaza/guests'
 CELL, HEIGHT, FOOT, SCALE = 512, 768, 730, 0.75
 # 목표 키, 공중에서 발이 뜨는 높이. 깡충은 ⑤의 키로 같은 배율을 쓴다.
