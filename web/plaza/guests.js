@@ -4,6 +4,7 @@
    - 크기: 캐릭터 크기 규칙(plaza.js char — 방보다 작게 + 원근 depth). 생일 시트 틀(강고양이 씨 560) 기준 키 → 광장 px
    - 그림이 아직 없는 손님은 나오지 않는다(그림이 들어오면 저절로). 밤엔 그림을 어둡게 덮는다(광장 그림과 같이)
    - 동작 줄이기: 걷지 않고 멈출 곳에 서서 올려다보는 모습만 */
+import { tintAtop } from './plaza-kit.js';
 const clamp01 = v => Math.max(0, Math.min(1, v));
 
 export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }) {
@@ -144,9 +145,7 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
       tg.globalCompositeOperation = 'source-over';
       tg.drawImage(im, fi * cw, 0, cw, chh, 0, 0, cw, chh);
       if (dark > 0.01) {
-        tg.globalCompositeOperation = 'source-atop';
-        tg.fillStyle = `rgba(16,22,52,${(dark * G.nightShade).toFixed(3)})`;
-        tg.fillRect(0, 0, cw, chh);
+        tintAtop(tg, cw, chh, `rgba(16,22,52,${(dark * G.nightShade).toFixed(3)})`);
       }
       g.save();
       g.globalAlpha = fade;

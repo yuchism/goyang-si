@@ -4,6 +4,7 @@
    - 소리: sound.js Snd(방과 같은 오디오)로 녹음을 통째로 받아 풀고(range 요청 없이 — 서비스 워커와 다투지 않게) 같은 곡을 되풀이
    - 누르는 것 자체가 소리를 켜겠다는 뜻이라, 소리가 꺼져 있어도 연다(거실 설정은 바꾸지 않음)
    - 페이지를 나갔다 오면 다시 「안 나옴」부터 (기억하지 않음). 동작 줄이기: 손잡이·음표 멈춤, 소리는 그대로 */
+import { tintAtop } from './plaza-kit.js';
 export function makeMusicBox(cfg, { Snd, RM, label }) {
   const M = cfg.music, n = M.files.length;
   const bufs = {}, busy = {};
@@ -98,9 +99,7 @@ export function makeMusicBox(cfg, { Snd, RM, label }) {
       tg.globalCompositeOperation = 'source-over';
       tg.clearRect(0, 0, tw, th);
       tg.drawImage(sheet, fi * pcw, 0, pcw, pch, 0, 0, dw, dh);
-      tg.globalCompositeOperation = 'source-atop';
-      tg.fillStyle = `rgba(16,22,52,${Math.min(1, dark) * (cfg.guests.nightShade ?? 0.22)})`; // 손님과 같은 밤 그늘
-      tg.fillRect(0, 0, tw, th);
+      tintAtop(tg, tw, th, `rgba(16,22,52,${Math.min(1, dark) * (cfg.guests.nightShade ?? 0.22)})`); // 손님과 같은 밤 그늘
       g.drawImage(tmp, px0, py0);
     }
     else

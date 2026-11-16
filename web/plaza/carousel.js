@@ -6,6 +6,7 @@
    - 말 n마리가 받침 위 타원(ring)을 돈다. 앞쪽은 왼쪽으로(그림 그대로), 뒤쪽은 오른쪽으로(뒤집기). 앞일수록 조금 크게
    - 말은 막대를 따라 오르락내리락(bob) — 막대 아래끝은 받침 속으로 잘라 넣어 틈이 안 보이게
    - 밤: 낮 그린 것 위에 밤 그린 것을 mix만큼(배경·소품과 같은 넘어가기). 밤 그림이 없으면 남색을 얹어 어둡게(night). 동작 줄이기: 멈춘 모습 */
+import { tintAtop } from './plaza-kit.js';
 export function makeCarousel(cfg, { RM }) {
   const C = cfg.carousel, [ox, oy] = C.at, [cw, ch] = C.size;
   const load = f => Object.assign(new Image(), { src: `props/${f}?v=${cfg.v}` });
@@ -54,10 +55,7 @@ export function makeCarousel(cfg, { RM }) {
     if (mix < 0.999 || !nightPic) {
       render(D, t);
       if (!nightPic && mix > 0.01) { // 밤 그림이 없을 때: 남색을 얹어 어둡게
-        b.globalCompositeOperation = 'source-atop';
-        b.fillStyle = `rgba(${C.night.rgb},${(Math.min(1, mix) * C.night.a).toFixed(3)})`;
-        b.fillRect(0, 0, cw, ch);
-        b.globalCompositeOperation = 'source-over';
+        tintAtop(b, cw, ch, `rgba(${C.night.rgb},${(Math.min(1, mix) * C.night.a).toFixed(3)})`);
       }
       g.drawImage(buf, ox, oy);
     }

@@ -5,6 +5,7 @@
    - 크기: 방 대비 cat.scale배(손님 charScale과 따로 — 손님 크기는 생일 그림 틀 기준이라 같은 숫자여도 강고양이 씨가 커 보임) × depth(y)
    - 언제: every초 칸마다 chance로 한 번(칸 안 시작은 고정 난수 — 같은 시각엔 누구에게나 같음). 낮·밤 모두
    - 동작 줄이기: 나들이 칸이면 트리 앞에 앉아 있는 모습만. 미리보기 ?cat=1: 바로, devEvery초마다 */
+import { frameMeta } from './plaza-kit.js';
 const clamp01 = v => Math.max(0, Math.min(1, v));
 const WALK = ['walk_contact_right', 'walk_pass_after_right', 'walk_contact_left', 'walk_pass_after_left'];
 
@@ -13,7 +14,7 @@ export function makeCatVisit(cfg, { rnd, RM, depthAt, dev }) {
   let meta = null;
   const ims = {};
   const im = n => ims[n] || (ims[n] = Object.assign(new Image(), { src: `../f/cat_${n}.webp` }));
-  fetch('../f/meta.json').then(r => r.json()).then(m => { meta = m; }).catch(() => { });
+  frameMeta().then(m => { meta = m; });
   let cat = null, lastSlot = -1;
   const every = dev ? C.devEvery : C.every;
   // 앉아 있는 동안의 순서: [프레임 이름들(번갈아), 초]

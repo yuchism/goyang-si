@@ -21,6 +21,7 @@ import { makeRink } from './skate.js';
 import { makeCarousel } from './carousel.js';
 import { makeElfRun } from './elfrun.js';
 import { makePeek } from './peek.js';
+import { depthOf, frameMeta } from './plaza-kit.js';
 
 const body = document.body;
 const HOME = '/?from=plaza';
@@ -474,10 +475,7 @@ function build(cfg) {
     startShow(FW_DEV);
 
   /* ── 광장 손님 (플랜 3-5, guests.js) */
-  const depthAt = y => {
-    const [y0, y1] = cfg.char.depth.y, [k0, k1] = cfg.char.depth.scale, p = clamp01((y - y0) / (y1 - y0));
-    return k0 + (k1 - k0) * p;
-  };
+  const depthAt = depthOf(cfg);
   const guests = makeGuests(cfg, { rnd, RM, depthAt, hourOf: d => d.getHours() + d.getMinutes() / 60, force: GUESTS_DEV });
   let gNight = false, gXmas = false;
   /* ── 강고양이 씨 나들이 (플랜 3-8, catvisit.js): 방과 상관없이 가끔 트리 앞에 */
@@ -509,6 +507,23 @@ function build(cfg) {
   /* ── 지붕 위 엘프·이브 썰매 그림자 (플랜 3-7, roofs.js): 하늘 겹(stars)에 — 그림이 가린다 */
   const roofs = makeRoofs(cfg, { nightImg: night, RM, rnd, dev: { elf: ELF_DEV, sleigh: SLEIGH_DEV } });
   let gEve = false;
+
+  /* ── 그리기 겹 등록 (PLAZA_REFACTOR_PLAN.md R4): { y(), on(ctx)?, update(t, dt, ctx)?, always?, draw(t, ctx) }
+     ctx = { xmas, d(지금 시각), mix(밤 0~1), dk(손님 밤 그늘 세기), snowman(눈사람 있음) }. on이 거짓이면 안 그림(always면 update는 계속)
+     y 순서로 그리고 그 사이사이에 손님. 새 캐릭터·소품은 여기 한 줄 */
+  const snowmanOn = xmas => PROPS.some(p => p.id === 'snowman' && propOn(p, xmas));
+  const LAYERS = [
+    { y: () => kitty.y(), always: true, update: (t, dt) => kitty.update(t, dt), draw: () => kitty.draw(g) },
+    { y: () => vendor.y, draw: (t, c) => vendor.draw(g, t, c.d) },
+    { y: () => rink.y, always: true, update: (t, dt, c) => rink.update(t, dt, c.d, gXmas && gNight), draw: (t, c) => rink.draw(g, t, c.mix) },
+    { y: () => cfg.music.at[1], on: c => c.xmas, draw: (t, c) => mbox.draw(g, t, c.dk) },
+    { y: () => elfRun.y, on: c => c.xmas, update: (t, dt) => elfRun.update(t, dt, gXmas && gNight), draw: t => elfRun.draw(g, t) },
+    { y: () => peek.y, on: c => c.snowman, update: t => peek.update(t), draw: t => peek.draw(g, t) },
+    ...PROPS.map(p => ({ y: () => p.y, on: c => propOn(p, c.xmas),
+      draw: p.id === 'tree' ? t => { drawProp(p); drawLights(t); } // 트리 전구·별은 트리 바로 위
+        : p.id === 'carousel' ? (t, c) => { if (!carousel.draw(g, t, c.mix)) drawProp(p); } // 도는 회전목마(그림이 없으면 멈춘 소품)
+          : () => drawProp(p) }))
+  ];
 
   /* ── 시험 캐릭터 (?probe=1): 방 스프라이트 하나를 두 자리에 — 방 앞쪽 크기 × charScale × depth(y) */
   if (PROBE)
@@ -590,30 +605,19 @@ function build(cfg) {
     drawFw(t);
     g.clearRect(0, 0, W, H);
     guests.update(t, dt, now(), gNight, gXmas);
-    // 안쪽(y 작은)부터 그림: 오르골·강고양이 씨·금붕생이 로봇을 y 순서로 세우고 그 사이사이에 손님 (겹칠 때 앞뒤가 맞게)
-    kitty.update(t, dt);
-    rink.update(t, dt, now(), gXmas && gNight);
-    const dk = mix / 0.62;
+    // 겹(LAYERS)을 y 순서로 세워 그 사이사이에 손님 — 안쪽(y 작은)부터 (겹칠 때 앞뒤가 맞게)
+    const ctx = { xmas, d: now(), mix, dk: mix / 0.62, snowman: snowmanOn(xmas) };
+    const live = LAYERS.filter(L => !L.on || L.on(ctx));
+    for (const L of LAYERS)
+      if (L.update && (!L.on || L.on(ctx) || L.always))
+        L.update(t, dt, ctx);
     let gy = -Infinity;
-    const layers = [[kitty.y(), () => kitty.draw(g)], [vendor.y, () => vendor.draw(g, t, now())], [rink.y, () => rink.draw(g, t, mix)]];
-    if (xmas) {
-      layers.push([cfg.music.at[1], () => mbox.draw(g, t, dk)]);
-      elfRun.update(t, dt, gXmas && gNight);
-      layers.push([elfRun.y, () => elfRun.draw(g, t)]);
+    for (const L of live.map(L => [L.y(), L]).sort((a, b) => a[0] - b[0])) {
+      guests.draw(g, t, ctx.dk, gy, L[0]);
+      L[1].draw(t, ctx);
+      gy = L[0];
     }
-    if (PROPS.some(p => p.id === 'snowman' && propOn(p, xmas))) {
-      peek.update(t);
-      layers.push([peek.y, () => peek.draw(g, t)]);
-    }
-    for (const p of PROPS)
-      if (propOn(p, xmas))
-        layers.push([p.y, p.id === 'tree' ? () => { drawProp(p); drawLights(t); } : p.id === 'carousel' ? () => { if (!carousel.draw(g, t, mix)) drawProp(p); } : () => drawProp(p)]); // 트리 전구·별은 트리 바로 위, 회전목마는 돌아가는 것(그림이 없으면 멈춘 소품)
-    for (const [ly, fn] of layers.sort((a, b) => a[0] - b[0])) {
-      guests.draw(g, t, dk, gy, ly);
-      fn();
-      gy = ly;
-    }
-    guests.draw(g, t, dk, gy);
+    guests.draw(g, t, ctx.dk, gy);
     drawSteam(t);
     drawSnow(t, dt);
     if (!RM || lit !== litTo)
@@ -646,7 +650,7 @@ function probe(sc, CH) {
     return CH.roomPx * CH.charScale * (k0 + (k1 - k0) * p);
   };
   const name = CH.probe.frame;
-  fetch('../f/meta.json').then(r => r.json()).then(meta => {
+  frameMeta().then(meta => {
     const [fw, fh, ax, ay, fk = 1] = meta[name];
     for (const [x, y] of CH.probe.at) {
       const k = at(y) * fk, im = el('img', 'probe');
