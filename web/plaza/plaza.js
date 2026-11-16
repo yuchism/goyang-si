@@ -514,6 +514,8 @@ function build(cfg) {
     const d = now(), n = FORCE_NIGHT ?? isNight(d);
     mix = FORCE_NIGHT !== null ? +FORCE_NIGHT : RM ? +n : clamp01(darkness(d, true));
     night.style.opacity = mix;
+    // 완전한 밤엔 낮 그림을 숨김 — 낮 그림 지붕 가장자리의 반투명 밝은 픽셀이 밤하늘에 1px 흰 띠로 비쳐서 (2026-11-16)
+    day.style.visibility = mix >= 0.995 ? 'hidden' : '';
     starTo = FORCE_NIGHT !== null ? +FORCE_NIGHT : clamp01(darkness(d, true) / cfg.weather.nightDark);
     snowTo = FORCE_SNOW ?? snowAt(d, cfg.weather);
     drawSky(d, mix);
