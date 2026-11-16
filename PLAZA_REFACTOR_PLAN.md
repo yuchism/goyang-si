@@ -1,6 +1,6 @@
 # 광장 코드 정리
 
-> 상태: **명세 (2026-11-16).** R1 끝(2026-11-16). 크리스마스 광장 → 사계절 광장을 하루에 빠르게 붙이면서 생긴 버그·복잡함·남은 것. 기능은 바꾸지 않는다(화면이 그대로인지 `tools/check_plaza.mjs`와 화면 비교로 확인).
+> 상태: **명세 (2026-11-16).** R1·R2·R3 끝(2026-11-16). 크리스마스 광장 → 사계절 광장을 하루에 빠르게 붙이면서 생긴 버그·복잡함·남은 것. 기능은 바꾸지 않는다(화면이 그대로인지 `tools/check_plaza.mjs`와 화면 비교로 확인).
 
 ## 1. 버그 (먼저)
 
@@ -8,8 +8,8 @@
 
 ## 2. 소품 도구 (`tools/`)
 
-- **R2. 차이 뽑기 걷어내기:** 소품은 이제 전부 주인이 다시 받은 그림(`assets/plaza/props/*-source-v1.png`). `make_plaza_props.py`는 "받은 그림 → 참고 상자 자리에 맞춰 자르기 → `scene.json` 자리 출력"만 남긴다. 전구 줄을 옛 방식으로 덮어쓰는 문제가 함께 없어짐(지금은 `make_plaza_wires.py`를 꼭 뒤에 다시 돌려야 함).
-- **R3. 참고 상자 한 곳:** 참고 그림 자르기(`assets/plaza/prop-ref/`)와 소품 자리 맞추기가 같은 상자(REF)를 쓰게 — 지금은 스크립트마다 숫자를 따로 적음(`make_plaza_rink.py`의 REF 포함).
+- **R2. 차이 뽑기 걷어내기 — 끝:** 소품은 이제 전부 주인이 다시 받은 그림(`assets/plaza/props/*-source-v1.png`). `make_plaza_props.py`는 "받은 그림 → 참고 상자 자리에 맞춰 자르기 → `scene.json` 자리 출력"만 남긴다. 전구 줄을 옛 방식으로 덮어쓰는 문제가 함께 없어짐(지금은 `make_plaza_wires.py`를 꼭 뒤에 다시 돌려야 함).
+- **R3. 참고 상자 한 곳 — 끝:** `tools/plaza_props.json`(상자·바로잡기 shift) — `make_plaza_props.py`(scene.json at도 씀)·`make_plaza_prop_refs.py`(참고 그림 자르기, 새로)·`make_plaza_rink.py`가 같이 읽음. 결과 그림은 전과 픽셀까지 같음. 참고 그림 자르기(`assets/plaza/prop-ref/`)와 소품 자리 맞추기가 같은 상자(REF)를 쓰게 — 지금은 스크립트마다 숫자를 따로 적음(`make_plaza_rink.py`의 REF 포함).
 
 ## 3. 광장 그리기 (`web/plaza/plaza.js`)
 

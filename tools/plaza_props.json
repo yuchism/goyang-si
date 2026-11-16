@@ -1,0 +1,12 @@
+{
+  "_": "광장 소품 참고 상자 (PLAZA_REFACTOR_PLAN.md R3) — 도구들이 같이 쓰는 한 곳. box: 크리스마스 광장 그림에서 참고 그림을 자른 상자 [x0, y0, x1, y1](광장 px, tools/make_plaza_prop_refs.py → assets/plaza/prop-ref/<id>-day·night-ref.png). 주인이 ChatGPT로 같은 크기로 다시 그린 것(assets/plaza/props/<id>-day·night-source-v1.png)을 box 왼쪽 위 + shift 자리에 놓는다(tools/make_plaza_props.py). shift: 받은 그림이 살짝 밀려 온 만큼 바로잡기(tree: 꼭대기 별을 tree.star에, stall: 아래가 비어 보여 8px 내림)",
+  "props": {
+    "carousel":   { "box": [30, 390, 460, 815] },
+    "stall":      { "box": [186, 745, 530, 989], "shift": [0, 8] },
+    "tree":       { "box": [460, 20, 1080, 860], "shift": [9, 0] },
+    "gifts-left": { "box": [495, 695, 715, 860] },
+    "gift-right": { "box": [862, 750, 1000, 860] },
+    "snowman":    { "box": [1340, 720, 1520, 989] },
+    "rink":       { "box": [985, 750, 1395, 935] }
+  }
+}
