@@ -1,6 +1,6 @@
 # 광장 주인장 걷기 스프라이트 지시서 v1 (PLAZA_OWNER_WALK_ART)
 
-> 상태: **지시서 씀 (2026-11-17).** 플랜 `PLAZA_PLAN.md` 4-3(손님). 형식은 `XMAS_PLAZA_GUEST_ART.md`와 같음.
+> 상태: **v2 받음 (2026-11-17).** v1은 팔이 안 바뀌고 머리가 흔들려 다시 받음(머리는 고쳐짐, 팔 엇갈림은 아직 약함). 웹 시트는 `tools/make_plaza_guests.py`가 가장 높은 판(-vN)을 쓰고, 주인장은 한 배율·머리 가운데 맞춤(HUMAN). 플랜 `PLAZA_PLAN.md` 4-3(손님). 형식은 `XMAS_PLAZA_GUEST_ART.md`와 같음.
 > 대상: 주인장 4명 × 5칸 = 시트 4장
 > 참고 그림(ChatGPT에 같이 붙임): `assets/plaza/guest-ref/<이름>-dance-ref.png`(인물) + `assets/plaza/guest-ref/walk-format-koala.png`(형식)
 

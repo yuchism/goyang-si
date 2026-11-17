@@ -13,6 +13,7 @@ REVIEW = ROOT / 'assets/plaza/guests/_review'  # 검수용 정렬 그림·gif·�
 WEB = ROOT / 'web/plaza/guests'
 CELL, HEIGHT, FOOT, SCALE = 512, 768, 730, 0.75
 # 목표 키, 공중에서 발이 뜨는 높이. 깡충은 ⑤의 키로 같은 배율을 쓴다.
+HUMAN = {'common': True, 'head': True}
 GUESTS = {
     'koala': (476, (0, 0, 0, 0, 0)),
     'kangaroo': (700, (0, 40, 50, 0, 0)),
@@ -21,11 +22,12 @@ GUESTS = {
     'dog': (504, (0, 0, 0, 0, 0)),
     'wombat': (392, (0, 0, 0, 0, 0)),
     'wolf-sheep-disguise': (490, (0, 0, 0, 0, 0)),  # 양 탈을 쓴 늑대 (주인이 ChatGPT로 직접 그림, 2026-11-16)
-    # 주인장 넷 (assets/briefs/PLAZA_OWNER_WALK_ART.md, 2026-11-17) — 키는 생일 춤 시트 키를 코알라와 견줘 잡음
-    'mandeuk': (577, (0, 0, 0, 0, 0)),
-    'family-01': (591, (0, 0, 0, 0, 0)),
-    'family-02': (595, (0, 0, 0, 0, 0)),
-    'family-03': (546, (0, 0, 0, 0, 0)),
+    # 주인장 넷 (assets/briefs/PLAZA_OWNER_WALK_ART.md, 2026-11-17) — 키는 생일 춤 시트 키를 코알라와 견줘 잡음.
+    # HUMAN: 칸마다 키를 맞추면 큰 머리가 커졌다 작아졌다 흔들려서, 한 배율(①~⑤ 키 가운데값)로 줄이고 가로는 머리 가운데로 맞춤
+    'mandeuk': (577, (0, 0, 0, 0, 0), HUMAN),
+    'family-01': (591, (0, 0, 0, 0, 0), HUMAN),
+    'family-02': (595, (0, 0, 0, 0, 0), HUMAN),
+    'family-03': (546, (0, 0, 0, 0, 0), HUMAN),
 }
 
 
@@ -49,18 +51,31 @@ def body_center(im):
     return sum(x * w for x, w in enumerate(weights)) / sum(weights)
 
 
-def convert(name, target, lifts):
-    src = Image.open(ROOT / f'assets/plaza/guests/{name}-walk-source-v1.png').convert('RGBA')
+def head_center(im):
+    # 위 30% 띠(머리)의 좌우 가운데
+    a = im.getchannel('A').point(lambda v: 255 if v > 96 else 0)
+    band = a.crop((0, 0, im.width, round(im.height * 0.3)))
+    xs = [x for x in range(im.width) if band.crop((x, 0, x + 1, band.height)).getbbox()]
+    return (xs[0] + xs[-1]) / 2
+
+
+def convert(name, target, lifts, opts=None):
+    opts = opts or {}
+    # 가장 높은 판(-vN)을 씀 (주인장 v2: 팔 엇갈림·머리 고정으로 다시 받음, 2026-11-17)
+    srcs = sorted((ROOT / 'assets/plaza/guests').glob(f'{name}-walk-source-v*.png'), key=lambda f: int(f.stem.rsplit('-v', 1)[1]))
+    src = Image.open(srcs[-1]).convert('RGBA')
+    print(name, '←', srcs[-1].name)
     parts = [clean(src.crop((round(i * src.width / 5), 0,
                             round((i + 1) * src.width / 5), src.height)))
              for i in range(5)]
     sheet = Image.new('RGBA', (CELL * 5, HEIGHT))
     frames, metrics = [], []
+    common = sorted(p.height for p in parts)[2]  # 키 가운데값
     for i, part in enumerate(parts):
-        k = target / (parts[4].height if any(lifts) else part.height)
+        k = target / (common if opts.get('common') else parts[4].height if any(lifts) else part.height)
         size = (round(part.width * k), round(part.height * k))
         part = part.resize(size, Image.Resampling.LANCZOS)
-        x = round(CELL / 2 - body_center(part))
+        x = round(CELL / 2 - (head_center(part) if opts.get('head') else body_center(part)))
         x = max(2, min(x, CELL - 2 - part.width))
         y = FOOT - lifts[i] - part.height
         assert x >= 2 and x + part.width <= CELL - 2 and y >= 0, (name, i, size)
@@ -100,9 +115,9 @@ def main():
     metrics = {}
     # 검수 합성 전용 자리. 실제 장면 설정·동작에는 사용하지 않는다.
     for i, name in enumerate(names):
-        height, lifts = GUESTS[name]
+        height, lifts, *opts = GUESTS[name]
         x = 130 + i * 1260 / max(1, len(names) - 1) if len(names) > 1 else 760
-        frames, metrics[name] = convert(name, height, lifts)
+        frames, metrics[name] = convert(name, height, lifts, *opts)
         frame = frames[0].resize((round(CELL * .42), round(HEIGHT * .42)), Image.Resampling.LANCZOS)
         overview.alpha_composite(frame, (round(x - CELL * .42 / 2), round(940 - FOOT * .42)))
         print(name, metrics[name])
