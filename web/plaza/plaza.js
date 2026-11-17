@@ -22,6 +22,7 @@ import { makeCarousel } from './carousel.js';
 import { makeElfRun } from './elfrun.js';
 import { makePeek } from './peek.js';
 import { makeGiftPop } from './giftpop.js';
+import { makeTaiyaki } from './taiyaki.js';
 import { depthOf, frameMeta } from './plaza-kit.js';
 
 const body = document.body;
@@ -588,10 +589,13 @@ function build(cfg) {
     }
     else
       drawPropAt(p);
+    if (p.id === 'stall') // 붕어빵 공중제비는 노점 그림 위에
+      taiyaki.draw(g, performance.now() / 1000);
     if (p === lastGift) // 터지는 것들은 맨 뒤에 그리는(앞쪽) 상자 겹에서 한 번에
       gifts.draw(g, performance.now() / 1000);
   };
   const gifts = makeGiftPop(cfg, { RM });
+  const taiyaki = makeTaiyaki(cfg, { RM });
   const lastGift = PROPS.filter(p => gifts.ids.includes(p.id)).sort((a, b) => b.y - a.y)[0];
   const drawPropAt = p => {
     const [d, n] = p.im, [x, y] = p.at;
@@ -621,6 +625,8 @@ function build(cfg) {
       return;
     const gift = PROPS.find(p => gifts.ids.includes(p.id) && propOn(p, isXmas(now())) && gifts.tap(p, x, y, t));
     if (gift)
+      return;
+    if (PROPS.some(p => p.id === 'stall' && propOn(p, isXmas(now()))) && taiyaki.tap(x, y, t))
       return;
     if (tapSnowman(x, y, t, isXmas(now()))) {
       peek.poke(t); // 눈사람 뒤 쥐야쥐가 퐁

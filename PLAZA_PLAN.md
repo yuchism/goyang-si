@@ -86,6 +86,7 @@
 - 방 어항의 금붕생이가 어항 머리를 얹은 **붕어빵 화로 로봇**(바퀴·계기판·굴뚝·붕어빵 집게 팔 하나, 산타 모자)으로 노점을 본다. 그림은 주인이 ChatGPT로(`assets/plaza/fish-vendor-source-v1.png`, 5칸), 정리 `tools/make_plaza_fishvendor.py`.
 - 노점 가운데쯤 ~ 트리 앞 왼쪽(`vendor.roam`)을 손님 길보다 안쪽에서 바퀴로 천천히 오가고(돌지 않고 굴러감) 멈추면 붕어빵 집어 자랑(가끔 한숨). 새벽 1~6시 졸기. 누르면 자랑 한 번. 굴뚝 김이 따라감.
 - `web/plaza/vendor.js`.
+- **가판대를 누르면 (2026-11-17):** 굽는 판 틀 하나에서 노릇한 붕어빵이 퐁 튀어 공중제비를 돌고(차양 밑까지만) 오른쪽 바구니로 쏙. 붕어빵 그림은 주인이 ChatGPT로(`assets/plaza/props/bungeoppang-v1.png` → `web/plaza/props/taiyaki.webp`), 움직임은 `web/plaza/taiyaki.js`·`scene.json` `taiyaki`. 여러 번 누르면 여러 마리(최대 4).
 
 ### 4-7. 스케이트장 (회의 2026-11-16)
 
