@@ -26,7 +26,7 @@ GUESTS = {
     # HUMAN: 칸마다 키를 맞추면 큰 머리가 커졌다 작아졌다 흔들려서, 한 배율(①~⑤ 키 가운데값)로 줄이고 가로는 머리 가운데로 맞춤
     'mandeuk': (577, (0, 0, 0, 0, 0), HUMAN),
     'family-01': (591, (0, 0, 0, 0, 0), HUMAN),
-    'family-02': (595, (0, 0, 0, 0, 0), HUMAN),
+    'family-02': (595, (0, 0, 0, 0, 0), {**HUMAN, 'v': 1}),  # v1이 더 좋다(주인, 2026-11-17)
     'family-03': (546, (0, 0, 0, 0, 0), HUMAN),
 }
 
@@ -61,8 +61,10 @@ def head_center(im):
 
 def convert(name, target, lifts, opts=None):
     opts = opts or {}
-    # 가장 높은 판(-vN)을 씀 (주인장 v2: 팔 엇갈림·머리 고정으로 다시 받음, 2026-11-17)
+    # 가장 높은 판(-vN)을 씀 (opts v로 정해 둘 수 있음) (주인장 v2: 팔 엇갈림·머리 고정으로 다시 받음, 2026-11-17)
     srcs = sorted((ROOT / 'assets/plaza/guests').glob(f'{name}-walk-source-v*.png'), key=lambda f: int(f.stem.rsplit('-v', 1)[1]))
+    if opts.get('v'):  # 판을 정해 둔 손님
+        srcs = [f for f in srcs if f.stem.endswith(f"-v{opts['v']}")]
     src = Image.open(srcs[-1]).convert('RGBA')
     print(name, '←', srcs[-1].name)
     parts = [clean(src.crop((round(i * src.width / 5), 0,
