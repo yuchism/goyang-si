@@ -21,6 +21,11 @@ GUESTS = {
     'dog': (504, (0, 0, 0, 0, 0)),
     'wombat': (392, (0, 0, 0, 0, 0)),
     'wolf-sheep-disguise': (490, (0, 0, 0, 0, 0)),  # 양 탈을 쓴 늑대 (주인이 ChatGPT로 직접 그림, 2026-11-16)
+    # 주인장 넷 (assets/briefs/PLAZA_OWNER_WALK_ART.md, 2026-11-17) — 키는 생일 춤 시트 키를 코알라와 견줘 잡음
+    'mandeuk': (577, (0, 0, 0, 0, 0)),
+    'family-01': (591, (0, 0, 0, 0, 0)),
+    'family-02': (595, (0, 0, 0, 0, 0)),
+    'family-03': (546, (0, 0, 0, 0, 0)),
 }
 
 
@@ -85,6 +90,8 @@ def convert(name, target, lifts):
 
 
 def main():
+    import sys
+    names = sys.argv[1:] or list(GUESTS)  # 이름을 주면 그 손님만 (예: python3 tools/make_plaza_guests.py mandeuk family-01)
     REVIEW.mkdir(parents=True, exist_ok=True)
     WEB.mkdir(parents=True, exist_ok=True)
     plaza = Image.open(ROOT / 'tools/ref/xmas-night.webp').convert('RGBA')
@@ -92,7 +99,9 @@ def main():
     overview.alpha_composite(plaza)
     metrics = {}
     # 검수 합성 전용 자리. 실제 장면 설정·동작에는 사용하지 않는다.
-    for (name, (height, lifts)), x in zip(GUESTS.items(), (130, 340, 550, 760, 970, 1180, 1390)):
+    for i, name in enumerate(names):
+        height, lifts = GUESTS[name]
+        x = 130 + i * 1260 / max(1, len(names) - 1) if len(names) > 1 else 760
         frames, metrics[name] = convert(name, height, lifts)
         frame = frames[0].resize((round(CELL * .42), round(HEIGHT * .42)), Image.Resampling.LANCZOS)
         overview.alpha_composite(frame, (round(x - CELL * .42 / 2), round(940 - FOOT * .42)))
