@@ -28,6 +28,9 @@ GUESTS = {
     'family-01': (591, (0, 0, 0, 0, 0), HUMAN),
     'family-02': (595, (0, 0, 0, 0, 0), HUMAN),
     'family-03': (546, (0, 0, 0, 0, 0), HUMAN),
+    # family-01은 스케이트보드를 타고 지나감 (2026-11-18): 원본 family-01-skate-source-vN → web family-01-skate.webp.
+    # ⑤(보드 위에 서서 올려다봄, 보드 포함 키) 기준 한 배율, 가로는 보드 가운데로(보드가 칸마다 제자리)
+    'family-01-skate': (542, (0, 0, 0, 0, 0), {'id': 'family-01', 'kind': 'skate', 'ref5': True, 'board': True}),
 }
 
 
@@ -59,10 +62,19 @@ def head_center(im):
     return (xs[0] + xs[-1]) / 2
 
 
+def board_center(im):
+    # 맨 아래 7% 띠(보드·바퀴)의 좌우 가운데
+    a = im.getchannel('A').point(lambda v: 255 if v > 96 else 0)
+    band = a.crop((0, round(im.height * 0.93), im.width, im.height))
+    xs = [x for x in range(im.width) if band.crop((x, 0, x + 1, band.height)).getbbox()]
+    return (xs[0] + xs[-1]) / 2
+
+
 def convert(name, target, lifts, opts=None):
     opts = opts or {}
     # 가장 높은 판(-vN)을 씀 (주인장 v2: 팔 엇갈림·머리 고정으로 다시 받음, 2026-11-17)
-    srcs = sorted((ROOT / 'assets/plaza/guests').glob(f'{name}-walk-source-v*.png'), key=lambda f: int(f.stem.rsplit('-v', 1)[1]))
+    base, kind = opts.get('id', name), opts.get('kind', 'walk')
+    srcs = sorted((ROOT / 'assets/plaza/guests').glob(f'{base}-{kind}-source-v*.png'), key=lambda f: int(f.stem.rsplit('-v', 1)[1]))
     src = Image.open(srcs[-1]).convert('RGBA')
     print(name, '←', srcs[-1].name)
     parts = [clean(src.crop((round(i * src.width / 5), 0,
@@ -72,10 +84,10 @@ def convert(name, target, lifts, opts=None):
     frames, metrics = [], []
     common = sorted(p.height for p in parts)[2]  # 키 가운데값
     for i, part in enumerate(parts):
-        k = target / (common if opts.get('common') else parts[4].height if any(lifts) else part.height)
+        k = target / (parts[4].height if opts.get('ref5') else common if opts.get('common') else parts[4].height if any(lifts) else part.height)
         size = (round(part.width * k), round(part.height * k))
         part = part.resize(size, Image.Resampling.LANCZOS)
-        x = round(CELL / 2 - (head_center(part) if opts.get('head') else body_center(part)))
+        x = round(CELL / 2 - (board_center(part) if opts.get('board') else head_center(part) if opts.get('head') else body_center(part)))
         x = max(2, min(x, CELL - 2 - part.width))
         y = FOOT - lifts[i] - part.height
         assert x >= 2 and x + part.width <= CELL - 2 and y >= 0, (name, i, size)
@@ -87,7 +99,7 @@ def convert(name, target, lifts, opts=None):
                         'left': x, 'width': part.width})
     sheet.save(REVIEW / f'{name}-aligned.png')
     web = sheet.resize((1920, 576), Image.Resampling.LANCZOS)
-    web.save(WEB / f'{name}-walk.webp', quality=86, alpha_quality=100, method=6)
+    web.save(WEB / f'{base}-{kind}.webp', quality=86, alpha_quality=100, method=6)
     # 고정 팔레트·밝은 배경: GIF 투명색의 가장자리 번짐 없이 동작 확인.
     preview = []
     for frame in frames[:4]:
@@ -99,7 +111,7 @@ def convert(name, target, lifts, opts=None):
         palette.paste(frame, (i * 256, 0))
     palette = palette.quantize(colors=255)
     gif = [frame.quantize(palette=palette) for frame in preview]
-    gif[0].save(REVIEW / f'{name}-walk.gif', save_all=True,
+    gif[0].save(REVIEW / f'{base}-{kind}.gif', save_all=True,
                 append_images=gif[1:], duration=150, loop=0, disposal=2)
     return frames, metrics
 

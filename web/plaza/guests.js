@@ -4,6 +4,7 @@
    - 크기: 캐릭터 크기 규칙(plaza.js char — 방보다 작게 + 원근 depth). 생일 시트 틀(강고양이 씨 560) 기준 키 → 광장 px
    - 그림이 아직 없는 손님은 나오지 않는다(그림이 들어오면 저절로). 밤엔 그림을 어둡게 덮는다(광장 그림과 같이)
    - 누르면(tapAt) 잠깐 춤추고(생일 춤 시트 web/sheet/guest-<id>-dance-v1.webp ①~④, danceSec초) 다시 걷는다 (2026-11-17)
+   - family-01은 스케이트보드를 타고 지나감(guests.sheet·ride, 2026-11-18): 밀기 두 칸 → 미끄러지기, 걷는 손님의 두 배쯤 빠르게, 멈출 곳에선 보드 위에 서서 올려다봄
    - 동작 줄이기: 걷지 않고 멈출 곳에 서서 올려다보는 모습만 (춤도 없음) */
 import { tintAtop } from './plaza-kit.js';
 const clamp01 = v => Math.max(0, Math.min(1, v));
@@ -16,7 +17,7 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
       return imgs[id];
     const im = new Image();
     im.decoding = 'async';
-    im.src = `guests/${id}-walk.webp?v=${cfg.v}`;
+    im.src = `guests/${id}-${(G.sheet && G.sheet[id]) || 'walk'}.webp?v=${cfg.v}`; // family-01은 스케이트보드(sheet)
     im.onerror = () => { im.bad = true; };
     im.onload = () => measure(im);
     return imgs[id] = im;
@@ -85,7 +86,7 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
         id = f;
         break;
       }
-    const hop = G.hop.includes(id);
+    const hop = G.hop.includes(id), ride = G.ride && G.ride[id];
     const dir = Math.random() < 0.5 ? 1 : -1;
     const y = G.y[0] + Math.random() * (G.y[1] - G.y[0]);
     // 멈출 곳 한두 곳 (걷는 방향 순서대로)
@@ -93,7 +94,7 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
     stops.sort((a, b) => dir * (a - b));
     const W = cfg.size[0];
     const q = { id, hop, dir, y: standOnly ? G.stops[list.length % G.stops.length][1] : y, x: dir > 0 ? G.leftX : W + 60, stops, state: 'walk', until: 0, t0: t,
-      speed: (hop ? G.hopSpeed : G.speed)[0] + Math.random() * ((hop ? G.hopSpeed : G.speed)[1] - (hop ? G.hopSpeed : G.speed)[0]) };
+      speed: (() => { const r = ride ? ride.speed : hop ? G.hopSpeed : G.speed; return r[0] + Math.random() * (r[1] - r[0]); })(), ride };
     if (standOnly) {
       const s = G.stops[list.length % G.stops.length];
       Object.assign(q, { x: s[0], state: 'look', until: Infinity });
@@ -155,7 +156,9 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
       const dancing = q.state === 'dance' && danceReady(q.id);
       const im = dancing ? dances[q.id] : imgs[q.id];
       const cw = dancing ? G.danceCell[0] : G.cell[0];
-      const fi = dancing ? Math.floor((t - q.dt0) * G.danceFps) % 4 : q.state === 'look' || q.state === 'dance' ? 4 : Math.floor((t - q.t0) * (q.hop ? G.hopFps : G.fps)) % 4;
+      const fi = dancing ? Math.floor((t - q.dt0) * G.danceFps) % 4 : q.state === 'look' || q.state === 'dance' ? 4
+        : q.ride ? q.ride.seq[Math.floor((t - q.t0) * q.ride.fps) % q.ride.seq.length] // 보드: 밀기 ①② → 미끄러지기 ③④
+          : Math.floor((t - q.t0) * (q.hop ? G.hopFps : G.fps)) % 4;
       const want = wantOf(q);
       const k = want / (im.visH || chh * 0.62), foot = im.footY || G.foot;
       const w = cw * k, h = chh * k;
