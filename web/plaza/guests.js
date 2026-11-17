@@ -78,7 +78,13 @@ export function makeGuests(cfg, { rnd, RM, depthAt, isXmasNight, hourOf, force }
     const free = G.ids.filter(id => ready(id) && !here.has(id));
     if (!free.length)
       return;
-    const id = free[Math.floor(Math.random() * free.length)];
+    const wt = id => (G.weight && G.weight[id]) || 1; // 주인장들은 조금 덜 (scene.json guests.weight)
+    let r = Math.random() * free.reduce((a, id) => a + wt(id), 0), id = free[free.length - 1];
+    for (const f of free)
+      if ((r -= wt(f)) < 0) {
+        id = f;
+        break;
+      }
     const hop = G.hop.includes(id);
     const dir = Math.random() < 0.5 ? 1 : -1;
     const y = G.y[0] + Math.random() * (G.y[1] - G.y[0]);

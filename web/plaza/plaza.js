@@ -21,6 +21,7 @@ import { makeRink } from './skate.js';
 import { makeCarousel } from './carousel.js';
 import { makeElfRun } from './elfrun.js';
 import { makePeek } from './peek.js';
+import { makeGiftPop } from './giftpop.js';
 import { depthOf, frameMeta } from './plaza-kit.js';
 
 const body = document.body;
@@ -575,8 +576,23 @@ function build(cfg) {
       drawPuffs(performance.now() / 1000);
       return;
     }
-    drawPropAt(p);
+    const gs = gifts.ids.includes(p.id) && gifts.shape(p, performance.now() / 1000), im = p.im[0];
+    if (gs && im.naturalWidth) { // 선물 상자 들썩: 밑동 가운데를 축으로 늘였다 줄였다 + 폴짝
+      const cx = p.at[0] + im.naturalWidth / 2, by = p.at[1] + im.naturalHeight;
+      g.save();
+      g.translate(cx, by - gs[2]);
+      g.scale(gs[0], gs[1]);
+      g.translate(-cx, -by);
+      drawPropAt(p);
+      g.restore();
+    }
+    else
+      drawPropAt(p);
+    if (p === lastGift) // 터지는 것들은 맨 뒤에 그리는(앞쪽) 상자 겹에서 한 번에
+      gifts.draw(g, performance.now() / 1000);
   };
+  const gifts = makeGiftPop(cfg, { RM });
+  const lastGift = PROPS.filter(p => gifts.ids.includes(p.id)).sort((a, b) => b.y - a.y)[0];
   const drawPropAt = p => {
     const [d, n] = p.im, [x, y] = p.at;
     if (d.complete && d.naturalWidth && mix < 0.999)
@@ -602,6 +618,9 @@ function build(cfg) {
       return;
     const r = sc.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height, t = performance.now() / 1000;
     if (elfRun.tapAt(x, y, t) || roofs.tapAt(x, y, t) || guests.tapAt(x, y, t))
+      return;
+    const gift = PROPS.find(p => gifts.ids.includes(p.id) && propOn(p, isXmas(now())) && gifts.tap(p, x, y, t));
+    if (gift)
       return;
     if (tapSnowman(x, y, t, isXmas(now()))) {
       peek.poke(t); // 눈사람 뒤 쥐야쥐가 퐁
