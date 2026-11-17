@@ -85,6 +85,8 @@ def convert(name, target, lifts, opts=None):
     common = sorted(p.height for p in parts)[2]  # 키 가운데값
     for i, part in enumerate(parts):
         k = target / (parts[4].height if opts.get('ref5') else common if opts.get('common') else parts[4].height if any(lifts) else part.height)
+        if opts.get('common') and i == 4 and abs(part.height / common - 1) > 0.05:
+            k = target / part.height  # ⑤만 눈에 띄게 작게/크게 그려 온 경우(family-02 v13) ①~④와 같은 키로 맞춤
         size = (round(part.width * k), round(part.height * k))
         part = part.resize(size, Image.Resampling.LANCZOS)
         x = round(CELL / 2 - (board_center(part) if opts.get('board') else head_center(part) if opts.get('head') else body_center(part)))
