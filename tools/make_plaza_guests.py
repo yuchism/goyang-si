@@ -24,7 +24,7 @@ GUESTS = {
     'wolf-sheep-disguise': (490, (0, 0, 0, 0, 0)),  # 양 탈을 쓴 늑대 (주인이 ChatGPT로 직접 그림, 2026-11-16)
     # 주인장 넷 (assets/briefs/PLAZA_OWNER_WALK_ART.md, 2026-11-17) — 키는 생일 춤 시트 키를 코알라와 견줘 잡음.
     # HUMAN: 칸마다 키를 맞추면 큰 머리가 커졌다 작아졌다 흔들려서, 한 배율(①~⑤ 키 가운데값)로 줄이고 가로는 머리 가운데로 맞춤
-    'mandeuk': (577, (0, 0, 0, 0, 0), HUMAN),
+    'mandeuk': (577, (0, 0, 0, 0, 0), {**HUMAN, 'v': 2}),  # v4는 팔이 이상해서 v2로(주인, 2026-11-18)
     'family-01': (591, (0, 0, 0, 0, 0), HUMAN),
     'family-02': (595, (0, 0, 0, 0, 0), HUMAN),
     'family-03': (546, (0, 0, 0, 0, 0), HUMAN),
@@ -75,6 +75,8 @@ def convert(name, target, lifts, opts=None):
     # 가장 높은 판(-vN)을 씀 (주인장 v2: 팔 엇갈림·머리 고정으로 다시 받음, 2026-11-17)
     base, kind = opts.get('id', name), opts.get('kind', 'walk')
     srcs = sorted((ROOT / 'assets/plaza/guests').glob(f'{base}-{kind}-source-v*.png'), key=lambda f: int(f.stem.rsplit('-v', 1)[1]))
+    if opts.get('v'):  # 판을 정해 둔 손님 (없으면 가장 높은 판)
+        srcs = [f for f in srcs if f.stem.endswith(f"-v{opts['v']}")]
     src = Image.open(srcs[-1]).convert('RGBA')
     print(name, '←', srcs[-1].name)
     parts = [clean(src.crop((round(i * src.width / 5), 0,
