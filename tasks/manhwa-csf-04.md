@@ -1,7 +1,7 @@
 # 쫄깃 소넷맛 치킨 4화 「아저씨의 이중생활」 — 장 그림 14장 → 회차
 - status: implemented
 - mode: needs-review
-- office: ready
+- office: done
 - brief: assets/briefs/csf/04-brief.md
 - assets: assets/manhwa/csf/4/01.png ~ 14.png (새로, git 무시) · web/manhwa/csf/ 회차 (build_manhwa.py가 만듦)
 - 출처: 주인 원고 "어디 가시게요?"(2026-11-13 회의에서 다듬음) → 회차 지시서 `04-brief.md`(Claude, 진지판 14장)
