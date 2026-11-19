@@ -2,7 +2,7 @@
 - status: implemented
 - mode: needs-review
 - implement: codex
-- office: ready
+- office: done
 - brief: assets/briefs/MANHWA_SHOP_ART.md에 「그림 15 — 머그잔」 절을 더함 (이 티켓에서)
 - assets: assets/manhwa/shop/mug.png (git 무시, 로컬) · web/manhwa/shop/mug.webp
 - 출처: 회의 2026-11-06 — 주인: 만화방이 "좀 너무 고요한 느낌". 후보(먼지·머그잔 김·전등 흔들림·손님 기척·초침) 중 **머그잔 김만**

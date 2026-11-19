@@ -1,7 +1,7 @@
 # 쥐구멍 기지 2b: 식구 둘 더 — 검은 고양이(검수 의자) · 붓 고양이(이젤) + 한도 대기 줄
 - status: implemented
 - mode: needs-review
-- office: ready
+- office: done
 - brief: assets/briefs/BASE_FAMILY_B_ART.md
 - assets: assets/base/*-source-v1.png (git 무시) · web/base/fam/*.webp
 - 출처: 회의 2026-11-07~08 쥐구멍 기지 화면 · `base-2a`(식구 넷)의 다음

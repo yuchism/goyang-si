@@ -1,7 +1,7 @@
 # 쫄깃 소넷맛 치킨 3화 「2번」 — 장 그림 10장 → 회차
 - status: implemented
 - mode: needs-review
-- office: ready
+- office: done
 - brief: assets/briefs/csf/03-brief.md
 - assets: assets/manhwa/csf/3/01.png ~ 10.png (새로, git 무시) · web/manhwa/csf/ 회차 (build_manhwa.py가 만듦)
 - 출처: 주인 원고 "2부 첫 화 · 2번"(2026-11-10) → 회차 지시서 `03-brief.md`(Claude, 진지판 10장). 하네스로 만화 회차를 그리는 첫 시험 — 만화 전용 기능(헤드쿼터 `OFFICE_MANHWA_PLAN` 3-1~3-6)은 아직 없어서 지금 있는 그림 흐름으로

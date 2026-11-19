@@ -1,7 +1,7 @@
 # 쥐구멍 기지 3: 열쇠 · 출동 · 귀환
 - status: implemented
 - mode: needs-review
-- office: ready
+- office: done
 - 출처: 회의 2026-11-08 (헤드쿼터 아이디어 4-1장 "들어가는 길·출동·귀환")
 - 진행: **손으로 함**(Claude가 세션에서) — 하네스에는 기록만. `✅ 확정`을 붙이지 않는다. 끝나면 `✅ 손으로 끝냄`
 

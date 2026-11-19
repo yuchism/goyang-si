@@ -1,7 +1,7 @@
 # 쥐구멍 기지 4: 쉬는 시간 — 지난 일 다시 보기 + 쉬는 자세
 - status: implemented
 - mode: needs-review
-- office: ready
+- office: done
 - 출처: 회의 2026-11-08 — 상태는 3시간마다 찍은 사진 한 장이라 대부분 "다 쉬는 중"으로 보임
 - 진행: **손으로 함**(Claude가 세션에서) — 하네스에는 기록만. 끝나면 `✅ 손으로 끝냄`
 

@@ -2,7 +2,7 @@
 - status: done
 - mode: needs-review
 - relay: brief
-- office: ready
+- office: done
 - brief: assets/briefs/BASE_HALL_ART.md (이 티켓에서 새로 씀)
 - assets: assets/base/*-source-v1.png (git 무시) · web/base/*.webp
 - 출처: 회의 2026-11-07 쥐구멍 기지 화면 — goyang-hq `ideas/CAT_INC_IDEAS.md` v8 4-1장 · `plans/OFFICE_STATUS_PLAN.md`
