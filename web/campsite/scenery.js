@@ -105,10 +105,17 @@ const STARS = 4500; // 별 수 (주인 요청 2026-11-20: 더 많이). 보이는
 export function makeScenery({ phase, south }) {
   const moonDir = [Math.sin(FRONT + MOON.rel) * Math.cos(MOON.el), Math.sin(MOON.el), Math.cos(FRONT + MOON.rel) * Math.cos(MOON.el)];
   const lit = (1 - Math.cos(phase * TAU)) / 2;
+  // 별: 방향(az) 순으로 정렬해 두고, 프레임마다 화면에 들어오는 방향의 별만 그린다(4500개를 다 돌면 밀림)
   const stars = Array.from({ length: STARS }, () => {
-    const el = 0.015 + Math.random() * 0.74, az = Math.random() * TAU;
-    return { dir: [Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)], el, p: Math.random() * 6, s: Math.random() };
-  });
+    const el = 0.015 + Math.random() * 0.74, az = Math.random() * TAU, s = Math.random();
+    return { dir: [Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)], az, el, p: Math.random() * 6, s,
+      c: s > 0.97 ? '+' : s > 0.8 ? '*' : s > 0.5 ? '.' : '·', b: 0.45 + 0.5 * s, sp: 0.5 + s * 0.8 };
+  }).sort((a, b) => a.az - b.az);
+  const starAz = Float32Array.from(stars, s => s.az);
+  const lowerBound = a => { let lo = 0, hi = starAz.length; while (lo < hi) { const m = (lo + hi) >> 1; if (starAz[m] < a) lo = m + 1; else hi = m; } return lo; };
+  // 반짝임 밝기는 12단계로 — 색 글자를 프레임마다 새로 만들지 않게
+  const STAR_COL = Array.from({ length: 12 }, (_, i) => `rgba(205,215,255,${(i / 11).toFixed(2)})`);
+  const REFL_COL = Array.from({ length: 12 }, (_, i) => `rgba(170,185,230,${(i / 11 * 0.4).toFixed(2)})`);
 
   // 색 이름표 (표에는 번호만)
   const colors = [''], colorNo = new Map([['', 0]]);
@@ -227,15 +234,19 @@ export function makeScenery({ phase, south }) {
       }
     },
     // 별 (하늘 빈 칸에만) + 물에 비친 별
-    drawStars(view, T) {
-      for (const s of stars) {
-        const tw = 0.3 + 0.7 * Math.abs(Math.sin(T * (0.5 + s.s * 0.8) + s.p));
-        const pp = view.projectDir(...s.dir);
-        if (pp) view.putBack(view.cell(pp[0], pp[1]), s.s > 0.97 ? '+' : s.s > 0.8 ? '*' : s.s > 0.5 ? '.' : '·', `rgba(205,215,255,${(tw * (0.45 + 0.5 * s.s)).toFixed(2)})`, 0);
-        if (s.el > 0.35 || s.s <= 0.7) continue;
+    drawStars(view, yaw, T) {
+      const half = view.halfFov() + 0.03;
+      const one = s => {
+        const tw = 0.3 + 0.7 * Math.abs(Math.sin(T * s.sp + s.p));
+        const pp = view.projectDir(s.dir[0], s.dir[1], s.dir[2]);
+        if (pp) view.putBack(view.cell(pp[0], pp[1]), s.c, STAR_COL[Math.round(tw * s.b * 11)], 0);
+        if (s.el > 0.35 || s.s <= 0.7) return;
         const rp = view.projectDir(s.dir[0], -s.dir[1], s.dir[2]);
-        if (rp) view.putBack(view.cell(rp[0], rp[1]), '.', `rgba(170,185,230,${(tw * 0.4).toFixed(2)})`, 2);
-      }
+        if (rp) view.putBack(view.cell(rp[0], rp[1]), '.', REFL_COL[Math.round(tw * 11)], 2);
+      };
+      const a0 = (((yaw - half) % TAU) + TAU) % TAU, a1 = a0 + 2 * half; // 화면 왼쪽 끝 ~ 오른쪽 끝 방향
+      for (let i = lowerBound(a0); i < stars.length && starAz[i] <= a1; i++) one(stars[i]);
+      if (a1 > TAU) for (let i = 0; i < stars.length && starAz[i] <= a1 - TAU; i++) one(stars[i]); // 0을 넘어 이어지는 쪽
     },
   };
 }

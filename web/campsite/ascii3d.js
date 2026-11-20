@@ -99,6 +99,8 @@ export function makeView(canvas, opt) {
     camera0: () => [0, opt.lookY + opt.dist * sp, -opt.dist * cp],
     // 한 칸 높이가 몇 라디안인가
     angleStep: () => fs / fpx,
+    // 화면 가운데에서 옆 끝까지의 각(라디안) — 보이는 방향만 그릴 때
+    halfFov: () => Math.atan((w / 2) / fpx),
     backAt: id => bk[id],
     depthAt: id => zb[id],
     begin(yaw, sky = '#04060c') {

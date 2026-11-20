@@ -100,7 +100,7 @@ function frame(ms) {
   const light = fire.light(T);
   view.begin(yaw);
   scenery.drawFar(view, yaw, T);
-  scenery.drawStars(view, T);
+  scenery.drawStars(view, yaw, T);
   view.drawCloud(cloud, light, scenery.moonLight, T);
   fire.drawFlames(view);
   view.flush(light);
