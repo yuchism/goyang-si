@@ -22,7 +22,8 @@ export const FIRE = {
   embers: 7,           // 초당 불씨
 };
 
-export function makeCampfire({ reduce }) {
+// flames: false면 불꽃 입자는 만들지 않음(WebGL이 셰이더로 불을 그릴 때 — 불빛·불씨·솟음만 씀)
+export function makeCampfire({ reduce, flames = true }) {
   const parts = [], embers = [];
   let clock = 0, glow = 0; // glow: 글자를 태울 때 잠깐 확 솟는 기운 (기억 태우기)
   const spawn = () => {
@@ -35,7 +36,7 @@ export function makeCampfire({ reduce }) {
       h: (0.75 + Math.random() * 0.35) * tongue,
     });
   };
-  if (reduce) for (let i = 0; i < 500; i++) { // 멈춘 불: 수명 곳곳의 입자
+  if (reduce && flames) for (let i = 0; i < 500; i++) { // 멈춘 불: 수명 곳곳의 입자
     spawn();
     const p = parts[parts.length - 1], k = Math.random();
     p.age = k * p.life;
@@ -82,7 +83,7 @@ export function makeCampfire({ reduce }) {
       clock = T;
       glow = Math.max(0, glow - dt * 0.8);
       if (reduce) return;
-      stepFlames(dt, T);
+      if (flames) stepFlames(dt, T);
       stepEmbers(dt, T);
     },
     // 이번 순간의 불빛 (ascii3d drawCloud·flush에 넘김)
@@ -95,9 +96,10 @@ export function makeCampfire({ reduce }) {
       };
     },
     // 글자 하나가 불에 들어옴: 그 자리에서 불꽃이 잠깐 솟음 (tasks/campsite-3-memory.md)
+    get glow() { return glow; },
     burst(x, z, n = 40) {
       glow = Math.min(1.5, glow + 0.25);
-      if (reduce) return;
+      if (reduce || !flames) return;
       for (let i = 0; i < n; i++) {
         spawn();
         const p = parts[parts.length - 1];
