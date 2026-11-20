@@ -257,12 +257,15 @@ export function makeScenery({ phase, south }) {
         const gi = azBin(gAz[id] + yaw), rk = Math.min(R_N - 1, Math.floor(Math.log(r[id] / R0) / R_K)), g = gi * R_N + rk, type = gType[g];
         if (type === G.LAKE) { // 비친 하늘·산·달 + 잔물결, 달빛 길
           const ripple = 0.006 * Math.sin(t[id] * 1.3 - T * 1.4 + gi * 0.05) + 0.004 * Math.sin(t[id] * 2.9 + T * 0.9);
-          const k = skyK(az[id] + yaw + ripple * 0.6, -el[id] + ripple);
+          const raz = az[id] + yaw + ripple * 0.6, rel = -el[id] + ripple;
+          // 달 원판은 비추지 않음 — 달빛 길(아래)만 (주인 요청 2026-11-20: 둘 다 있으니 겹쳐 보임)
+          const mu = wrap(raz - FRONT - MOON.rel) * Math.cos(MOON.el) / MOON.r, mv = (rel - MOON.el) / MOON.r, inMoon = mu * mu + mv * mv <= 1.4;
+          const k = inMoon ? -1 : skyK(raz, rel);
           const c = k >= 0 ? skyCh[k] : 0;
           if (c && c !== 32) {
-            const ch = String.fromCharCode(c), moon = ch === '@' || ch === 'O';
-            if (!moon && hash(gi, rk) < 0.5) view.setBack(id, ' ', '', 2); // 비친 산은 성기게
-            else view.setBack(id, moon ? '~' : ch === '/' || ch === '\\' ? '-' : ch, colors[skyDim[k]], 2);
+            const ch = String.fromCharCode(c);
+            if (hash(gi, rk) < 0.5) view.setBack(id, ' ', '', 2); // 비친 산·은하수는 성기게
+            else view.setBack(id, ch === '/' || ch === '\\' ? '-' : ch, colors[skyDim[k]], 2);
             continue;
           }
           if (Math.abs(wrap(az[id] + yaw - FRONT - MOON.rel)) < moonPath && hash(rk, Math.floor(T * 3) + gi) < 0.35 * lit)
