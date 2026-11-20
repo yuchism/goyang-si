@@ -38,7 +38,7 @@ export function makeCloud() {
 export function makeView(canvas, opt) {
   const ctx = canvas.getContext('2d');
   const fs = opt.fontPx, cw = fs * 0.6;
-  let w = 0, h = 0, cols = 0, rows = 0, zb, ch, col, heat, bk, heatScale = 1, fpx = 600;
+  let w = 0, h = 0, cols = 0, rows = 0, zb, ch, col, heat, bk, heatScale = 1, fpx = 600, gen = 0;
   const resize = () => {
     const d = window.devicePixelRatio || 1;
     w = canvas.clientWidth || 360;
@@ -55,6 +55,7 @@ export function makeView(canvas, opt) {
     bk = new Uint8Array(cols * rows);
     fpx = Math.min(h * 0.75, w * 1.1) * opt.zoom; // 좁은 쪽 기준: 세로 폰에서 불이 너무 커지지 않게, 가로 화면에서 하늘(달)이 잘리지 않게
     heatScale = (fpx / HEAT_REF) ** 2;
+    gen++; // 화면 크기가 바뀜 → 먼 풍경 칸 표를 다시 만들 때
   };
   resize();
   window.addEventListener('resize', resize);
@@ -74,12 +75,11 @@ export function makeView(canvas, opt) {
     const y2 = dy * cp + z1 * sp, z2 = -dy * sp + z1 * cp;
     return z2 <= 0.01 ? null : [w / 2 + fpx * x1 / z2, h * opt.horizon - fpx * y2 / z2];
   };
-  // 화면 자리 → 세계 방향(단위 벡터). project를 거꾸로
-  const rayDir = (sx, sy) => {
-    const x1 = (sx - w / 2) / fpx, y2 = -(sy - h * opt.horizon) / fpx;
-    const y = y2 * cp - sp, z1 = y2 * sp + cp;
-    const x = x1 * ca + z1 * sa, z = -x1 * sa + z1 * ca, l = Math.hypot(x, y, z);
-    return [x / l, y / l, z / l];
+  // 칸 → 카메라가 yaw 0일 때의 세계 방향(단위 벡터). project를 거꾸로. 카메라는 yaw로만 도니 다른 yaw는 이것을 돌리면 된다
+  const rayAt = (u, v) => {
+    const x1 = ((u + 0.5) * cw - w / 2) / fpx, y2 = -((v + 0.5) * fs - h * opt.horizon) / fpx;
+    const y = y2 * cp - sp, z = y2 * sp + cp, l = Math.hypot(x1, y, z);
+    return [x1 / l, y / l, z / l];
   };
   // 화면 자리 → 칸 번호(밖이면 -1)
   const cell = (sx, sy, pad = 0) => {
@@ -88,15 +88,16 @@ export function makeView(canvas, opt) {
   };
 
   return {
-    ctx, project, projectDir, cell,
+    ctx, project, projectDir, cell, rayAt,
+    get gen() { return gen; },
     get width() { return w; },
     get height() { return h; },
     get cols() { return cols; },
     get rows() { return rows; },
     cellW: cw, cellH: fs,
-    // 카메라 자리 (세계 좌표) — 땅·물에 닿는 자리를 셀 때
-    camera: () => [-opt.dist * cp * sa, opt.lookY + opt.dist * sp, -opt.dist * cp * ca],
-    // 한 칸 높이가 몇 라디안인가 (먼 풍경의 능선을 글자 한 칸 두께로 그을 때)
+    // yaw 0일 때 카메라 자리 (세계 좌표) — 땅·물에 닿는 자리를 셀 때
+    camera0: () => [0, opt.lookY + opt.dist * sp, -opt.dist * cp],
+    // 한 칸 높이가 몇 라디안인가
     angleStep: () => fs / fpx,
     backAt: id => bk[id],
     depthAt: id => zb[id],
@@ -112,19 +113,13 @@ export function makeView(canvas, opt) {
       ctx.font = `${fs}px ui-monospace,Menlo,monospace`;
       ctx.textBaseline = 'top';
     },
-    // 먼 풍경: 칸마다 방향을 fn(dir)에 물어 [글자, 색, 종류(1 땅·산, 2 물)]를 받음. 물체보다 늘 뒤
-    drawBackdrop(fn) {
-      for (let v = 0; v < rows; v++)
-        for (let u = 0; u < cols; u++) {
-          const r = fn(rayDir((u + 0.5) * cw, (v + 0.5) * fs));
-          if (!r) continue;
-          const id = v * cols + u;
-          bk[id] = r[2] || 1;
-          zb[id] = 1e8;
-          if (r[0] === ' ') continue;
-          ch[id] = r[0];
-          col[id] = r[1];
-        }
+    // 먼 풍경 칸 하나 (물체보다 늘 뒤). kind: 1 땅·산, 2 물. c가 ' '면 글자 없이 자리만
+    setBack(id, c, color, kind) {
+      bk[id] = kind;
+      zb[id] = 1e8;
+      if (c === ' ') return;
+      ch[id] = c;
+      col[id] = color;
     },
     // 먼 풍경 칸에 글자 하나 (별·물에 비친 별). 하늘(빈 칸)이나 물에만
     putBack(id, c, color, kind) {

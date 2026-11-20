@@ -3,7 +3,8 @@
    - 앞(rel 0): 호수, 그 너머 V자 골짜기와 눈 덮인 먼 봉우리. 물에 하늘·산·달·별이 비치고 잔물결에 흔들림
    - 오른쪽: 풀 언덕 / 왼쪽: 가파른 산벽 / 뒤: 침엽수 숲. 숲에서 흘러나와 풀밭을 지나 호수로 드는 가는 개울
    - 하늘: 반짝이는 별, 호수 위 오늘의 달(위상은 날짜, 남·북반구 모양은 방문자 시간대)
-   능선·물·개울은 글자 칸마다 방향(ascii3d drawBackdrop)으로 계산 — 그림 파일 없음.
+   그림 파일 없음. 들어올 때 한 번 360도 표를 구워 두고(bake — 하늘·산·달 / 땅·호수·개울), 프레임마다는 표에서 읽기만.
+   카메라는 불 둘레를 yaw로만 도니, 화면 칸의 방향도 한 번 재 두고 yaw만 더한다(prepare). 움직이는 건 물결·개울·별뿐
    불과 카메라 사이엔 아무것도 세우지 않는다 (회의 2026-11-20: 불멍이니 시야를 막지 않게) */
 export const FRONT = 4.6; // 호수 쪽 방향 (처음 카메라가 바라보는 쪽)
 const TAU = Math.PI * 2;
@@ -92,25 +93,52 @@ function moonAt(u, v, phase, south) {
   return [crater ? '%' : wz > 0.6 ? '@' : wz > 0.3 ? 'O' : 'o', rgb(crater ? [200, 196, 175] : [240, 235, 210], k)];
 }
 
+// 구운 표의 칸 크기
+const AZ_N = 1440, AZ_STEP = TAU / AZ_N;                    // 방향 0.25°
+const EL_MIN = -0.06, EL_STEP = 0.005, EL_N = 150;           // 높이 -0.06 ~ 0.69 rad
+const R0 = 3.3, R_K = 0.035, R_N = 200;                       // 땅: 불에서 R0 ~ 약 3600 (로그 간격)
+const RIDGE_STEP = 0.009;                                     // 능선 글자 두께(라디안)
+const azBin = a => ((Math.floor(a / AZ_STEP) % AZ_N) + AZ_N) % AZ_N;
+const G = { NEAR: 0, GRASS: 1, LAKE: 2, STREAM: 3 };
+
 export function makeScenery({ phase, south }) {
   const moonDir = [Math.sin(FRONT + MOON.rel) * Math.cos(MOON.el), Math.sin(MOON.el), Math.cos(FRONT + MOON.rel) * Math.cos(MOON.el)];
   const lit = (1 - Math.cos(phase * TAU)) / 2;
-  const stars = Array.from({ length: 320 }, (_, i) => {
+  const stars = Array.from({ length: 320 }, () => {
     const el = Math.asin(0.03 + Math.random() * 0.95), az = Math.random() * TAU;
-    return { dir: [Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)], az, el, p: Math.random() * 6, s: Math.random(), i };
+    return { dir: [Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)], el, p: Math.random() * 6, s: Math.random() };
   });
 
-  // 하늘·산 (물에 비칠 때도 이것). 달이면 달, 아니면 산, 아니면 null(하늘)
-  const skyAt = (rel, el, step, dim) => {
+  // 색 이름표 (표에는 번호만)
+  const colors = [''], colorNo = new Map([['', 0]]);
+  const cno = c => { let n = colorNo.get(c); if (n === undefined) { n = colors.length; colors.push(c); colorNo.set(c, n); } return n; };
+
+  // 하늘·산·달 (물에 비칠 때도 이것)
+  const skyAt = (rel, el, dim) => {
     const du = wrap(rel - MOON.rel) * Math.cos(MOON.el) / MOON.r, dv = (el - MOON.el) / MOON.r;
     if (du * du + dv * dv <= 1) {
       const m = moonAt(du, dv, phase, south);
       return m && m[0] !== ' ' ? [m[0], dim < 1 ? m[1].replace(/\d+/g, n => (n * dim) | 0) : m[1]] : null;
     }
-    return mountainAt(rel, el, step, dim);
+    return mountainAt(rel, el, RIDGE_STEP, dim);
   };
 
-  // 땅 자리(불 기준 x,z) 가 개울이면 흐름 위치(0~), 아니면 -1
+  /* ───── 굽기: 하늘 표 (방향 × 높이) — 글자(0 하늘, 32 산 속 빈칸), 색, 물에 비친 색 ───── */
+  const skyCh = new Uint16Array(AZ_N * EL_N), skyCol = new Uint16Array(AZ_N * EL_N), skyDim = new Uint16Array(AZ_N * EL_N);
+  for (let i = 0; i < AZ_N; i++) {
+    const rel = wrap((i + 0.5) * AZ_STEP - FRONT);
+    for (let j = 0; j < EL_N; j++) {
+      const el = EL_MIN + (j + 0.5) * EL_STEP, r = skyAt(rel, el, 1), k = i * EL_N + j;
+      if (!r) continue;
+      skyCh[k] = r[0].charCodeAt(0);
+      skyCol[k] = cno(r[1]);
+      const d = skyAt(rel, el, 0.45);
+      skyDim[k] = cno(d ? d[1] : '');
+    }
+  }
+  const skyK = (az, el) => { const j = Math.floor((el - EL_MIN) / EL_STEP); return j < 0 || j >= EL_N ? -1 : azBin(az) * EL_N + j; };
+
+  /* ───── 굽기: 땅 표 (방향 × 거리) — 풀밭·호수·개울(흐름 위치) ───── */
   const streamAt = (x, z) => {
     let best = 9, along = 0, acc = 0;
     for (let i = 0; i < STREAM.length - 1; i++) {
@@ -122,49 +150,90 @@ export function makeScenery({ phase, south }) {
     }
     return best < 0.11 + along * 0.006 ? along : -1;
   };
+  const gType = new Uint8Array(AZ_N * R_N), gAlong = new Float32Array(AZ_N * R_N), gCh = new Uint16Array(AZ_N * R_N), gCol = new Uint16Array(AZ_N * R_N);
+  for (let i = 0; i < AZ_N; i++) {
+    const az = (i + 0.5) * AZ_STEP, grel = wrap(az - FRONT), sx = Math.sin(az), cz = Math.cos(az);
+    for (let k = 0; k < R_N; k++) {
+      const r = R0 * Math.exp((k + 0.5) * R_K), x = sx * r, z = cz * r, n = i * R_N + k;
+      if (Math.abs(grel) < 1.18 && r > SHORE(grel)) { gType[n] = G.LAKE; continue; }
+      const s = streamAt(x, z);
+      if (s >= 0) { gType[n] = G.STREAM; gAlong[n] = s; continue; }
+      gType[n] = G.GRASS;
+      const far = Math.min(1, 6 / r);
+      if (hash(Math.floor(x * 4), Math.floor(z * 4)) < 0.3 * far + 0.05) {
+        gCh[n] = (hash(x, z) < 0.5 ? ',' : '.').charCodeAt(0);
+        gCol[n] = cno(rgb([30, 52, 30], 0.6 + 0.6 * far));
+      }
+    }
+  }
 
+  /* ───── 화면 칸 → 방향 (화면 크기가 바뀔 때만) ───── */
+  let gen = -1, cells = null;
+  const prepare = view => {
+    if (gen === view.gen) return;
+    gen = view.gen;
+    const n = view.cols * view.rows, cam = view.camera0();
+    cells = { ground: new Uint8Array(n), az: new Float32Array(n), el: new Float32Array(n), gAz: new Float32Array(n), r: new Float32Array(n), t: new Float32Array(n) };
+    for (let v = 0; v < view.rows; v++)
+      for (let u = 0; u < view.cols; u++) {
+        const id = v * view.cols + u, [dx, dy, dz] = view.rayAt(u, v);
+        cells.az[id] = Math.atan2(dx, dz);
+        cells.el[id] = Math.asin(dy);
+        if (dy > -0.002) continue;
+        const t = -cam[1] / dy, gx = cam[0] + dx * t, gz = cam[2] + dz * t;
+        cells.ground[id] = 1;
+        cells.gAz[id] = Math.atan2(gx, gz);
+        cells.r[id] = Math.hypot(gx, gz);
+        cells.t[id] = t;
+      }
+  };
+
+  const moonPath = 0.05 * lit + 0.004;
   return {
     moonLight: { dir: moonDir, power: 0.1 + 0.22 * lit, color: [105, 125, 190] },
-    // ascii3d drawBackdrop에 넘길 함수를 만든다 (프레임마다)
-    backdrop(view, T) {
-      const step = view.angleStep(), cam = view.camera();
-      return ([dx, dy, dz]) => {
-        const rel = wrap(Math.atan2(dx, dz) - FRONT), el = Math.asin(dy);
-        if (dy > -0.002) return skyAt(rel, el, step, 1);
-        // 땅에 닿는 자리
-        const t = -cam[1] / dy, gx = cam[0] + dx * t, gz = cam[2] + dz * t, gr = Math.hypot(gx, gz);
-        const grel = wrap(Math.atan2(gx, gz) - FRONT);
-        if (Math.abs(grel) < 1.18 && gr > SHORE(grel)) { // 호수: 비친 하늘·산·달 + 잔물결
-          const ripple = 0.006 * Math.sin(t * 1.3 - T * 1.4 + gx * 1.7) + 0.004 * Math.sin(t * 2.9 + T * 0.9);
-          const m = skyAt(rel + ripple * 0.6, -el + ripple, step, 0.45);
-          if (m && m[0] !== ' ' && m[0] !== '@' && m[0] !== 'O' && hash(Math.floor(gx * 5), Math.floor(gz * 5)) < 0.5) return [' ', '', 2]; // 비친 산은 더 성기게
-          if (m) return [m[0] === '@' || m[0] === 'O' ? '~' : m[0] === '/' || m[0] === '\\' ? '-' : m[0], m[1], 2];
-          const glint = Math.abs(wrap(rel - MOON.rel)) < 0.05 * lit + 0.004 && hash(Math.floor(t * 3), Math.floor(T * 3 + gx)) < 0.35 * lit;
-          if (glint) return ['~', rgb([220, 220, 200], 0.4 + 0.5 * lit), 2]; // 달빛 길
-          const n = hash(Math.floor(gx * 3), Math.floor(gz * 3 + T * 0.5));
-          return n < 0.12 ? ['-', 'rgb(24,34,58)', 2] : [' ', '', 2];
+    // 먼 풍경 그리기 (프레임마다): 표에서 읽어 ascii3d 칸에
+    drawFar(view, yaw, T) {
+      prepare(view);
+      const { ground, az, el, gAz, r, t } = cells, n = ground.length;
+      for (let id = 0; id < n; id++) {
+        if (!ground[id]) { // 하늘·산·달
+          const k = skyK(az[id] + yaw, el[id]);
+          if (k >= 0 && skyCh[k]) view.setBack(id, String.fromCharCode(skyCh[k]), colors[skyCol[k]], 1);
+          continue;
         }
-        const s = streamAt(gx, gz);
-        if (s >= 0) { // 개울: 흐름을 따라 물결 글자가 내려감, 가끔 달빛에 반짝
-          const ph = Math.sin(s * 9 - T * 3.2);
-          const shine = hash(Math.floor(s * 12), Math.floor(T * 4)) < 0.06;
-          return [shine ? "'" : ph > 0.3 ? '~' : '-', shine ? rgb([200, 210, 230], 0.5 + 0.5 * lit) : 'rgb(52,78,118)', 2];
+        if (r[id] < R0) continue; // 가까운 풀밭은 점 구름이 그림
+        const gi = azBin(gAz[id] + yaw), rk = Math.min(R_N - 1, Math.floor(Math.log(r[id] / R0) / R_K)), g = gi * R_N + rk, type = gType[g];
+        if (type === G.LAKE) { // 비친 하늘·산·달 + 잔물결, 달빛 길
+          const ripple = 0.006 * Math.sin(t[id] * 1.3 - T * 1.4 + gi * 0.05) + 0.004 * Math.sin(t[id] * 2.9 + T * 0.9);
+          const k = skyK(az[id] + yaw + ripple * 0.6, -el[id] + ripple);
+          const c = k >= 0 ? skyCh[k] : 0;
+          if (c && c !== 32) {
+            const ch = String.fromCharCode(c), moon = ch === '@' || ch === 'O';
+            if (!moon && hash(gi, rk) < 0.5) view.setBack(id, ' ', '', 2); // 비친 산은 성기게
+            else view.setBack(id, moon ? '~' : ch === '/' || ch === '\\' ? '-' : ch, colors[skyDim[k]], 2);
+            continue;
+          }
+          if (Math.abs(wrap(az[id] + yaw - FRONT - MOON.rel)) < moonPath && hash(rk, Math.floor(T * 3) + gi) < 0.35 * lit)
+            view.setBack(id, '~', rgb([220, 220, 200], 0.4 + 0.5 * lit), 2);
+          else view.setBack(id, hash(gi >> 2, rk + Math.floor(T * 0.5)) < 0.12 ? '-' : ' ', 'rgb(24,34,58)', 2);
         }
-        if (gr < 3.3) return null; // 가까운 풀밭은 점 구름이 그림
-        const far = Math.min(1, 6 / gr);
-        return hash(Math.floor(gx * 4), Math.floor(gz * 4)) < 0.3 * far + 0.05 ? [hash(gx, gz) < 0.5 ? ',' : '.', rgb([30, 52, 30], 0.6 + 0.6 * far)] : [' ', ''];
-      };
+        else if (type === G.STREAM) { // 흐름을 따라 물결 글자가 내려감, 가끔 달빛에 반짝
+          const s = gAlong[g], shine = hash(Math.floor(s * 12), Math.floor(T * 4)) < 0.06;
+          view.setBack(id, shine ? "'" : Math.sin(s * 9 - T * 3.2) > 0.3 ? '~' : '-', shine ? rgb([200, 210, 230], 0.5 + 0.5 * lit) : 'rgb(52,78,118)', 2);
+        }
+        else if (gCh[g]) view.setBack(id, String.fromCharCode(gCh[g]), colors[gCol[g]], 1);
+        else view.setBack(id, ' ', '', 1);
+      }
     },
     // 별 (하늘 빈 칸에만) + 물에 비친 별
     drawStars(view, T) {
       for (const s of stars) {
         const tw = 0.3 + 0.7 * Math.abs(Math.sin(T * (0.5 + s.s * 0.8) + s.p));
-        const c = s.s > 0.9 ? '+' : s.s > 0.55 ? '.' : '·';
         const pp = view.projectDir(...s.dir);
-        if (pp) view.putBack(view.cell(pp[0], pp[1]), c, `rgba(205,215,255,${(tw * 0.8).toFixed(2)})`, 0);
-        if (s.el > 0.35) continue;
+        if (pp) view.putBack(view.cell(pp[0], pp[1]), s.s > 0.9 ? '+' : s.s > 0.55 ? '.' : '·', `rgba(205,215,255,${(tw * 0.8).toFixed(2)})`, 0);
+        if (s.el > 0.35 || s.s <= 0.5) continue;
         const rp = view.projectDir(s.dir[0], -s.dir[1], s.dir[2]);
-        if (rp && s.s > 0.5) view.putBack(view.cell(rp[0], rp[1]), '.', `rgba(170,185,230,${(tw * 0.4).toFixed(2)})`, 2);
+        if (rp) view.putBack(view.cell(rp[0], rp[1]), '.', `rgba(170,185,230,${(tw * 0.4).toFixed(2)})`, 2);
       }
     },
   };
