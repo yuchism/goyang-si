@@ -3,8 +3,8 @@
    - 화면: 글자 칸 격자. 불을 가운데 둔 궤도 카메라(yaw로 돌림)로 투영 → 칸마다 가장 가까운 점 하나(z-버퍼)
    - 빛: 모닥불(점광원 — 거리로 어두워지고 flick만큼 일렁임) + 달빛(방향광, 푸른빛). 밝기 → 종류별 글자 사다리
    - 불꽃처럼 비치는 것은 heat 칸(addHeat)에 쌓아 두었다가 flush에서 물체 위에 얹는다 */
-export const KIND = { GRASS: 0, STONE: 1, WOOD: 2, TENT: 3, ASH: 4, DARK: 5 };
-const RAMPS = [" .,'\";:", '.:-=oO0@', '.:-=+#%&', '.,:;=+*%', '.,:;-', '.:'];
+export const KIND = { GRASS: 0, STONE: 1, WOOD: 2, ASH: 3 };
+const RAMPS = [" .,'\";:", '.:-=oO0@', '.:-=+#%&', '.,:;-'];
 const FIRE_CH = ' .,:;-=+*#%';
 const STRIDE = 11; // x y z nx ny nz r g b kind ember
 // 불을 맞춘 화면 크기(높이 400px × zoom 1.5). 화면이 크면 불이 더 많은 칸에 퍼지므로 칸마다 쌓는 열기를 넓이만큼 늘려 같은 진하기로

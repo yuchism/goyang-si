@@ -1,8 +1,8 @@
 /* 모닥불 둘레 물체를 점 구름으로 (CAMPSITE_PLAN.md 3·4장, tasks/campsite-1-fire.md)
    단위: 불 가운데가 (0,0,0), 1 ≈ 1m 남짓. y가 위.
    - 땅: 풀밭 원판, 불 둘레는 재(가운데 재는 숯불처럼 숨 쉼)
-   - 돌 열두 개 동그랗게, 엇갈린 장작 셋(불 가까운 쪽이 숯불), 앉는 통나무 둘(자른 면에 나이테)
-   - 텐트 하나: 주황 A자, 입구는 불을 향해 반쯤 열림(안은 어둠) */
+   - 돌 열두 개 동그랗게, 엇갈린 장작 셋(불 가까운 쪽이 숯불), 앉는 통나무 셋(자른 면에 나이테)
+   - 텐트는 뺌(회의 2026-11-20) — 그 자리에도 통나무 */
 import { KIND } from './ascii3d.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -51,26 +51,6 @@ function cylinder(cl, a, b, rad, n, color, { ember, caps } = {}) {
     }
 }
 
-function tent(cl, ang, R) {
-  const T = [R * Math.cos(ang), 0, R * Math.sin(ang)], d = [-Math.cos(ang), 0, -Math.sin(ang)], xa = [-d[2], 0, d[0]];
-  const hw = 0.62, hh = 0.85, hd = 0.7, C = [200, 125, 48];
-  // 텐트 자리(lx 옆, ly 위, ld 불 쪽) → 세계
-  const put = (lx, ly, ld, nx, ny, nd, color, kind) =>
-    cl.add(T[0] + xa[0] * lx + d[0] * ld, ly, T[2] + xa[2] * lx + d[2] * ld, xa[0] * nx + d[0] * nd, ny, xa[2] * nx + d[2] * nd, color, kind);
-  for (let i = 0; i < 3600; i++) { // 양쪽 경사면
-    const s = Math.random(), side = Math.random() < 0.5 ? -1 : 1;
-    put(side * hw * (1 - s), hh * s, rnd(-hd, hd), side * hh, hw, 0, shade(C, rnd(0.88, 1.08)), KIND.TENT);
-  }
-  const tri = () => { const y = Math.random() * hh, w = hw * (1 - y / hh); return [rnd(-w, w), y, w]; };
-  for (let i = 0; i < 700; i++) { const [x, y] = tri(); put(x, y, -hd, 0, 0, -1, C, KIND.TENT); } // 뒷면
-  for (let i = 0; i < 900; i++) { // 앞면: 양옆 자락만, 가운데는 열린 입구(안쪽 어둠)
-    const [x, y, w] = tri();
-    if (Math.abs(x) > w * 0.42) put(x, y, hd, 0, 0, 1, C, KIND.TENT);
-    else put(x, y, hd - 0.05, 0, 0, 1, [22, 16, 12], KIND.DARK);
-  }
-  for (let i = 0; i < 120; i++) put(0, hh + 0.01, rnd(-hd - 0.05, hd + 0.05), 0, 1, 0, [90, 80, 70], KIND.STONE); // 용마루
-}
-
 export function buildCampsite(cl) {
   ground(cl);
   for (let i = 0; i < 12; i++) {
@@ -81,9 +61,8 @@ export function buildCampsite(cl) {
   cylinder(cl, [-0.48, 0.04, -0.18], [0.42, 0.2, 0.12], 0.065, 700, [45, 32, 24], { ember });
   cylinder(cl, [0.3, 0.04, -0.46], [-0.16, 0.22, 0.38], 0.06, 650, [42, 30, 22], { ember });
   cylinder(cl, [0.1, 0.04, 0.5], [-0.05, 0.24, -0.42], 0.058, 650, [48, 34, 25], { ember });
-  for (const ang of [3.4, 5.3]) { // 앉는 통나무 (불 둘레를 따라 누움)
+  for (const ang of [0.55, 3.4, 5.3]) { // 앉는 통나무 (불 둘레를 따라 누움)
     const r = 1.75, cx = r * Math.cos(ang), cz = r * Math.sin(ang), tx = -Math.sin(ang) * 0.6, tz = Math.cos(ang) * 0.6;
     cylinder(cl, [cx - tx, 0.17, cz - tz], [cx + tx, 0.17, cz + tz], 0.17, 2200, [110, 72, 42], { caps: true });
   }
-  tent(cl, 0.55, 2.35);
 }
