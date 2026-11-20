@@ -100,12 +100,13 @@ const R0 = 3.3, R_K = 0.035, R_N = 200;                       // 땅: 불에서 
 const RIDGE_STEP = 0.009;                                     // 능선 글자 두께(라디안)
 const azBin = a => ((Math.floor(a / AZ_STEP) % AZ_N) + AZ_N) % AZ_N;
 const G = { NEAR: 0, GRASS: 1, LAKE: 2, STREAM: 3 };
+const STARS = 4500; // 별 수 (주인 요청 2026-11-20: 더 많이). 보이는 하늘(높이 0~0.75rad)에만 고르게 — 머리 위로 흩어 버리지 않게. 대부분 희미한 ·, 드물게 밝은 +
 
 export function makeScenery({ phase, south }) {
   const moonDir = [Math.sin(FRONT + MOON.rel) * Math.cos(MOON.el), Math.sin(MOON.el), Math.cos(FRONT + MOON.rel) * Math.cos(MOON.el)];
   const lit = (1 - Math.cos(phase * TAU)) / 2;
-  const stars = Array.from({ length: 320 }, () => {
-    const el = Math.asin(0.03 + Math.random() * 0.95), az = Math.random() * TAU;
+  const stars = Array.from({ length: STARS }, () => {
+    const el = 0.015 + Math.random() * 0.74, az = Math.random() * TAU;
     return { dir: [Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)], el, p: Math.random() * 6, s: Math.random() };
   });
 
@@ -230,8 +231,8 @@ export function makeScenery({ phase, south }) {
       for (const s of stars) {
         const tw = 0.3 + 0.7 * Math.abs(Math.sin(T * (0.5 + s.s * 0.8) + s.p));
         const pp = view.projectDir(...s.dir);
-        if (pp) view.putBack(view.cell(pp[0], pp[1]), s.s > 0.9 ? '+' : s.s > 0.55 ? '.' : '·', `rgba(205,215,255,${(tw * 0.8).toFixed(2)})`, 0);
-        if (s.el > 0.35 || s.s <= 0.5) continue;
+        if (pp) view.putBack(view.cell(pp[0], pp[1]), s.s > 0.97 ? '+' : s.s > 0.8 ? '*' : s.s > 0.5 ? '.' : '·', `rgba(205,215,255,${(tw * (0.45 + 0.5 * s.s)).toFixed(2)})`, 0);
+        if (s.el > 0.35 || s.s <= 0.7) continue;
         const rp = view.projectDir(s.dir[0], -s.dir[1], s.dir[2]);
         if (rp) view.putBack(view.cell(rp[0], rp[1]), '.', `rgba(170,185,230,${(tw * 0.4).toFixed(2)})`, 2);
       }
