@@ -125,7 +125,7 @@ export function makeView(canvas, opt) {
     },
     // 먼 풍경 칸에 글자 하나 (별·물에 비친 별). 하늘(빈 칸)이나 물에만
     putBack(id, c, color, kind) {
-      if (id < 0 || bk[id] !== kind || (kind === 0 && ch[id])) return;
+      if (id < 0 || bk[id] !== kind) return; // 별은 하늘(은하수 위 포함)에만, 물에 비친 별은 물에만
       ch[id] = c;
       col[id] = color;
     },

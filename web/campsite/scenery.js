@@ -15,6 +15,31 @@ const rgb = (c, k = 1) => `rgb(${Math.min(255, c[0] * k) | 0},${Math.min(255, c[
 
 // 달: 호수 위 하늘 한가운데
 const MOON = { rel: 0, el: 0.2, r: 0.04 };
+// 은하수 (주인 요청 2026-11-20): 하늘을 비스듬히 가로지르는 띠. 골짜기 왼쪽(cross)에서 떠올라 오른쪽 풀 언덕 위 하늘 높이(peakEl) 지나 뒤쪽 숲으로 넘어감
+// (높은 산벽이 있는 왼쪽은 피함 — 하늘이 넓게 트인 오른쪽·뒤로)
+// 띠 안은 희미한 별가루 글자(구워 둠) + 몰린 별(BAND_STARS). 가운데 어두운 갈래(먼지띠), 달 가까이는 달빛에 묻힘
+const MILKY = { cross: -0.4, peakEl: 0.4, width: 0.08, dust: 0.85 }; // peakEl: 폰 화면 위 끝(약 0.5rad)보다 낮게
+const BAND_STARS = 1800;
+const MW = (() => {
+  const a1 = FRONT + MILKY.cross, ap = a1 + Math.PI / 2;
+  const d0 = [Math.sin(a1), 0, Math.cos(a1)];
+  const p = [Math.sin(ap) * Math.cos(MILKY.peakEl), Math.sin(MILKY.peakEl), Math.cos(ap) * Math.cos(MILKY.peakEl)];
+  const n = [d0[1] * p[2] - d0[2] * p[1], d0[2] * p[0] - d0[0] * p[2], d0[0] * p[1] - d0[1] * p[0]], l = Math.hypot(...n);
+  const nn = n.map(v => v / l), e2 = [nn[1] * d0[2] - nn[2] * d0[1], nn[2] * d0[0] - nn[0] * d0[2], nn[0] * d0[1] - nn[1] * d0[0]];
+  return { n: nn, e1: d0, e2 };
+})();
+// 방향의 은하수 짙기 (0~1)
+function milkyAt(dx, dy, dz, moonDir) {
+  const d = dx * MW.n[0] + dy * MW.n[1] + dz * MW.n[2];
+  if (Math.abs(d) > MILKY.width * 2.5) return 0;
+  const u = Math.atan2(dx * MW.e2[0] + dy * MW.e2[1] + dz * MW.e2[2], dx * MW.e1[0] + dy * MW.e1[1] + dz * MW.e1[2]);
+  const core = Math.exp(-((d / MILKY.width) ** 2));
+  const lump = 0.55 + 0.45 * Math.sin(u * 7 + 1.3) * Math.sin(u * 3.1 + d * 40);           // 뭉게뭉게
+  const rift = 1 - 0.75 * Math.exp(-(((d - 0.018 * Math.sin(u * 2.3)) / 0.014) ** 2));    // 가운데 어두운 갈래
+  const moon = smooth(0.12, 0.55, Math.acos(Math.max(-1, Math.min(1, dx * moonDir[0] + dy * moonDir[1] + dz * moonDir[2]))));
+  return core * lump * rift * moon;
+}
+
 // 개울: 숲 → 풀밭 → 호수 오른쪽 끝. [rel, 불에서 거리]
 const STREAM = [[2.75, 16], [2.4, 8], [2.0, 5.2], [1.55, 4.6], [1.15, 5.0]].map(([r, d]) => [Math.sin(FRONT + r) * d, Math.cos(FRONT + r) * d]);
 const SHORE = rel => 4.1 + 0.35 * Math.sin(rel * 3 + 1); // 호숫가까지 거리
@@ -106,11 +131,18 @@ export function makeScenery({ phase, south }) {
   const moonDir = [Math.sin(FRONT + MOON.rel) * Math.cos(MOON.el), Math.sin(MOON.el), Math.cos(FRONT + MOON.rel) * Math.cos(MOON.el)];
   const lit = (1 - Math.cos(phase * TAU)) / 2;
   // 별: 방향(az) 순으로 정렬해 두고, 프레임마다 화면에 들어오는 방향의 별만 그린다(4500개를 다 돌면 밀림)
-  const stars = Array.from({ length: STARS }, () => {
-    const el = 0.015 + Math.random() * 0.74, az = Math.random() * TAU, s = Math.random();
-    return { dir: [Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)], az, el, p: Math.random() * 6, s,
-      c: s > 0.97 ? '+' : s > 0.8 ? '*' : s > 0.5 ? '.' : '·', b: 0.45 + 0.5 * s, sp: 0.5 + s * 0.8 };
-  }).sort((a, b) => a.az - b.az);
+  const star = (az, el, s) => ({ dir: [Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)], az, el, p: Math.random() * 6, s,
+    c: s > 0.97 ? '+' : s > 0.8 ? '*' : s > 0.5 ? '.' : '·', b: 0.45 + 0.5 * s, sp: 0.5 + s * 0.8 });
+  const stars = Array.from({ length: STARS }, () => star(Math.random() * TAU, 0.015 + Math.random() * 0.74, Math.random()));
+  for (let made = 0; made < BAND_STARS;) { // 은하수에 몰린 별 (띠 가운데로 갈수록 많이)
+    const u = Math.random() * TAU, off = (Math.random() + Math.random() + Math.random() - 1.5) * MILKY.width * 0.9;
+    const d = [0, 1, 2].map(k => Math.cos(u) * MW.e1[k] + Math.sin(u) * MW.e2[k] + off * MW.n[k]), l = Math.hypot(...d);
+    const el = Math.asin(d[1] / l);
+    if (el < 0.015 || el > 0.75) continue;
+    stars.push(star(((Math.atan2(d[0], d[2]) % TAU) + TAU) % TAU, el, Math.random() * 0.85));
+    made++;
+  }
+  stars.sort((a, b) => a.az - b.az);
   const starAz = Float32Array.from(stars, s => s.az);
   const lowerBound = a => { let lo = 0, hi = starAz.length; while (lo < hi) { const m = (lo + hi) >> 1; if (starAz[m] < a) lo = m + 1; else hi = m; } return lo; };
   // 반짝임 밝기는 12단계로 — 색 글자를 프레임마다 새로 만들지 않게
@@ -133,11 +165,23 @@ export function makeScenery({ phase, south }) {
 
   /* ───── 굽기: 하늘 표 (방향 × 높이) — 글자(0 하늘, 32 산 속 빈칸), 색, 물에 비친 색 ───── */
   const skyCh = new Uint16Array(AZ_N * EL_N), skyCol = new Uint16Array(AZ_N * EL_N), skyDim = new Uint16Array(AZ_N * EL_N);
+  const skyKind = new Uint8Array(AZ_N * EL_N).fill(1); // 1 산·달, 0 은하수(하늘이라 별이 그 위에 뜸)
+  const MW_COL = [[70, 74, 108], [98, 102, 140], [140, 142, 180]].map(c => [cno(rgb(c)), cno(rgb(c, 0.45))]);
   for (let i = 0; i < AZ_N; i++) {
     const rel = wrap((i + 0.5) * AZ_STEP - FRONT);
     for (let j = 0; j < EL_N; j++) {
       const el = EL_MIN + (j + 0.5) * EL_STEP, r = skyAt(rel, el, 1), k = i * EL_N + j;
-      if (!r) continue;
+      if (!r) { // 하늘: 은하수 별가루
+        const az = (i + 0.5) * AZ_STEP, ce = Math.cos(el);
+        const m = milkyAt(Math.sin(az) * ce, Math.sin(el), Math.cos(az) * ce, moonDir) * MILKY.dust, n = hash(i * 0.37, j * 1.91);
+        if (n < m) {
+          const lv = n < m * 0.25 ? 2 : n < m * 0.6 ? 1 : 0;
+          skyCh[k] = (lv === 2 ? ':' : lv === 1 ? '·' : '.').charCodeAt(0);
+          [skyCol[k], skyDim[k]] = MW_COL[lv];
+          skyKind[k] = 0;
+        }
+        continue;
+      }
       skyCh[k] = r[0].charCodeAt(0);
       skyCol[k] = cno(r[1]);
       const d = skyAt(rel, el, 0.45);
@@ -206,7 +250,7 @@ export function makeScenery({ phase, south }) {
       for (let id = 0; id < n; id++) {
         if (!ground[id]) { // 하늘·산·달
           const k = skyK(az[id] + yaw, el[id]);
-          if (k >= 0 && skyCh[k]) view.setBack(id, String.fromCharCode(skyCh[k]), colors[skyCol[k]], 1);
+          if (k >= 0 && skyCh[k]) view.setBack(id, String.fromCharCode(skyCh[k]), colors[skyCol[k]], skyKind[k]);
           continue;
         }
         if (r[id] < R0) continue; // 가까운 풀밭은 점 구름이 그림
