@@ -2,7 +2,8 @@
    - 점 구름: 물체 표면에 뿌린 점(자리·법선·바탕색·종류·숯불 세기). makeCloud로 모아 Float32Array 하나로
    - 화면: 글자 칸 격자. 불을 가운데 둔 궤도 카메라(yaw로 돌림)로 투영 → 칸마다 가장 가까운 점 하나(z-버퍼)
    - 빛: 모닥불(점광원 — 거리로 어두워지고 flick만큼 일렁임) + 달빛(방향광, 푸른빛). 밝기 → 종류별 글자 사다리
-   - 불꽃처럼 비치는 것은 heat 칸(addHeat)에 쌓아 두었다가 flush에서 물체 위에 얹는다 */
+   - 불꽃처럼 비치는 것은 heat 칸(addHeat)에 쌓아 두었다가 flush에서 물체 위에 얹는다
+   - WebGL 불(gl3d.js)이 있으면 셰이더가 구운 칸별 불 세기(setFire)를 heat 대신 쓴다 */
 export const KIND = { GRASS: 0, STONE: 1, WOOD: 2, ASH: 3 };
 const RAMPS = [" .,'\";:", '.:-=oO0@', '.:-=+#%&', '.,:;-'];
 const FIRE_CH = ' .,:;-=+*#%';
@@ -38,7 +39,7 @@ export function makeCloud() {
 export function makeView(canvas, opt) {
   const ctx = canvas.getContext('2d');
   const fs = opt.fontPx, cw = fs * 0.6;
-  let w = 0, h = 0, cols = 0, rows = 0, zb, ch, col, heat, bk, heatScale = 1, fpx = 600, gen = 0;
+  let w = 0, h = 0, cols = 0, rows = 0, zb, ch, col, heat, glv, bk, heatScale = 1, fpx = 600, gen = 0;
   const resize = () => {
     const d = window.devicePixelRatio || 1;
     w = canvas.clientWidth || 360;
@@ -52,6 +53,7 @@ export function makeView(canvas, opt) {
     ch = new Array(cols * rows);
     col = new Array(cols * rows);
     heat = new Float32Array(cols * rows);
+    glv = new Float32Array(cols * rows);
     bk = new Uint8Array(cols * rows);
     fpx = Math.min(h * 0.75, w * 1.1) * opt.zoom; // 좁은 쪽 기준: 세로 폰에서 불이 너무 커지지 않게, 가로 화면에서 하늘(달)이 잘리지 않게
     heatScale = (fpx / HEAT_REF) ** 2;
@@ -109,6 +111,7 @@ export function makeView(canvas, opt) {
       zb.fill(1e9);
       ch.fill(undefined);
       heat.fill(0);
+      glv.fill(0);
       bk.fill(0);
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, w, h);
@@ -170,6 +173,17 @@ export function makeView(canvas, opt) {
       if (id < 0 || dz > zb[id] + 0.05) return;
       heat[id] += amount * heatScale;
     },
+    // WebGL 불: px는 칸마다 RGBA(아래 줄부터, readPixels). R 불 세기, G 깊이/8 — 물체 뒤면 안 얹음
+    setFire(px) {
+      for (let v = 0; v < rows; v++)
+        for (let u = 0; u < cols; u++) {
+          const o = ((rows - 1 - v) * cols + u) * 4, lv = px[o] / 255;
+          if (lv < 0.1) continue;
+          const id = v * cols + u;
+          if (px[o + 1] / 255 * 8 > zb[id] + 0.05) continue;
+          glv[id] = lv;
+        }
+    },
     // 열기를 살짝 번지게 한 뒤 불 글자로 얹고, 모든 칸을 캔버스에 쓴다
     flush(fire) {
       const sm = new Float32Array(heat.length);
@@ -179,8 +193,8 @@ export function makeView(canvas, opt) {
           sm[id] = heat[id] * 0.5 + (heat[id - 1] + heat[id + 1]) * 0.14 + (heat[id - cols] + heat[id + cols]) * 0.08 + heat[id + cols] * 0.04;
         }
       for (let id = 0; id < sm.length; id++) {
-        if (sm[id] <= 0.06) continue;
-        const lv = 1 - Math.exp(-sm[id] * fire.gain);
+        if (sm[id] <= 0.06 && !glv[id]) continue;
+        const lv = glv[id] || 1 - Math.exp(-sm[id] * fire.gain);
         if (lv <= 0.12 && ch[id]) continue;
         ch[id] = FIRE_CH[Math.min(FIRE_CH.length - 1, 1 + Math.floor(lv * (FIRE_CH.length - 1)))];
         col[id] = rgb(fireColor(lv * fire.hue));

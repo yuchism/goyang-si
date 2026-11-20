@@ -127,21 +127,6 @@ const azBin = a => ((Math.floor(a / AZ_STEP) % AZ_N) + AZ_N) % AZ_N;
 const G = { NEAR: 0, GRASS: 1, LAKE: 2, STREAM: 3 };
 const STARS = 4500; // 별 수 (주인 요청 2026-11-20: 더 많이). 보이는 하늘(높이 0~0.75rad)에만 고르게 — 머리 위로 흩어 버리지 않게. 대부분 희미한 ·, 드물게 밝은 +
 
-// WebGL용 (tasks/campsite-6-webgl.md): 방향(rel, el)의 산 색 [r,g,b](0~255), 산이 아니면 null. 글자 대신 색만 — 글자는 밝기로 셰이더가 고름
-function mountainColor(rel, el) {
-  for (const L of LAYERS) {
-    const wt = L.w(rel);
-    if (wt <= 0.01) continue;
-    const top = L.ridge(rel) * wt - (1 - wt) * 0.2;
-    if (el > top) continue;
-    const below = top - el;
-    const base = L.snow && below < L.snow && top > 0.12 ? [175, 185, 210] : L.color;
-    const k = (below < 0.006 ? 1.3 : 0.62 + 0.3 * hash(Math.floor(rel * 160), Math.floor(el * 95))) * (L.snow && below < L.snow && top > 0.12 ? 0.8 : 1);
-    return [base[0] * k, base[1] * k, base[2] * k];
-  }
-  return null;
-}
-
 export function makeScenery({ phase, south }) {
   const moonDir = [Math.sin(FRONT + MOON.rel) * Math.cos(MOON.el), Math.sin(MOON.el), Math.cos(FRONT + MOON.rel) * Math.cos(MOON.el)];
   const lit = (1 - Math.cos(phase * TAU)) / 2;
@@ -258,43 +243,6 @@ export function makeScenery({ phase, south }) {
   const moonPath = 0.05 * lit + 0.004;
   return {
     moonLight: { dir: moonDir, power: 0.1 + 0.22 * lit, color: [105, 125, 190] },
-    // WebGL에 넘길 표 (tasks/campsite-6-webgl.md): 같은 풍경을 색 그림 두 장으로
-    //  pano: 방향 AZ_N × 높이 EL_N, RGB = 산·달·은하수 색, A = 255 산·달 / 1~200 은하수 짙기 / 0 하늘
-    //  ground: 방향 AZ_N × 로그 거리 R_N, R = 종류(G), G = 개울 흐름 위치(÷40), B = 풀 무늬
-    forGL() {
-      const pano = new Uint8Array(AZ_N * EL_N * 4), ground = new Uint8Array(AZ_N * R_N * 4);
-      for (let j = 0; j < EL_N; j++) {
-        const el = EL_MIN + (j + 0.5) * EL_STEP, ce = Math.cos(el);
-        for (let i = 0; i < AZ_N; i++) {
-          const az = (i + 0.5) * AZ_STEP, rel = wrap(az - FRONT), o = (j * AZ_N + i) * 4;
-          const du = wrap(rel - MOON.rel) * Math.cos(MOON.el) / MOON.r, dv = (el - MOON.el) / MOON.r;
-          let c = null, a = 255;
-          if (du * du + dv * dv <= 1) {
-            const m = moonAt(du, dv, phase, south);
-            if (m && m[0] !== ' ') c = m[1].match(/\d+/g).map(Number);
-          }
-          if (!c) c = mountainColor(rel, el);
-          if (!c) {
-            const m = milkyAt(Math.sin(az) * ce, Math.sin(el), Math.cos(az) * ce, moonDir) * MILKY.dust;
-            if (m > 0.02) { c = [110 * m, 114 * m, 150 * m]; a = Math.max(1, Math.min(200, Math.round(m * 200))); }
-            else { c = [0, 0, 0]; a = 0; }
-          }
-          pano[o] = c[0]; pano[o + 1] = c[1]; pano[o + 2] = c[2]; pano[o + 3] = a;
-        }
-      }
-      for (let k = 0; k < R_N; k++)
-        for (let i = 0; i < AZ_N; i++) {
-          const n = i * R_N + k, o = (k * AZ_N + i) * 4;
-          ground[o] = gType[n];
-          ground[o + 1] = Math.min(255, Math.round(gAlong[n] / 40 * 255));
-          ground[o + 2] = Math.round(hash(i * 0.7, k * 1.3) * 255);
-          ground[o + 3] = 255;
-        }
-      return {
-        pano, ground, azN: AZ_N, elN: EL_N, elMin: EL_MIN, elStep: EL_STEP, rN: R_N, r0: R0, rK: R_K,
-        moonDir, moonRel: MOON.rel, lit, front: FRONT, mw: MW.n, moonLight: 0.1 + 0.22 * lit,
-      };
-    },
     // 먼 풍경 그리기 (프레임마다): 표에서 읽어 ascii3d 칸에
     drawFar(view, yaw, T) {
       prepare(view);
