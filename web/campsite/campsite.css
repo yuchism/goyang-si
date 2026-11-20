@@ -2,4 +2,11 @@
 html, body { margin: 0; height: 100%; background: #04060c; overflow: hidden; }
 .stage { display: block; width: 100vw; height: 100vh; height: 100dvh; touch-action: none; cursor: grab; }
 .stage:active { cursor: grabbing; }
+/* 구석의 작은 나가기 버튼 (2장) — 풍경을 가리지 않게 작고 흐리게 */
+.exit {
+  position: fixed; left: calc(10px + env(safe-area-inset-left)); top: calc(10px + env(safe-area-inset-top));
+  font: 12px ui-monospace, Menlo, monospace; color: rgba(200, 205, 225, 0.55); text-decoration: none;
+  padding: 6px 8px; border-radius: 6px; background: rgba(10, 14, 26, 0.35);
+}
+.exit:hover, .exit:focus-visible { color: rgba(225, 230, 245, 0.9); background: rgba(20, 26, 44, 0.6); }
 .msg { color: #ccd; font: 16px sans-serif; padding: 2rem; }

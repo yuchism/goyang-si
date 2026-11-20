@@ -38,7 +38,7 @@ export function makeCloud() {
 export function makeView(canvas, opt) {
   const ctx = canvas.getContext('2d');
   const fs = opt.fontPx, cw = fs * 0.6;
-  let w = 0, h = 0, cols = 0, rows = 0, zb, ch, col, heat, heatScale = 1, fpx = 600;
+  let w = 0, h = 0, cols = 0, rows = 0, zb, ch, col, heat, bk, heatScale = 1, fpx = 600;
   const resize = () => {
     const d = window.devicePixelRatio || 1;
     w = canvas.clientWidth || 360;
@@ -52,7 +52,8 @@ export function makeView(canvas, opt) {
     ch = new Array(cols * rows);
     col = new Array(cols * rows);
     heat = new Float32Array(cols * rows);
-    fpx = Math.min(h, w * 1.1) * opt.zoom; // 세로로 긴 폰에서 불이 너무 커지지 않게 좁은 쪽 기준
+    bk = new Uint8Array(cols * rows);
+    fpx = Math.min(h * 0.75, w * 1.1) * opt.zoom; // 좁은 쪽 기준: 세로 폰에서 불이 너무 커지지 않게, 가로 화면에서 하늘(달)이 잘리지 않게
     heatScale = (fpx / HEAT_REF) ** 2;
   };
   resize();
@@ -67,6 +68,19 @@ export function makeView(canvas, opt) {
     const y2 = y * cp + z1 * sp, z2 = -y * sp + z1 * cp + opt.dist;
     return [w / 2 + fpx * x1 / z2, h * opt.horizon - fpx * y2 / z2, z2];
   };
+  // 먼 것(별·달·산)의 방향 → 화면 자리 (뒤쪽이면 null)
+  const projectDir = (dx, dy, dz) => {
+    const x1 = dx * ca - dz * sa, z1 = dx * sa + dz * ca;
+    const y2 = dy * cp + z1 * sp, z2 = -dy * sp + z1 * cp;
+    return z2 <= 0.01 ? null : [w / 2 + fpx * x1 / z2, h * opt.horizon - fpx * y2 / z2];
+  };
+  // 화면 자리 → 세계 방향(단위 벡터). project를 거꾸로
+  const rayDir = (sx, sy) => {
+    const x1 = (sx - w / 2) / fpx, y2 = -(sy - h * opt.horizon) / fpx;
+    const y = y2 * cp - sp, z1 = y2 * sp + cp;
+    const x = x1 * ca + z1 * sa, z = -x1 * sa + z1 * ca, l = Math.hypot(x, y, z);
+    return [x / l, y / l, z / l];
+  };
   // 화면 자리 → 칸 번호(밖이면 -1)
   const cell = (sx, sy, pad = 0) => {
     const u = (sx / cw) | 0, v = (sy / fs) | 0;
@@ -74,9 +88,17 @@ export function makeView(canvas, opt) {
   };
 
   return {
-    ctx, project, cell,
+    ctx, project, projectDir, cell,
     get width() { return w; },
     get height() { return h; },
+    get cols() { return cols; },
+    get rows() { return rows; },
+    cellW: cw, cellH: fs,
+    // 카메라 자리 (세계 좌표) — 땅·물에 닿는 자리를 셀 때
+    camera: () => [-opt.dist * cp * sa, opt.lookY + opt.dist * sp, -opt.dist * cp * ca],
+    // 한 칸 높이가 몇 라디안인가 (먼 풍경의 능선을 글자 한 칸 두께로 그을 때)
+    angleStep: () => fs / fpx,
+    backAt: id => bk[id],
     depthAt: id => zb[id],
     begin(yaw, sky = '#04060c') {
       ca = Math.cos(yaw);
@@ -84,10 +106,31 @@ export function makeView(canvas, opt) {
       zb.fill(1e9);
       ch.fill(undefined);
       heat.fill(0);
+      bk.fill(0);
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, w, h);
       ctx.font = `${fs}px ui-monospace,Menlo,monospace`;
       ctx.textBaseline = 'top';
+    },
+    // 먼 풍경: 칸마다 방향을 fn(dir)에 물어 [글자, 색, 종류(1 땅·산, 2 물)]를 받음. 물체보다 늘 뒤
+    drawBackdrop(fn) {
+      for (let v = 0; v < rows; v++)
+        for (let u = 0; u < cols; u++) {
+          const r = fn(rayDir((u + 0.5) * cw, (v + 0.5) * fs));
+          if (!r) continue;
+          const id = v * cols + u;
+          bk[id] = r[2] || 1;
+          zb[id] = 1e8;
+          if (r[0] === ' ') continue;
+          ch[id] = r[0];
+          col[id] = r[1];
+        }
+    },
+    // 먼 풍경 칸에 글자 하나 (별·물에 비친 별). 하늘(빈 칸)이나 물에만
+    putBack(id, c, color, kind) {
+      if (id < 0 || bk[id] !== kind || (kind === 0 && ch[id])) return;
+      ch[id] = c;
+      col[id] = color;
     },
     // 점 구름 그리기. fire = {x,y,z,flick,power,falloff}, moon = {dir, power, color}
     drawCloud({ data, n }, fire, moon, T) {

@@ -71,8 +71,8 @@ const TZ = (() => {
     return '';
   }
 })();
-// 기기 시간대가 남반구인가. REGION을 거쳐서만 쓴다 (season, MOON_SOUTH, seasonSouth)
-const SOUTH = /^(Australia|Antarctica|Pacific\/(Auckland|Chatham|Fiji|Tongatapu|Noumea)|America\/(Argentina|Santiago|Sao_Paulo|Montevideo|Asuncion|La_Paz|Lima)|Africa\/(Johannesburg|Maputo|Harare|Windhoek|Gaborone|Lusaka)|Indian\/(Mauritius|Reunion))/.test(TZ);
+// 기기 시간대가 남반구인가. 방은 REGION을 거쳐서만 쓴다 (season, MOON_SOUTH, seasonSouth). 캠핑장 달은 늘 이것(CAMPSITE_PLAN.md 3장)
+export const SOUTH = /^(Australia|Antarctica|Pacific\/(Auckland|Chatham|Fiji|Tongatapu|Noumea)|America\/(Argentina|Santiago|Sao_Paulo|Montevideo|Asuncion|La_Paz|Lima)|Africa\/(Johannesburg|Maputo|Harare|Windhoek|Gaborone|Lusaka)|Indian\/(Mauritius|Reunion))/.test(TZ);
 export const seasonSouth = () => REGION.season === 'local' && SOUTH;
 export const hourOf = d => d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
 export const dayKey = d => d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
