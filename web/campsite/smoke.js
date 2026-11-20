@@ -1,0 +1,46 @@
+/* 연기 (CAMPSITE_PLAN.md 5장, tasks/campsite-3-memory.md)
+   탄 글자가 남기는 연기. 옅은 글자 입자로 3D 공간에서 천천히 오르며 퍼진다.
+   아래쪽은 불빛을 받아 따뜻하게, 오를수록 식어 회색이 되고 밤하늘에 녹아 사라짐. 글자 잔상은 없음 (회의 2026-11-20).
+   물체 뒤로 가면 가려짐(ascii3d depthAt). 동작 줄이기면 연기 없음 */
+const CH = ['~', ':', "'", '.'];
+
+export const SMOKE = { life: [5, 3], rise: [0.28, 0.18], spread: 0.08 };
+
+export function makeSmoke({ reduce }) {
+  const ps = [];
+  return {
+    add(x, y, z, n = 20) {
+      if (reduce) return;
+      for (let i = 0; i < n; i++) ps.push({
+        x: x + (Math.random() - 0.5) * 0.1, y: y + Math.random() * 0.2, z: z + (Math.random() - 0.5) * 0.1,
+        vx: (Math.random() - 0.5) * SMOKE.spread, vy: SMOKE.rise[0] + Math.random() * SMOKE.rise[1], vz: (Math.random() - 0.5) * SMOKE.spread,
+        age: 0, life: SMOKE.life[0] + Math.random() * SMOKE.life[1], ph: Math.random() * 6,
+      });
+    },
+    update(dt, T) {
+      for (let i = ps.length - 1; i >= 0; i--) {
+        const p = ps[i];
+        p.age += dt;
+        if (p.age > p.life) { ps.splice(i, 1); continue; }
+        p.vx += (Math.sin(T * 0.4 + p.ph + p.y) * 0.05 + 0.02) * dt; // 느린 바람에 살짝 기울며 흔들림
+        p.vz += Math.cos(T * 0.33 + p.ph * 1.3) * 0.05 * dt;
+        p.vy *= 1 - dt * 0.05;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.z += p.vz * dt;
+      }
+    },
+    draw(view) {
+      for (const p of ps) {
+        const [sx, sy, dz] = view.project(p.x, p.y, p.z);
+        if (dz < 0.3) continue;
+        const id = view.cell(sx, sy);
+        if (id < 0 || dz > view.depthAt(id) + 0.05) continue;
+        const a = p.age / p.life, warm = Math.max(0, 1 - (p.y - 0.4) / 1.4); // 아래는 불빛을 받아 따뜻
+        const r = 120 + 70 * warm, g = 118 + 22 * warm, b = 128 - 30 * warm;
+        const alpha = (a < 0.1 ? a / 0.1 : 1) * (1 - a) * 0.75;
+        view.put(id, CH[Math.min(CH.length - 1, Math.floor(a * CH.length))], `rgb(${r | 0},${g | 0},${b | 0})`, alpha);
+      }
+    },
+  };
+}

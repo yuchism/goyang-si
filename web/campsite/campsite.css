@@ -9,4 +9,13 @@ html, body { margin: 0; height: 100%; background: #04060c; overflow: hidden; }
   padding: 6px 8px; border-radius: 6px; background: rgba(10, 14, 26, 0.35);
 }
 .exit:hover, .exit:focus-visible { color: rgba(225, 230, 245, 0.9); background: rgba(20, 26, 44, 0.6); }
+/* 기억 태우기 입력 칸 (5장): 글자는 캔버스 타자 줄에 찍히므로 칸의 글자·커서는 숨기고 안내만 */
+.type {
+  position: fixed; left: 0; right: 0; bottom: 0; box-sizing: border-box; width: 100%;
+  height: calc(52px + env(safe-area-inset-bottom)); padding: 0 18px env(safe-area-inset-bottom);
+  border: 0; outline: 0; background: transparent; color: transparent; caret-color: transparent;
+  font: 16px -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; text-align: center;
+}
+.type::placeholder { color: rgba(200, 205, 225, 0.38); }
+.type:focus::placeholder { color: transparent; }
 .msg { color: #ccd; font: 16px sans-serif; padding: 2rem; }

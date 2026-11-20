@@ -24,7 +24,7 @@ export const FIRE = {
 
 export function makeCampfire({ reduce }) {
   const parts = [], embers = [];
-  let clock = 0;
+  let clock = 0, glow = 0; // glow: 글자를 태울 때 잠깐 확 솟는 기운 (기억 태우기)
   const spawn = () => {
     const r = Math.sqrt(Math.random()) * FIRE.baseR, a = Math.random() * Math.PI * 2;
     const tongue = 0.65 + 0.35 * Math.sin(a * 3 + clock * 2.1);
@@ -80,17 +80,33 @@ export function makeCampfire({ reduce }) {
   return {
     update(dt, T) {
       clock = T;
+      glow = Math.max(0, glow - dt * 0.8);
       if (reduce) return;
       stepFlames(dt, T);
       stepEmbers(dt, T);
     },
     // 이번 순간의 불빛 (ascii3d drawCloud·flush에 넘김)
     light(T) {
-      const flick = reduce ? 1 : 1 + 0.06 * Math.sin(T * 9.1) + 0.05 * Math.sin(T * 5.3 + 1) + 0.03 * Math.sin(T * 15.7) + (Math.random() - 0.5) * 0.02;
+      const breath = reduce ? 1 : 1 + 0.06 * Math.sin(T * 9.1) + 0.05 * Math.sin(T * 5.3 + 1) + 0.03 * Math.sin(T * 15.7) + (Math.random() - 0.5) * 0.02;
+      const flick = breath * (1 + glow * 0.3);
       return {
         x: reduce ? 0 : Math.sin(T * 3.1) * 0.05, y: 0.5, z: reduce ? 0 : Math.cos(T * 2.7) * 0.05,
         flick, power: FIRE.light, falloff: FIRE.falloff, gain: FIRE.gain, hue: FIRE.hue,
       };
+    },
+    // 글자 하나가 불에 들어옴: 그 자리에서 불꽃이 잠깐 솟음 (tasks/campsite-3-memory.md)
+    burst(x, z, n = 40) {
+      glow = Math.min(1.5, glow + 0.25);
+      if (reduce) return;
+      for (let i = 0; i < n; i++) {
+        spawn();
+        const p = parts[parts.length - 1];
+        p.x = x + (Math.random() - 0.5) * 0.16;
+        p.z = z + (Math.random() - 0.5) * 0.16;
+        p.y = 0.3;
+        p.vy *= 1.15;
+        p.h *= 1.2;
+      }
     },
     drawFlames(view) {
       for (const p of parts) {
