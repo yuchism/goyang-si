@@ -1,0 +1,5 @@
+/* 미스테리 캠핑장 (CAMPSITE_PLAN.md) */
+html, body { margin: 0; height: 100%; background: #04060c; overflow: hidden; }
+.stage { display: block; width: 100vw; height: 100vh; height: 100dvh; touch-action: none; cursor: grab; }
+.stage:active { cursor: grabbing; }
+.msg { color: #ccd; font: 16px sans-serif; padding: 2rem; }
