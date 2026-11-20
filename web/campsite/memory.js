@@ -4,7 +4,7 @@
      · 띄어쓰기·문장부호가 나오면 · 줄에 batch글자가 모이면 · idle초 동안 안 치면 · 엔터 · 줄이 꽉 차면
        → 줄 전체가 거의 함께(spread초 간격) 떠남 (같은 날 고침: 3초는 길다 → 1초, 띄어쓰기에도)
    - 3D 공간의 모닥불로 날아 들어가 그을리며 타고 → 불이 잠깐 솟고 → 연기(smoke.js). 떠나면 줄은 처음으로
-   - 백스페이스로 되돌릴 수 없음
+   - 백스페이스: 줄에서 기다리는 글자는 지워짐. 이미 날아간 글자는 되돌릴 수 없음 (주인 요청 2026-11-20)
    - 날아가는 동안 카메라를 돌려도 목적지(불 속의 한 점)를 따라감
    - 동작 줄이기: 날지 않고 그 자리에서 천천히 사라짐(연기 없음)
    - 소리(타자 키·줄 바꿈 '띵'·타닥)는 tasks/campsite-4-sound.md 에서 — 여기엔 onKey·onReturn·onBurn 자리만 */
@@ -57,7 +57,7 @@ export function makeMemory({ view, fire, smoke, input, reduce, font, onKey, onRe
     if (ch.trim()) {
       const a = Math.random() * Math.PI * 2, r = Math.random() * 0.15;
       letters.push({
-        ch, x0: cursor + w / 2, y0: lineY(), t0: t, dep: Infinity, // dep: 떠나는 시각(모이는 동안 Infinity)
+        ch, w, x0: cursor + w / 2, y0: lineY(), t0: t, dep: Infinity, // dep: 떠나는 시각(모이는 동안 Infinity)
         to: [Math.cos(a) * r, 0.32 + Math.random() * 0.18, Math.sin(a) * r],
         rot: (Math.random() - 0.5) * 0.09, ink: 0.78 + Math.random() * 0.22, sw: (Math.random() < 0.5 ? -1 : 1) * (10 + Math.random() * 25),
         ph: Math.random() * 6, burst: false,
@@ -67,11 +67,19 @@ export function makeMemory({ view, fire, smoke, input, reduce, font, onKey, onRe
     if (M.breaks.test(ch) || waiting().length >= M.batch) launch();
   };
 
+  // 줄에서 기다리는 마지막 글자 하나 지우기 (날아간 글자는 그대로)
+  const unstamp = () => {
+    const L = letters[letters.length - 1];
+    if (!L || L.dep !== Infinity) return false;
+    letters.pop();
+    cursor = Math.max(M.margin, L.x0 - L.w / 2);
+    return true;
+  };
   // 입력 칸: 조합이 끝난 글자만 찍는다(조합 중인 마지막 글자는 미리 보기). 칸은 가끔 비워 둔다
   let spawned = 0, composing = false;
   const sync = () => {
     const arr = [...input.value], done = composing ? Math.max(0, arr.length - 1) : arr.length;
-    if (done < spawned) spawned = done; // 지웠어도 이미 친 글자는 그대로 (되돌릴 수 없음)
+    for (let k = done; k < spawned; k++) unstamp(); // 지움: 줄에서 기다리는 글자만
     for (let i = spawned; i < done; i++) stamp(arr[i]);
     spawned = done;
     preview = composing ? arr[arr.length - 1] || '' : '';
@@ -81,6 +89,7 @@ export function makeMemory({ view, fire, smoke, input, reduce, font, onKey, onRe
   input.addEventListener('compositionend', () => { composing = false; lastType = now(); sync(); });
   input.addEventListener('input', e => { if (e.isComposing) composing = true; lastType = now(); sync(); });
   input.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !e.isComposing && input.value === '') { unstamp(); lastType = now(); return; } // 칸을 비운 뒤에도 줄 글자는 지울 수 있게
     if (e.key !== 'Enter' || e.isComposing) return;
     e.preventDefault();
     launch();
