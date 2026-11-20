@@ -2,6 +2,7 @@
    - 들어오면 안개가 걷히고, 한가운데 모닥불. 좌우로 끌면 불 둘레를 돌며 방향마다 다른 풍경
    - 혼자 돌지는 않음(주인 요청 2026-11-20 — 돌리는 건 사용자만). 구석의 작은 버튼 → 안개 → 거실
    - 항상 밤. 달 모양은 오늘 날짜(time.js moonPhase), 남·북반구 모양은 방문자 시간대(time.js SOUTH)
+   - 소리(sound.js): 장작·개울·풀벌레·부엉이·타자기. 오른쪽 위 작은 버튼으로 켬/끔(방과 같은 기록)
    - 기억 태우기: 아래 입력 칸에 치면 타자 줄에 찍혀 불로 날아가 타고 연기가 됨(memory.js·smoke.js)
    - 동작 줄이기: 불이 멈추고 안개 없음(끌어서 돌리기는 됨)
    - 미리보기(dev): ?moon=0~1 (달 나이 비율: 0 그믐, 0.25 상현, 0.5 보름), ?south=1|0 */
@@ -12,6 +13,7 @@ import { FRONT, makeScenery } from './scenery.js';
 import { makeFog } from './fog.js';
 import { makeSmoke } from './smoke.js';
 import { makeMemory } from './memory.js';
+import { makeSound } from './sound.js';
 import { moonPhase, now, SOUTH } from '../js/time.js';
 import { gcEvent, pickLang, store } from '../js/util.js';
 import { el, freshVisit } from '../js/page-kit.js';
@@ -23,6 +25,8 @@ const Q = new URL(location.href).searchParams;
 const DEV = Q.get('dev') === '1' || (Q.get('dev') !== '0' && store.get('devTools', false)); // 방 미리보기 도구와 같은 기록
 const STR = {
   home: { ko: '거실로', en: 'Living room' },
+  soundOn: { ko: '소리 켬', en: 'Sound on' },
+  soundOff: { ko: '소리 끔', en: 'Sound off' },
   type: { ko: '여기를 눌러 불에 태울 기억을 적어 보세요', en: 'Tap here and type a memory to burn' },
   scene: { ko: '미스테리 캠핑장: 밤 호숫가, 가운데 모닥불. 좌우로 끌면 둘레를 돌아봐요', en: 'Mystery Campsite: a lakeside at night with a campfire in the middle. Drag sideways to look around' },
 };
@@ -42,7 +46,9 @@ Object.assign(input, { type: 'text', autocomplete: 'off', spellcheck: false, pla
 input.setAttribute('autocorrect', 'off');
 input.setAttribute('autocapitalize', 'off');
 input.setAttribute('aria-label', tr('type'));
-document.body.append(canvas, exit, input);
+const snd = el('button', 'snd');
+snd.type = 'button';
+document.body.append(canvas, exit, snd, input);
 const FONT = '-apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif';
 
 const view = makeView(canvas, CAM);
@@ -57,7 +63,11 @@ const scenery = makeScenery({
 });
 const fog = makeFog({ reduce });
 const smoke = makeSmoke({ reduce });
-const memory = makeMemory({ view, fire, smoke, input, reduce, font: FONT });
+const sound = makeSound({ store });
+const showSound = () => { snd.textContent = sound.on ? '♪ ' + tr('soundOn') : tr('soundOff'); snd.setAttribute('aria-pressed', String(sound.on)); };
+showSound();
+snd.addEventListener('click', () => { sound.toggle(); showSound(); });
+const memory = makeMemory({ view, fire, smoke, input, reduce, font: FONT, onKey: sound.key, onReturn: sound.bell, onBurn: sound.burn });
 
 exit.addEventListener('click', ev => {
   if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return;
@@ -65,12 +75,19 @@ exit.addEventListener('click', ev => {
   fog.leave(() => { location.href = HOME; });
 });
 
-let yaw = FRONT, drag = false, px = 0;
-canvas.addEventListener('pointerdown', e => { drag = true; px = e.clientX; canvas.setPointerCapture(e.pointerId); });
-canvas.addEventListener('pointermove', e => { if (!drag) return; yaw -= (e.clientX - px) * 0.01; px = e.clientX; });
-const up = () => { drag = false; };
-canvas.addEventListener('pointerup', up);
-canvas.addEventListener('pointercancel', up);
+// 끌어서 돌리기. 돌려도 입력 칸의 포커스(키보드)는 그대로 두고(누를 때 기본 동작 막음),
+// 끌지 않고 톡 누르기만 하면 입력 칸으로 — 돌린 다음에도 바로 이어 칠 수 있게 (주인 요청 2026-11-20)
+let yaw = FRONT, drag = false, px = 0, moved = 0;
+const keepFocus = e => { if (e.cancelable) e.preventDefault(); };
+canvas.addEventListener('touchstart', keepFocus, { passive: false });
+canvas.addEventListener('mousedown', keepFocus);
+canvas.addEventListener('pointerdown', e => { drag = true; px = e.clientX; moved = 0; canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener('pointermove', e => { if (!drag) return; yaw -= (e.clientX - px) * 0.01; moved += Math.abs(e.clientX - px); px = e.clientX; });
+canvas.addEventListener('pointerup', () => {
+  drag = false;
+  if (moved < 6) input.focus({ preventScroll: true });
+});
+canvas.addEventListener('pointercancel', () => { drag = false; });
 
 let last = 0;
 function frame(ms) {
@@ -79,6 +96,7 @@ function frame(ms) {
   const T = reduce ? 0 : t;
   fire.update(dt, T);
   smoke.update(dt, T);
+  sound.update(yaw);
   const light = fire.light(T);
   view.begin(yaw);
   scenery.drawFar(view, yaw, T);

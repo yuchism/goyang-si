@@ -8,6 +8,13 @@ html, body { margin: 0; height: 100%; background: #04060c; overflow: hidden; }
   font: 12px ui-monospace, Menlo, monospace; color: rgba(200, 205, 225, 0.55); text-decoration: none;
   padding: 6px 8px; border-radius: 6px; background: rgba(10, 14, 26, 0.35);
 }
+.snd {
+  position: fixed; right: calc(10px + env(safe-area-inset-right)); top: calc(10px + env(safe-area-inset-top));
+  font: 12px ui-monospace, Menlo, monospace; color: rgba(200, 205, 225, 0.55); border: 0; cursor: pointer;
+  padding: 6px 8px; border-radius: 6px; background: rgba(10, 14, 26, 0.35);
+}
+.snd[aria-pressed="false"] { color: rgba(200, 205, 225, 0.32); }
+.snd:hover, .snd:focus-visible,
 .exit:hover, .exit:focus-visible { color: rgba(225, 230, 245, 0.9); background: rgba(20, 26, 44, 0.6); }
 /* 기억 태우기 입력 칸 (5장): 글자는 캔버스 타자 줄에 찍히므로 칸의 글자·커서는 숨기고 안내만 */
 .type {

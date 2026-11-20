@@ -60,3 +60,16 @@ and re-encoded (96 kbps) for this site:
 
 They are included only as part of this website. To use them elsewhere,
 download them from Pixabay under its own license.
+
+The Mystery Campsite sounds in `web/campsite/sound/` (`CAMPSITE_PLAN.md` 6장) are
+cut, looped and re-encoded from recordings released under
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) by
+`tools/make_campsite_sounds.py` (credit is not required, but given here with thanks):
+
+| Files | Original | Author |
+|---|---|---|
+| `fire-loop-v1.mp3`, `log-pop-*-v1.mp3` | ["Campfire 02"](https://freesound.org/s/729396) (Freesound) | HECKFRICKER |
+| `stream-loop-v1.mp3` | ["stream2.wav"](https://freesound.org/s/333987) (Freesound) | gluckose |
+| `crickets-loop-v1.mp3` | ["Crickets Ambient Noise - loopable"](https://opengameart.org/node/130090) (OpenGameArt) | Wolfgang_ |
+| `owl-v1.mp3` | ["HOOT.wav"](https://freesound.org/s/454842) (Freesound) | thegoosington |
+| `typewriter-key-*-v1.mp3`, `typewriter-bell-v1.mp3` | ["typewriter-olivetti-lettra-22.wav"](https://freesound.org/s/123344) (Freesound) | keithpeter |
