@@ -1,5 +1,5 @@
 # 미스테리 캠핑장 6: 불만 WebGL로 (글자 6px)
-- status: implemented
+- status: superseded   (→ tasks/campsite-7-stack.md, 2026-11-25 — 아스키를 접고 스프라이트 스태킹 픽셀아트로)
 - mode: needs-review
 - brief: 그림 없음 (전부 코드)
 - 출처: 회의 2026-11-21 — `CAMPSITE_PLAN.md` 4장

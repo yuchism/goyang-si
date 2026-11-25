@@ -1,6 +1,6 @@
 # 에셋: 미스테리 캠핑장 — 360도 둘러싼 배경 (CAMPSITE_BG_ART)
 
-> 상태: **지시서 씀 (2026-11-25) — 그림 기다림(주인이 ChatGPT로).** 회의 2026-11-25: 캠핑장을 아스키 대신 **스프라이트 스태킹 픽셀아트(2px)**로 — 시안 https://claude.ai/artifact/PvBfbeNwFENALjxAUudV33 (바닷가 모닥불 POC를 바탕으로). 기획서·티켓 반영은 따로.
+> 상태: **그림 받음·시안에 넣음 (2026-11-25).** 원본 `assets/campsite/campsite-bg-far.png`·`campsite-bg-near.png`(git 밖), 2px 격자로 줄인 384폭 `-384.png`. 뒤쪽 숲은 가까운 숲 그림을 이어 붙여 채움 — 반복이 거슬리면 뒤쪽 숲 그림 한 장 더(같은 화풍, 숲만, 양 끝 숲으로 이어짐). 티켓 `tasks/campsite-7-stack.md`. 회의 2026-11-25: 캠핑장을 아스키 대신 **스프라이트 스태킹 픽셀아트(2px)**로 — 시안 https://claude.ai/artifact/PvBfbeNwFENALjxAUudV33 (바닷가 모닥불 POC를 바탕으로).
 > 넣을 곳: 캠핑장(`/campsite/`)의 하늘과 땅 사이, 불 둘레를 돌면 함께 도는 먼 풍경.
 
 ## 1. 한 줄 요약
