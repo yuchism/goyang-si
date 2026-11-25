@@ -1,17 +1,17 @@
-/* 미스테리 캠핑장 (CAMPSITE_PLAN.md, tasks/campsite-1-fire.md · campsite-2-scene.md)
+/* 미스테리 캠핑장 (CAMPSITE_PLAN.md, tasks/campsite-1-fire.md · campsite-2-scene.md · campsite-7-stack.md)
    - 들어오면 안개가 걷히고, 한가운데 모닥불. 좌우로 끌면 불 둘레를 돌며 방향마다 다른 풍경
-   - 혼자 돌지는 않음(주인 요청 2026-11-20 — 돌리는 건 사용자만). 구석의 작은 버튼 → 안개 → 거실
+   - 혼자 돌지는 않음(주인 요청 2026-11-20 — 돌리는 건 사용자만). 끌다 놓으면 살짝 미끄러지다 멈춤. 구석의 작은 버튼 → 안개 → 거실
    - 항상 밤. 달 모양은 오늘 날짜(time.js moonPhase), 남·북반구 모양은 방문자 시간대(time.js SOUTH)
    - 소리(sound.js): 장작·개울·풀벌레·부엉이·타자기. 오른쪽 위 작은 버튼으로 켬/끔(방과 같은 기록)
    - 기억 태우기: 아래 입력 칸에 치면 타자 줄에 찍혀 불로 날아가 타고 연기가 됨(memory.js·smoke.js)
    - 동작 줄이기: 불이 멈추고 안개 없음(끌어서 돌리기는 됨)
-   - 그리기: 캔버스 아스키(ascii3d.js, 6px). 불꽃만 WebGL(gl3d.js)이 되면 셰이더로, 안 되면 불꽃 입자로 — tasks/campsite-6-webgl.md
-   - 미리보기(dev): ?gl=0 (캔버스로), ?fps=1, ?moon=0~1 (달 나이 비율: 0 그믐, 0.25 상현, 0.5 보름), ?south=1|0 */
-import { makeCloud, makeView } from './ascii3d.js';
-import { makeGLFire } from './gl3d.js';
-import { buildCampsite } from './props.js';
-import { makeCampfire } from './campfire.js';
-import { FRONT, makeScenery } from './scenery.js';
+   - 그리기: 스프라이트 스태킹 픽셀아트, 한 픽셀 = 화면 2px (회의 2026-11-25) — stack.js(무대)·voxels.js(모닥불 모형)·
+     backdrop.js(하늘·산·호수·숲 그림)·fire.js(불꽃·불빛). 기억 태우기 글자만 화면 픽셀로 위에
+   - 미리보기(dev): ?fps=1, ?moon=0~1 (달 나이 비율: 0 그믐, 0.25 상현, 0.5 보름), ?south=1|0 */
+import { makeStage } from './stack.js';
+import { N, buildCampfire, drawCampfire } from './voxels.js';
+import { FRONT, makeBackdrop } from './backdrop.js';
+import { makeFire } from './fire.js';
 import { makeFog } from './fog.js';
 import { makeSmoke } from './smoke.js';
 import { makeMemory } from './memory.js';
@@ -20,7 +20,7 @@ import { moonPhase, now, SOUTH } from '../js/time.js';
 import { gcEvent, pickLang, store } from '../js/util.js';
 import { el, freshVisit } from '../js/page-kit.js';
 
-const CAM = { fontPx: 6, dist: 4.7, zoom: 1.5, pitch: 0.24, lookY: 0.5, horizon: 0.66 };
+const DRAG = { speed: 0.007, slide: 2.2 }; // 끌 때 화면 1px당 돌아가는 각, 놓은 뒤 멈추는 빠르기
 const HOME = '/?from=campsite';
 
 const Q = new URL(location.href).searchParams;
@@ -54,22 +54,20 @@ document.body.append(canvas, exit, snd, input);
 const FONT = '-apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif';
 
 const qMoon = DEV && Q.get('moon') != null ? ((+Q.get('moon') % 1) + 1) % 1 : null;
-const scenery = makeScenery({
+const backdrop = makeBackdrop({
   phase: qMoon ?? moonPhase(now()).k,
   south: DEV && Q.get('south') != null ? Q.get('south') === '1' : SOUTH,
 });
-let glFire = DEV && Q.get('gl') === '0' ? null : makeGLFire(CAM);
-const view = makeView(canvas, CAM);
-const cl = makeCloud();
-buildCampsite(cl);
-const cloud = cl.done();
-const fire = makeCampfire({ reduce, flames: !glFire });
+const stage = makeStage(canvas, N);
+const campfire = buildCampfire();
+const fire = makeFire({ reduce });
 const fog = makeFog({ reduce });
 const smoke = makeSmoke({ reduce });
 const sound = makeSound({ store });
 const showSound = () => { snd.textContent = sound.on ? '♪ ' + tr('soundOn') : tr('soundOff'); snd.setAttribute('aria-pressed', String(sound.on)); };
 showSound();
 snd.addEventListener('click', () => { sound.toggle(); showSound(); });
+const view = { ctx: stage.screen, get width() { return stage.width; }, get height() { return stage.height; }, project: stage.project };
 const memory = makeMemory({ view, fire, smoke, input, reduce, font: FONT, onKey: sound.key, onReturn: sound.bell, onBurn: sound.burn });
 
 exit.addEventListener('click', ev => {
@@ -80,17 +78,26 @@ exit.addEventListener('click', ev => {
 
 // 끌어서 돌리기. 돌려도 입력 칸의 포커스(키보드)는 그대로 두고(누를 때 기본 동작 막음),
 // 끌지 않고 톡 누르기만 하면 입력 칸으로 — 돌린 다음에도 바로 이어 칠 수 있게 (주인 요청 2026-11-20)
-let yaw = FRONT, drag = false, px = 0, moved = 0;
+let angle = 0, vel = 0, drag = false, px = 0, moved = 0, lastMove = 0;
 const keepFocus = e => { if (e.cancelable) e.preventDefault(); };
 canvas.addEventListener('touchstart', keepFocus, { passive: false });
 canvas.addEventListener('mousedown', keepFocus);
-canvas.addEventListener('pointerdown', e => { drag = true; px = e.clientX; moved = 0; canvas.setPointerCapture(e.pointerId); });
-canvas.addEventListener('pointermove', e => { if (!drag) return; yaw -= (e.clientX - px) * 0.01; moved += Math.abs(e.clientX - px); px = e.clientX; });
+canvas.addEventListener('pointerdown', e => { drag = true; px = e.clientX; moved = 0; vel = 0; lastMove = performance.now(); canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const now = performance.now(), dx = e.clientX - px, dt = Math.max(1, now - lastMove) / 1000;
+  angle -= dx * DRAG.speed;
+  vel = -dx * DRAG.speed / dt;
+  moved += Math.abs(dx);
+  px = e.clientX;
+  lastMove = now;
+});
 canvas.addEventListener('pointerup', () => {
   drag = false;
-  if (moved < 6) input.focus({ preventScroll: true });
+  if (performance.now() - lastMove > 80) vel = 0; // 멈췄다 놓으면 미끄러지지 않음
+  if (moved < 6) { input.focus({ preventScroll: true }); fire.pop(); }
 });
-canvas.addEventListener('pointercancel', () => { drag = false; });
+canvas.addEventListener('pointercancel', () => { drag = false; vel = 0; });
 
 const SHOW_FPS = DEV && Q.get('fps') === '1';
 let fpsN = 0, fpsT = 0, fpsText = '';
@@ -99,37 +106,42 @@ function frame(ms) {
   const t = ms / 1000, dt = last ? Math.min(0.05, t - last) : 0.016;
   last = t;
   const T = reduce ? 0 : t;
-  fire.update(dt, T);
+  if (!drag) { angle += vel * dt; vel *= 1 - Math.min(1, dt * DRAG.slide); }
+  stage.angle = angle;
+  const azc = FRONT - angle; // 화면 가운데가 보는 방향 — 불이 돌아가는 반대로 풍경이 지나감
+  fire.update(stage, dt, T);
   smoke.update(dt, T);
-  sound.update(yaw);
-  const light = fire.light(T);
-  view.begin(yaw);
-  scenery.drawFar(view, yaw, T);
-  scenery.drawStars(view, yaw, T);
-  view.drawCloud(cloud, light, scenery.moonLight, T);
-  if (glFire && !glFire.render(view, yaw, T, light, fire.glow)) { // 그림판을 잃으면 불꽃 입자로
-    glFire = null;
-    fire.useFlames();
-  }
-  if (!glFire) fire.drawFlames(view);
-  view.flush(light);
-  fire.drawEmbers(view, T);
-  smoke.draw(view);
+  sound.update(azc);
+  backdrop.draw(stage, azc, T);
+  fire.drawGround(stage);
+  drawCampfire(stage, campfire, T, fire.glow);
+  fire.draw(stage);
+  smoke.draw(stage);
+  vignette(stage);
+  stage.present();
   memory.draw();
-  fog.draw(view, dt, t);
+  fog.draw(stage, dt, t);
   if (SHOW_FPS) {
     fpsN++;
-    if (t - fpsT > 1) { fpsText = `${fpsN} fps · ${glFire ? 'WebGL fire' : 'canvas'}`; fpsN = 0; fpsT = t; }
-    view.ctx.fillStyle = 'rgba(200,205,225,0.6)';
-    view.ctx.font = '11px ui-monospace,Menlo,monospace';
-    view.ctx.fillText(fpsText, 10, view.height - 20);
+    if (t - fpsT > 1) { fpsText = `${fpsN} fps · ${stage.W}×${stage.H}`; fpsN = 0; fpsT = t; }
+    stage.screen.fillStyle = 'rgba(200,205,225,0.6)';
+    stage.screen.font = '11px ui-monospace,Menlo,monospace';
+    stage.screen.fillText(fpsText, 10, stage.height - 20);
   }
   requestAnimationFrame(frame);
+}
+// 가장자리 어둡게 — 눈이 불로 가게
+function vignette({ ctx, W, H, cx, cy }) {
+  const g = ctx.createRadialGradient(cx, cy, Math.min(W, H) * 0.3, cx, cy, Math.max(W, H) * 0.75);
+  g.addColorStop(0, 'rgba(0,0,0,0)');
+  g.addColorStop(1, 'rgba(0,0,0,.5)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
 }
 requestAnimationFrame(frame);
 
 if (freshVisit())
   gcEvent('campsite-visit', '캠핑장 방문');
-// 오프라인: 방과 같은 서비스 워커 (sw.js 캠핑장 칸 — 캠핑장은 그림 없이 코드뿐)
+// 오프라인: 방과 같은 서비스 워커 (sw.js 캠핑장 칸)
 if ('serviceWorker' in navigator && location.protocol !== 'file:')
   navigator.serviceWorker.register('../sw.js').catch(() => { });

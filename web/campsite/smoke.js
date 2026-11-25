@@ -1,8 +1,8 @@
-/* 연기 (CAMPSITE_PLAN.md 5장, tasks/campsite-3-memory.md)
-   탄 글자가 남기는 연기. 옅은 글자 입자로 3D 공간에서 천천히 오르며 퍼진다.
+/* 연기 (CAMPSITE_PLAN.md 5장, tasks/campsite-3-memory.md · campsite-7-stack.md)
+   탄 글자가 남기는 연기. 픽셀 알갱이로 3D 공간(세계 좌표)에서 천천히 오르며 퍼진다.
    아래쪽은 불빛을 받아 따뜻하게, 오를수록 식어 회색이 되고 밤하늘에 녹아 사라짐. 글자 잔상은 없음 (회의 2026-11-20).
-   물체 뒤로 가면 가려짐(ascii3d depthAt). 동작 줄이기면 연기 없음 */
-const CH = ['~', ':', "'", '.'];
+   동작 줄이기면 연기 없음 */
+import { STACK } from './stack.js';
 
 export const SMOKE = { life: [5, 3], rise: [0.28, 0.18], spread: 0.08 };
 
@@ -30,16 +30,16 @@ export function makeSmoke({ reduce }) {
         p.z += p.vz * dt;
       }
     },
-    draw(view) {
+    // 그림판(낮은 해상도)에 알갱이로
+    draw(st) {
+      const { ctx, kp } = st, V = STACK.VPU;
       for (const p of ps) {
-        const [sx, sy, dz] = view.project(p.x, p.y, p.z);
-        if (dz < 0.3) continue;
-        const id = view.cell(sx, sy);
-        if (id < 0 || dz > view.depthAt(id) + 0.05) continue;
+        const [x, y] = st.lowAt(p.x * V, p.z * V, p.y * V);
         const a = p.age / p.life, warm = Math.max(0, 1 - (p.y - 0.4) / 1.4); // 아래는 불빛을 받아 따뜻
         const r = 120 + 70 * warm, g = 118 + 22 * warm, b = 128 - 30 * warm;
-        const alpha = (a < 0.1 ? a / 0.1 : 1) * (1 - a) * 0.75;
-        view.put(id, CH[Math.min(CH.length - 1, Math.floor(a * CH.length))], `rgb(${r | 0},${g | 0},${b | 0})`, alpha);
+        const alpha = (a < 0.1 ? a / 0.1 : 1) * (1 - a) * 0.5, sz = Math.max(1, Math.round((1 + a * 2) * kp * 0.4));
+        ctx.fillStyle = `rgba(${r | 0},${g | 0},${b | 0},${alpha.toFixed(3)})`;
+        ctx.fillRect(Math.round(x - sz / 2), Math.round(y - sz / 2), sz, sz);
       }
     },
   };

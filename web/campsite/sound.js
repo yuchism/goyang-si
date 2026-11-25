@@ -4,12 +4,12 @@
    - 가끔: 먼 숲에서 부엉이(숲 쪽 귀로), 장작 '툭'
    - 기억 태우기: 타자 키(여러 소리를 돌려 가며 살짝 높낮이를 바꿈), 줄이 떠날 때 '띵', 글자가 불에 들어갈 때 작은 '툭'
    - 소리 켬/끔은 방과 같은 기록(store 'sound', 기본 켬). 브라우저 규칙상 처음 누르거나 칠 때 시작. 화면을 가리면 멈춤 */
-import { FRONT } from './scenery.js';
+import { FRONT } from './backdrop.js';
 
 export const SOUND = {
   fire: 0.55, crickets: 0.12, owl: 0.28, pop: 0.45, key: 0.55, bell: 0.4, burn: 0.25,
   stream: [0.08, 0.45],      // 개울: [등지고 있을 때, 바로 볼 때]
-  streamRel: 1.9,            // 개울이 있는 방향 (호수 쪽에서 오른쪽으로 잰 각, scenery.js STREAM 가운데쯤)
+  streamRel: 1.3,            // 개울이 있는 방향 (호수 쪽에서 오른쪽으로 잰 각 — 가까운 숲 그림의 풀 언덕 쪽)
   owlRel: Math.PI,           // 부엉이는 뒤쪽 숲
   owlEvery: [45, 110],       // 부엉이 간격(초)
   popEvery: [14, 40],        // 장작 '툭' 간격(초)

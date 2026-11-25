@@ -1,5 +1,5 @@
 # 미스테리 캠핑장 7: 스프라이트 스태킹 픽셀아트로 다시 그리기 (2px)
-- status: brief
+- status: implemented
 - mode: needs-review
 - brief: `assets/briefs/CAMPSITE_BG_ART.md` (배경 그림 두 겹 — 받음), 시안 `assets/briefs/campsite/stack-poc.html` (= https://claude.ai/artifact/PvBfbeNwFENALjxAUudV33)
 - 출처: 회의 2026-11-25 — `CAMPSITE_PLAN.md` 4장. 6번(WebGL)을 대신함
@@ -20,17 +20,17 @@
 - 돌리기: 끌 때만, 놓으면 살짝 미끄러지다 멈춤(혼자 돌지 않음).
 
 ## 요구사항
-- [ ] 시안을 레포 구조로: 복셀 모형(`model`)·판 굽기·쌓아 그리기·배경 겹·입자 모듈로 나눔. 숫자는 맨 위 표로
-- [ ] 배경 그림을 `web/campsite/` 아래 작은 png/webp로 (원본은 `assets/campsite/`, git 밖)
-- [ ] 오늘의 달(위상·남북반구), 별·은하수를 새 하늘에 다시
-- [ ] 기억 태우기(타자 줄 → 함께 날아가 타고 연기), 글자는 한글 픽셀 글꼴 검토(예: 갈무리, OFL)
-- [ ] 안개 들어오기·나가기, 소리(개울은 바라보는 쪽으로), 나가기 버튼
-- [ ] 동작 줄이기: 멈춘 불
-- [ ] 넓은 화면: 그림을 정수배로 키우고 지평선·달 자리 맞춤
-- [ ] 아스키·WebGL 파일(`ascii3d.js`·`gl3d.js` 등) 정리 — 커밋 기록에만 남김
+- [x] 시안을 레포 구조로: 복셀 모형(`model`)·판 굽기·쌓아 그리기·배경 겹·입자 모듈로 나눔. 숫자는 맨 위 표로
+- [x] 배경 그림을 `web/campsite/` 아래 작은 png/webp로 (원본은 `assets/campsite/`, git 밖)
+- [x] 오늘의 달(위상·남북반구), 별·은하수를 새 하늘에 다시
+- [x] 기억 태우기(타자 줄 → 함께 날아가 타고 연기) — 글자는 지금 화면 글꼴 그대로(화면 픽셀로 위에). 한글 픽셀 글꼴(예: 갈무리, OFL)은 아직
+- [x] 안개 들어오기·나가기, 소리(개울은 바라보는 쪽으로), 나가기 버튼
+- [x] 동작 줄이기: 멈춘 불
+- [x] 넓은 화면: 그림을 정수배로 키우고 지평선·달 자리 맞춤
+- [x] 아스키·WebGL 파일(`ascii3d.js`·`gl3d.js` 등) 정리 — 커밋 기록에만 남김
 
 ## 확인
-- [ ] `node tools/check_structure.mjs` 통과
+- [x] `node tools/check_structure.mjs` 통과
 - [ ] (사람) 폰·넓은 화면: 예쁜지, 돌려도 부드러운지, 오래 봐도 편한지
 
 <!-- office:verify
@@ -40,3 +40,6 @@
 ## 메모
 - 2026-11-25 Claude 씀. 시안은 클라우드 크롬 폰 크기 60fps.
 - 뒤쪽 숲은 가까운 숲 그림의 숲 부분을 이어 붙이고 뒤집어 채움 — 반복이 거슬리면 뒤쪽 숲 그림을 한 장 더 받음.
+- 2026-11-25 Claude 구현: stack.js(무대·카메라) · voxels.js(시안 모형 그대로) · backdrop.js(하늘·은하수 띠·별·오늘의 달 그림판, 그림 두 겹, 물결) · fire.js(시안 입자) · fog.js(픽셀 안개, 화면 6px 칸) · smoke.js(탄 글자 연기를 알갱이로). memory.js는 그대로 — view = 화면 캔버스 + stage.project(세계 1 = 복셀 39칸).
+  - 톡 누르면 입력 칸으로 + 불똥(시안). 끌다 놓으면 살짝 미끄러짐(시안). 개울 소리 방향은 오른쪽 풀 언덕 쪽(streamRel 1.3) — 개울 그림은 아직 없음.
+  - 옛 파일 지움: ascii3d.js · gl3d.js · campfire.js · props.js · scenery.js. 클라우드 크롬 폰 크기 60fps.
