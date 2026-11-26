@@ -1,5 +1,5 @@
 # 미스테리 해변 3: 쪽지 병
-- status: todo
+- status: implemented
 - mode: needs-review
 - brief: 글귀 `assets/briefs/beach/notes-draft.md` (150개, 주인 확정 2026-11-26)
 - 출처: 회의 2026-11-26 — `BEACH_PLAN.md` 5장
@@ -11,14 +11,14 @@
 - 기록은 방문자 브라우저에만(`store`).
 
 ## 요구사항
-- [ ] 글귀를 `web/beach/notes.json`(또는 js)으로
-- [ ] 병 모형·밀려오기·흔들림
-- [ ] 쪽지 열기·닫기, 키보드·스크린리더로도
-- [ ] 하루 한 번·겹치지 않기 기록
-- [ ] 미리보기: `?bottle=1`(오늘 이미 봤어도 다시)
+- [x] 글귀를 `web/beach/notes.json`(또는 js)으로
+- [x] 병 모형·밀려오기·흔들림
+- [x] 쪽지 열기·닫기, 키보드·스크린리더로도
+- [x] 하루 한 번·겹치지 않기 기록
+- [x] 미리보기: `?bottle=1`(오늘 이미 봤어도 다시)
 
 ## 확인
-- [ ] `node tools/check_structure.mjs` 통과
+- [x] `node tools/check_structure.mjs` 통과
 - [ ] (사람) 쪽지를 열 때 설레는지, 글이 읽기 편한지
 
 <!-- office:verify
@@ -27,3 +27,8 @@
 
 ## 메모
 - 2026-11-26 Claude 씀.
+- 2026-11-26 Claude 구현: notes.js(150개 — `tools/make_beach_notes.py`가 notes-draft.md 표에서 만듦) · bottle.js(누운 유리병 복셀 모형 22×9×9 — 코르크·유리 너머 말린 종이·반짝 결, 판을 쌓아 그림, 빛깔은 시간대로 다시 구움; 숫자 BOTTLE) · note.js(쪽지: 말린 종이가 계단식으로 펼쳐짐, 갈무리11 24px, 모서리에 번호 #n).
+  - 도착 18초 뒤 물 위에 반쯤 잠겨 떠오다(9초) 모래 위로 밀려 올라(3초) 쉼. 물이 닿을 때 살짝 흔들림, 4.5초마다 유리에 작은 십자 반짝(눈길이 가게).
+  - 본 번호는 store `beachNote.seen`, 다 보면 방금 것만 빼고 처음부터. 오늘 열었으면 `day`·`opened` → 모래 위 자국만.
+  - 키보드: 병이 멈추면 아래 가운데 숨은 버튼 "물가의 병 열기"(포커스할 때 보임). 쪽지는 dialog — 닫기 버튼 포커스, Esc·바깥 누르기로 닫힘.
+  - 동작 줄이기: 병은 처음부터 모래 위, 쪽지는 펼침 없이.

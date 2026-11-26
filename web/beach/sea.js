@@ -34,7 +34,7 @@ function makeSheen(W, sH, sunR, col, glare) {
 }
 
 export function makeSea() {
-  let sandCv = null, sandKey = '', sheen = null, sheenKey = '';
+  let sandCv = null, sandKey = '', sheen = null, sheenKey = '', edges = new Int16Array(0);
   const ripples = Array.from({ length: 160 }, (_, i) => ({ u: hash(i, 1.3), d: hash(i, 2.9) ** 0.8, l: 1 + Math.floor(hash(i, 4.1) * 4), p: hash(i, 6.7) * 6.3, light: hash(i, 8.3) < 0.55 }));
 
   // 밀려온 정도 0~1: 빨리 올라왔다 천천히 빠짐. n번째 파도마다 높이가 조금씩 다름
@@ -45,6 +45,8 @@ export function makeSea() {
   };
 
   return {
+    // 밀려온 물 끝의 높이 (그림판 x에서, 마지막으로 그린 때) — 병이 물에 닿았는지
+    edgeAt(x) { return edges[Math.max(0, Math.min(edges.length - 1, Math.round(x)))] || 0; },
     // 모래 그림판(물가 아래 전체) — 빛깔이 바뀔 때
     paintSand(W, H, ys, L) {
       const h = H - ys, key = W + 'x' + h;
@@ -168,8 +170,10 @@ export function makeSea() {
       // 밀려왔다 빠지는 얇은 물 + 거품 테
       const s = swash(t), reach = (H - ys) * WAVE.reach, sheet = mix(mix(L.sea, L.hor, 0.5), L.light, 0.2);
       const fa = (s.k < 0.28 ? 0.85 : 0.85 * (1 - (s.k - 0.28) / 0.72)) * (0.55 + 0.45 * L.lum);
+      if (edges.length !== W) edges = new Int16Array(W);
       for (let x = 0; x < W; x++) {
         const wob = 0.75 + 0.5 * vnoise((x + pan) * 0.025, s.n * 3.1), edge = ys + Math.round(s.v * reach * wob);
+        edges[x] = edge;
         if (edge > ys) {
           ctx.fillStyle = rgb(sheet, 0.7 - 0.25 * s.k);
           ctx.fillRect(x, ys, 1, edge - ys);
