@@ -7,7 +7,10 @@
    - 시내와 폭포: 먼 산 골짜기를 굽이쳐 내려와 호수로 떨어짐(코드, SKY.fall) — 물에도 희미하게 비침. 물소리(sound.js streamRel)도 그쪽에서
    - 달: 오늘 날짜의 모양(phase), 남·북반구(south)에 따라 밝은 쪽이 바뀜. 호수 오른쪽 위 하늘(SKY.moonAz). 물에는 달 원판 없이 달빛 길만(주인 2026-11-20)
    - 넓은 화면: 그림을 정수배(AS)로 키우고, 지평선은 산 높이에 맞춰 내림 */
-export const FRONT = 0;   // 호수·달 쪽 방향 (처음 바라보는 쪽). sound.js가 개울·부엉이 방향을 여기서 잼
+export const FRONT = 0;
+// 해변으로 가는 오솔길 (BEACH_PLAN.md 2장, tasks/beach-2-path.md) — 가까운 숲 그림(bg-near-v2) 뒤 절반의 픽셀 자리
+//  lamp: 등불 유리 [x0, y0, x1, y1], glow: 빛 번짐 반지름(픽셀), tap: 누르면 해변으로 가는 칸(오솔길·팻말·등불) [x0, y0, x1, y1]
+export const TRAIL = { lamp: [593, 60, 595, 65], glow: 14, tap: [548, 38, 606, 85] };   // 호수·달 쪽 방향 (처음 바라보는 쪽). sound.js가 개울·부엉이 방향을 여기서 잼
 const TAU = Math.PI * 2;
 const FAR_W = 384;        // 먼 산 그림 폭 (한 바퀴)
 export const SKY = {
@@ -36,7 +39,7 @@ const tile = (x, p) => Math.round(((x % p) + p) % p - p);
 export function makeBackdrop({ phase, south }) {
   const far = img('bg-far-v1.png'), near = img('bg-near-v2.png');
   let farDark = null, sky = null, moon = null, built = -1, stars = [], dashes = [];
-  let AS = 1, PW = FAR_W, y0 = 0, y1 = 0, farH = 0, mr = 3;
+  let AS = 1, PW = FAR_W, y0 = 0, y1 = 0, farH = 0, mr = 3, nearX = 0, nearY = 0, nearP = 0;
   const ready = i => i.complete && i.naturalWidth > 0;
 
   // 화면 크기가 바뀌면: 하늘 한 바퀴(그라데이션·은하수 먼지)·달·별·물결을 다시 만듦
@@ -132,6 +135,27 @@ export function makeBackdrop({ phase, south }) {
       ctx.fillRect(px, py, AS, AS);
     }
   };
+  // 등불: 유리에 따뜻한 불빛, 둘레로 번지는 빛, 발치에 옅은 빛 — 촛불처럼 은은히 깜빡임
+  const lantern = (ctx, ox, oy, t, W) => {
+    const [a, b, c, d] = TRAIL.lamp, cx = ox + (a + c + 1) / 2 * AS, cy = oy + (b + d + 1) / 2 * AS, R = TRAIL.glow * AS;
+    if (cx < -R || cx > W + R) return;
+    const f = 0.78 + 0.12 * Math.sin(t * 5.3) + 0.1 * Math.sin(t * 13.1 + Math.sin(t * 2.3) * 2);
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(cx, cy, 1, cx, cy, R);
+    g.addColorStop(0, `rgba(255,170,90,${(0.34 * f).toFixed(3)})`);
+    g.addColorStop(0.35, `rgba(240,130,60,${(0.12 * f).toFixed(3)})`);
+    g.addColorStop(1, 'rgba(240,120,50,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+    ctx.fillStyle = `rgba(255,150,80,${(0.1 * f).toFixed(3)})`; // 발치의 빛
+    ctx.fillRect(cx - 4 * AS, oy + (d + 6) * AS, 8 * AS, 2 * AS);
+    ctx.globalCompositeOperation = 'source-over';
+    for (let y = b; y <= d; y++) { // 유리: 가운데가 가장 밝게
+      const k = 1 - Math.abs((y - (b + d) / 2) / ((d - b) / 2 + 1)) * 0.5;
+      ctx.fillStyle = `rgb(${255 * Math.min(1, f * k + 0.1) | 0},${(150 + 80 * k) * f | 0},${(70 + 50 * k) * f | 0})`;
+      ctx.fillRect(ox + a * AS, oy + y * AS, (c - a + 1) * AS, AS);
+    }
+  };
   return {
     get horizon() { return y0; },
     get shore() { return y1; },
@@ -220,8 +244,18 @@ export function makeBackdrop({ phase, south }) {
       // 가까운 숲·절벽·언덕 (밑변 = 가까운 물가). 앞 가운데가 비어 호수가 보임
       if (ready(near)) {
         const PN = near.naturalWidth * AS, nh = near.naturalHeight * AS;
-        for (let x = tile(W / 2 - FAR_W / 2 * AS - azc / TAU * PN, PN); x < W; x += PN) ctx.drawImage(near, x, y1 + 2 - nh, PN, nh);
+        nearX = tile(W / 2 - FAR_W / 2 * AS - azc / TAU * PN, PN);
+        nearY = y1 + 2 - nh;
+        nearP = PN;
+        for (let x = nearX; x < W; x += PN) ctx.drawImage(near, x, nearY, PN, nh);
+        for (let x = nearX; x < W; x += PN) lantern(ctx, x, nearY, t, W);
       }
+    },
+    // 그림판 픽셀 (lx, ly)가 오솔길 칸인가
+    hitTrail(lx, ly) {
+      if (!nearP) return false;
+      const ix = ((((lx - nearX) % nearP) + nearP) % nearP) / AS, iy = (ly - nearY) / AS, [x0, yA, x1, yB] = TRAIL.tap;
+      return ix >= x0 && ix <= x1 && iy >= yA && iy <= yB;
     },
   };
 }

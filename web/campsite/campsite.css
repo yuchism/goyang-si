@@ -27,4 +27,11 @@ html, body { margin: 0; height: 100%; background: #04060c; overflow: hidden; }
 }
 .type::placeholder { color: rgba(200, 205, 225, 0.38); }
 .type:focus::placeholder { color: transparent; }
+/* 해변 오솔길 숨은 링크: 키보드로 포커스할 때만 보임 */
+.trail {
+  position: fixed; left: 50%; top: calc(10px + env(safe-area-inset-top)); transform: translate(-50%, -200%);
+  font: 12px ui-monospace, Menlo, monospace; color: rgba(255, 214, 160, 0.9); text-decoration: none;
+  padding: 6px 8px; border-radius: 6px; background: rgba(20, 16, 12, 0.6);
+}
+.trail:focus-visible { transform: translate(-50%, 0); }
 .msg { color: #ccd; font: 16px sans-serif; padding: 2rem; }

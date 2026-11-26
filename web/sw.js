@@ -9,6 +9,7 @@
      상태 JSON(goyang-status, 바깥 주소)은 담지 않는다 — 늘 새로 (아래 바깥 주소 규칙)
    - 크리스마스 광장(plaza/): 기지와 같게 — 페이지·scene.json은 네트워크 먼저, 그림은 본 것만 따로(PLAZA). 'warm'에는 넣지 않는다
    - 미스테리 캠핑장(campsite/): 코드와 배경 그림 두 장(bg-*.png) — 페이지·js는 네트워크 먼저(PAGES). 오프라인이어도 방으로 대신하지 않는다
+   - 미스테리 해변(beach/): 캠핑장과 같게 — 코드와 배경 그림 두 장. 오프라인이어도 방으로 대신하지 않는다
    - GoatCounter 등 그 밖의 바깥 주소: 손대지 않음(네트워크만)
    __VERSION__은 배포 때 pages.yml이 커밋 해시로 바꾼다. 바뀌지 않았으면(로컬 개발) 그림도 네트워크 먼저.
    새 서비스 워커는 skipWaiting 없이, 다음에 열 때 적용된다 (켜 둔 화면이 갑자기 바뀌지 않게). */
@@ -38,7 +39,7 @@ const isImage = url => /\.(webp|png|jpe?g|gif|ico|svg)$/i.test(url.pathname);
 const isManhwa = url => url.pathname.startsWith(new URL('manhwa/', self.registration.scope).pathname);
 const isBase = url => url.pathname.startsWith(new URL('base/', self.registration.scope).pathname);
 const isPlaza = url => url.pathname.startsWith(new URL('plaza/', self.registration.scope).pathname);
-const isCampsite = url => url.pathname.startsWith(new URL('campsite/', self.registration.scope).pathname);
+const isCampsite = url => ['campsite/', 'beach/'].some(p => url.pathname.startsWith(new URL(p, self.registration.scope).pathname)); // 캠핑장·해변
 const isFont = url => url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
 
 // 리디렉트된 응답은 사파리가 페이지로 쓰지 못하므로 새 응답으로 감싼다
@@ -59,7 +60,7 @@ async function networkFirst(req, url) {
     return res;
   }
   catch (err) {
-    // 만화방·기지·광장·캠핑장 페이지는 방으로 대신하지 않는다
+    // 만화방·기지·광장·캠핑장·해변 페이지는 방으로 대신하지 않는다
     const hit = await cache.match(stripKey(req, url)) || (req.mode === 'navigate' && !isManhwa(url) && !isBase(url) && !isPlaza(url) && !isCampsite(url) && await cache.match(new URL('./', self.registration.scope).href));
     if (hit)
       return hit;

@@ -3,6 +3,7 @@
    - 혼자 돌지는 않음(주인 요청 2026-11-20 — 돌리는 건 사용자만). 끌다 놓으면 살짝 미끄러지다 멈춤. 구석의 작은 버튼 → 안개 → 거실
    - 항상 밤. 달 모양은 오늘 날짜(time.js moonPhase), 남·북반구 모양은 방문자 시간대(time.js SOUTH)
    - 소리(sound.js): 장작·개울·풀벌레·부엉이·타자기. 오른쪽 위 작은 버튼으로 켬/끔(방과 같은 기록)
+   - 캠프 뒤 숲의 등불 켜진 오솔길을 누르면 안개 → 숨은 해변(/beach/, BEACH_PLAN.md)
    - 기억 태우기: 아래 입력 칸에 치면 타자 줄에 찍혀 불로 날아가 타고 연기가 됨(memory.js·smoke.js)
    - 동작 줄이기: 불이 멈추고 안개 없음(끌어서 돌리기는 됨)
    - 그리기: 스프라이트 스태킹 픽셀아트, 한 픽셀 = 화면 2px (회의 2026-11-25) — stack.js(무대)·voxels.js(모닥불 모형)·
@@ -30,6 +31,7 @@ const STR = {
   soundOn: { ko: '소리 켬', en: 'Sound on' },
   soundOff: { ko: '소리 끔', en: 'Sound off' },
   type: { ko: '여기를 눌러 불에 태울 기억을 적어 보세요', en: 'Tap here and type a memory to burn' },
+  trail: { ko: '숲 사이 오솔길로', en: 'Into the forest trail' },
   scene: { ko: '미스테리 캠핑장: 밤 호숫가, 가운데 모닥불. 좌우로 끌면 둘레를 돌아봐요', en: 'Mystery Campsite: a lakeside at night with a campfire in the middle. Drag sideways to look around' },
 };
 const LANG = pickLang();
@@ -75,6 +77,26 @@ setTimeout(loadFont, 2500);
 input.addEventListener('focus', loadFont, { once: true });
 const memory = makeMemory({ view, fire, smoke, input, reduce, font: FONT, onKey: sound.key, onReturn: sound.bell, onBurn: sound.burn });
 
+// 해변으로 가는 숲 오솔길 (BEACH_PLAN.md 2장, tasks/beach-2-path.md): 캠프 뒤 등불 켜진 오솔길을 누르면 안개 → 해변.
+// 약도에는 없는 숨은 곳. 키보드·화면 읽기 프로그램으로도 갈 수 있게 숨은 링크(포커스하면 보임)
+const BEACH = '/beach/?from=campsite';
+const trail = el('a', 'trail', tr('trail'));
+trail.href = BEACH;
+document.body.append(trail);
+const onTrail = e => backdrop.hitTrail(e.clientX / stage.S, e.clientY / stage.S);
+let leaving = false;
+const goBeach = () => {
+  if (leaving) return;
+  leaving = true;
+  gcEvent('campsite-trail', '캠핑장 → 해변 오솔길');
+  fog.leave(() => { location.href = BEACH; });
+};
+trail.addEventListener('click', ev => {
+  if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return;
+  ev.preventDefault();
+  goBeach();
+});
+
 exit.addEventListener('click', ev => {
   if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return;
   ev.preventDefault();
@@ -97,11 +119,16 @@ canvas.addEventListener('pointermove', e => {
   px = e.clientX;
   lastMove = now;
 });
-canvas.addEventListener('pointerup', () => {
+canvas.addEventListener('pointerup', e => {
   drag = false;
   if (performance.now() - lastMove > 80) vel = 0; // 멈췄다 놓으면 미끄러지지 않음
-  if (moved < 6) { input.focus({ preventScroll: true }); fire.pop(); }
+  if (moved >= 6) return;
+  if (onTrail(e)) { goBeach(); return; }
+  input.focus({ preventScroll: true });
+  fire.pop();
 });
+// 오솔길 위에서는 손가락 모양 — 돌아보다 발견하게
+canvas.addEventListener('pointermove', e => { if (!drag && e.pointerType === 'mouse') canvas.style.cursor = onTrail(e) ? 'pointer' : ''; });
 canvas.addEventListener('pointercancel', () => { drag = false; vel = 0; });
 
 const SHOW_FPS = DEV && Q.get('fps') === '1';
