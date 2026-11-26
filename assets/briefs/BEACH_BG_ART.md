@@ -1,6 +1,6 @@
 # 에셋: 미스테리 해변 배경 + 캠핑장 오솔길 입구 (BEACH_BG_ART)
 
-> 상태: **지시서 씀 (2026-11-26) — 그림 기다림(주인이 ChatGPT로).** 기획 `BEACH_PLAN.md` 4장.
+> 상태: **그림 3장 받음 (2026-11-26).** 원본 `assets/beach/`·`assets/campsite/campsite-bg-near-back.png`(git 밖), 2px 격자로 줄인 `-384.png`. 오솔길 입구는 캠핑장 가까운 숲 뒤 절반에 넣음 → `web/campsite/bg-near-v2.png`(v1은 지움). 해변 두 장은 해변 구현 때. 기획 `BEACH_PLAN.md` 4장.
 > ChatGPT가 레포를 볼 수 있음 — 아래 프롬프트는 레포 경로로 참고 그림을 가리킴(못 보면 첨부).
 
 ## 1. 만들 것 (3장)

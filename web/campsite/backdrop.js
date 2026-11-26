@@ -2,7 +2,7 @@
    - 하늘(남색 그라데이션·은하수 띠·별) → 먼 산 그림 → 호수(물결·달빛 길) → 가까운 숲 그림 → 땅
    - 그림 두 장은 주인이 ChatGPT로 그린 것을 2px 격자로 줄인 것 (assets/briefs/CAMPSITE_BG_ART.md)
      · bg-far: 먼 산, 한 바퀴 = 384픽셀. 가운데(가장 높은 봉우리)가 앞(호수·달 쪽, FRONT)
-     · bg-near: 가까운 숲·절벽·풀 언덕. 원래 384에 뒤쪽 숲을 이어 붙여 한 바퀴 = 768 → 먼 산보다 두 배 빨리 지나감(주인 요청 2026-11-25)
+     · bg-near: 가까운 숲·절벽·풀 언덕(앞 절반 384) + 캠프 뒤 숲과 해변으로 가는 오솔길 입구(뒤 절반 384, 2026-11-26) — 한 바퀴 = 768 → 먼 산보다 두 배 빨리 지나감(주인 요청 2026-11-25)
    - 하늘·별·달은 먼 산과 같이 천천히. 물결은 깊이에 따라: 수평선 쪽은 먼 산처럼, 물가 쪽은 가까운 숲처럼 (주인 요청 2026-11-25)
    - 시내와 폭포: 먼 산 골짜기를 굽이쳐 내려와 호수로 떨어짐(코드, SKY.fall) — 물에도 희미하게 비침. 물소리(sound.js streamRel)도 그쪽에서
    - 달: 오늘 날짜의 모양(phase), 남·북반구(south)에 따라 밝은 쪽이 바뀜. 호수 오른쪽 위 하늘(SKY.moonAz). 물에는 달 원판 없이 달빛 길만(주인 2026-11-20)
@@ -34,7 +34,7 @@ const img = src => { const i = new Image(); i.src = src; return i; };
 const tile = (x, p) => Math.round(((x % p) + p) % p - p);
 
 export function makeBackdrop({ phase, south }) {
-  const far = img('bg-far-v1.png'), near = img('bg-near-v1.png');
+  const far = img('bg-far-v1.png'), near = img('bg-near-v2.png');
   let farDark = null, sky = null, moon = null, built = -1, stars = [], dashes = [];
   let AS = 1, PW = FAR_W, y0 = 0, y1 = 0, farH = 0, mr = 3;
   const ready = i => i.complete && i.naturalWidth > 0;
