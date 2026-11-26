@@ -1,6 +1,7 @@
-# 쪽지 병 글귀 초안 (100개)
+# 쪽지 병 글귀 초안 (150개)
 
 점쟁이가 툭 던지듯 짧고 의미심장하게. 사람마다 다른 상상을 하게. 겁주거나 단정하지 않게.
+성경 등 실제 구절은 넣지 않음(회의 2026-11-26: 점괘처럼 쓰는 글이 아님) — 101~150은 전도서·잠언 같은 담담한 말투를 참고해 새로 지은 것.
 지울 것은 줄을 지우고, 고칠 것은 고쳐 주세요. 영어는 뜻을 옮기되 영어로 자연스럽게.
 
 | # | 한국어 | English |
@@ -105,3 +106,53 @@
 | 98 | 오늘 만난 우연은 우연이 아니다. | Today's coincidence is no coincidence. |
 | 99 | 쪽지를 접어 주머니에 넣어라. 나중에 안다. | Fold this note into your pocket. You'll know later. |
 | 100 | 다시 병을 띄울 날이 온다. | A day will come to set a bottle adrift again. |
+| 101 | 모든 것에는 제 계절이 있다. 지금은 기다리는 계절이다. | Everything has its season. This one is for waiting. |
+| 102 | 강은 바다를 채우지 못해도 쉬지 않고 흐른다. | Rivers never fill the sea, and still they flow. |
+| 103 | 가장 깊은 물이 가장 조용하다. | The deepest water is the quietest. |
+| 104 | 오늘 심은 것은 오늘 보이지 않는다. | What you plant today won't show today. |
+| 105 | 말을 아낀 날이 오래 남는다. | The days you spoke less are the ones that stay. |
+| 106 | 바람을 세는 자는 씨를 뿌리지 못한다. | Whoever counts the wind never sows. |
+| 107 | 웃는 날도 우는 날도 지나간다. 그래서 둘 다 귀하다. | Laughing days and crying days both pass. That's why both are precious. |
+| 108 | 높이 오른 해도 결국 바다에 눕는다. | Even the highest sun lies down in the sea. |
+| 109 | 빈 그릇이 가장 많이 담는다. | An empty bowl holds the most. |
+| 110 | 당신이 내일을 모르듯, 내일도 당신을 모른다. 그러니 놀라게 하라. | You don't know tomorrow, and it doesn't know you. So surprise it. |
+| 111 | 부드러운 대답이 단단한 문을 연다. | A soft answer opens a hard door. |
+| 112 | 오래 본 것은 다시 보아야 보인다. | What you have long looked at must be seen again. |
+| 113 | 해 아래 새것은 없다. 하지만 당신의 눈은 새것이다. | Nothing is new under the sun. But your eyes are. |
+| 114 | 친구의 상처는 적의 칭찬보다 낫다. | A friend's wound is better than a stranger's praise. |
+| 115 | 기억이 흐려지는 것은 자리를 내주기 위해서다. | Memories fade to make room. |
+| 116 | 오늘 잃은 것이 내일 이름을 바꿔 돌아온다. | What you lose today returns tomorrow under another name. |
+| 117 | 쉬는 것도 일이다. | Resting is work too. |
+| 118 | 지나간 날을 더 좋았다 하지 마라. 그날도 오늘이었다. | Don't say the old days were better. They were today once. |
+| 119 | 등불은 멀리 비추지 않아도 된다. 발밑이면 충분하다. | A lamp needn't shine far. Your feet are enough. |
+| 120 | 가장 먼 길이 집으로 가는 길이기도 하다. | The longest road can be the road home. |
+| 121 | 같은 강물에 두 번 발을 담글 수 없다. 그래서 오늘이 있다. | You can't step in the same river twice. That's why there is today. |
+| 122 | 닻을 올리는 날이 온다. 서두르지 않아도. | The day to lift anchor will come, without hurrying. |
+| 123 | 조개 속의 모래가 진주가 된다. | The grain of sand in the shell becomes the pearl. |
+| 124 | 당신이 건넨 작은 친절이 아직 떠다니고 있다. | A small kindness you gave is still drifting somewhere. |
+| 125 | 잠이 모자란 밤에는 결정하지 마라. | Don't decide on a sleepless night. |
+| 126 | 너무 많은 지도가 길을 잃게 한다. | Too many maps will get you lost. |
+| 127 | 별은 서로 닿지 않아도 같은 밤을 만든다. | Stars never touch, yet they make the same night. |
+| 128 | 해야 할 말은 짧다. 하고 싶은 말이 길 뿐. | What must be said is short. Only what you want to say is long. |
+| 129 | 바다는 매일 모래 위의 글씨를 지운다. 그래도 사람들은 쓴다. | The sea erases words on sand every day. People keep writing. |
+| 130 | 비어 있는 날이 다음을 채운다. | An empty day fills the next. |
+| 131 | 당신을 붙잡는 것이 당신을 지키기도 한다. | What holds you back may also hold you safe. |
+| 132 | 처음 간 길은 언제나 길다. 돌아올 땐 짧다. | A new road is always long. The way back is short. |
+| 133 | 모든 문이 열릴 필요는 없다. | Not every door needs to open. |
+| 134 | 오늘은 남의 정원을 들여다보지 마라. | Today, don't look into other people's gardens. |
+| 135 | 지혜는 대개 늦게 도착한다. 그래도 온다. | Wisdom usually arrives late. But it arrives. |
+| 136 | 넘어진 자리에서 보이는 것이 있다. | Some things can only be seen from where you fell. |
+| 137 | 가벼운 짐이 먼 길을 간다. | Light baggage travels far. |
+| 138 | 하늘을 나는 새도 내려앉을 가지가 필요하다. | Even flying birds need a branch to land on. |
+| 139 | 그 사람의 침묵에도 말이 있다. | There are words in their silence too. |
+| 140 | 오늘의 물음은 내일의 대답에게 맡겨라. | Leave today's question to tomorrow's answer. |
+| 141 | 찾던 것은 찾기를 멈출 때 나타난다. | What you seek appears when you stop seeking. |
+| 142 | 노을은 매일 다르다. 당신도 그렇다. | No two sunsets are the same. Nor are you. |
+| 143 | 작은 불씨 하나가 긴 밤을 버틴다. | One small ember lasts the long night. |
+| 144 | 생각보다 많은 사람이 당신을 응원한다. | More people are rooting for you than you think. |
+| 145 | 무엇이든 끝은 처음보다 낫다. | The end of a thing is better than its beginning. |
+| 146 | 오래된 다리는 아직 튼튼하다. | The old bridge is still strong. |
+| 147 | 소금이 녹아야 바다가 된다. | Salt must dissolve to become the sea. |
+| 148 | 그 일은 당신이 생각한 만큼 무겁지 않다. | It isn't as heavy as you think. |
+| 149 | 반대편 해안에서도 누군가 병을 띄운다. | On the far shore, someone is setting a bottle adrift too. |
+| 150 | 이 쪽지를 읽는 지금이 그때다. | Now, as you read this, is the time. |
