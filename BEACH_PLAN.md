@@ -1,6 +1,6 @@
 # 미스테리 해변 (Mystery Beach, 가칭)
 
-> 상태: **회의 끝, 기획 문서 씀 (2026-11-26).** 구현 전. 다음: 그림 지시서, 티켓 나누기. (글귀 150개 확정)
+> 상태: **티켓 나눔 (2026-11-26)** — `tasks/beach-1-scene.md`~`beach-4-sound.md`. 그림 받음, 글귀 150개 확정.
 > 관련 문서: `CAMPSITE_PLAN.md`(여기로 가는 길이 있는 캠핑장), `assets/briefs/beach/notes-draft.md`(쪽지 글귀 초안 150개)
 > 바탕: 주인이 만든 바닷가 모닥불 POC(스프라이트 스태킹, 하루가 흐르는 바다 — https://claude.ai/artifact/4XeMS3btfVdFg4iJ7PFKqT)
 
