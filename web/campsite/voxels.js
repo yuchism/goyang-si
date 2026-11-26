@@ -18,10 +18,10 @@ export function buildCampfire() {
   const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
   const MID = N / 2 - 0.5;
   const vox = Array.from({ length: HV }, () => new Array(N * N).fill(null));
-  const set = (x, y, z, c, glow = 0, a = 255) => {
+  const set = (x, y, z, c, glow = 0, a = 255, n = null) => { // n: 면 방향을 아는 곳(통나무)은 직접 — 둥글게 보이게
     x = Math.round(x); y = Math.round(y); z = Math.round(z);
     if (x < 0 || y < 0 || z < 0 || x >= N || y >= N || z >= HV) return;
-    vox[z][y * N + x] = { c, glow, a };
+    vox[z][y * N + x] = { c, glow, a, n };
   };
   const get = (x, y, z) => (z < 0 || z >= HV || x < 0 || y < 0 || x >= N || y >= N) ? null : vox[z][y * N + x];
   const hash3 = (x, y, z) => { let n = Math.sin(x * 12.99 + y * 78.23 + z * 37.71) * 43758.55; return n - Math.floor(n); };
@@ -90,24 +90,48 @@ export function buildCampfire() {
     }
   });
   // 앉는 통나무 셋 (지금 캠핑장과 같은 자리): 줄무늬 껍질, 자른 면엔 나이테, 하나는 곁가지
-  const SEATS = [[0.55, 39, 13, 4.4], [3.4, 40, 11, 4.8], [5.3, 38.5, 12, 4.2]];
-  SEATS.forEach(([a, R, L, r], si) => {
+  // 앉는 통나무 셋 (지금 캠핑장과 같은 자리). [방향, 불에서 거리, 반 길이, 굵기]
+  //  둥글게 보이도록 면 방향을 직접 줌. 껍질은 세로 골, 옹이 두어 개, 자른 면은 옅은 나무색에 은은한 나이테·끝은 살짝 깎임.
+  //  밑에는 땅 그림자 (주인 2026-11-26: 상자처럼 보여 안 이쁨)
+  const SEATS = [[0.55, 39, 14, 3.6], [3.4, 40, 12, 4], [5.3, 38.5, 13, 3.4]];
+  SEATS.forEach(([a, R, L, r0], si) => {
     const cx = MID + Math.cos(a) * R, cy = MID + Math.sin(a) * R, tx = -Math.sin(a), ty = Math.cos(a), nx = Math.cos(a), ny = Math.sin(a);
-    const bark = [[96, 66, 44], [104, 72, 48], [88, 62, 42]][si];
-    for (let s = -L; s <= L; s += .4) for (let th = 0; th < TAU; th += .12) for (let rr = 0; rr <= r; rr += .6) {
-      const u = Math.cos(th) * rr, w = Math.sin(th) * rr, z = r + w;
-      if (z < .5) continue;
-      const x = cx + tx * s + nx * u, y = cy + ty * s + ny * u;
-      let c;
-      if (Math.abs(s) > L - .6) c = (Math.floor(rr * 1.5) & 1) ? [178, 140, 98] : [150, 112, 74];   // 나이테
-      else if (rr > r - .7) c = barkAt(bark, th, s);
-      else c = [150, 112, 74];
-      if (rr > r - .7 && w > r * .6 && hash3(Math.round(x), Math.round(y), 1) < .25) c = mixC(c, [70, 92, 56], .5);   // 위에 이끼 조금
-      set(x, y, z, c);
+    const bark = [[124, 94, 70], [132, 100, 74], [116, 90, 70]][si];
+    const knots = [[-L * .45, 1.2 + si], [L * .35, 2.6 + si * .7]];
+    const shaded = new Map();                                                    // 땅 그림자 (칸마다 한 번, 가장 짙은 값)
+    for (let s = -L - 1; s <= L + 1; s += .5) for (let u = -r0 - 2.5; u <= r0 + 2.5; u += .5) {
+      const gx = Math.round(cx + tx * s + nx * u), gy = Math.round(cy + ty * s + ny * u), k = .5 + .45 * Math.min(1, Math.max(0, (Math.abs(u) - r0 * .6) / 2.5));
+      const id = gy * N + gx; if (!shaded.has(id) || shaded.get(id) > k) shaded.set(id, k);
     }
-    if (si === 1) for (let t = 0; t < 5; t += .4) for (let th = 0; th < TAU; th += .4) {   // 곁가지
-      const x = cx + tx * 4 + nx * (r * .6 + t * .8) + Math.cos(th), y = cy + ty * 4 + ny * (r * .6 + t * .8) + Math.sin(th);
-      set(x, y, r * 1.4 + t * .9, barkAt(bark, th, t));
+    for (const [id, k] of shaded) { const g = vox[0][id]; if (g) g.c = g.c.map(v => v * k); }
+    for (let s = -L; s <= L; s += .35) {
+      const end = L - Math.abs(s), r = r0 * (1 + .06 * Math.sin(s * .5 + si * 2)) * (end < 1.2 ? 1 - (1.2 - end) / 1.2 * .18 : 1);
+      for (let th = 0; th < TAU; th += .1) for (let rr = 0; rr <= r; rr += .55) {
+        const cu = Math.cos(th), sw = Math.sin(th), z = r0 + sw * rr;
+        if (z < .5) continue;
+        const x = cx + tx * s + nx * cu * rr, y = cy + ty * s + ny * cu * rr, rim = rr > r - .7;
+        let c, n;
+        if (end < .5 && !rim) {                                                    // 자른 면
+          const ring = (Math.floor(rr * 1.3) & 1) ? .9 : 1, mid = rr < .8 ? .85 : 1;
+          c = vary([198 * ring * mid, 160 * ring * mid, 116 * ring * mid], 8);
+          n = [tx * Math.sign(s), ty * Math.sign(s), 0];
+        } else if (rim) {                                                          // 껍질
+          const groove = (Math.floor(th / TAU * 16 + Math.sin(s * .3 + si) * .5) & 1) ? .74 : 1;
+          c = vary(bark.map(v => v * groove), 12);
+          if (rnd() < .06) c = vary([126, 104, 84], 10);                          // 밝은 껍질 조각
+          for (const [ks, kt] of knots) {                                          // 옹이
+            const d = Math.hypot(s - ks, (((th - kt) % TAU + TAU + Math.PI) % TAU - Math.PI) * r);
+            if (d < 1.4) c = d < .7 ? [58, 40, 30] : [132, 100, 72];
+          }
+          n = [nx * cu, ny * cu, sw];
+        } else c = [160, 122, 84];
+        set(x, y, z, c, 0, 255, n);
+      }
+    }
+    if (si === 1) for (let t = 0; t < 4; t += .35) for (let th = 0; th < TAU; th += .35) { // 곁가지 (잘린 그루터기)
+      const bx = cx + tx * 4 + nx * (r0 * .5 + t * .7), by = cy + ty * 4 + ny * (r0 * .5 + t * .7), bz = r0 * 1.35 + t * .8;
+      const cap = t > 3.6;
+      set(bx + Math.cos(th) * .9, by + Math.sin(th) * .9, bz, cap ? [190, 152, 108] : vary(bark, 12), 0, 255, cap ? [0, 0, 1] : [Math.cos(th), Math.sin(th), .3]);
     }
   });
   // 잔가지 몇 개 (불 옆에 흩어진)
@@ -142,6 +166,7 @@ export function buildCampfire() {
       }
       let nl = Math.hypot(nx, ny, nz); if (nl < .01) { nx = 0; ny = 0; nz = 1; nl = 1; }
       nx /= nl; ny /= nl; nz /= nl;
+      if (v.n) { const m = Math.hypot(...v.n) || 1; nx = v.n[0] / m; ny = v.n[1] / m; nz = v.n[2] / m; }
       const lx = MID - x, ly = MID - y, lz = FZ - z, ld = Math.hypot(lx, ly, lz) || 1;
       const lam = Math.max(0, (nx * lx + ny * ly + nz * lz) / ld) * .8 + .2;
       const fire = lam * 1.25 / (1 + (ld / 15) ** 2 * 1.4);
