@@ -22,6 +22,14 @@ export function makeFog({ reduce }) {
       speed = 1 / FOG.close;
       done = then;
     },
+    // 다시 덮었다가 걷힘 (해변: 돌아오면 해돋이·해넘이를 처음부터 — 바뀌는 순간을 가림)
+    cover() {
+      if (reduce) return;
+      amount = 1;
+      target = 0;
+      speed = 1 / FOG.clear;
+      done = null;
+    },
     // st.screen(화면 픽셀 좌표)에 덮음
     draw(st, dt, T) {
       if (amount < target) amount = Math.min(target, amount + dt * speed);

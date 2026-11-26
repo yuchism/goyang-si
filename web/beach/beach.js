@@ -1,6 +1,7 @@
 /* 미스테리 해변 (BEACH_PLAN.md, tasks/beach-1-scene.md)
    - 캠핑장 뒤 숲 오솔길 끝의 숨은 해변. 약도에는 없음. 바다를 정면으로 바라보는 한 장면 — 끌면 좌우로 조금만 고개를 돌림
    - 들어올 때마다 해가 뜨거나 짐: 방문자 시간대 오전(0~12시) 해돋이, 오후·밤 해넘이. 3분(sky.js MINUTES) 뒤 아침 빛·별 뜬 밤바다에 머묾
+     다른 데 1분 넘게 갔다 돌아오면(탭·앱·뒤로 가기) 다시 처음부터 (REPLAY)
    - 그리기: 캠핑장과 같은 픽셀아트, 한 픽셀 = 화면 2px (../campsite/stack.js 무대, ../campsite/fog.js 안개)
      sky.js(해 높이·빛깔·하늘) · scenery.js(그림 두 겹·배·갈매기) · sea.js(바다·햇빛 길·파도·모래)
    - 소리(sound.js): 파도·바닷바람·해넘이 때 먼 갈매기·병 '톡'·종이. 오른쪽 위 작은 버튼으로 켬/끔(방·캠핑장과 같은 기록)
@@ -43,8 +44,9 @@ const LANG = pickLang();
 const tr = k => STR[k][LANG];
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const MODE = DEV && /^(rise|set)$/.test(Q.get('sun')) ? Q.get('sun') : now().getHours() < 12 ? 'rise' : 'set';
-const AT = DEV && Q.get('at') != null ? clamp01(+Q.get('at') || 0) : 0;
+const FORCE = DEV && /^(rise|set)$/.test(Q.get('sun')) ? Q.get('sun') : null;
+const modeNow = () => FORCE || (now().getHours() < 12 ? 'rise' : 'set');
+let MODE = modeNow(), AT = DEV && Q.get('at') != null ? clamp01(+Q.get('at') || 0) : 0;
 
 const canvas = el('canvas', 'stage');
 canvas.setAttribute('role', 'img');
@@ -123,7 +125,24 @@ const up = e => {
 canvas.addEventListener('pointerup', up);
 canvas.addEventListener('pointercancel', up);
 
-const start = performance.now();
+// 언제든 돌아오면 처음부터 (주인 2026-11-26): 다른 탭·앱에 REPLAY.away초 넘게 가 있다 돌아오거나, 뒤로 가기로 다시 오면
+// 안개가 덮였다 걷히며 그때 시각의 해돋이·해넘이를 다시 3분. 머물러 있는 동안은 끝 장면에 그대로 머묾
+const REPLAY = { away: 60 };
+let start = performance.now(), awayAt = 0;
+const replay = () => {
+  if (reduce) return;
+  MODE = modeNow();
+  AT = 0;
+  start = performance.now();
+  canvas.setAttribute('aria-label', tr(MODE));
+  fog.cover();
+  painted.gen = -1;
+};
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) awayAt = performance.now();
+  else if (awayAt && performance.now() - awayAt > REPLAY.away * 1000) replay();
+});
+addEventListener('pageshow', e => { if (e.persisted) replay(); });
 const SHOW_FPS = DEV && Q.get('fps') === '1';
 let fpsN = 0, fpsT = 0, fpsText = '', last = 0;
 function frame(ms) {
