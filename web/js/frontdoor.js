@@ -5,6 +5,7 @@
    - 약도 그림은 시작 묶음에 넣지 않는다(0008) — 처음 펼칠 때 받는다. 못 받으면 종이색 판 + 이름표만
    - 가게 그림: 늘 day (만화방 밤 그림은 뺌, PLAZA_PLAN.md 5장 회의 2026-11-16). 계절 가게(period)는 달력 기간 안이면 on 그림, 밖이면 off 그림 — offOpen이면 밖에서도 누름(광장, PLAZA_PLAN.md), 아니면 offName·안 눌림.
      미리보기 「크리스마스」(holidayOverride christmas)를 켜면 기간 안으로 친다
+   - 안개 낀 곳(fx: fog — 미스테리 캠핑장): 그림 위 안개 덩어리가 몽글몽글, 누르면 FOG_MS 동안 짙어진 뒤 떠남
    - 문틈 열림 정도는 world.doorAjar(0~1, 그리기는 draw.js drawDoor). 만득 씨가 오면 약도는 바로 접힌다
    이 파일은 덩어리 밖 모듈만 가져온다(구조 검사). 문 자리·카메라는 ui.js가 넘겨준다 */
 import { tr } from './i18n.js';
@@ -16,6 +17,7 @@ import { countThenGo } from './page-kit.js';
 
 const mapEl = document.getElementById('mapp');
 const GHOST_MS = 500; // 약도를 펼친 뒤 이 시간 안의 click은 연 손가락의 것 (폰)
+const FOG_MS = 600; // 안개 낀 곳을 누르면 안개가 짙어지는 시간 (style.css .shop.leaving)
 let openedAt = 0;
 const AJAR_SEC = 0.25; // 문이 살짝 열리고 닫히는 시간
 const BELL_WAIT = 12; // 돌아온 딸랑을 소리가 열릴 때까지 기다리는 시간(초). 그보다 늦은 첫 터치에는 울리지 않는다
@@ -48,8 +50,9 @@ function render(map) {
         (sh.label ? `<span class="mlabel" style="${at(sh.label, s)}">${esc(tr(sh.offName || sh.name))}</span>` : '');
     }
     const src = sh.period ? (inP ? sh.on : sh.off) : sh.day, name = esc(tr(sh.name)), go = `href="${esc(href)}" data-gc="${esc(sh.gc ? via + '-' + sh.gc : '')}"`;
-    return `<a class="shop" ${go} style="${at(b, s)};width:${pct(b[2], s)};height:${pct(b[3], s)}" tabindex="-1" aria-hidden="true">` +
-      (src ? `<img src="${esc(src)}" alt="" decoding="async" onerror="this.remove()">` : '') + '</a>' +
+    const fog = sh.fx === 'fog' ? '<span class="fog"><i></i><i></i><i></i><i></i><i></i></span>' : ''; // 몽글몽글 움직이는 안개 (style.css)
+    return `<a class="shop${fog ? ' foggy' : ''}" ${go} style="${at(b, s)};width:${pct(b[2], s)};height:${pct(b[3], s)}" tabindex="-1" aria-hidden="true">` +
+      (src ? `<img src="${esc(src)}" alt="" decoding="async" onerror="this.remove()">` : '') + fog + '</a>' +
       (sh.label ? `<a class="mlabel" ${go} style="${at(sh.label, s)}">${name}</a>` : '');
   }).join('');
   mapEl.setAttribute('aria-label', tr('mapDlg'));
@@ -151,10 +154,18 @@ export function initFrontDoor() {
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.button)
         return;
       e.preventDefault();
-      countThenGo(a, () => {
+      const go = () => countThenGo(a, () => {
         if (a.dataset.gc)
           gcEvent(a.dataset.gc, '약도에서 가게로: ' + a.dataset.gc);
       });
+      // 안개 낀 곳(fx: fog): 안개가 짙어진 뒤 떠남 (이름표를 눌러도 같은 그림의 안개가)
+      const foggy = mapEl.querySelector(`a.shop.foggy[href="${CSS.escape(a.getAttribute('href'))}"]`);
+      if (foggy && !RM) {
+        foggy.classList.add('leaving');
+        setTimeout(go, FOG_MS);
+      }
+      else
+        go();
       return;
     }
     if (e.target === mapEl || e.target.closest('.x'))

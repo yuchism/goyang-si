@@ -34,6 +34,7 @@ export const STR = {
   mapHome: { ko: '고양.시', en: 'goyang.si' },
   mapManhwa: { ko: '만화방', en: 'Comic Café' },
   mapPlaza: { ko: '광장', en: 'Plaza' },
+  mapCampsite: { ko: '미스테리 캠핑장', en: 'Mystery Campsite' },
   mandukWait: { ko: '잠깐만~', en: 'Hold on~' },
   capDoorBell: { ko: '딸랑~', en: 'ding-a-ling~' },
   noteDlg: { ko: '오늘의 포스트잇', en: "Today's sticky note" },

@@ -135,6 +135,17 @@ button[aria-pressed="true"]{background:var(--bell);color:#2a1f0e;border-color:va
 .mapbox a.mlabel:hover,.mapbox a.mlabel:focus-visible{background:#ffd76a}
 .mapbox .x{position:absolute;right:6px;top:6px;width:1.9em;height:1.9em;border:2px solid #2b2118;border-radius:50%;background:#fffaf0;color:#2b2118;font-size:.9em;line-height:1;cursor:pointer}
 @media (prefers-reduced-motion:reduce){.mapp.grow .mapbox{animation:none}}
+/* 약도의 안개 낀 곳(frontdoor.js fx:fog — 미스테리 캠핑장): 그림 위로 옅은 안개 덩어리가 몽글몽글. 누르면 짙어짐(.leaving) */
+.mapbox .shop .fog{position:absolute;inset:-8%;pointer-events:none}
+.mapbox .shop .fog i{position:absolute;border-radius:50%;background:radial-gradient(closest-side,rgba(236,240,247,.78),rgba(236,240,247,.4) 55%,rgba(236,240,247,0));animation:mfog 11s ease-in-out infinite alternate}
+.mapbox .shop .fog i:nth-child(1){left:2%;top:46%;width:52%;height:22%;animation-duration:13s}
+.mapbox .shop .fog i:nth-child(2){left:44%;top:52%;width:54%;height:24%;animation-duration:10s;animation-delay:-4s}
+.mapbox .shop .fog i:nth-child(3){left:18%;top:28%;width:62%;height:20%;animation-duration:15s;animation-delay:-7s}
+.mapbox .shop .fog i:nth-child(4){left:26%;top:68%;width:48%;height:18%;animation-duration:12s;animation-delay:-2s}
+.mapbox .shop .fog i:nth-child(5){left:56%;top:22%;width:38%;height:17%;animation-duration:9s;animation-delay:-5s}
+@keyframes mfog{0%{transform:translate(-9%,2%) scale(.86);opacity:.38}50%{opacity:.72}100%{transform:translate(9%,-3%) scale(1.16);opacity:.5}}
+.mapbox .shop.leaving .fog i{animation:none;transition:transform .6s ease-in,opacity .6s ease-in;transform:scale(3);opacity:1}
+@media (prefers-reduced-motion:reduce){.mapbox .shop .fog i{animation:none;opacity:.5}}
 /* 어항 크게 보기 (fishview.js, FISHBOWL_VIEW_PLAN.md): 어두운 둘레·× 누르면 닫힘. 크기는 fishview.js가 화면에 맞춰 정한다 */
 .fbvp{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(14,10,8,.55)}
 .fbvp[hidden]{display:none}
