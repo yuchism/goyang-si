@@ -80,3 +80,16 @@ cut, looped and re-encoded from recordings released under
 | `crickets-loop-v1.mp3` | ["Crickets Ambient Noise - loopable"](https://opengameart.org/node/130090) (OpenGameArt) | Wolfgang_ |
 | `owl-v1.mp3` | ["HOOT.wav"](https://freesound.org/s/454842) (Freesound) | thegoosington |
 | `typewriter-key-*-v1.mp3`, `typewriter-bell-v1.mp3` | ["typewriter-olivetti-lettra-22.wav"](https://freesound.org/s/123344) (Freesound) | keithpeter |
+
+The Mystery Beach sounds in `web/beach/sound/` (`BEACH_PLAN.md` 6장) are
+cut, looped, filtered and re-encoded from recordings released under
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) by
+`tools/make_beach_sounds.py` (credit is not required, but given here with thanks):
+
+| Files | Original | Author |
+|---|---|---|
+| `waves-loop-v1.mp3` | ["Gentle Waves - Quiet Beach"](https://freesound.org/s/376795) (Freesound) | amholma |
+| `wind-loop-v1.mp3` | ["Looping Gentle Wind Ambience on an Open Desert Plain.wav"](https://freesound.org/s/697217) (Freesound) | dhallcomposer |
+| `gull-*-v1.mp3` | ["SeaGulls.wav"](https://freesound.org/s/207130) (Freesound) | ahill86 |
+| `bottle-land-v1.mp3` | ["Glass Bottles rattle and chink"](https://freesound.org/s/259671) and ["sand slide on glass FF677.aif"](https://freesound.org/s/199396) (Freesound) | LampEight, martinimeniscus |
+| `paper-v1.mp3` | ["rustling paper.wav"](https://freesound.org/s/181774) (Freesound) | keweldog |

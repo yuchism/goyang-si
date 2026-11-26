@@ -39,6 +39,9 @@ def load(n):
 
 def save(x, name, kbps=80, af='highpass=f=40'):
     os.makedirs(OUT, exist_ok=True)
+    peak = float(np.max(np.abs(x)))
+    if peak > 0.8:                      # 튀는 순간이 깨지지 않게 (RMS를 맞춘 뒤에도 끝이 1을 넘으면 함께 줄임)
+        x = x * (0.8 / peak)
     path = os.path.join(OUT, name + '.mp3')
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'f32le', '-ar', str(SR), '-ac', '1', '-i', '-',
                     '-af', af, '-codec:a', 'libmp3lame', '-b:a', f'{kbps}k', path],
@@ -137,7 +140,7 @@ def main():
     e = envelope(p, 0.2)
     w = int(1.2 * SR)
     i = int(np.argmax(np.convolve(e, np.ones(w), mode='valid')))
-    save(level(fades(p[i:i + w], 0.05, 0.25), 0.07), 'paper-v1')
+    save(level(fades(p[i:i + w], 0.05, 0.25), 0.05), 'paper-v1')
 
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 # 미스테리 해변 4: 소리
-- status: in-progress (원본 소리 받기를 기다림)
+- status: implemented
 - mode: needs-review
 - 출처: 회의 2026-11-26 — `BEACH_PLAN.md` 6장
 
@@ -19,12 +19,12 @@
 | 쪽지 종이 | [rustling paper.wav](https://freesound.org/s/181774) | keweldog |
 
 ## 요구사항
-- [ ] 소리 파일 `web/beach/sound/`, 작게(ogg/m4a)
+- [x] 소리 파일 `web/beach/sound/`, 작게(ogg/m4a)
 - [x] 해 진행에 따라 바람·갈매기 세기
-- [ ] `ASSET_LICENSE.md`에 출처
+- [x] `ASSET_LICENSE.md`에 출처
 
 ## 확인
-- [ ] `node tools/check_structure.mjs` 통과
+- [x] `node tools/check_structure.mjs` 통과
 - [ ] (사람) 이어폰으로 오래 들어도 편한지
 
 <!-- office:verify
@@ -34,3 +34,4 @@
 ## 메모
 - 2026-11-26 Claude 씀.
 - 2026-11-26 Claude: 코드 먼저 — `web/beach/sound.js`(파도·바닷바람 고리, 밤일수록 바람 조금 크게, 갈매기는 해넘이 때 갈매기가 보일 때만 7~18초마다 좌우 아무 쪽, 병이 멈출 때 '톡', 쪽지 펼칠 때 종이; 오른쪽 위 켬/끔 버튼), `tools/make_beach_sounds.py`(원본 → sound/*.mp3: 고리 교차 페이드, 갈매기는 센 울음 셋을 낮은 통과 + 짧은 메아리로 멀게, 병은 모래 스침 + 둥글게 깎은 유리 소리). 원본이 없으면 소리 없이 그대로 돎. 원본을 받으면 스크립트를 돌리고 ASSET_LICENSE.md에 적음.
+- 2026-11-26 주인이 원본을 받아 줌 → `python3 tools/make_beach_sounds.py`로 sound/*.mp3 7개(모두 약 0.9MB, mp3 — 캠핑장과 같게). 튀는 순간이 깨지지 않게 끝을 0.8로 맞춤. 클라우드 크롬에서 소리 켜짐 확인(귀로는 주인이).
