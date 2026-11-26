@@ -12,8 +12,29 @@ export const WAVE = {
   wet: 0.36,       // 젖은 모래 띠 높이 (같은 비율)
 };
 
+// 햇빛 길 둘레의 번진 빛 그림판 (폭 = 물가에서 가장 넓은 폭)
+const BAY = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => v / 16);
+function makeSheen(W, sH, sunR, col, glare) {
+  const hw = Math.ceil(sunR * 11), cv = document.createElement('canvas');
+  cv.width = hw * 2;
+  cv.height = Math.max(1, sH - 1);
+  const c = cv.getContext('2d'), img = c.createImageData(cv.width, cv.height), px = img.data;
+  for (let y = 0; y < cv.height; y++) {
+    const d = y / sH, sw = sunR * (1.5 + d * 8);
+    for (let x = 0; x < cv.width; x++) {
+      const dx = (x - hw) / sw, a = glare * 0.22 * (1 - d * 0.45) * Math.exp(-dx * dx * 1.6);
+      const q = Math.floor(a * 40 + BAY[(y & 3) * 4 + (x & 3)]) / 40; // 점 무늬로 단계
+      if (q <= 0) continue;
+      const o = (y * cv.width + x) * 4;
+      px[o] = col[0]; px[o + 1] = col[1]; px[o + 2] = col[2]; px[o + 3] = q * 255;
+    }
+  }
+  c.putImageData(img, 0, 0);
+  return cv;
+}
+
 export function makeSea() {
-  let sandCv = null, sandKey = '';
+  let sandCv = null, sandKey = '', sheen = null, sheenKey = '';
   const ripples = Array.from({ length: 160 }, (_, i) => ({ u: hash(i, 1.3), d: hash(i, 2.9) ** 0.8, l: 1 + Math.floor(hash(i, 4.1) * 4), p: hash(i, 6.7) * 6.3, light: hash(i, 8.3) < 0.55 }));
 
   // 밀려온 정도 0~1: 빨리 올라왔다 천천히 빠짐. n번째 파도마다 높이가 조금씩 다름
@@ -59,10 +80,36 @@ export function makeSea() {
         ctx.fillStyle = rgb(r.light ? mix(L.mid, L.hor, 0.5) : mix(L.sea, L.dark, 0.5), a);
         ctx.fillRect(x, y, Math.round(r.l * (0.6 + r.d * 1.6)), 1);
       }
-      // 햇빛 길
+      // 햇빛 길: ① 물 위에 넓게 번진 은은한 빛 ② 해 바로 아래 이어진 빛기둥(가로로 끊긴 밝은 결) ③ 가장자리 반짝이 조각
       const glare = sunUp * (1 - clamp01((L.e - 0.12) / 0.3) * 0.5);
       if (glare > 0.01) {
         ctx.globalCompositeOperation = 'lighter';
+        // ① 번진 빛: 가운데서 옆으로 부드럽게 옅어짐 (점 무늬로 단계), 빛깔이 바뀔 때만 다시 그림
+        const key = [W, sH, sunR, glare.toFixed(2), L.glow.map(Math.round)].join();
+        if (key !== sheenKey) { sheen = makeSheen(W, sH, sunR, mix(L.glow, L.sun, 0.5), glare); sheenKey = key; }
+        ctx.drawImage(sheen, Math.round(sx - sheen.width / 2), y0 + 1);
+        const low = 1 - clamp01(L.e / 0.25); // 해가 낮을수록 빛기둥이 진하고 길게
+        for (let y = y0 + 1; y < ys; y++) {
+          const d = (y - y0) / sH;
+          // ② 빛기둥: 줄마다 가운데 쪽 긴 결 하나, 물결 따라 끊기고 흔들림
+          const cw = sunR * (0.55 + d * 1.6), wob = Math.sin(y * 0.9 + t * 1.7) * (0.6 + d * 1.5);
+          const on = vnoise(y * 0.45, t * 0.9) > 0.32 - low * 0.12;
+          if (on) {
+            const len = Math.max(1, Math.round(cw * (0.7 + 0.8 * vnoise(y * 0.7 + 5, t * 1.3)))), x = Math.round(sx + wob - len / 2);
+            const k = glare * (0.22 + 0.4 * low) * (1 - d * 0.55);
+            ctx.fillStyle = rgb(mix(L.sun, [255, 246, 224], 0.5), k);
+            ctx.fillRect(x, y, len, 1);
+          }
+        }
+        // 수평선 바로 아래 해의 납작한 그림자 (해가 낮을 때)
+        if (L.e < 0.12) {
+          const k = glare * clamp01((0.12 - L.e) / 0.1);
+          for (let i = 0; i < 3; i++) {
+            const hw = Math.round(sunR * (0.9 - i * 0.22));
+            ctx.fillStyle = rgb(mix(L.sun, [255, 240, 210], 0.4), k * 0.45);
+            ctx.fillRect(sx - hw, y0 + 1 + i, hw * 2 + 1, 1);
+          }
+        }
         for (let y = y0 + 1; y < ys; y++) {
           const d = (y - y0) / sH, hw = (sunR * (0.5 + d * 3.2) + Math.sin(y * 1.7 + t * 2) * (1 + d * 2)) * (0.8 + 0.4 * hash(y, Math.floor(t * 1.5)));
           const n = Math.ceil(hw * 0.7);
