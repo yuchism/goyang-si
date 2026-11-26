@@ -211,7 +211,7 @@ function frame(ms) {
   scenery.drawGulls(ctx, W, y0, p, L, T, MODE);
   // 바다·모래 (먼 겹은 바다 위, 수평선에)
   sea.draw(ctx, { W, H, y0, ys, sx, sunR, L, t: T, pan });
-  if (!reduce) scenery.drawDolphins(ctx, W, y0, ys, L, T, pan);
+  if (!reduce && MODE === 'set' && p < DOLPHIN.until) scenery.drawDolphins(ctx, W, y0, ys, L, T, pan);
   scenery.drawFar(ctx, fx, y0, AS);
   scenery.drawBoat(ctx, fx, y0, AS, p, L, T, MODE);
   bottle.draw(ctx, { W, H, ys, L, t: T, dt, pan, wetAt: (x, y) => sea.edgeAt(x) >= y ? 1 : 0 });
