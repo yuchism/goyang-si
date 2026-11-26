@@ -33,11 +33,15 @@
 - 코드가 그림을 `box` 약 **[450, 20, 280, 280]**(왼쪽·위·폭·높이)에 얹고, 이름표를 그 아래 길 위 약 **(590, 315)** 에 둔다. 받은 그림을 보고 숫자를 맞춘다.
 - 그림 512×512 안에서: 빈터 입구(아래 끝)는 **y 약 490**, 가로 가운데. 위·옆 여백은 안개만.
 
-## 5. ChatGPT에 줄 말 (첨부: `map-now.png`, `map-top.png`)
+## 5. ChatGPT에 줄 말 (ChatGPT가 레포를 볼 수 있음 — 파일은 레포 경로로. 못 보면 `map-now.png`·`map-top.png` 첨부)
 
 ```
-Attached is a hand-drawn neighborhood map from my website (map-now.png) and a crop of its top-center area (map-top.png).
-Please draw ONE new small illustration to place on the empty green lot at the top center of this map.
+Please read this brief in my repository: assets/briefs/CAMPSITE_MAP_ART.md
+Reference images in the repo:
+- assets/briefs/campsite/map-now.png — the whole hand-drawn neighborhood map as it looks now
+- assets/briefs/campsite/map-top.png — a crop of its empty top-center lot, where the new drawing goes
+- web/r/map/map-base.webp — the map base; web/r/map/shop-day.webp and web/r/map/plaza-winter.webp — neighbor drawings already placed on it (match this style)
+Please draw ONE new small illustration to place on the empty green lot at the top center of this map (save as campsite-fog.png).
 
 Subject: a tiny mysterious campsite deep in the woods, half-hidden in fog.
 - A round dirt clearing with a small campfire in a ring of stones at the center, and three logs lying around it as seats.
