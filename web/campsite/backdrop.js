@@ -141,7 +141,7 @@ export function makeBackdrop({ phase, south }) {
       ctx.fillStyle = '#141a38'; ctx.fillRect(0, y0, W, y1 - y0);
       const ym = Math.round(lerp(y0, y1, 0.5));
       ctx.fillStyle = '#0d1129'; ctx.fillRect(0, ym, W, y1 - ym);
-      ctx.fillStyle = '#19151f'; ctx.fillRect(0, y1, W, H - y1);
+      ctx.fillStyle = '#19151f'; ctx.fillRect(0, y1, W, H - y1); // 땅 (voxels.js GROUND와 같은 색)
       ctx.fillStyle = 'rgba(170,170,210,.35)'; ctx.fillRect(0, y0, W, 1);
       for (const d of dashes) { // 물결: 깊이에 따라 먼 산(PW)~가까운 숲(2PW) 빠르기
         const P = PW * (1 + d.y), off = (((d.u - azc / TAU) * P + t * 1.2) % P + P) % P;

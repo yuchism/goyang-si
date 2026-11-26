@@ -8,6 +8,7 @@
 import { STACK } from './stack.js';
 
 export const N = 96, HV = 24, FZ = 6; // FZ: 불 가운데 높이(복셀)
+export const GROUND = [25, 21, 31];    // 배경 땅 색 (backdrop.js 땅과 같게) — 흙 원판 가장자리가 이 색으로 녹아듦
 const TAU = Math.PI * 2;
 const lerp = (a, b, k) => a + (b - a) * k;
 const mixC = (a, b, k) => a.map((v, i) => lerp(v, b[i], k));
@@ -27,12 +28,14 @@ export function buildCampfire() {
   const hash3 = (x, y, z) => { let n = Math.sin(x * 12.99 + y * 78.23 + z * 37.71) * 43758.55; return n - Math.floor(n); };
   const vary = (c, k) => { const n = (rnd() - .5) * k; return [c[0] + n, c[1] + n * .9, c[2] + n * .8]; };
 
-  // 땅: 흙 원판 — 가장자리는 듬성듬성 비워 배경 땅과 섞이게
+  // 땅: 흙 원판. 바깥으로 갈수록 배경 땅 색(GROUND)과 똑같아져 돌려도 원판 테두리가 보이지 않게
+  //  (주인 2026-11-26: 돌릴 때 이질감, 통나무가 떠 보임 — 원판이 통나무 밑까지 오고 그림자가 땅에 붙도록)
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-    const d = Math.hypot(x - MID, y - MID), edge = (d - 31) / 13;
-    if (d > 44 || hash3(Math.floor(x / 3), Math.floor(y / 3), 0) * .7 + rnd() * .3 < edge) continue;
+    const d = Math.hypot(x - MID, y - MID);
+    if (d > 47.5) continue;
     const ash = Math.max(0, 1 - d / 19);
     set(x, y, 0, vary(mixC([48, 40, 38], [104, 98, 96], ash * ash), 12));
+    vox[0][y * N + x].flat = 1 - Math.min(1, Math.max(0, (d - 24) / 20)) ** 1.5; // 구운 빛과 배경 색 사이 (1 = 구운 빛)
   }
   // 숯 더미: 가운데가 살짝 봉긋, 숯불·검은 숯·재가 섞임
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
@@ -103,11 +106,11 @@ export function buildCampfire() {
       const gx = Math.round(cx + tx * s + nx * u), gy = Math.round(cy + ty * s + ny * u), k = .5 + .45 * Math.min(1, Math.max(0, (Math.abs(u) - r0 * .6) / 2.5));
       const id = gy * N + gx; if (!shaded.has(id) || shaded.get(id) > k) shaded.set(id, k);
     }
-    for (const [id, k] of shaded) { const g = vox[0][id]; if (g) g.c = g.c.map(v => v * k); }
+    for (const [id, k] of shaded) { const g = vox[0][id]; if (g) g.sh = Math.min(g.sh ?? 1, k); }
     for (let s = -L; s <= L; s += .35) {
       const end = L - Math.abs(s), r = r0 * (1 + .06 * Math.sin(s * .5 + si * 2)) * (end < 1.2 ? 1 - (1.2 - end) / 1.2 * .18 : 1);
       for (let th = 0; th < TAU; th += .1) for (let rr = 0; rr <= r; rr += .55) {
-        const cu = Math.cos(th), sw = Math.sin(th), z = r0 + sw * rr;
+        const cu = Math.cos(th), sw = Math.sin(th), z = r0 * .8 + sw * rr; // 살짝 땅에 묻힘
         if (z < .5) continue;
         const x = cx + tx * s + nx * cu * rr, y = cy + ty * s + ny * cu * rr, rim = rr > r - .7;
         let c, n;
@@ -173,7 +176,10 @@ export function buildCampfire() {
       const moon = Math.max(0, nx * MOON[0] + ny * MOON[1] + nz * MOON[2]) * .45;
       const ao = 1 - occ / 26 * .55;
       const lr = (.12 + moon * .8 + fire) * ao, lg = (.12 + moon * .85 + fire * .64) * ao, lb = (.18 + moon * 1.1 + fire * .36) * ao;
-      ib.data.set([Math.min(255, c[0] * lr * 1.6), Math.min(255, c[1] * lg * 1.6), Math.min(255, c[2] * lb * 1.6), v.a], k);
+      let o = [Math.min(255, c[0] * lr * 1.6), Math.min(255, c[1] * lg * 1.6), Math.min(255, c[2] * lb * 1.6)];
+      if (v.flat !== undefined) o = mixC(GROUND, o, v.flat);
+      if (v.sh) o = o.map(q => q * v.sh);
+      ib.data.set([o[0], o[1], o[2], v.a], k);
     }
     if (!any) continue;
     base.getContext('2d').putImageData(ib, 0, 0);
@@ -185,7 +191,7 @@ export function buildCampfire() {
 }
 
 // 판 쌓아 그리기. glow: 기억을 태울 때 솟는 기운(0~), 숯불 판이 더 밝아짐
-export function drawCampfire(stage, slices, t, glow) {
+export function drawCampfire(stage, slices, t, glow, afterGround) {
   const { ctx, sc, zs, cx, cy } = stage, rep = Math.max(1, Math.ceil(zs));
   const a1 = .55 + .45 * Math.sin(t * 1.9) * Math.sin(t * .7 + 2) + glow * .3;
   const a2 = .55 + .45 * Math.sin(t * 1.3 + 3) * Math.sin(t * .9) + glow * .3;
@@ -201,5 +207,6 @@ export function drawCampfire(stage, slices, t, glow) {
     if (s.e1) { ctx.globalAlpha = Math.max(.15, Math.min(1, a1)); ctx.drawImage(s.e1, -N / 2, -N / 2); }
     if (s.e2) { ctx.globalAlpha = Math.max(.15, Math.min(1, a2)); ctx.drawImage(s.e2, -N / 2, -N / 2); }
     ctx.restore();
+    if (s.z === 0 && r === rep - 1 && afterGround) afterGround(); // 땅 판 바로 위에 (불빛이 원판과 배경 땅에 똑같이 번지게)
   }
 }

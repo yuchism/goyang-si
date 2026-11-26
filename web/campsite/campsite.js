@@ -113,8 +113,7 @@ function frame(ms) {
   smoke.update(dt, T);
   sound.update(azc);
   backdrop.draw(stage, azc, T);
-  fire.drawGround(stage);
-  drawCampfire(stage, campfire, T, fire.glow);
+  drawCampfire(stage, campfire, T, fire.glow, () => fire.drawGround(stage));
   fire.draw(stage);
   smoke.draw(stage);
   vignette(stage);
