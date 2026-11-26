@@ -9,7 +9,7 @@ import { FRONT } from './backdrop.js';
 export const SOUND = {
   fire: 0.55, crickets: 0.12, owl: 0.28, pop: 0.45, key: 0.55, bell: 0.4, burn: 0.25,
   stream: [0.08, 0.45],      // 개울: [등지고 있을 때, 바로 볼 때]
-  streamRel: -0.33,          // 물소리 방향 (호수 쪽에서 오른쪽으로 잰 각) — 먼 산 골짜기의 폭포(backdrop.js SKY.fall)
+  streamRel: -0.05,          // 물소리 방향 (호수 쪽에서 오른쪽으로 잰 각) — 먼 산의 시내·폭포(backdrop.js SKY.fall)
   owlRel: Math.PI,           // 부엉이는 뒤쪽 숲
   owlEvery: [45, 110],       // 부엉이 간격(초)
   popEvery: [14, 40],        // 장작 '툭' 간격(초)

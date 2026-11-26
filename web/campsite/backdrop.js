@@ -4,7 +4,7 @@
      · bg-far: 먼 산, 한 바퀴 = 384픽셀. 가운데(가장 높은 봉우리)가 앞(호수·달 쪽, FRONT)
      · bg-near: 가까운 숲·절벽·풀 언덕. 원래 384에 뒤쪽 숲을 이어 붙여 한 바퀴 = 768 → 먼 산보다 두 배 빨리 지나감(주인 요청 2026-11-25)
    - 하늘·별·달은 먼 산과 같이 천천히. 물결은 깊이에 따라: 수평선 쪽은 먼 산처럼, 물가 쪽은 가까운 숲처럼 (주인 요청 2026-11-25)
-   - 폭포: 먼 산 골짜기에 가는 물줄기(코드, SKY.fall) — 물에도 희미하게 비침. 물소리(sound.js streamRel)도 그쪽에서
+   - 시내와 폭포: 먼 산 골짜기를 굽이쳐 내려와 호수로 떨어짐(코드, SKY.fall) — 물에도 희미하게 비침. 물소리(sound.js streamRel)도 그쪽에서
    - 달: 오늘 날짜의 모양(phase), 남·북반구(south)에 따라 밝은 쪽이 바뀜. 호수 오른쪽 위 하늘(SKY.moonAz). 물에는 달 원판 없이 달빛 길만(주인 2026-11-20)
    - 넓은 화면: 그림을 정수배(AS)로 키우고, 지평선은 산 높이에 맞춰 내림 */
 export const FRONT = 0;   // 호수·달 쪽 방향 (처음 바라보는 쪽). sound.js가 개울·부엉이 방향을 여기서 잼
@@ -18,8 +18,9 @@ export const SKY = {
   moonR: 0.022,           // 달 반지름 (화면 높이 비율)
   moonAz: 0.8,            // 달 방향: 앞(호수)에서 오른쪽으로 — 처음 화면 오른쪽 위쯤에 보이게 (주인 2026-11-26)
   moonY: 0.1,             // 달 높이 (화면 높이 비율)
-  // 먼 산 골짜기의 가는 폭포 (주인 2026-11-26: 개울 대신). 먼 산 그림의 픽셀 자리 — x, 위 끝 줄, 꺾이는 줄(턱에서 한 칸 비킴), 굵기
-  fall: { x: 172, top: 31, ledge: 47, w: 2, speed: 14 },
+  // 먼 산의 시내와 폭포 (주인 2026-11-26: 개울 대신 — 주인이 그려 준 길). 먼 산 그림의 픽셀 자리
+  //  path: 골짜기 위에서 굽이쳐 내려오는 시내, 끝에서 호수까지 곧게 떨어지는 폭포. w: 폭포 굵기, speed: 흐르는 빠르기(픽셀/초)
+  fall: { path: [[209, 37], [204, 39], [199, 42], [194, 46], [194, 49], [198, 51], [200, 53], [199, 56], [195, 59], [190, 61], [186, 63], [185, 64]], w: 1, speed: 6 },
 };
 const hash = (a, b) => { const s = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return s - Math.floor(s); };
 const vnoise = (x, y) => {
@@ -95,19 +96,39 @@ export function makeBackdrop({ phase, south }) {
     built = st.gen;
   };
 
-  // 폭포: 흰 물줄기가 아래로 흐르는 띠(줄마다 밝기가 흘러내림), 턱에서 한 칸 비켜 꺾이고, 밑에서 물안개
+  // 시내: 길을 따라 한 칸씩(아래로 갈수록 한 칸 더 굵게), 밝은 결이 물 흐르는 쪽으로 지나감
+  const streamCells = (() => {
+    const P = SKY.fall.path, cells = [], seen = new Set();
+    let d = 0;
+    for (let i = 1; i < P.length; i++) {
+      const [ax, ay] = P[i - 1], [bx, by] = P[i], L = Math.hypot(bx - ax, by - ay);
+      for (let u = 0; u < L; u += 0.25) {
+        const x = Math.round(ax + (bx - ax) * u / L), y = Math.round(ay + (by - ay) * u / L), key = x * 1000 + y;
+        if (!seen.has(key)) { seen.add(key); cells.push([x, y, d + u]); }
+      }
+      d += L;
+    }
+    return { cells, len: d };
+  })();
+  // 폭포: 시내 끝에서 호수까지 흰 물줄기(줄마다 밝기가 흘러내림), 밑에서 물안개
   const waterfall = (ctx, ox, oy, t) => {
-    const F = SKY.fall, top = oy + F.top * AS, ledge = oy + F.ledge * AS, bottom = y0, w = F.w * AS;
+    const F = SKY.fall, { cells, len } = streamCells, end = F.path[F.path.length - 1];
+    for (const [x, y, d] of cells) {
+      const k = 0.5 + 0.5 * Math.sin((d - t * F.speed) * 0.8 + hash(x, y) * 1.2), wide = d > len * 0.55 ? 2 : 1;
+      // 차분한 푸른 물빛 — 눈과 구별될 만큼만, 도드라지지 않게 (주인 2026-11-26: 평안을 위해). 가끔 은은한 반짝임
+      const c = k > 0.93 ? [168, 182, 216] : [78 + 30 * k, 92 + 30 * k, 136 + 30 * k];
+      ctx.fillStyle = `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${(0.45 + 0.2 * k).toFixed(2)})`;
+      ctx.fillRect(ox + x * AS, oy + y * AS, wide * AS, AS);
+    }
+    const top = oy + end[1] * AS, bottom = y0, w = F.w * AS, fx = ox + end[0] * AS;
     for (let y = top; y < bottom; y++) {
-      const x = ox + F.x * AS + (y >= ledge ? AS : 0), k = 0.5 + 0.5 * Math.sin((y - t * F.speed * AS) * 0.55 / AS + hash(y, 3) * 1.5);
-      const fade = Math.min(1, (y - top + 1) / (3 * AS));
-      ctx.fillStyle = `rgba(${205 + 30 * k | 0},${214 + 26 * k | 0},${236 + 14 * k | 0},${((0.35 + 0.45 * k) * fade).toFixed(2)})`;
-      ctx.fillRect(x, y, w, 1);
-      if (k > 0.75) { ctx.fillStyle = 'rgba(170,180,215,.35)'; ctx.fillRect(x - 1, y, 1, 1); }
+      const k = 0.5 + 0.5 * Math.sin((y - t * F.speed * 1.6 * AS) * 0.55 / AS + hash(y, 3) * 1.5);
+      ctx.fillStyle = `rgba(${150 + 30 * k | 0},${162 + 28 * k | 0},${200 + 20 * k | 0},${(0.35 + 0.25 * k).toFixed(2)})`;
+      ctx.fillRect(fx, y, w, 1);
     }
     for (let i = 0; i < 6 * AS; i++) { // 물안개
-      const a = hash(i, Math.floor(t * 3)) , px = ox + F.x * AS + AS + Math.round((hash(i, 9) - 0.5) * 6 * AS), py = bottom - 1 - Math.floor(hash(i, 4) * 3 * AS);
-      ctx.fillStyle = `rgba(200,208,232,${(0.12 + 0.18 * a).toFixed(2)})`;
+      const a = hash(i, Math.floor(t * 3)), px = fx + Math.round((hash(i, 9) - 0.4) * 6 * AS), py = bottom - 1 - Math.floor(hash(i, 4) * 3 * AS);
+      ctx.fillStyle = `rgba(190,198,224,${(0.08 + 0.1 * a).toFixed(2)})`;
       ctx.fillRect(px, py, AS, AS);
     }
   };
@@ -183,7 +204,7 @@ export function makeBackdrop({ phase, south }) {
         ctx.globalCompositeOperation = 'source-over';
       }
       { // 물에 비친 폭포 (희미하게 흔들림)
-        const fx = sx0 + (SKY.fall.x + 1) * AS;
+        const fx = sx0 + SKY.fall.path[SKY.fall.path.length - 1][0] * AS;
         for (let x = fx; x < W; x += PW) for (let y = y0 + 1; y < y0 + (y1 - y0) * 0.6; y++) {
           const k = 0.5 + 0.5 * Math.sin(y * 2.3 + t * 3 + hash(y, 5) * 2);
           if (k < 0.4) continue;
