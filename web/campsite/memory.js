@@ -9,7 +9,7 @@
    - 동작 줄이기: 날지 않고 그 자리에서 천천히 사라짐(연기 없음)
    - 소리(타자 키·줄 바꿈 '띵'·타닥)는 tasks/campsite-4-sound.md 에서 — 여기엔 onKey·onReturn·onBurn 자리만 */
 export const MEMORY = {
-  fontPx: 17,      // 타자 줄 글자 크기
+  fontPx: 24,      // 타자 줄 글자 크기 — 픽셀 글꼴 갈무리11(12px 격자)의 2배라 또렷 (주인 2026-11-26: 픽셀 장면과 같은 결로)
   margin: 18,      // 줄 양끝 여백(px)
   bottom: 78,      // 화면 아래에서 타자 줄까지(px) — 그 아래는 입력 칸
   batch: 12,       // 줄에 이만큼 모이면 함께 떠남
@@ -44,7 +44,7 @@ export function makeMemory({ view, fire, smoke, input, reduce, font, onKey, onRe
     cursor = M.margin;
   };
   const lineY = () => view.height - M.bottom;
-  const setFont = px => { view.ctx.font = `500 ${px}px ${font}`; };
+  const setFont = px => { view.ctx.font = `${px}px ${font}`; }; // 굵기 없이 (픽셀 글꼴을 억지로 굵히면 뭉개짐)
 
   const stamp = ch => {
     setFont(M.fontPx);

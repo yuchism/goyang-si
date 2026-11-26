@@ -51,7 +51,10 @@ input.setAttribute('aria-label', tr('type'));
 const snd = el('button', 'snd');
 snd.type = 'button';
 document.body.append(canvas, exit, snd, input);
-const FONT = '-apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif';
+// 기억 태우기 글자: 픽셀 글꼴 갈무리11(OFL, font/ — campsite.css @font-face). 들어올 때 받지 않고 조금 뒤에·처음 칠 때 받음.
+// 받기 전에는 아래 글꼴로 보이다가 받으면 바뀜
+const FONT = 'Galmuri11, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif';
+const loadFont = () => document.fonts?.load('24px Galmuri11').catch(() => { });
 
 const qMoon = DEV && Q.get('moon') != null ? ((+Q.get('moon') % 1) + 1) % 1 : null;
 const backdrop = makeBackdrop({
@@ -68,6 +71,8 @@ const showSound = () => { snd.textContent = sound.on ? '♪ ' + tr('soundOn') : 
 showSound();
 snd.addEventListener('click', () => { sound.toggle(); showSound(); });
 const view = { ctx: stage.screen, get width() { return stage.width; }, get height() { return stage.height; }, project: stage.project };
+setTimeout(loadFont, 2500);
+input.addEventListener('focus', loadFont, { once: true });
 const memory = makeMemory({ view, fire, smoke, input, reduce, font: FONT, onKey: sound.key, onReturn: sound.bell, onBurn: sound.burn });
 
 exit.addEventListener('click', ev => {

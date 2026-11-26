@@ -20,6 +20,13 @@ holder.
 
 The MIT License in `LICENSE` applies only to the source code and documentation.
 
+## Third-party fonts
+
+`web/campsite/font/Galmuri11.woff2` is the unmodified Galmuri11 font by Lee Minseo
+([quiple/galmuri](https://github.com/quiple/galmuri), npm `galmuri` 2.40.3),
+licensed under the SIL Open Font License 1.1 — see `web/campsite/font/OFL.md`.
+It is used for the typed memories on the Mystery Campsite page.
+
 ## Third-party sounds
 
 The sound files in `web/sound/` are not covered by the MIT License or by the

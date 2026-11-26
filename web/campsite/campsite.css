@@ -1,4 +1,6 @@
 /* 미스테리 캠핑장 (CAMPSITE_PLAN.md) */
+/* 기억 태우기 글자 — 갈무리11 원본 그대로(SIL OFL 1.1, font/OFL.md, ASSET_LICENSE.md). 캔버스에 쓰므로 campsite.js가 불러 둠 */
+@font-face { font-family: Galmuri11; font-weight: 400; font-display: swap; src: url('font/Galmuri11.woff2') format('woff2'); }
 html, body { margin: 0; height: 100%; background: #04060c; overflow: hidden; }
 .stage { display: block; width: 100vw; height: 100vh; height: 100dvh; touch-action: none; cursor: grab; }
 .stage:active { cursor: grabbing; }
