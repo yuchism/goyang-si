@@ -8,6 +8,13 @@ html, body { margin: 0; height: 100%; background: #04060c; overflow: hidden; }
   font: 12px ui-monospace, Menlo, monospace; color: rgba(220, 222, 235, 0.6); text-decoration: none;
   padding: 6px 8px; border-radius: 6px; background: rgba(10, 14, 26, 0.3);
 }
+.snd {
+  position: fixed; right: calc(10px + env(safe-area-inset-right)); top: calc(10px + env(safe-area-inset-top));
+  font: 12px ui-monospace, Menlo, monospace; color: rgba(220, 222, 235, 0.6); border: 0; cursor: pointer;
+  padding: 6px 8px; border-radius: 6px; background: rgba(10, 14, 26, 0.3);
+}
+.snd[aria-pressed="false"] { color: rgba(220, 222, 235, 0.35); }
+.snd:hover, .snd:focus-visible,
 .exit:hover, .exit:focus-visible { color: rgba(240, 242, 250, 0.95); background: rgba(20, 26, 44, 0.6); }
 .msg { color: #ccd; font: 16px sans-serif; padding: 2rem; }
 /* 쪽지 (note.js) — 갈무리11 원본(SIL OFL 1.1, 캠핑장과 같은 파일 ../campsite/font/) */

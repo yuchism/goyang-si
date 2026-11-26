@@ -46,7 +46,7 @@ function bake(Lgt) {
   return slices;
 }
 
-export function makeBottle({ store, today, dev, reduce }) {
+export function makeBottle({ store, today, dev, reduce, onLand }) {
   const saved = store.get(BOTTLE.key, null);
   const done = !dev && saved && saved.day === today && saved.opened;
   let slices = null, bakedE = NaN, since = 0, landedAt = -1, gone = done, pos = null;
@@ -80,7 +80,7 @@ export function makeBottle({ store, today, dev, reduce }) {
         sink = 0.35 * (1 - e);
         yaw = BOTTLE.yaw + 0.08 * (1 - e) * Math.sin(t * 3);
       } else {
-        if (landedAt < 0) landedAt = t;
+        if (landedAt < 0) { landedAt = t; if (!reduce) onLand?.(); }
         const wet = wetAt ? wetAt(x, y) : 0;                 // 파도가 닿으면 살짝 흔들림
         yaw = BOTTLE.yaw + 0.06 * wet * Math.sin(t * 2.6);
       }

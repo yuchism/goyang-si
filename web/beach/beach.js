@@ -3,16 +3,18 @@
    - 들어올 때마다 해가 뜨거나 짐: 방문자 시간대 오전(0~12시) 해돋이, 오후·밤 해넘이. 3분(sky.js MINUTES) 뒤 아침 빛·별 뜬 밤바다에 머묾
    - 그리기: 캠핑장과 같은 픽셀아트, 한 픽셀 = 화면 2px (../campsite/stack.js 무대, ../campsite/fog.js 안개)
      sky.js(해 높이·빛깔·하늘) · scenery.js(그림 두 겹·배·갈매기) · sea.js(바다·햇빛 길·파도·모래)
+   - 소리(sound.js): 파도·바닷바람·해넘이 때 먼 갈매기·병 '톡'·종이. 오른쪽 위 작은 버튼으로 켬/끔(방·캠핑장과 같은 기록)
    - 하루 한 번 쪽지 병(bottle.js·note.js·notes.js): 조금 뒤 물가로 밀려옴 → 누르면 쪽지 → 닫으면 그날은 모래 위 자국만
    - 동작 줄이기: 끝 장면을 바로, 멈춘 채 (병은 이미 모래 위에)
-   - 미리보기(dev): ?sun=rise|set, ?at=0~1 (이 진행에서 시작), ?bottle=1 (오늘 열었어도 다시, 3초 뒤), ?fps=1 */
+   - 미리보기(dev): ?sun=rise|set, ?at=0~1 (이 진행에서 시작), ?bottle=1 (오늘 열었어도 다시, 3초 뒤), ?dolphin=1 (돌고래 자주), ?fps=1 */
 import { makeStage } from '../campsite/stack.js';
 import { makeFog } from '../campsite/fog.js';
 import { MINUTES, SUN, sunHeight, lightAt, makeSkyCanvas, mix, rgb, clamp01, hash } from './sky.js';
-import { makeScenery } from './scenery.js';
+import { makeScenery, DOLPHIN, GULLS } from './scenery.js';
 import { makeSea } from './sea.js';
 import { makeBottle } from './bottle.js';
 import { makeNote, pickNote } from './note.js';
+import { makeSound } from './sound.js';
 import { now, dayKey } from '../js/time.js';
 import { gcEvent, pickLang, store } from '../js/util.js';
 import { el, freshVisit } from '../js/page-kit.js';
@@ -32,6 +34,8 @@ const DEV = Q.get('dev') === '1' || (Q.get('dev') !== '0' && store.get('devTools
 const STR = {
   back: { ko: '숲길로', en: 'Back to the woods' },
   bottle: { ko: '물가의 병 열기', en: 'Open the bottle on the shore' },
+  soundOn: { ko: '소리 켬', en: 'Sound on' },
+  soundOff: { ko: '소리 끔', en: 'Sound off' },
   set: { ko: '미스테리 해변: 바다 너머로 해가 지고 있어요. 좌우로 끌면 조금 둘러봐요', en: 'Mystery Beach: the sun is setting over the sea. Drag sideways to look around a little' },
   rise: { ko: '미스테리 해변: 바다 너머로 해가 뜨고 있어요. 좌우로 끌면 조금 둘러봐요', en: 'Mystery Beach: the sun is rising over the sea. Drag sideways to look around a little' },
 };
@@ -53,10 +57,18 @@ document.body.append(canvas, exit);
 
 const stage = makeStage(canvas, 24);
 const fog = makeFog({ reduce });
+if (DEV && Q.get('dolphin') === '1') DOLPHIN.every = [3, 5]; // 미리보기: 돌고래 자주
 const scenery = makeScenery();
 const sea = makeSea();
-const bottle = makeBottle({ store, today: dayKey(now()), dev: DEV && Q.get('bottle') === '1', reduce });
-const note = makeNote({ lang: LANG });
+const sound = makeSound({ store });
+const snd = el('button', 'snd');
+snd.type = 'button';
+document.body.append(snd);
+const showSound = () => { snd.textContent = sound.on ? '♪ ' + tr('soundOn') : tr('soundOff'); snd.setAttribute('aria-pressed', String(sound.on)); };
+showSound();
+snd.addEventListener('click', () => { sound.toggle(); showSound(); });
+const bottle = makeBottle({ store, today: dayKey(now()), dev: DEV && Q.get('bottle') === '1', reduce, onLand: sound.land });
+const note = makeNote({ lang: LANG, onOpen: sound.paper });
 const openBottle = el('button', 'open-bottle', tr('bottle'));
 openBottle.type = 'button';
 openBottle.hidden = true;
@@ -180,11 +192,13 @@ function frame(ms) {
   scenery.drawGulls(ctx, W, y0, p, L, T, MODE);
   // 바다·모래 (먼 겹은 바다 위, 수평선에)
   sea.draw(ctx, { W, H, y0, ys, sx, sunR, L, t: T, pan });
+  if (!reduce) scenery.drawDolphins(ctx, W, y0, ys, L, T, pan);
   scenery.drawFar(ctx, fx, y0, AS);
   scenery.drawBoat(ctx, fx, y0, AS, p, L, T, MODE);
   bottle.draw(ctx, { W, H, ys, L, t: T, dt, pan, wetAt: (x, y) => sea.edgeAt(x) >= y ? 1 : 0 });
   if (bottle.ready && openBottle.hidden && !note.open) openBottle.hidden = false;
   scenery.drawNear(ctx, Math.round(cx - pan), H, AS, W);
+  sound.update(1 - L.lum, MODE === 'set' && p > GULLS.show[0] && p < GULLS.show[1]);
   vignette(stage, L);
   stage.present();
   fog.draw(stage, dt, t);
