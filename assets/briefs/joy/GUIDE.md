@@ -14,12 +14,14 @@
 | 표지 원화 (진지판 화풍 기준) | `assets/briefs/joy/cover-key.png` |
 | 캐릭터 시트 A — 외형(정면·3/4·옆·뒤, 디테일, 팔레트) | `assets/briefs/joy/sheet-a.png` |
 | 캐릭터 시트 B — 표정 8종 + SD(개그판) 4종 | `assets/briefs/joy/sheet-b.png` |
+| 캐릭터 시트 현대편 — 추리닝·대파검(정면·3/4·옆·뒤, 디테일, 동작 둘, SD, 팔레트) | `assets/briefs/joy/sheet-modern.png` |
 | 고정 엔딩 마스터 | `assets/briefs/joy/ending-master.png` |
 | 회차 시나리오 | 주인이 goyang-hq `manhwa/joy/<회차>-scenario.md`에 씀 → 하네스가 `assets/manhwa/joy/<회차>/scenario.md`로 복사 |
 | 회차 지시서 | `assets/briefs/joy/<회차>-brief.md` |
 | 원고 (그림) | `assets/manhwa/joy/<회차>/01.png, 02.png …` (git 무시) |
 
 - 회차마다 진지판·개그판 중 **하나**를 고른다(지시서 머리 `- style: serious | gag`). 한 회차 안에서 섞지 않는다. 단, 고정 엔딩 장면은 늘 진지판 화풍.
+- 복식도 회차마다 고른다(지시서 머리 `- outfit: traditional | modern`). 전통편은 sheet-a·b, 현대편은 sheet-modern.
 - 시트가 글보다 우선이다. 글과 시트가 다르면 시트를 따른다.
 - 시트의 "EEZEOEE" 글자는 장식이다. 원고 안에 쓰지 않는다.
 
@@ -29,6 +31,12 @@
 - 남색·흰색 겹옷에 흰 구름 무늬, 빨간 허리띠(길게 늘어진 매듭), 통 넓은 남색 바지, 끈을 감은 부츠
 - 등에 비스듬히 멘 검: 검은 감은 손잡이, 금색 장식, 빨간 매듭 술. 손잡이는 조이의 왼쪽 어깨 위로
 - 잠옷(개그판 소품): 구름무늬 파란 잠옷, 나이트캡, 고양이 슬리퍼
+
+### 현대편 복식 (sheet-modern.png)
+- 남색 추리닝(지퍼 재킷 반쯤 잠금 + 조거 바지), 팔·다리에 흰 줄 둘. 안에 흰 티셔츠. 흰 운동화
+- **대파검:** 비스듬히 멘 천 장바구니에서 대파 한 대가 검 손잡이 자리(왼쪽 어깨 위)로 튀어나와 있다. 대파 뿌리 쪽 흰 부분에 빨간 매듭 술을 묶었다. 뽑을 때는 칼처럼 진지한 자세로
+- 머리·리본·별 문양은 전통편과 같다
+- 대파검으로도 일격필살·불살 규칙은 같다(베인 것은 바뀌고, 대파 냄새가 남는다)
 
 ## 3. 세계 규칙 (화풍과 상관없이)
 - **일격필살은 하루에 한 번.** 한 번 베고 나면 그날은 끝. 쓰기 전 별 문양이 희미하게 빛나고, 쓰고 나면 빛이 꺼진다.
@@ -66,7 +74,8 @@ csf `GUIDE.md` 5장과 같다. 머리:
 ```
 # <회차>화 「제목」 지시서
 - style: serious
-- sheet: assets/briefs/joy/sheet-a.png · assets/briefs/joy/sheet-b.png
+- outfit: traditional
+- sheet: assets/briefs/joy/sheet-a.png · assets/briefs/joy/sheet-b.png (현대편이면 sheet-modern.png)
 - 장 수: N
 ```
 장마다 ```text 한 덩어리(장 번호·컷 수·핵심 한 줄 / 컷마다 장소·누가 무엇을·표정·소품 / 글자 / 이어지는 것). 마지막 장의 마지막 컷은 늘 고정 엔딩.
@@ -84,5 +93,6 @@ csf `GUIDE.md` 5장과 같다. 머리:
 - 고정 엔딩이 ending-master.png와 같은 나무·구도인가
 
 ## 8. 바뀐 기록
+- 2026-11-27 현대편 복식 추가(주인): 추리닝 + 대파검. 시트 `sheet-modern.png`(주인이 ChatGPT로 만듦). 지시서 머리에 `- outfit:`
 - 2026-11-27 불살 규칙 추가(주인): 일격필살은 없애는 게 아니라 "변화"를 일으킨다. 주인공 소개 문장도 바꿈.
 - 2026-11-26 초안(Claude, 주인과 회의). 표지·시트 A·B·엔딩 마스터는 주인이 ChatGPT로 만든 그림. 별 문양 위치는 시트 기준으로 적었고 주인 확인이 남았다.
