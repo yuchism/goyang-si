@@ -4,6 +4,20 @@
   "about": "",
   "tagline": "하루에 한 번이면 충분하다",
   "taglineEn": "Once a day is enough",
-  "episodes": [],
+  "episodes": [
+    {
+      "no": 1,
+      "slug": "znmzv",
+      "title": "하루에 단 한 번",
+      "open": "2026-12-01",
+      "heights": [
+        1668,
+        1668,
+        1668,
+        1620
+      ],
+      "v": "3120aee0"
+    }
+  ],
   "cover": "ef04c446"
 }
