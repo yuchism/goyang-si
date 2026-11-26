@@ -153,22 +153,28 @@ function frame(ms) {
     ctx.fillStyle = g;
     ctx.fillRect(sx - sunR * 5, sunY - sunR * 5, sunR * 10, sunR * 10);
     ctx.globalCompositeOperation = 'source-over';
-    const core = mix(L.sun, [255, 251, 236], 0.72), rim = mix(L.sun, [255, 242, 212], 0.45);
-    for (let v = -sunR; v <= sunR; v++) {
-      const y = sunY + v;
-      if (y > y0) break;
-      const hw = Math.round(Math.sqrt(sunR * sunR - v * v));
-      ctx.fillStyle = rgb(v > sunR * 0.75 ? rim : core, fade);
-      ctx.fillRect(sx - hw, y, hw * 2 + 1, 1);
-    }
     // 해 바로 둘레의 밝은 테 — 둘레 노을보다 해가 또렷이 밝게 (높이 뜨면 조금 줄임)
     ctx.globalCompositeOperation = 'lighter';
     const h2 = ctx.createRadialGradient(sx, sunY, sunR * 0.6, sx, sunY, sunR * 2.2);
-    h2.addColorStop(0, rgb(mix(L.sun, [255, 250, 230], 0.5), 0.45 * fade * (1 - 0.5 * clamp01((L.e - 0.1) / 0.2))));
+    h2.addColorStop(0, rgb(mix(L.sun, [255, 250, 230], 0.5), 0.45 * fade * (1 - 0.5 * clamp01((L.e - 0.1) / 0.2)) * (1 - 0.5 * clamp01((SUN.redden - e) / SUN.redden))));
     h2.addColorStop(1, rgb(L.sun, 0));
     ctx.fillStyle = h2;
     ctx.fillRect(sx - sunR * 3, sunY - sunR * 3, sunR * 6, Math.max(0, Math.min(sunR * 6, y0 + 1 - (sunY - sunR * 3))));
     ctx.globalCompositeOperation = 'source-over';
+    // 해 원판: 낮아질수록 아랫부분부터 붉게 물듦(두꺼운 대기를 지나는 빛), 수평선 가까이선 살짝 납작해지고 옅은 가로 띠
+    const core = mix(L.sun, [255, 251, 236], 0.72);
+    const red = clamp01((SUN.redden - e) / SUN.redden), flat = 1 - SUN.flatten * clamp01((0.06 - e) / 0.08);
+    const ry = Math.max(2, Math.round(sunR * flat));
+    for (let v = -ry; v <= ry; v++) {
+      const y = sunY + v;
+      if (y > y0) break;
+      const k = (v + ry) / (2 * ry), hw = Math.round(sunR * Math.sqrt(Math.max(0, 1 - (v / ry) ** 2)));
+      let c = mix(core, SUN.warm, red * 0.5 * (0.4 + 0.6 * k));             // 전체가 조금 노르스름하게
+      c = mix(c, SUN.red, 0.92 * clamp01((k - (1 - red * 1.1)) / 0.5));     // 붉은 기운이 아래에서부터 차오름
+      if (red > 0.6 && k > 0.45 && (v + 99) % 3 === 0) c = mix(c, L.glow, (red - 0.6) * 0.8); // 옅은 가로 띠
+      ctx.fillStyle = rgb(c, fade);
+      ctx.fillRect(sx - hw, y, hw * 2 + 1, 1);
+    }
   }
   scenery.drawGulls(ctx, W, y0, p, L, T, MODE);
   // 바다·모래 (먼 겹은 바다 위, 수평선에)
