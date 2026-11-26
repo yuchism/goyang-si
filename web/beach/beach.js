@@ -148,7 +148,7 @@ function frame(ms) {
     const fade = clamp01((e + 0.06) / 0.06);
     ctx.globalCompositeOperation = 'lighter';
     const g = ctx.createRadialGradient(sx, sunY, 1, sx, sunY, sunR * 5);
-    g.addColorStop(0, rgb(L.sun, 0.28 * fade));
+    g.addColorStop(0, rgb(L.sun, 0.2 * fade * (1 - 0.8 * clamp01((SUN.redden - e) / SUN.redden)))); // 해가 낮으면 번짐을 줄임 — 둘레가 해보다 밝지 않게 (주인 2026-11-26)
     g.addColorStop(1, rgb(L.sun, 0));
     ctx.fillStyle = g;
     ctx.fillRect(sx - sunR * 5, sunY - sunR * 5, sunR * 10, sunR * 10);
@@ -156,13 +156,13 @@ function frame(ms) {
     // 해 바로 둘레의 밝은 테 — 둘레 노을보다 해가 또렷이 밝게 (높이 뜨면 조금 줄임)
     ctx.globalCompositeOperation = 'lighter';
     const h2 = ctx.createRadialGradient(sx, sunY, sunR * 0.6, sx, sunY, sunR * 2.2);
-    h2.addColorStop(0, rgb(mix(L.sun, [255, 250, 230], 0.5), 0.45 * fade * (1 - 0.5 * clamp01((L.e - 0.1) / 0.2)) * (1 - 0.5 * clamp01((SUN.redden - e) / SUN.redden))));
+    h2.addColorStop(0, rgb(mix(L.sun, [255, 250, 230], 0.5), 0.28 * fade * (1 - 0.5 * clamp01((L.e - 0.1) / 0.2)) * (1 - clamp01((SUN.redden - e) / SUN.redden))));
     h2.addColorStop(1, rgb(L.sun, 0));
     ctx.fillStyle = h2;
     ctx.fillRect(sx - sunR * 3, sunY - sunR * 3, sunR * 6, Math.max(0, Math.min(sunR * 6, y0 + 1 - (sunY - sunR * 3))));
     ctx.globalCompositeOperation = 'source-over';
     // 해 원판: 낮아질수록 아랫부분부터 붉게 물듦(두꺼운 대기를 지나는 빛), 수평선 가까이선 살짝 납작해지고 옅은 가로 띠
-    const core = mix(L.sun, [255, 251, 236], 0.72);
+    const core = mix(L.sun, [255, 253, 244], 0.85);
     const red = clamp01((SUN.redden - e) / SUN.redden), flat = 1 - SUN.flatten * clamp01((0.06 - e) / 0.08);
     const ry = Math.max(2, Math.round(sunR * flat));
     for (let v = -ry; v <= ry; v++) {
