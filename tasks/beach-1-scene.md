@@ -1,5 +1,5 @@
 # 미스테리 해변 1: 장면 — 하늘·해·물·파도, 해돋이/해넘이 3분
-- status: todo
+- status: implemented
 - mode: needs-review
 - brief: `assets/briefs/BEACH_BG_ART.md` (배경 두 겹 — 받음: `assets/beach/beach-bg-far-384.png`·`beach-bg-near-384.png`)
 - 출처: 회의 2026-11-26 — `BEACH_PLAN.md` 3·4장
@@ -19,15 +19,15 @@
 - 모닥불 없음.
 
 ## 요구사항
-- [ ] `web/beach/` (index.html·beach.css·beach.js·sky.js 등), 그림은 384폭 png로
-- [ ] 3분 진행 + 끝 장면에 머묾
-- [ ] 동작 줄이기: 끝 장면 바로
-- [ ] 미리보기: `?sun=rise|set`, `?at=0~1`
-- [ ] 넓은 화면: 그림 정수배, 수평선 맞춤
-- [ ] 들어올 때 안개가 걷힘
+- [x] `web/beach/` (index.html·beach.css·beach.js·sky.js 등), 그림은 384폭 png로
+- [x] 3분 진행 + 끝 장면에 머묾
+- [x] 동작 줄이기: 끝 장면 바로
+- [x] 미리보기: `?sun=rise|set`, `?at=0~1`
+- [x] 넓은 화면: 그림 정수배, 수평선 맞춤
+- [x] 들어올 때 안개가 걷힘
 
 ## 확인
-- [ ] `node tools/check_structure.mjs` 통과
+- [x] `node tools/check_structure.mjs` 통과
 - [ ] (사람) 폰·랩탑: 3분이 지루하지 않은지, 밤바다가 먹먹한지
 
 <!-- office:verify
@@ -36,3 +36,6 @@
 
 ## 메모
 - 2026-11-26 Claude 씀.
+- 2026-11-26 Claude 구현: beach.js(시작·3분 진행·끌어서 조금 고개 돌리기, 숫자 VIEW) · sky.js(해 높이 COURSE·빛깔 LIGHT·하늘 그림 — 그라데이션·노을·얇은 구름 띠, 4×4 점 무늬로 색 단계) · scenery.js(그림 두 겹을 빛깔로 다시 칠함, 먼 겹은 수평선 빛으로 흐리게, 배·갈매기) · sea.js(바다·잔물결·햇빛 길·물결 마루·밀려왔다 빠지는 물·젖은 모래·모래). 무대·안개는 `../campsite/stack.js`·`fog.js`.
+  - 좁은 화면(폰): 가까운 겹을 두 배로 키우고 두 쪽을 안쪽으로 당겨 바위·유목이 양옆에 걸리게. 해는 먼 겹 0.44 자리(곶과 섬 사이).
+  - 나가기 버튼(← 숲길로 → 안개 → `/campsite/`)도 넣음 — beach-2의 일부. noindex. 클라우드 크롬 폰·노트북 크기 55~60fps.
