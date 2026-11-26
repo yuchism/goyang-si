@@ -169,8 +169,9 @@ function frame(ms) {
       const y = sunY + v;
       if (y > y0) break;
       const k = (v + ry) / (2 * ry), hw = Math.round(sunR * Math.sqrt(Math.max(0, 1 - (v / ry) ** 2)));
-      let c = mix(core, SUN.warm, red * 0.5 * (0.4 + 0.6 * k));             // 전체가 조금 노르스름하게
-      c = mix(c, SUN.red, 0.92 * clamp01((k - (1 - red * 1.1)) / 0.5));     // 붉은 기운이 아래에서부터 차오름
+      let c = mix(core, SUN.warm, Math.min(1, red * 1.4));                   // 하얀 해가 짙은 노랑으로
+      c = mix(c, SUN.red, 0.9 * clamp01((k - (1 - red * 1.1)) / 0.55));      // 주황 기운이 아래에서부터 차오름
+      c = mix(c, SUN.deep, clamp01((red - 0.75) / 0.25) * k ** 1.5 * 0.8);   // 수평선에 닿을 무렵 맨 아래는 더 붉게
       if (red > 0.6 && k > 0.45 && (v + 99) % 3 === 0) c = mix(c, L.glow, (red - 0.6) * 0.8); // 옅은 가로 띠
       ctx.fillStyle = rgb(c, fade);
       ctx.fillRect(sx - hw, y, hw * 2 + 1, 1);

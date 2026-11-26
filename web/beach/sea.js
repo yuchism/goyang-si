@@ -99,7 +99,7 @@ export function makeSea() {
           if (on) {
             const len = Math.max(1, Math.round(cw * (0.7 + 0.8 * vnoise(y * 0.7 + 5, t * 1.3)))), x = Math.round(sx + wob - len / 2);
             const k = glare * (0.22 + 0.4 * low) * (1 - d * 0.55);
-            ctx.fillStyle = rgb(mix(L.sun, [255, 246, 224], 0.5), k);
+            ctx.fillStyle = rgb(mix(L.sun, [255, 246, 224], 0.12 + 0.38 * clamp01(L.e / 0.25)), k); // 해가 낮으면 빛기둥도 해 빛깔(금빛)로
             ctx.fillRect(x, y, len, 1);
           }
         }

@@ -7,11 +7,12 @@
 export const MINUTES = 3;            // 해돋이·해넘이 길이 (회의 2026-11-26 — "요즘 분들은 참을성이 없어서")
 export const SUN = {
   u: 0.44,                           // 해 자리: 먼 겹 그림 폭의 이 비율 (곶과 섬 사이 빈 수평선)
-  r: 0.032,                          // 해 반지름 (화면 높이 비율)
+  r: 0.04,                           // 해 반지름 (화면 높이 비율)
   lift: 0.62,                        // 해 높이 1 = 하늘 높이(지평선까지)의 이 비율
   redden: 0.2,                       // 해가 이 높이보다 낮아지면 아랫부분부터 붉게 물들기 시작 (주인 2026-11-26)
-  warm: [255, 200, 110],             // 물들 때 위쪽 빛깔
-  red: [236, 78, 44],                // 아랫부분 빛깔 (수평선에 닿을 때)
+  warm: [255, 230, 84],              // 물들 때 위쪽 빛깔: 짙은 노랑 (주인이 보여 준 사진 2026-11-26)
+  red: [255, 150, 36],               // 아랫부분 빛깔: 주황 — 수평선에 닿을 무렵엔 더 붉게(deep)
+  deep: [238, 92, 38],
   flatten: 0.14,                     // 수평선 가까이서 납작해지는 정도
 };
 export const COURSE = {
@@ -23,8 +24,8 @@ export const LIGHT = [
   { e: -0.62, top: '#020308', mid: '#070b1d', hor: '#161a36', glow: '#181a3a', sea: '#070a17', sand: '#191a26', dark: '#04050b', light: '#242a40', sun: '#000000', stars: 1, lum: 0.06 },
   { e: -0.3, top: '#050819', mid: '#141c42', hor: '#373a6a', glow: '#3e3a6e', sea: '#0b1029', sand: '#2b2a3e', dark: '#080a17', light: '#3b4163', sun: '#000000', stars: 0.55, lum: 0.2 },
   { e: -0.12, top: '#10173a', mid: '#38356a', hor: '#b06676', glow: '#d0707a', sea: '#1f2047', sand: '#54465a', dark: '#121227', light: '#665876', sun: '#ff6a40', stars: 0.12, lum: 0.36 },
-  { e: -0.02, top: '#1b2756', mid: '#7c5282', hor: '#f4804e', glow: '#ff9050', sea: '#3a2c52', sand: '#836056', dark: '#1e182d', light: '#ab7872', sun: '#ff7a3c', stars: 0, lum: 0.52 },
-  { e: 0.1, top: '#2a4682', mid: '#b47a82', hor: '#ffae62', glow: '#ffc070', sea: '#4c4a72', sand: '#b88a6c', dark: '#2a2840', light: '#dca482', sun: '#ffc46c', stars: 0, lum: 0.72 },
+  { e: -0.02, top: '#2e2550', mid: '#a4485c', hor: '#e8684a', glow: '#ff9a3e', sea: '#2e2538', sand: '#7e5850', dark: '#1e1626', light: '#a8706a', sun: '#ff9a30', stars: 0, lum: 0.52 },
+  { e: 0.1, top: '#3a3a70', mid: '#bc5c66', hor: '#f48a52', glow: '#ffbe48', sea: '#3c3448', sand: '#b07e66', dark: '#28203a', light: '#d89a7c', sun: '#ffd24a', stars: 0, lum: 0.72 },
   { e: 0.32, top: '#3768ac', mid: '#86aed6', hor: '#f0d4aa', glow: '#fff0c8', sea: '#3c5c86', sand: '#d4bc9c', dark: '#363d56', light: '#c4c2c8', sun: '#fff4d8', stars: 0, lum: 1 },
 ];
 
