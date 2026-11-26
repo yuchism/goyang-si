@@ -39,7 +39,7 @@ export function makeBackdrop({ phase, south }) {
     AS = Math.max(1, Math.round(W / FAR_W));
     PW = FAR_W * AS;
     farH = (ready(far) ? far.naturalHeight : 69) * AS;
-    y0 = Math.round(Math.max(H * 0.4, farH + H * 0.16));
+    y0 = Math.round(Math.max(H * 0.4, farH + H * 0.08)); // 낮고 넓은 화면: 산을 키운 만큼 지평선을 내리되, 땅(불 자리)이 넉넉히 남게 — 달은 봉우리에 조금 걸려도 됨
     y1 = y0 + Math.round(H * 0.1);
     mr = Math.max(3, Math.round(H * SKY.moonR));
     // 하늘 띠 (PW × y0): 그라데이션 + 은하수

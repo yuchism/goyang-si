@@ -109,10 +109,11 @@ function frame(ms) {
   if (!drag) { angle += vel * dt; vel *= 1 - Math.min(1, dt * DRAG.slide); }
   stage.angle = angle;
   const azc = FRONT - angle; // 화면 가운데가 보는 방향 — 불이 돌아가는 반대로 풍경이 지나감
+  backdrop.draw(stage, azc, T);
+  stage.ground(backdrop.shore);
   fire.update(stage, dt, T);
   smoke.update(dt, T);
   sound.update(azc);
-  backdrop.draw(stage, azc, T);
   drawCampfire(stage, campfire, T, fire.glow, () => fire.drawGround(stage));
   fire.draw(stage);
   smoke.draw(stage);
