@@ -4,6 +4,8 @@
    - 불빛: 땅에 납작하게 번지는 둥근 빛 + 불 둘레 빛. breath(느린 숨)·flick(빠른 일렁임)
    - glow: 기억을 태울 때 잠깐 솟는 기운(memory.js가 burst) — 불꽃이 커지고 숯불 판이 밝아짐
    - 동작 줄이기: 몇 초 미리 태운 뒤 멈춘 불 */
+import { STACK } from './stack.js';
+
 export const FIRE = {
   rate: 150,          // 초당 불꽃 입자 (×kp)
   rise: [13, 12],     // 오르는 빠르기 [기본, 더해지는 범위] (×kp)
@@ -29,7 +31,7 @@ export function makeFire({ reduce }) {
     while (acc > 1) {
       acc--;
       const a = R() * Math.PI * 2, r = Math.sqrt(R()) * FIRE.spread * kp;
-      flames.push({ x: cx + Math.cos(a) * r, y: base + Math.sin(a) * r * .44, ox: cx, vy: -(FIRE.rise[0] + R() * FIRE.rise[1]) * kp * (1 + glow * .4),
+      flames.push({ x: cx + Math.cos(a) * r, y: base + Math.sin(a) * r * STACK.SQ, ox: cx, vy: -(FIRE.rise[0] + R() * FIRE.rise[1]) * kp * (1 + glow * .4),
         life: 0, max: (FIRE.life[0] + R() * FIRE.life[1]) * (1.15 - r / (8 * kp)) * (.8 + flick * .35), ph: R() * 6.28 });
     }
     if (R() < dt * FIRE.smoke) smoke.push({ x: cx + (R() - .5) * 4 * kp, y: base - 30 * kp, vy: -(3 + R() * 3) * kp, life: 0, max: 5 + R() * 4 });
@@ -88,7 +90,7 @@ export function makeFire({ reduce }) {
       ctx.globalCompositeOperation = 'lighter';
       ctx.save();
       ctx.translate(cx, cy);
-      ctx.scale(1, .44);
+      ctx.scale(1, STACK.SQ);
       const g = ctx.createRadialGradient(0, 0, 4, 0, 0, G);
       g.addColorStop(0, `rgba(255,130,55,${(.2 * flick).toFixed(3)})`);
       g.addColorStop(1, 'rgba(255,130,55,0)');
