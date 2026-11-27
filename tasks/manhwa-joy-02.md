@@ -1,5 +1,5 @@
 # 일격필살 이조이 2화 「어디든 갑니다」 — 장 그림 4장 → 회차
-- status: brief
+- status: implemented
 - mode: needs-review
 - office: ready
 - brief: assets/briefs/joy/02-brief.md
@@ -39,3 +39,4 @@
 
 ## 메모
 - 2026-11-27 지시서 작성(Claude, 주인과 회의). 주인 확인 받고 `- office: ready`.
+- 2026-11-27 그림 4장 받음(그림 검수 통과, 1회) → 2화 이름 `u8cm6`, 공개일 2026-12-08, 조각 4개. 검수 지적 "01장 첫 캡션이 맨 위 1/10에 걸림" → 다시 그리지 않고 원본은 `assets/manhwa/joy/2/raw/01.png`로 두고, `01.png`는 컷1 맨 위 24px(건물·밤하늘)을 184px로 늘려 컷 안 내용을 160px 아래로 내림(1024×1536 → 1024×1696, 1/10 선 약 170px, 캡션 상자 위끝 약 205px). 검사 셋 통과.
